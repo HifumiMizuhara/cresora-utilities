@@ -19,10 +19,11 @@ import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Identifier
+import kotlin.math.max
 
 class Hinagatas_Tue(settings: Settings) : Item(settings) {
     companion object {
-        val bairitu = 0.7
+        val bairitu = 1.3
     }
     override fun appendTooltip(
         stack: ItemStack,
@@ -51,9 +52,13 @@ class Hinagatas_Tue(settings: Settings) : Item(settings) {
             // サーバーサイドでのみ実際の処理を行う
             if (!world.isClient) {
                 // レベルを取得して1加算
+
                 val currentLevel = pendantStack.getOrDefault(ModDataComponents.LEVEL, 1)
                 val newLevel = currentLevel + 1
-
+                if(user.experienceLevel<2) {
+                    user.sendMessage(Text.translatable("item.cresora.not_enough_xp").formatted(Formatting.RED))
+                    return TypedActionResult.fail(pendantStack)
+                }
                 // ペンダントのコンポーネントを更新
 
                 val possib=9-offHandStack.getOrDefault(ModDataComponents.LEVEL, 1)
@@ -62,9 +67,11 @@ class Hinagatas_Tue(settings: Settings) : Item(settings) {
                     user.sendMessage(Text.translatable("item.cresora.tuelevelled",currentLevel,newLevel))
                 }
                 else {
-                    user.sendMessage(Text.translatable("item.cresora.tuelevelfailed"))
+                    user.sendMessage(Text.translatable("item.cresora.tuelevelfailed").formatted(Formatting.RED))
                 }
                 offHandStack.decrement(1)
+                user.addExperienceLevels(-2)
+
             }
 
             // アクションが成功したことをクライアントに伝える (腕を振るアニメーション)
@@ -75,20 +82,23 @@ class Hinagatas_Tue(settings: Settings) : Item(settings) {
             if (!world.isClient) {
                 // レベルを取得して1加算
                 val currentLevel = pendantStack.getOrDefault(ModDataComponents.LEVEL, 1)
-
+                if(user.experienceLevel<2) {
+                    user.sendMessage(Text.translatable("item.cresora.not_enough_xp").formatted(Formatting.RED))
+                    return TypedActionResult.fail(pendantStack)
+                }
 
                 // ペンダントのコンポーネントを更新
                 val level = offHandStack.getOrDefault(ModDataComponents.LEVEL, 1)
                 val newLevel = currentLevel + level
-                var made=256-currentLevel
-                if (made<4) made=4
+                val made=max(currentLevel,level)
                 if ((1..made).shuffled().first() == 1) { //?%
                     pendantStack.set(ModDataComponents.LEVEL, newLevel)
                     user.sendMessage(Text.translatable("item.cresora.tuelevelled", currentLevel, newLevel))
                 } else {
-                    user.sendMessage(Text.translatable("item.cresora.tuelevelfailed2"))
+                    user.sendMessage(Text.translatable("item.cresora.tuelevelfailed2").formatted(Formatting.RED))
                 }
                 offHandStack.decrement(1)
+                user.addExperienceLevels(-2)
             }
         }
 
