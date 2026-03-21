@@ -1,0 +1,21 @@
+{
+  "criteria": {
+      "tick": {
+        "trigger": "minecraft:tick"
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "cresora-utilities:hinagatastue"
+    },
+    "title": {
+      "translate": "advancement.cresora.root.title"
+    },
+    "description": {
+      "translate": "advancement.cresora.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "parent": "cresora-utilities:root",
+  "display": {
+    "icon": {
+      "id": "cresora-utilities:hinagatastue"
+    },
+    "title": {
+      "translate": "advancement.cresora.get_hinagatas_tue.title"
+    },
+    "description": {
+      "translate": "advancement.cresora.get_hinagatas_tue.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "get_tue": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": ["cresora-utilities:hinagatastue"]
+          }
+        ]
+      }
+    }
+  }
+}

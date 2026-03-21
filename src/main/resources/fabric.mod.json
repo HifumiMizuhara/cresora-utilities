@@ -1,0 +1,46 @@
+{
+	"schemaVersion": 1,
+	"id": "cresora-utilities",
+	"version": "${version}",
+	"name": "CreSora Utilities",
+	"description": "A New Attempt to make Minecraft Servers Great Again!",
+	"authors": [
+		"Hifumi Mizuhara"
+	],
+	"icon": "assets/cresora-utilities/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-datagen": [
+			"hifumi.cresora.Datagen"
+		],
+		"main": [
+			{
+				"value": "hifumi.cresora.CreSoraUtilities",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "hifumi.cresora.CreSoraUtilitiesClient",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"cresora-utilities.mixins.json",
+		{
+			"config": "cresora-utilities.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.7",
+		"java": ">=21",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	},
+	"suggests": {
+		"attributefix": "*"
+	}
+}

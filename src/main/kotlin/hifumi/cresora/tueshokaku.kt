@@ -6,9 +6,24 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.component.type.TooltipDisplayComponent
+import java.util.function.Consumer
 import kotlin.math.roundToInt
 
 class tueshokaku(settings: Settings) : Item(settings) {
+    companion object {
+        const val MAX_LEVEL = 8
+
+        fun normalizeLevel(stack: ItemStack): Int {
+            val rawLevel = stack.getOrDefault(ModDataComponents.LEVEL, 1)
+            val normalizedLevel = rawLevel.coerceIn(1, MAX_LEVEL)
+            if (rawLevel != normalizedLevel) {
+                stack.set(ModDataComponents.LEVEL, normalizedLevel)
+            }
+            return normalizedLevel
+        }
+    }
+
     override fun getDefaultStack(): ItemStack {
         val stack = super.getDefaultStack()
         // デフォルトでレベル1のコンポーネントを付与する
@@ -18,17 +33,17 @@ class tueshokaku(settings: Settings) : Item(settings) {
     override fun appendTooltip(
         stack: ItemStack,
         context: TooltipContext,
-        tooltip: MutableList<Text>,
+        displayComponent: TooltipDisplayComponent,
+        textConsumer: Consumer<Text>,
         type: TooltipType
     ) {
         // データコンポーネントからレベルを取得
-        var level = stack.getOrDefault(ModDataComponents.LEVEL, 1)
+        val rawLevel = stack.getOrDefault(ModDataComponents.LEVEL, 1)
+        val level = rawLevel.coerceIn(1, MAX_LEVEL)
 
         // ツールチップに「Level: X」と表示する
-        if (level > 8) level = 8
-        val possibility=listOf<Int>(1,2,3,4,5,6,7,8)
-        val prob=(possibility[level-1]/8.0*1000).roundToInt()/10.0
-        tooltip.add(Text.literal("$prob%").formatted(Formatting.GRAY))
-        super.appendTooltip(stack, context, tooltip, type)
+        val prob = (level / MAX_LEVEL.toDouble() * 1000).roundToInt() / 10.0
+        textConsumer.accept(Text.literal("$prob%").formatted(Formatting.GRAY))
+        super.appendTooltip(stack, context, displayComponent, textConsumer, type)
     }
 }
