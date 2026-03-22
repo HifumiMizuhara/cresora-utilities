@@ -109,6 +109,8 @@
 - Re-verified the compressed stat command and crit-display changes with a successful `./gradlew build`
 - Added enemy-family-biased initial stat rolls so zombie, skeleton, and warden pendants now lean toward different build archetypes
 - Verified the mob-biased drop generation changes with a successful `./gradlew build`
+- Added action-bar combat feedback for outgoing damage bonus and incoming damage reduction
+- Re-verified the expanded combat feedback with a successful `./gradlew build`
 
 ## Current State
 

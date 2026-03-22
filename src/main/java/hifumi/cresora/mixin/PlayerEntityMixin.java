@@ -24,18 +24,38 @@ public class PlayerEntityMixin {
         double allBonus = totals.getOrDefault(StatType.ALL_DMG_BONUS, 0.0) / 100.0;
         double critRate = CombatStatSupport.effectiveCritRateRatio(totals);
         double critDamage = CombatStatSupport.effectiveCritDamageRatio(totals);
+        double damageMultiplier = 1.0 + Math.max(0.0, allBonus);
 
-        double result = cir.getReturnValueF() * (1.0 + Math.max(0.0, allBonus));
+        double result = cir.getReturnValueF() * damageMultiplier;
+        boolean critTriggered = false;
         if (critRate > 0.0) {
             if (player.getRandom().nextDouble() < critRate) {
                 double critMultiplier = 1.0 + Math.max(0.0, critDamage);
                 result *= critMultiplier;
-                player.sendMessage(
-                    Text.translatable("combat.cresora.crit_triggered", String.format(Locale.ROOT, "%.2f", critMultiplier)),
-                    true
-                );
+                critTriggered = true;
+                if (allBonus > 0.0) {
+                    player.sendMessage(
+                        Text.translatable(
+                            "combat.cresora.damage_combo",
+                            String.format(Locale.ROOT, "%.2f", damageMultiplier),
+                            String.format(Locale.ROOT, "%.2f", critMultiplier)
+                        ),
+                        true
+                    );
+                } else {
+                    player.sendMessage(
+                        Text.translatable("combat.cresora.crit_triggered", String.format(Locale.ROOT, "%.2f", critMultiplier)),
+                        true
+                    );
+                }
                 player.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 0.8F, 1.0F);
             }
+        }
+        if (!critTriggered && allBonus > 0.0) {
+            player.sendMessage(
+                Text.translatable("combat.cresora.damage_bonus", String.format(Locale.ROOT, "%.2f", damageMultiplier)),
+                true
+            );
         }
         cir.setReturnValue((float) result);
     }

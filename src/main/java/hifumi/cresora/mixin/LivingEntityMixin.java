@@ -4,11 +4,13 @@ import hifumi.cresora.EquipmentPlayerSupport;
 import hifumi.cresora.StatType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.Map;
+import java.util.Locale;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin {
@@ -23,6 +25,11 @@ public class LivingEntityMixin {
             return amount;
         }
         reduction = Math.min(0.95, Math.max(0.0, reduction));
-        return (float) (amount * (1.0 - reduction));
+        double finalMultiplier = 1.0 - reduction;
+        player.sendMessage(
+            Text.translatable("combat.cresora.damage_reduced", String.format(Locale.ROOT, "%.2f", finalMultiplier)),
+            true
+        );
+        return (float) (amount * finalMultiplier);
     }
 }

@@ -15,4 +15,4 @@
 - Re-run in-game verification of the revised drop tiers and confirm zombie, skeleton, and warden drops now match their intended rarity and level bands
 - Re-run in-game verification that zombie drops skew toward survival stats, skeleton drops skew toward offense/crit, and warden drops skew toward premium mixed stats
 - Re-run in-game combat verification of the new base crit profile and confirm the default `5%` crit chance feels correct with the current damage pacing
-- Expand combat feedback beyond crits so final-damage bonus and damage-reduction effects are easier to validate in live play
+- Re-run in-game verification that outgoing damage bonus and incoming damage reduction now surface in action-bar feedback cleanly during live combat

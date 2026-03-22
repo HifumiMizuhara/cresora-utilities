@@ -74,6 +74,9 @@
   "commands.cresora.stats.attack_damage": "攻撃力属性",
   "commands.cresora.stats.max_health": "最大HP属性",
   "commands.cresora.stats.armor": "防御属性",
+  "combat.cresora.damage_bonus": "与ダメ x%s",
+  "combat.cresora.damage_combo": "与ダメ x%s / 会心 x%s",
+  "combat.cresora.damage_reduced": "被ダメ x%s",
   "combat.cresora.crit_triggered": "会心! x%s",
   "cresora.welcome.message": "%s、お帰りなさい!"
 }

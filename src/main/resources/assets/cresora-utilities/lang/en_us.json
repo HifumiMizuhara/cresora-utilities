@@ -74,6 +74,9 @@
   "commands.cresora.stats.attack_damage": "Attack Damage Attribute",
   "commands.cresora.stats.max_health": "Max Health Attribute",
   "commands.cresora.stats.armor": "Armor Attribute",
+  "combat.cresora.damage_bonus": "DMG x%s",
+  "combat.cresora.damage_combo": "DMG x%s / CRIT x%s",
+  "combat.cresora.damage_reduced": "DMG taken x%s",
   "combat.cresora.crit_triggered": "CRIT! x%s",
   "cresora.welcome.message": "Hello, %s!\n Welcome back to CreSora!"
 }
