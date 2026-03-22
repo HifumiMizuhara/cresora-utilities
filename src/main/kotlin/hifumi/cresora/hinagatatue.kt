@@ -9,8 +9,6 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.ActionResult
 import net.minecraft.world.World
-import kotlin.math.roundToInt
-import hifumi.cresora.CreSoraUtilities.PENDANT_ATTRIBUTE_ID
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
@@ -29,70 +27,92 @@ class Hinagatas_Tue(settings: Settings) : atkItem(settings) {
         textConsumer: Consumer<Text>,
         type: TooltipType
     ) {
-        // データコンポーネントからレベルを取得
-        val level = stack.getOrDefault(ModDataComponents.LEVEL, 1)
+        val data = EquipmentStackSupport.getEquipmentData(stack) ?: EquipmentStackSupport.defaultPendantData(EquipmentStackSupport.getCompatibilityLevel(stack))
+        val aggregatedStats = EquipmentStatCalculator.aggregate(data)
 
-        // ツールチップに「Level: X」と表示する
-        val atk= ((level*bairitu*10).roundToInt()/10.0).toString()
-        textConsumer.accept(Text.literal("+$level"))
-        textConsumer.accept(Text.translatable("item.cresora.tuelevel", atk).formatted(Formatting.GRAY))
-        textConsumer.accept(Text.translatable("item.cresora.bairitu",bairitu).formatted(Formatting.GRAY))
+        textConsumer.accept(Text.translatable(data.rarity.translationKey()).formatted(Formatting.GOLD))
+        textConsumer.accept(
+            Text.translatable("item.cresora.equipment.level", data.level, data.rarity.maxLevel).formatted(Formatting.GRAY)
+        )
+        textConsumer.accept(
+            Text.translatable("item.cresora.equipment.main_stat", EquipmentStatCalculator.formatStatLine(data.mainStat)).formatted(Formatting.AQUA)
+        )
+
+        for (subStat in data.subStats) {
+            textConsumer.accept(
+                Text.translatable("item.cresora.equipment.sub_stat", EquipmentStatCalculator.formatStatLine(subStat)).formatted(Formatting.GRAY)
+            )
+        }
+
+        val nextGrowthLevel = ((data.level / 4) + 1) * 4
+        if (nextGrowthLevel <= data.rarity.maxLevel) {
+            textConsumer.accept(
+                Text.translatable("item.cresora.equipment.next_growth", nextGrowthLevel).formatted(Formatting.DARK_GREEN)
+            )
+        } else {
+            textConsumer.accept(Text.translatable("item.cresora.equipment.maxed").formatted(Formatting.DARK_GREEN))
+        }
         super.appendTooltip(stack, context, displayComponent, textConsumer, type)
     }
     override fun register() {
-        val STRENGTH_PENDANTS=this
         ServerTickEvents.END_SERVER_TICK.register { server: MinecraftServer ->
             for (player in server.playerManager.playerList) {
 
-                val atkInstance = player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE) ?: continue
+                val attackInstance = player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE)
+                val healthInstance = player.attributes.getCustomInstance(EntityAttributes.MAX_HEALTH)
+                val armorInstance = player.attributes.getCustomInstance(EntityAttributes.ARMOR)
 
-                // ★★★ 修正点: 引数がIdentifierになり、正しく動作する ★★★
-                val hasModifier = atkInstance.getModifier(PENDANT_ATTRIBUTE_ID) != null
-
-                var pendantStack: ItemStack? = null
-                var maxlev=0
-                for (stack in player.inventory.getMainStacks()) {
-                    if (stack.isOf(STRENGTH_PENDANTS)) {
-                        if (stack.getOrDefault(ModDataComponents.LEVEL,1)>maxlev){
-                            maxlev=stack.getOrDefault(ModDataComponents.LEVEL,1)
-                            pendantStack=stack
-                        }
-                    }
-                }
-                for (stack in player.enderChestInventory.heldStacks) {
-                    if (stack.isOf(STRENGTH_PENDANTS)) {
-                        if (stack.getOrDefault(ModDataComponents.LEVEL,1)>maxlev){
-                            maxlev=stack.getOrDefault(ModDataComponents.LEVEL,1)
-                            pendantStack=stack
-                        }
-                    }
-                }
-
-                if (pendantStack != null) {
-                    val level = pendantStack.getOrDefault(ModDataComponents.LEVEL, 1)
-                    val attackBonus = level * STRENGTH_PENDANTS.bairitu
-
-                    // ★★★ 修正点: getModifierの引数がIdentifierになる ★★★
-                    val currentModifier = atkInstance.getModifier(PENDANT_ATTRIBUTE_ID)
-                    if (currentModifier != null && currentModifier.value == attackBonus) {
-                        // 正しい値なので何もしない
-                    } else {
-                        // 古いボーナスを一度削除
-                        // ★★★ 修正点: removeModifierの引数がIdentifierになる ★★★
-                        atkInstance.removeModifier(PENDANT_ATTRIBUTE_ID)
-
-                        // ★★★ 修正点: EntityAttributeModifierのコンストラクタがIdentifierを要求する ★★★
-                        val newModifier = EntityAttributeModifier(
-                            PENDANT_ATTRIBUTE_ID, // 第1引数がIdentifier
-                            attackBonus,
-                            EntityAttributeModifier.Operation.ADD_VALUE
-                        )
-                        atkInstance.addTemporaryModifier(newModifier)
+                val totals = EquipmentPlayerSupport.getAggregatedStats(player)
+                if (totals.isNotEmpty()) {
+                    val bonuses = EquipmentStatCalculator.calculateAttributeBonuses(totals)
+                    updateModifier(
+                        attackInstance,
+                        CreSoraUtilities.PENDANT_ATTACK_FLAT_ID,
+                        bonuses.attackFlat,
+                        EntityAttributeModifier.Operation.ADD_VALUE
+                    )
+                    updateModifier(
+                        attackInstance,
+                        CreSoraUtilities.PENDANT_ATTACK_SCALAR_ID,
+                        bonuses.attackScalar,
+                        EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                    )
+                    updateModifier(
+                        healthInstance,
+                        CreSoraUtilities.PENDANT_HEALTH_FLAT_ID,
+                        bonuses.healthFlat,
+                        EntityAttributeModifier.Operation.ADD_VALUE
+                    )
+                    updateModifier(
+                        healthInstance,
+                        CreSoraUtilities.PENDANT_HEALTH_SCALAR_ID,
+                        bonuses.healthScalar,
+                        EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                    )
+                    updateModifier(
+                        armorInstance,
+                        CreSoraUtilities.PENDANT_ARMOR_FLAT_ID,
+                        bonuses.armorFlat,
+                        EntityAttributeModifier.Operation.ADD_VALUE
+                    )
+                    updateModifier(
+                        armorInstance,
+                        CreSoraUtilities.PENDANT_ARMOR_SCALAR_ID,
+                        bonuses.armorScalar,
+                        EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                    )
+                    if (player.health > player.maxHealth) {
+                        player.health = player.maxHealth
                     }
                 } else {
-                    if (hasModifier) {
-                        // ★★★ 修正点: removeModifierの引数がIdentifierになる ★★★
-                        atkInstance.removeModifier(PENDANT_ATTRIBUTE_ID)
+                    clearModifier(attackInstance, CreSoraUtilities.PENDANT_ATTACK_FLAT_ID)
+                    clearModifier(attackInstance, CreSoraUtilities.PENDANT_ATTACK_SCALAR_ID)
+                    clearModifier(healthInstance, CreSoraUtilities.PENDANT_HEALTH_FLAT_ID)
+                    clearModifier(healthInstance, CreSoraUtilities.PENDANT_HEALTH_SCALAR_ID)
+                    clearModifier(armorInstance, CreSoraUtilities.PENDANT_ARMOR_FLAT_ID)
+                    clearModifier(armorInstance, CreSoraUtilities.PENDANT_ARMOR_SCALAR_ID)
+                    if (player.health > player.maxHealth) {
+                        player.health = player.maxHealth
                     }
                 }
             }
@@ -118,8 +138,38 @@ class Hinagatas_Tue(settings: Settings) : atkItem(settings) {
      */
     override fun getDefaultStack(): ItemStack {
         val stack = super.getDefaultStack()
-        // デフォルトでレベル1のコンポーネントを付与する
-        stack.set(ModDataComponents.LEVEL, 1)
+        EquipmentStackSupport.syncPendantData(
+            stack,
+            EquipmentGenerationService.createPendant(net.minecraft.util.math.random.Random.create())
+        )
         return stack
+    }
+
+    private fun updateModifier(
+        instance: net.minecraft.entity.attribute.EntityAttributeInstance?,
+        id: net.minecraft.util.Identifier,
+        value: Double,
+        operation: EntityAttributeModifier.Operation
+    ) {
+        if (instance == null) {
+            return
+        }
+        if (value == 0.0) {
+            instance.removeModifier(id)
+            return
+        }
+        val existing = instance.getModifier(id)
+        if (existing != null && existing.value == value && existing.operation == operation) {
+            return
+        }
+        instance.removeModifier(id)
+        instance.addTemporaryModifier(EntityAttributeModifier(id, value, operation))
+    }
+
+    private fun clearModifier(
+        instance: net.minecraft.entity.attribute.EntityAttributeInstance?,
+        id: net.minecraft.util.Identifier
+    ) {
+        instance?.removeModifier(id)
     }
 }

@@ -193,6 +193,7 @@ class UpgradeScreen(
             "screen.cresora.upgrade.ready_tool" -> Text.translatable("screen.cresora.upgrade.ready_short")
             "screen.cresora.upgrade.ready_wand" -> Text.translatable("screen.cresora.upgrade.ready_short")
             "item.cresora.not_enough_xp" -> Text.translatable("screen.cresora.upgrade.no_xp_short")
+            "screen.cresora.upgrade.max_level" -> Text.translatable("screen.cresora.upgrade.max_level_short")
             else -> Text.empty()
         }
     }

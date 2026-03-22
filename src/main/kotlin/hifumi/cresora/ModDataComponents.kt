@@ -18,6 +18,15 @@ object ModDataComponents {
             .build()
     )
 
+    val EQUIPMENT_DATA: ComponentType<EquipmentData> = Registry.register(
+        Registries.DATA_COMPONENT_TYPE,
+        Identifier.of(CreSoraUtilities.MOD_ID, "equipment_data"),
+        ComponentType.builder<EquipmentData>()
+            .codec(EquipmentData.CODEC)
+            .packetCodec(PacketCodecs.registryCodec(EquipmentData.CODEC))
+            .build()
+    )
+
     // このメソッドをModの初期化時に呼ぶことで、クラスがロードされコンポーネントが登録される
     fun initialize() {}
 }

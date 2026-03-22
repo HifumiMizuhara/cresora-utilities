@@ -37,6 +37,11 @@ object UpgradeLogic {
         }
 
         val currentLevel = normalizePendantLevel(baseStack)
+        val baseData = EquipmentStackSupport.getEquipmentData(baseStack) ?: EquipmentStackSupport.defaultPendantData(currentLevel)
+        if (currentLevel >= baseData.rarity.maxLevel) {
+            return Preview(MaterialType.NONE, currentLevel, currentLevel, 0, false, "screen.cresora.upgrade.max_level")
+        }
+
         if (materialStack.isEmpty) {
             return Preview(MaterialType.NONE, currentLevel, currentLevel, 0, false, "screen.cresora.upgrade.insert_material")
         }
@@ -61,12 +66,13 @@ object UpgradeLogic {
 
         if (materialStack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) {
             val sacrificeLevel = normalizePendantLevel(materialStack)
-            val denominator = max(currentLevel, sacrificeLevel)
+            val levelGain = max(1, sacrificeLevel)
+            val denominator = max(1, max(currentLevel, levelGain))
             val successRate = 1000 / denominator
             return Preview(
                 MaterialType.PENDANT,
                 currentLevel,
-                currentLevel + sacrificeLevel,
+                (currentLevel + levelGain).coerceAtMost(baseData.rarity.maxLevel),
                 successRate,
                 true,
                 "screen.cresora.upgrade.ready_wand"
@@ -94,7 +100,11 @@ object UpgradeLogic {
             MaterialType.TUESHOKAKU -> {
                 materialStack.decrement(1)
                 if (success) {
-                    baseStack.set(ModDataComponents.LEVEL, preview.resultLevel)
+                    val baseData = EquipmentStackSupport.ensurePendantData(baseStack, player.random)
+                    EquipmentStackSupport.syncPendantData(
+                        baseStack,
+                        EquipmentUpgradeService.applyLevels(baseData, preview.resultLevel - baseData.level, player.random)
+                    )
                     AttemptResult(true, true, Text.translatable("item.cresora.tuelevelled", preview.currentLevel, preview.resultLevel))
                 } else {
                     AttemptResult(false, true, Text.translatable("item.cresora.tuelevelfailed").formatted(Formatting.RED))
@@ -104,7 +114,11 @@ object UpgradeLogic {
             MaterialType.PENDANT -> {
                 materialStack.decrement(1)
                 if (success) {
-                    baseStack.set(ModDataComponents.LEVEL, preview.resultLevel)
+                    val baseData = EquipmentStackSupport.ensurePendantData(baseStack, player.random)
+                    EquipmentStackSupport.syncPendantData(
+                        baseStack,
+                        EquipmentUpgradeService.applyLevels(baseData, preview.resultLevel - baseData.level, player.random)
+                    )
                     AttemptResult(true, true, Text.translatable("item.cresora.tuelevelled", preview.currentLevel, preview.resultLevel))
                 } else {
                     AttemptResult(false, true, Text.translatable("item.cresora.tuelevelfailed2").formatted(Formatting.RED))
@@ -116,11 +130,6 @@ object UpgradeLogic {
     }
 
     fun normalizePendantLevel(stack: ItemStack): Int {
-        val rawLevel = stack.getOrDefault(ModDataComponents.LEVEL, 1)
-        val normalizedLevel = rawLevel.coerceAtLeast(1)
-        if (rawLevel != normalizedLevel) {
-            stack.set(ModDataComponents.LEVEL, normalizedLevel)
-        }
-        return normalizedLevel
+        return EquipmentStackSupport.getCompatibilityLevel(stack)
     }
 }
