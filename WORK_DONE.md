@@ -107,6 +107,8 @@
 - Compressed `/cresora_stats` so all 10 supported buff stats remain visible with far fewer chat lines
 - Updated crit action-bar feedback to show the applied crit multiplier during combat
 - Re-verified the compressed stat command and crit-display changes with a successful `./gradlew build`
+- Added enemy-family-biased initial stat rolls so zombie, skeleton, and warden pendants now lean toward different build archetypes
+- Verified the mob-biased drop generation changes with a successful `./gradlew build`
 
 ## Current State
 

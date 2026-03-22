@@ -13,6 +13,6 @@
 - Re-run in-game verification that `hinagatastue` can be inserted into the Trinkets UI `necklace` slot after the explicit Trinket registration fallback
 - Re-run in-game verification of the player-facing `/cresora_stats` command in each supported language and confirm all 10 localized stat lines render cleanly
 - Re-run in-game verification of the revised drop tiers and confirm zombie, skeleton, and warden drops now match their intended rarity and level bands
+- Re-run in-game verification that zombie drops skew toward survival stats, skeleton drops skew toward offense/crit, and warden drops skew toward premium mixed stats
 - Re-run in-game combat verification of the new base crit profile and confirm the default `5%` crit chance feels correct with the current damage pacing
-- Add enemy-family-biased stat pools so different mobs are worth farming for different build archetypes
 - Expand combat feedback beyond crits so final-damage bonus and damage-reduction effects are easier to validate in live play

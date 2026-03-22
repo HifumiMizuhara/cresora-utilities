@@ -106,14 +106,15 @@ object CreSoraUtilities : ModInitializer {
 			}
 
 			when (key) {
-				EntityType.ZOMBIE.getLootTableKey().orElse(null) -> {
-					tableBuilder.pool(
-						createPendantLootPool(
-							chance = 0.2f,
-							levelProvider = UniformLootNumberProvider.create(0.0f, 2.0f),
-							rarity = EquipmentRarity.THREE_STAR
+					EntityType.ZOMBIE.getLootTableKey().orElse(null) -> {
+						tableBuilder.pool(
+							createPendantLootPool(
+								chance = 0.2f,
+								levelProvider = UniformLootNumberProvider.create(0.0f, 2.0f),
+								rarity = EquipmentRarity.THREE_STAR,
+								dropProfile = EquipmentDropProfile.ZOMBIE_SURVIVOR
+							)
 						)
-					)
 					tableBuilder.pool(
 						createUpgradeToolLootPool(
 							chance = 0.1f,
@@ -122,14 +123,15 @@ object CreSoraUtilities : ModInitializer {
 					)
 				}
 
-				EntityType.SKELETON.getLootTableKey().orElse(null) -> {
-					tableBuilder.pool(
-						createPendantLootPool(
-							chance = 0.2f,
-							levelProvider = UniformLootNumberProvider.create(2.0f, 5.0f),
-							rarity = EquipmentRarity.FOUR_STAR
+					EntityType.SKELETON.getLootTableKey().orElse(null) -> {
+						tableBuilder.pool(
+							createPendantLootPool(
+								chance = 0.2f,
+								levelProvider = UniformLootNumberProvider.create(2.0f, 5.0f),
+								rarity = EquipmentRarity.FOUR_STAR,
+								dropProfile = EquipmentDropProfile.SKELETON_ASSAULT
+							)
 						)
-					)
 					tableBuilder.pool(
 						createUpgradeToolLootPool(
 							chance = 0.12f,
@@ -138,15 +140,16 @@ object CreSoraUtilities : ModInitializer {
 					)
 				}
 
-				EntityType.WARDEN.getLootTableKey().orElse(null) -> {
-					tableBuilder.pool(
-						createPendantLootPool(
-							chance = 1.0f,
-							levelProvider = UniformLootNumberProvider.create(8.0f, 12.0f),
-							rarity = EquipmentRarity.FIVE_STAR
+					EntityType.WARDEN.getLootTableKey().orElse(null) -> {
+						tableBuilder.pool(
+							createPendantLootPool(
+								chance = 1.0f,
+								levelProvider = UniformLootNumberProvider.create(8.0f, 12.0f),
+								rarity = EquipmentRarity.FIVE_STAR,
+								dropProfile = EquipmentDropProfile.WARDEN_RELIC
+							)
 						)
-					)
-				}
+					}
 			}
 		}
 	}
@@ -154,14 +157,15 @@ object CreSoraUtilities : ModInitializer {
 	private fun createPendantLootPool(
 		chance: Float,
 		levelProvider: LootNumberProvider,
-		rarity: EquipmentRarity
+		rarity: EquipmentRarity,
+		dropProfile: EquipmentDropProfile
 	): LootPool {
 		return LootPool.builder()
 			.rolls(ConstantLootNumberProvider.create(1.0f))
 			.conditionally(RandomChanceLootCondition.builder(chance))
 			.with(ItemEntry.builder(STRENGTH_PENDANT))
 			.apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 1.0f)))
-			.apply(SetLevelLootFunction(levelProvider, rarity))
+			.apply(SetLevelLootFunction(levelProvider, rarity, dropProfile))
 			.build()
 	}
 
@@ -180,7 +184,8 @@ object CreSoraUtilities : ModInitializer {
 }
 class SetLevelLootFunction(
 	val levelProvider: LootNumberProvider,
-	val forcedRarity: EquipmentRarity? = null
+	val forcedRarity: EquipmentRarity? = null,
+	val dropProfile: EquipmentDropProfile? = null
 ) : LootFunction {
 
 	// このLootFunctionのタイプ（登録に必要）
@@ -195,27 +200,30 @@ class SetLevelLootFunction(
 		if (stack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) {
 			EquipmentStackSupport.syncPendantData(
 				stack,
-				EquipmentGenerationService.createPendant(
-					random = context.random,
-					startingLevel = randomLevel,
-					forcedRarity = forcedRarity
+					EquipmentGenerationService.createPendant(
+						random = context.random,
+						startingLevel = randomLevel,
+						forcedRarity = forcedRarity,
+						dropProfile = dropProfile
+					)
 				)
-			)
-		}
+			}
 		return stack
 	}
 
 	// このLootFunctionをシリアライズ（データ化）/デシリアライズ（復元）する方法を定義
 	companion object {
 		// 'level_provider'という名前でLootNumberProviderをコーデックに含める
-		val CODEC: MapCodec<SetLevelLootFunction> = RecordCodecBuilder.mapCodec { instance ->
-			instance.group(
-				LootNumberProviderTypes.CODEC.fieldOf("level_provider").forGetter(SetLevelLootFunction::levelProvider),
-				EquipmentRarity.CODEC.optionalFieldOf("forced_rarity")
-					.forGetter { Optional.ofNullable(it.forcedRarity) }
-			).apply(instance) { levelProvider, forcedRarity ->
-				SetLevelLootFunction(levelProvider, forcedRarity.orElse(null))
+			val CODEC: MapCodec<SetLevelLootFunction> = RecordCodecBuilder.mapCodec { instance ->
+				instance.group(
+					LootNumberProviderTypes.CODEC.fieldOf("level_provider").forGetter(SetLevelLootFunction::levelProvider),
+					EquipmentRarity.CODEC.optionalFieldOf("forced_rarity")
+						.forGetter { Optional.ofNullable(it.forcedRarity) },
+					EquipmentDropProfile.CODEC.optionalFieldOf("drop_profile")
+						.forGetter { Optional.ofNullable(it.dropProfile) }
+				).apply(instance) { levelProvider, forcedRarity, dropProfile ->
+					SetLevelLootFunction(levelProvider, forcedRarity.orElse(null), dropProfile.orElse(null))
+				}
 			}
 		}
 	}
-}
