@@ -4,7 +4,10 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ExampleMixin",
+		"ItemEntityMixin",
 		"LivingEntityMixin",
+		"MobEntityMixin",
+		"ServerPlayerEntityMixin",
 		"PlayerEntityMixin"
 	],
 	"injectors": {

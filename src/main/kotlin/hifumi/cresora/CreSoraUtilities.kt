@@ -72,6 +72,7 @@ object CreSoraUtilities : ModInitializer {
 		)
 		Join.init()
 		Commands.init()
+		AdventureRankHooks.init()
 		modifyLootTables()
 
 		Registry.register(Registries.ITEM, HINAGATASTUE_ID, STRENGTH_PENDANT)
@@ -193,21 +194,38 @@ class SetLevelLootFunction(
 
 	// アイテムがドロップされる瞬間に呼び出されるメインの処理
 	override fun apply(stack: ItemStack, context: LootContext): ItemStack {
+		val player = when {
+			context.hasParameter(net.minecraft.loot.context.LootContextParameters.LAST_DAMAGE_PLAYER) ->
+				context.get(net.minecraft.loot.context.LootContextParameters.LAST_DAMAGE_PLAYER) as? net.minecraft.server.network.ServerPlayerEntity
+			context.hasParameter(net.minecraft.loot.context.LootContextParameters.ATTACKING_ENTITY) ->
+				context.get(net.minecraft.loot.context.LootContextParameters.ATTACKING_ENTITY) as? net.minecraft.server.network.ServerPlayerEntity
+			else -> null
+		}
+		val adventureRank = player?.let { AdventureRankService.getRank(it) } ?: AdventureRankProgression.MIN_RANK
+		val lootBonus = AdventureRankProfile.lootBonus(adventureRank)
 		// levelProviderを使ってランダムな数値を生成し、Intに変換する
-		val randomLevel = levelProvider.nextInt(context)
+		val randomLevel = (levelProvider.nextInt(context) + lootBonus.levelBonus).coerceAtLeast(0)
 		// アイテムの'level'コンポーネントに設定する
 		stack.set(ModDataComponents.LEVEL, randomLevel)
 		if (stack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) {
+			val baseRarity = forcedRarity ?: EquipmentStackSupport.rarityForLevel(randomLevel)
+			val scaledRarity = AdventureRankProfile.upgradeRarity(baseRarity, adventureRank, context.random)
 			EquipmentStackSupport.syncPendantData(
 				stack,
 					EquipmentGenerationService.createPendant(
 						random = context.random,
 						startingLevel = randomLevel,
-						forcedRarity = forcedRarity,
+						forcedRarity = scaledRarity,
 						dropProfile = dropProfile
 					)
 				)
+		}
+		if (stack.isIn(ModItemTags.ADVENTURE_RANK_UPGRADE_MATERIALS)) {
+			val extraCount = AdventureRankProfile.extraUpgradeMaterialCount(adventureRank, context.random)
+			if (extraCount > 0) {
+				stack.count = stack.count + extraCount
 			}
+		}
 		return stack
 	}
 

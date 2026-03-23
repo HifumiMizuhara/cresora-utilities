@@ -1,7 +1,9 @@
 package hifumi.cresora.mixin;
 
+import hifumi.cresora.AdventureRankService;
 import hifumi.cresora.EquipmentPlayerSupport;
 import hifumi.cresora.StatType;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
@@ -15,7 +17,11 @@ import java.util.Locale;
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin {
     @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
-    private float cresora$applyDamageReduction(float amount) {
+    private float cresora$applyCombatScaling(float amount, net.minecraft.server.world.ServerWorld world, DamageSource source) {
+        double enemyMultiplier = AdventureRankService.INSTANCE.damageMultiplier(source);
+        if (enemyMultiplier > 1.0D) {
+            amount = (float) (amount * enemyMultiplier);
+        }
         if (!((Object) this instanceof PlayerEntity player)) {
             return amount;
         }

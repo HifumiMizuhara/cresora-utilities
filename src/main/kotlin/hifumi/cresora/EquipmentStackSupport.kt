@@ -26,7 +26,7 @@ object EquipmentStackSupport {
     fun defaultPendantData(level: Int = 1): EquipmentData {
         val normalizedLevel = level.coerceAtLeast(0)
         return EquipmentData(
-            rarity = legacyRarityForLevel(normalizedLevel),
+            rarity = rarityForLevel(normalizedLevel),
             level = normalizedLevel,
             mainStat = StatEntry(StatType.ATK_FLAT, 3.0 + normalizedLevel * 1.4),
             subStats = emptyList(),
@@ -45,7 +45,7 @@ object EquipmentStackSupport {
             random != null -> EquipmentGenerationService.createPendant(
                 random = random,
                 startingLevel = legacyLevel,
-                forcedRarity = legacyRarityForLevel(legacyLevel)
+                forcedRarity = rarityForLevel(legacyLevel)
             )
             else -> defaultPendantData(legacyLevel)
         }
@@ -78,7 +78,7 @@ object EquipmentStackSupport {
         return synced
     }
 
-    private fun legacyRarityForLevel(level: Int): EquipmentRarity {
+    fun rarityForLevel(level: Int): EquipmentRarity {
         return when {
             level <= EquipmentRarity.THREE_STAR.maxLevel -> EquipmentRarity.THREE_STAR
             level <= EquipmentRarity.FOUR_STAR.maxLevel -> EquipmentRarity.FOUR_STAR

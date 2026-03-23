@@ -111,6 +111,21 @@
 - Verified the mob-biased drop generation changes with a successful `./gradlew build`
 - Added action-bar combat feedback for outgoing damage bonus and incoming damage reduction
 - Re-verified the expanded combat feedback with a successful `./gradlew build`
+- Removed the non-critical outgoing-damage action-bar spam so crit feedback remains visible during live combat
+- Updated the crit-combo action-bar text ordering across all supported languages
+
+## Adventure Rank System
+
+- Added a player-specific `Adventure Rank` progression layer with persistent rank and rank XP storage
+- Added reusable adventure-rank progression and profile services so future artifact slots can hook into the same scaling backend
+- Added item-tag-based reward classification so future artifact categories can contribute to rank XP without rewriting the rank core
+- Added hostile-mob scaling that assigns nearby-player-based rank tiers and boosts enemy health and outgoing damage
+- Added adventure-rank-aware loot scaling for pendant level, rarity upgrades, and upgrade-material extra drops
+- Added rank XP gain from hostile kills and ground pickup of tagged artifacts / upgrade materials
+- Added the player-facing `/cresora_rank` command plus `op` subcommands for rank testing and manual progression control
+- Added adventure-rank summary output to `/cresora_stats`
+- Added localized adventure-rank command and stat text for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
+- Verified the adventure-rank implementation with a successful `./gradlew build`
 
 ## Current State
 
