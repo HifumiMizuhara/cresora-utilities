@@ -1,8 +1,11 @@
 package hifumi.cresora
 
+import net.minecraft.entity.EntityType
 import net.minecraft.util.math.random.Random
 
 object AdventureRankProfile {
+    const val MOB_HEALTH_CAP: Double = 500.0
+
     data class LootBonus(
         val levelBonus: Int,
         val rarityUpgradeChance: Double,
@@ -10,9 +13,43 @@ object AdventureRankProfile {
         val bonusExtraCountChance: Double
     )
 
+    data class DefenseBonus(
+        val armorFlat: Double,
+        val toughnessFlat: Double
+    )
+
     fun healthMultiplier(rank: Int): Double {
         val normalized = AdventureRankProgression.sanitizeRank(rank)
         return 1.0 + (normalized - 1) * 0.18
+    }
+
+    fun healthMultiplier(entityType: EntityType<*>, rank: Int): Double {
+        val normalized = AdventureRankProgression.sanitizeRank(rank)
+        val step = normalized - 1
+        return when (entityType) {
+            EntityType.WARDEN -> 1.0 + step * 0.03
+            EntityType.SKELETON -> 1.0 + step * 0.15
+            EntityType.ZOMBIE -> 1.0 + step * 0.18
+            else -> 1.0 + step * 0.12
+        }
+    }
+
+    fun defenseOverflow(entityType: EntityType<*>, overflowHealth: Double): DefenseBonus {
+        if (overflowHealth <= 0.0) {
+            return DefenseBonus(0.0, 0.0)
+        }
+
+        val coefficient = when (entityType) {
+            EntityType.WARDEN -> 1.40
+            EntityType.SKELETON -> 0.90
+            EntityType.ZOMBIE -> 1.00
+            else -> 0.80
+        }
+
+        return DefenseBonus(
+            armorFlat = (overflowHealth / 20.0) * coefficient,
+            toughnessFlat = (overflowHealth / 80.0) * coefficient
+        )
     }
 
     fun damageMultiplier(rank: Int): Double {

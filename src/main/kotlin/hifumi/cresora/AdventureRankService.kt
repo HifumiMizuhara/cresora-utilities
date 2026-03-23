@@ -10,6 +10,8 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.abs
 
 object AdventureRankService {
     private const val PLAYER_RANK_KEY = "cresora_adventure_rank"
@@ -18,6 +20,8 @@ object AdventureRankService {
     private const val SEARCH_RADIUS = 64.0
 
     private val MOB_HEALTH_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_health_scalar")
+    private val MOB_ARMOR_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_armor_bonus")
+    private val MOB_TOUGHNESS_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_toughness_bonus")
 
     fun playerRankKey(): String = PLAYER_RANK_KEY
 
@@ -134,12 +138,19 @@ object AdventureRankService {
     fun applyMobScaling(entity: HostileEntity, rank: Int) {
         val normalizedRank = AdventureRankProgression.sanitizeRank(rank)
         val maxHealthInstance = entity.attributes.getCustomInstance(EntityAttributes.MAX_HEALTH) ?: return
+        val armorInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR)
+        val toughnessInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR_TOUGHNESS)
         val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
         val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
-        val modifierValue = AdventureRankProfile.healthMultiplier(normalizedRank) - 1.0
+        val baseMaxHealth = maxHealthInstance.baseValue.coerceAtLeast(1.0)
+        val rawMultiplier = AdventureRankProfile.healthMultiplier(entity.type, normalizedRank)
+        val rawTargetHealth = baseMaxHealth * rawMultiplier
+        val targetHealth = min(rawTargetHealth, AdventureRankProfile.MOB_HEALTH_CAP)
+        val overflowHealth = max(0.0, rawTargetHealth - targetHealth)
+        val modifierValue = targetHealth / baseMaxHealth - 1.0
 
         maxHealthInstance.removeModifier(MOB_HEALTH_SCALAR_ID)
-        if (modifierValue > 0.0) {
+        if (abs(modifierValue) > 1.0e-6) {
             maxHealthInstance.addTemporaryModifier(
                 EntityAttributeModifier(
                     MOB_HEALTH_SCALAR_ID,
@@ -149,7 +160,32 @@ object AdventureRankService {
             )
         }
 
-        val scaledHealth = max(1.0, entity.maxHealth.toDouble() * healthRatio)
+        armorInstance?.removeModifier(MOB_ARMOR_BONUS_ID)
+        toughnessInstance?.removeModifier(MOB_TOUGHNESS_BONUS_ID)
+
+        if (overflowHealth > 0.0) {
+            val bonus = AdventureRankProfile.defenseOverflow(entity.type, overflowHealth)
+            if (bonus.armorFlat > 0.0) {
+                armorInstance?.addTemporaryModifier(
+                    EntityAttributeModifier(
+                        MOB_ARMOR_BONUS_ID,
+                        bonus.armorFlat,
+                        EntityAttributeModifier.Operation.ADD_VALUE
+                    )
+                )
+            }
+            if (bonus.toughnessFlat > 0.0) {
+                toughnessInstance?.addTemporaryModifier(
+                    EntityAttributeModifier(
+                        MOB_TOUGHNESS_BONUS_ID,
+                        bonus.toughnessFlat,
+                        EntityAttributeModifier.Operation.ADD_VALUE
+                    )
+                )
+            }
+        }
+
+        val scaledHealth = max(1.0, targetHealth * healthRatio)
         entity.health = scaledHealth.toFloat()
     }
 

@@ -120,6 +120,8 @@
 - Added reusable adventure-rank progression and profile services so future artifact slots can hook into the same scaling backend
 - Added item-tag-based reward classification so future artifact categories can contribute to rank XP without rewriting the rank core
 - Added hostile-mob scaling that assigns nearby-player-based rank tiers and boosts enemy health and outgoing damage
+- Added a hard enemy HP clamp at `500` and converted overflow HP into armor and toughness bonuses instead of letting health keep climbing
+- Added mob-type-specific enemy health curves, including a separate Warden curve
 - Added adventure-rank-aware loot scaling for pendant level, rarity upgrades, and upgrade-material extra drops
 - Added rank XP gain from hostile kills and ground pickup of tagged artifacts / upgrade materials
 - Added the player-facing `/cresora_rank` command plus `op` subcommands for rank testing and manual progression control

@@ -14,6 +14,7 @@
 - Re-run in-game verification of the player-facing `/cresora_stats` command in each supported language and confirm all 10 localized stat lines render cleanly
 - Re-run in-game verification of `/cresora_rank` and confirm rank progression, admin overrides, and localized output all behave correctly
 - Re-run in-game verification that adventure-rank-based enemy HP scaling prevents easy one-shots without feeling too tanky
+- Re-run in-game verification of the new `500` HP clamp and overflow-to-defense conversion, especially on Warden-tier mobs
 - Re-run in-game verification that adventure-rank-based enemy outgoing damage still feels fair with current `damage_reduction` values
 - Re-run in-game verification that adventure-rank loot scaling feels appropriate for zombies, skeletons, and wardens at low and high ranks
 - Decide whether nearby-player highest-rank mob assignment should remain the long-term multiplayer rule or become configurable later
