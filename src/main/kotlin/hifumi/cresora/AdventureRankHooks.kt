@@ -3,6 +3,7 @@ package hifumi.cresora
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.server.network.ServerPlayerEntity
 
@@ -22,6 +23,10 @@ object AdventureRankHooks {
 
         ServerPlayerEvents.COPY_FROM.register(ServerPlayerEvents.CopyFrom { oldPlayer, newPlayer, _ ->
             AdventureRankService.copyTo(oldPlayer, newPlayer)
+        })
+
+        ServerTickEvents.END_WORLD_TICK.register(ServerTickEvents.EndWorldTick { world ->
+            CombatMobDisplayService.tick(world)
         })
     }
 }

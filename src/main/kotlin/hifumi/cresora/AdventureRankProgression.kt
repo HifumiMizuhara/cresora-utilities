@@ -2,9 +2,7 @@ package hifumi.cresora
 
 object AdventureRankProgression {
     const val MIN_RANK: Int = 1
-    const val MAX_RANK: Int = 10
-
-    private val REQUIRED_XP = intArrayOf(100, 180, 280, 400, 550, 730, 940, 1180, 1450)
+    const val MAX_RANK: Int = 70
 
     data class Progress(
         val rank: Int,
@@ -23,7 +21,21 @@ object AdventureRankProgression {
         if (normalized >= MAX_RANK) {
             return null
         }
-        return REQUIRED_XP[normalized - MIN_RANK]
+        val step = normalized - MIN_RANK
+        return when {
+            step < 10 -> 100 + step * 25
+            step < 20 -> 350 + (step - 10) * 40
+            step < 35 -> 750 + (step - 20) * 65
+            step < 50 -> 1725 + (step - 35) * 95
+            else -> 3150 + (step - 50) * 130
+        }
+    }
+
+    fun normalizedProgress(rank: Int): Double {
+        if (MAX_RANK <= MIN_RANK) {
+            return 0.0
+        }
+        return (sanitizeRank(rank) - MIN_RANK).toDouble() / (MAX_RANK - MIN_RANK).toDouble()
     }
 
     fun normalize(rank: Int, xp: Int): Progress {

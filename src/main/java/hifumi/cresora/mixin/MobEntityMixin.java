@@ -2,6 +2,7 @@ package hifumi.cresora.mixin;
 
 import hifumi.cresora.AdventureRankMobAccess;
 import hifumi.cresora.AdventureRankService;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
@@ -26,6 +27,19 @@ public class MobEntityMixin implements AdventureRankMobAccess {
     @Inject(method = "readCustomData", at = @At("TAIL"))
     private void cresora$readMobAdventureRank(ReadView view, CallbackInfo ci) {
         this.cresora$mobAdventureRank = view.getInt(AdventureRankService.INSTANCE.mobRankKey(), 0);
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void cresora$refreshMobDisplay(CallbackInfo ci) {
+        if (!((Object)this instanceof HostileEntity hostile)) {
+            return;
+        }
+        if (hostile.getWorld().isClient()) {
+            return;
+        }
+        if (hostile.age % 10 == 0) {
+            AdventureRankService.INSTANCE.refreshMobDisplay(hostile);
+        }
     }
 
     @Override

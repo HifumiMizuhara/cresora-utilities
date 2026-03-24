@@ -83,6 +83,7 @@
   "commands.cresora.rank.set_feedback": "%s adventure rank set to %s.",
   "commands.cresora.rank.addxp_feedback": "%s gained %s rank XP. Rank %s | XP %s / %s",
   "commands.cresora.rank.setxp_feedback": "%s rank XP set to %s. Rank %s | XP %s / %s",
+  "combat.cresora.mob_label": "Lv %s %s HP %s / %s",
   "combat.cresora.damage_combo": "CRIT! x%s / DMG x%s",
   "combat.cresora.damage_reduced": "DMG taken x%s",
   "combat.cresora.crit_triggered": "CRIT! x%s",

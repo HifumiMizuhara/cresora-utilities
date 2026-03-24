@@ -77,6 +77,7 @@
   "commands.cresora.rank.set_feedback": "已設 %s 之冒險等第為 %s。",
   "commands.cresora.rank.addxp_feedback": "已益 %s 等第XP %s。等第 %s | XP %s / %s",
   "commands.cresora.rank.setxp_feedback": "已設 %s 之等第XP為 %s。等第 %s | XP %s / %s",
+  "combat.cresora.mob_label": "Lv %s %s HP %s / %s",
   "combat.cresora.damage_combo": "會心！x%s / 萬傷 x%s",
   "combat.cresora.damage_reduced": "減傷 x%s",
   "combat.cresora.crit_triggered": "會心！x%s",

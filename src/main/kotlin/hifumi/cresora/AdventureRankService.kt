@@ -1,6 +1,7 @@
 package hifumi.cresora
 
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.damage.DamageSource
@@ -115,12 +116,8 @@ object AdventureRankService {
     }
 
     fun hostileKillXp(entity: HostileEntity): Int {
-        return when (entity.type) {
-            net.minecraft.entity.EntityType.ZOMBIE -> 8
-            net.minecraft.entity.EntityType.SKELETON -> 12
-            net.minecraft.entity.EntityType.WARDEN -> 180
-            else -> 10
-        }
+        val rank = (entity as? AdventureRankMobAccess)?.cresoraGetMobAdventureRank() ?: AdventureRankProgression.MIN_RANK
+        return AdventureRankProfile.killXp(entity.type, rank)
     }
 
     fun getOrAssignMobRank(entity: HostileEntity, world: ServerWorld): Int {
@@ -163,30 +160,29 @@ object AdventureRankService {
         armorInstance?.removeModifier(MOB_ARMOR_BONUS_ID)
         toughnessInstance?.removeModifier(MOB_TOUGHNESS_BONUS_ID)
 
-        if (overflowHealth > 0.0) {
-            val bonus = AdventureRankProfile.defenseOverflow(entity.type, overflowHealth)
-            if (bonus.armorFlat > 0.0) {
-                armorInstance?.addTemporaryModifier(
-                    EntityAttributeModifier(
-                        MOB_ARMOR_BONUS_ID,
-                        bonus.armorFlat,
-                        EntityAttributeModifier.Operation.ADD_VALUE
-                    )
+        val bonus = AdventureRankProfile.defenseBonus(entity.type, normalizedRank, overflowHealth)
+        if (bonus.armorFlat > 0.0) {
+            armorInstance?.addTemporaryModifier(
+                EntityAttributeModifier(
+                    MOB_ARMOR_BONUS_ID,
+                    bonus.armorFlat,
+                    EntityAttributeModifier.Operation.ADD_VALUE
                 )
-            }
-            if (bonus.toughnessFlat > 0.0) {
-                toughnessInstance?.addTemporaryModifier(
-                    EntityAttributeModifier(
-                        MOB_TOUGHNESS_BONUS_ID,
-                        bonus.toughnessFlat,
-                        EntityAttributeModifier.Operation.ADD_VALUE
-                    )
+            )
+        }
+        if (bonus.toughnessFlat > 0.0) {
+            toughnessInstance?.addTemporaryModifier(
+                EntityAttributeModifier(
+                    MOB_TOUGHNESS_BONUS_ID,
+                    bonus.toughnessFlat,
+                    EntityAttributeModifier.Operation.ADD_VALUE
                 )
-            }
+            )
         }
 
         val scaledHealth = max(1.0, targetHealth * healthRatio)
         entity.health = scaledHealth.toFloat()
+        CombatMobDisplayService.updateMobStatus(entity)
     }
 
     fun damageMultiplier(source: DamageSource): Double {
@@ -201,7 +197,25 @@ object AdventureRankService {
         if (storedRank <= 0) {
             return 1.0
         }
-        return AdventureRankProfile.damageMultiplier(storedRank)
+        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank)
+    }
+
+    fun mobRank(entity: HostileEntity): Int {
+        val access = entity as? AdventureRankMobAccess ?: return AdventureRankProgression.MIN_RANK
+        return AdventureRankProgression.sanitizeRank(access.cresoraGetMobAdventureRank())
+    }
+
+    fun mobLevel(entity: HostileEntity): Int = mobRank(entity)
+
+    fun refreshMobDisplay(entity: HostileEntity) {
+        CombatMobDisplayService.updateMobStatus(entity)
+    }
+
+    fun showMobDamage(target: LivingEntity, source: DamageSource, damage: Float) {
+        if (damage <= 0.0f) {
+            return
+        }
+        CombatMobDisplayService.showDamage(target, source, damage.toDouble())
     }
 
     private fun findHighestNearbyRank(world: ServerWorld, x: Double, y: Double, z: Double): Int {

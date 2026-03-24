@@ -13,8 +13,12 @@
 - Re-run in-game verification that `hinagatastue` can be inserted into the Trinkets UI `necklace` slot after the explicit Trinket registration fallback
 - Re-run in-game verification of the player-facing `/cresora_stats` command in each supported language and confirm all 10 localized stat lines render cleanly
 - Re-run in-game verification of `/cresora_rank` and confirm rank progression, admin overrides, and localized output all behave correctly
+- Re-run in-game verification that hostile mobs now show `Lv` and live `HP` above their heads without causing visual clutter in crowded fights
+- Re-run in-game verification that floating damage numbers render correctly for melee and projectile hits and disappear cleanly
+- Re-run in-game verification that Adventure Rank `70` progression pace feels reasonable from early game to endgame
 - Re-run in-game verification that adventure-rank-based enemy HP scaling prevents easy one-shots without feeling too tanky
 - Re-run in-game verification of the new `500` HP clamp and overflow-to-defense conversion, especially on Warden-tier mobs
+- Re-run in-game verification that the new rank-based base-defense curve prevents one-shots without making low-tier mobs feel spongey
 - Re-run in-game verification that adventure-rank-based enemy outgoing damage still feels fair with current `damage_reduction` values
 - Re-run in-game verification that adventure-rank loot scaling feels appropriate for zombies, skeletons, and wardens at low and high ranks
 - Decide whether nearby-player highest-rank mob assignment should remain the long-term multiplayer rule or become configurable later

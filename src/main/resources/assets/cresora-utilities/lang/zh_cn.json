@@ -83,6 +83,7 @@
   "commands.cresora.rank.set_feedback": "已将 %s 的冒险等级设为 %s。",
   "commands.cresora.rank.addxp_feedback": "已为 %s 增加 %s 点等级XP。等级 %s | XP %s / %s",
   "commands.cresora.rank.setxp_feedback": "已将 %s 的等级XP设为 %s。等级 %s | XP %s / %s",
+  "combat.cresora.mob_label": "Lv %s %s HP %s / %s",
   "combat.cresora.damage_combo": "暴击! x%s / 伤害 x%s",
   "combat.cresora.damage_reduced": "受伤 x%s",
   "combat.cresora.crit_triggered": "暴击! x%s",

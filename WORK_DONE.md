@@ -122,6 +122,10 @@
 - Added hostile-mob scaling that assigns nearby-player-based rank tiers and boosts enemy health and outgoing damage
 - Added a hard enemy HP clamp at `500` and converted overflow HP into armor and toughness bonuses instead of letting health keep climbing
 - Added mob-type-specific enemy health curves, including a separate Warden curve
+- Extended adventure-rank progression from `10` to `70` and replaced the short fixed XP table with a long-form rank curve
+- Rebalanced hostile scaling so higher ranks add moderate HP plus rank-based defense instead of relying on raw HP inflation
+- Added hostile overhead labels that show live `Lv` and current `HP / Max HP`
+- Added floating damage numbers above hostile mobs on successful hits
 - Added adventure-rank-aware loot scaling for pendant level, rarity upgrades, and upgrade-material extra drops
 - Added rank XP gain from hostile kills and ground pickup of tagged artifacts / upgrade materials
 - Added the player-facing `/cresora_rank` command plus `op` subcommands for rank testing and manual progression control
