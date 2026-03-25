@@ -14,12 +14,16 @@ object EquipmentStatCalculator {
         val armorScalar: Double
     )
 
-    fun aggregate(data: EquipmentData): Map<StatType, Double> {
+    fun aggregate(entries: Iterable<StatEntry>): Map<StatType, Double> {
         val totals = EnumMap<StatType, Double>(StatType::class.java)
-        for (entry in listOf(data.mainStat) + data.subStats) {
+        for (entry in entries) {
             totals[entry.type] = (totals[entry.type] ?: 0.0) + entry.value
         }
         return totals
+    }
+
+    fun aggregate(data: EquipmentData): Map<StatType, Double> {
+        return aggregate(listOf(data.mainStat) + data.subStats)
     }
 
     fun calculateAttributeBonuses(data: EquipmentData): AttributeBonuses {

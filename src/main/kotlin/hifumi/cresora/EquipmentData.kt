@@ -8,7 +8,9 @@ data class EquipmentData(
     val level: Int,
     val mainStat: StatEntry,
     val subStats: List<StatEntry>,
-    val upgradeCount: Int
+    val upgradeCount: Int,
+    val slotType: EquipmentSlotType = EquipmentSlotType.WAND,
+    val setId: EquipmentSet = EquipmentSet.HINAGATA
 ) {
     fun normalized(): EquipmentData {
         val normalizedMainStat = mainStat.normalized()
@@ -35,7 +37,9 @@ data class EquipmentData(
                 Codec.INT.fieldOf("level").forGetter(EquipmentData::level),
                 StatEntry.CODEC.fieldOf("mainStat").forGetter(EquipmentData::mainStat),
                 StatEntry.CODEC.listOf().fieldOf("subStats").forGetter(EquipmentData::subStats),
-                Codec.INT.fieldOf("upgradeCount").forGetter(EquipmentData::upgradeCount)
+                Codec.INT.fieldOf("upgradeCount").forGetter(EquipmentData::upgradeCount),
+                EquipmentSlotType.CODEC.optionalFieldOf("slotType", EquipmentSlotType.WAND).forGetter(EquipmentData::slotType),
+                EquipmentSet.CODEC.optionalFieldOf("setId", EquipmentSet.HINAGATA).forGetter(EquipmentData::setId)
             ).apply(instance, ::EquipmentData)
         }
     }

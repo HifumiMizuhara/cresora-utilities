@@ -31,17 +31,17 @@ class UpgradeScreenHandler(
 
     init {
         addSlot(object : Slot(upgradeInventory, TARGET_SLOT, 27, 30) {
-            override fun canInsert(stack: ItemStack): Boolean = stack.isOf(CreSoraUtilities.STRENGTH_PENDANT)
+            override fun canInsert(stack: ItemStack): Boolean = EquipmentStackSupport.isEquipment(stack)
             override fun getMaxItemCount(): Int = 1
             override fun getBackgroundSprite(): Identifier? = null
         })
         addSlot(object : Slot(upgradeInventory, MATERIAL_SLOT, 76, 30) {
             override fun canInsert(stack: ItemStack): Boolean {
-                return stack.isOf(CreSoraUtilities.TUESHOKAKU) || stack.isOf(CreSoraUtilities.STRENGTH_PENDANT)
+                return stack.isOf(CreSoraUtilities.TUESHOKAKU) || EquipmentStackSupport.isEquipment(stack)
             }
 
             override fun getMaxItemCount(stack: ItemStack): Int {
-                return if (stack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) 1 else super.getMaxItemCount(stack)
+                return if (EquipmentStackSupport.isEquipment(stack)) 1 else super.getMaxItemCount(stack)
             }
 
             override fun getBackgroundSprite(): Identifier? = null
@@ -71,8 +71,8 @@ class UpgradeScreenHandler(
             }
         } else {
             val targetIndex = when {
-                originalStack.isOf(CreSoraUtilities.STRENGTH_PENDANT) && !slots[TARGET_SLOT].hasStack() -> TARGET_SLOT
-                (originalStack.isOf(CreSoraUtilities.TUESHOKAKU) || originalStack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) -> MATERIAL_SLOT
+                EquipmentStackSupport.isEquipment(originalStack) && !slots[TARGET_SLOT].hasStack() -> TARGET_SLOT
+                (originalStack.isOf(CreSoraUtilities.TUESHOKAKU) || EquipmentStackSupport.isEquipment(originalStack)) -> MATERIAL_SLOT
                 else -> return ItemStack.EMPTY
             }
 
@@ -132,7 +132,7 @@ class UpgradeScreenHandler(
     private fun tryMoveSelectedWand() {
         val selectedSlot = playerInventory.selectedSlot
         val selectedStack = playerInventory.getStack(selectedSlot)
-        if (!selectedStack.isOf(CreSoraUtilities.STRENGTH_PENDANT) || slots[TARGET_SLOT].hasStack()) {
+        if (!EquipmentStackSupport.isEquipment(selectedStack) || slots[TARGET_SLOT].hasStack()) {
             return
         }
 

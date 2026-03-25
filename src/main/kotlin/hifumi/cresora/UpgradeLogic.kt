@@ -32,7 +32,7 @@ object UpgradeLogic {
     )
 
     fun getPreview(baseStack: ItemStack, materialStack: ItemStack, player: PlayerEntity?): Preview {
-        if (!baseStack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) {
+        if (!EquipmentStackSupport.isEquipment(baseStack)) {
             return Preview(MaterialType.NONE, 0, 0, 0, false, "screen.cresora.upgrade.need_base")
         }
 
@@ -64,7 +64,7 @@ object UpgradeLogic {
             )
         }
 
-        if (materialStack.isOf(CreSoraUtilities.STRENGTH_PENDANT)) {
+        if (EquipmentStackSupport.isEquipment(materialStack)) {
             val sacrificeLevel = normalizePendantLevel(materialStack)
             val levelGain = max(1, sacrificeLevel)
             val denominator = max(1, max(currentLevel, levelGain))

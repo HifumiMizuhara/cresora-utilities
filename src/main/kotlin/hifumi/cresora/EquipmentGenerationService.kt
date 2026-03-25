@@ -3,23 +3,27 @@ package hifumi.cresora
 import net.minecraft.util.math.random.Random
 
 object EquipmentGenerationService {
-    private val MAIN_STAT_POOL = StatType.entries.filter(StatType::allowedAsMainStat)
     private val SUB_STAT_POOL = StatType.entries
 
-    fun createPendant(
+    fun createEquipment(
         random: Random,
+        definition: EquipmentDefinition,
         startingLevel: Int = 0,
         forcedRarity: EquipmentRarity? = null,
         dropProfile: EquipmentDropProfile? = null
     ): EquipmentData {
         val rarity = forcedRarity ?: rollRarity(random)
-        val mainType = rollWeightedStat(MAIN_STAT_POOL, random) { type -> dropProfile?.mainWeight(type) ?: 1.0 }
+        val mainType = rollWeightedStat(definition.slotType.mainStatCandidates, random) { type ->
+            definition.slotType.mainWeight(type) * (dropProfile?.mainWeight(type) ?: 1.0)
+        }
         var data = EquipmentData(
             rarity = rarity,
             level = 0,
             mainStat = StatEntry(mainType, rollMainStatValue(mainType, rarity, random)),
             subStats = emptyList(),
-            upgradeCount = 0
+            upgradeCount = 0,
+            slotType = definition.slotType,
+            setId = definition.setId
         )
 
         repeat(rarity.initialSubStatCount) {
@@ -33,11 +37,28 @@ object EquipmentGenerationService {
         )
     }
 
+    fun createPendant(
+        random: Random,
+        startingLevel: Int = 0,
+        forcedRarity: EquipmentRarity? = null,
+        dropProfile: EquipmentDropProfile? = null
+    ): EquipmentData {
+        return createEquipment(
+            random = random,
+            definition = EquipmentDefinitions.HINAGATA_WAND,
+            startingLevel = startingLevel,
+            forcedRarity = forcedRarity,
+            dropProfile = dropProfile
+        )
+    }
+
     fun rollNewSubStat(data: EquipmentData, random: Random, dropProfile: EquipmentDropProfile? = null): StatEntry {
         val excludedTypes = data.subStats.mapTo(mutableSetOf()) { it.type }
         excludedTypes += data.mainStat.type
         val candidates = SUB_STAT_POOL.filterNot(excludedTypes::contains)
-        val type = rollWeightedStat(candidates, random) { statType -> dropProfile?.subWeight(statType) ?: 1.0 }
+        val type = rollWeightedStat(candidates, random) { statType ->
+            data.slotType.subWeight(statType) * (dropProfile?.subWeight(statType) ?: 1.0)
+        }
         return StatEntry(type, rollSubStatValue(type, data.rarity, random))
     }
 

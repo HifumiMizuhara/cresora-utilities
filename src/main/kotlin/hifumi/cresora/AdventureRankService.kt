@@ -127,7 +127,7 @@ object AdventureRankService {
             return AdventureRankProgression.sanitizeRank(existing)
         }
 
-        val assigned = findHighestNearbyRank(world, entity.x, entity.y, entity.z)
+        val assigned = findNearestNearbyRank(world, entity.x, entity.y, entity.z)
         access.cresoraSetMobAdventureRank(assigned)
         return assigned
     }
@@ -218,15 +218,20 @@ object AdventureRankService {
         CombatMobDisplayService.showDamage(target, source, damage.toDouble())
     }
 
-    private fun findHighestNearbyRank(world: ServerWorld, x: Double, y: Double, z: Double): Int {
-        var highest = AdventureRankProgression.MIN_RANK
+    private fun findNearestNearbyRank(world: ServerWorld, x: Double, y: Double, z: Double): Int {
+        var nearestRank = AdventureRankProgression.MIN_RANK
+        var nearestDistance = Double.MAX_VALUE
         val radiusSquared = SEARCH_RADIUS * SEARCH_RADIUS
         for (player in world.players) {
-            if (player.squaredDistanceTo(x, y, z) > radiusSquared) {
+            val distance = player.squaredDistanceTo(x, y, z)
+            if (distance > radiusSquared) {
                 continue
             }
-            highest = max(highest, getRank(player))
+            if (distance < nearestDistance) {
+                nearestDistance = distance
+                nearestRank = getRank(player)
+            }
         }
-        return highest
+        return nearestRank
     }
 }

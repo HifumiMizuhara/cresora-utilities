@@ -11,6 +11,9 @@
 - Re-evaluate whether the current upgrade button should become a more vanilla workstation-like interaction
 - Decide whether `upgrade.png` should remain as a resource or be fully replaced by code-driven / vanilla texture rendering
 - Re-run in-game verification that `hinagatastue` can be inserted into the Trinkets UI `necklace` slot after the explicit Trinket registration fallback
+- Re-run in-game verification that the new Hinagata hat, glasses, armor, and boots each equip into the intended Trinkets slots
+- Re-run in-game verification that the Hinagata 2-piece and 4-piece bonuses apply correctly to `/cresora_stats` and live combat damage
+- Re-run in-game verification that upgraded non-wand artifacts preserve their slot type, set ID, and tooltip data correctly
 - Re-run in-game verification of the player-facing `/cresora_stats` command in each supported language and confirm all 10 localized stat lines render cleanly
 - Re-run in-game verification of `/cresora_rank` and confirm rank progression, admin overrides, and localized output all behave correctly
 - Re-run in-game verification that hostile mobs now show `Lv` and live `HP` above their heads without causing visual clutter in crowded fights
@@ -21,8 +24,9 @@
 - Re-run in-game verification that the new rank-based base-defense curve prevents one-shots without making low-tier mobs feel spongey
 - Re-run in-game verification that adventure-rank-based enemy outgoing damage still feels fair with current `damage_reduction` values
 - Re-run in-game verification that adventure-rank loot scaling feels appropriate for zombies, skeletons, and wardens at low and high ranks
-- Decide whether nearby-player highest-rank mob assignment should remain the long-term multiplayer rule or become configurable later
+- Decide whether nearest-player mob rank assignment should remain the long-term multiplayer rule or become configurable later
 - Re-run in-game verification of the revised drop tiers and confirm zombie, skeleton, and warden drops now match their intended rarity and level bands
+- Re-run in-game verification that artifact drops now rotate across all five Hinagata set pieces with sensible slot diversity
 - Re-run in-game verification that zombie drops skew toward survival stats, skeleton drops skew toward offense/crit, and warden drops skew toward premium mixed stats
 - Re-run in-game combat verification of the new base crit profile and confirm the default `5%` crit chance feels correct with the current damage pacing
 - Re-run in-game verification that outgoing damage bonus and incoming damage reduction now surface in action-bar feedback cleanly during live combat

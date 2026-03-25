@@ -81,6 +81,10 @@
 - Added explicit player Trinkets slot definitions so accessory slots render for players
 - Added explicit Trinket registration for `hinagatastue` and restricted it to the `chest/necklace` slot in code
 - Added the fallback `trinkets:all` item tag for `hinagatastue` so Canary accepts pendant insertion more reliably during runtime
+- Expanded the artifact lineup to five Trinkets-backed slots: wand, hat, glasses, armor, and boots
+- Added temporary vanilla-backed item models for the new Hinagata hat, glasses, armor, and boots pieces
+- Generalized artifact data and generation so non-wand pieces now share the same growth backend with slot-specific roll biases
+- Added Hinagata set counting and set bonuses through the equipped Trinkets aggregation path
 - Verified the Trinkets-integrated build with a successful `./gradlew build`
 
 ## Local Runtime Verification
@@ -113,6 +117,8 @@
 - Re-verified the expanded combat feedback with a successful `./gradlew build`
 - Removed the non-critical outgoing-damage action-bar spam so crit feedback remains visible during live combat
 - Updated the crit-combo action-bar text ordering across all supported languages
+- Expanded the upgrade screen flow so any supported artifact piece can be upgraded or used as sacrifice material
+- Verified the five-piece artifact expansion with a successful `./gradlew build`
 
 ## Adventure Rank System
 
@@ -126,7 +132,9 @@
 - Rebalanced hostile scaling so higher ranks add moderate HP plus rank-based defense instead of relying on raw HP inflation
 - Added hostile overhead labels that show live `Lv` and current `HP / Max HP`
 - Added floating damage numbers above hostile mobs on successful hits
+- Switched hostile spawn-time rank assignment from the highest nearby player to the nearest nearby player
 - Added adventure-rank-aware loot scaling for pendant level, rarity upgrades, and upgrade-material extra drops
+- Expanded hostile artifact drops so zombies, skeletons, and wardens can roll any Hinagata set piece instead of wand-only drops
 - Added rank XP gain from hostile kills and ground pickup of tagged artifacts / upgrade materials
 - Added the player-facing `/cresora_rank` command plus `op` subcommands for rank testing and manual progression control
 - Added adventure-rank summary output to `/cresora_stats`
@@ -141,3 +149,5 @@
 - The first real `EquipmentData`-driven pendant implementation is now in place
 - GUI polishing is now focused on in-game readability and visual hierarchy
 - The project is ready to continue feature work from a dedicated `dev` branch
+- Added [Version_1.2.0_log.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/version_log/Version_1.2.0_log.md) as a multilingual version log entry under `version_log/`
+- Expanded [Version_1.2.0_log.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/version_log/Version_1.2.0_log.md) with a Literary Chinese (Simplified Script) section for release notes only
