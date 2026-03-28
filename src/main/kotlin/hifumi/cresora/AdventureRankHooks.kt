@@ -13,6 +13,10 @@ object AdventureRankHooks {
             val hostile = entity as? HostileEntity ?: return@AfterDeath
             val killer = damageSource.attacker as? ServerPlayerEntity ?: return@AfterDeath
             AdventureRankService.addXp(killer, AdventureRankService.hostileKillXp(hostile))
+            CreditsService.addHostileKillReward(killer, hostile)
+            WeaponDropService.onHostileKilled(killer, hostile)
+            ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, hostile)
+            EquipmentEffectHookService.onKill(killer, hostile)
         })
 
         ServerEntityEvents.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, world ->
@@ -23,6 +27,7 @@ object AdventureRankHooks {
 
         ServerPlayerEvents.COPY_FROM.register(ServerPlayerEvents.CopyFrom { oldPlayer, newPlayer, _ ->
             AdventureRankService.copyTo(oldPlayer, newPlayer)
+            CreditsService.copyTo(oldPlayer, newPlayer)
         })
 
         ServerTickEvents.END_WORLD_TICK.register(ServerTickEvents.EndWorldTick { world ->

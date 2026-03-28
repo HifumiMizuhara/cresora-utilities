@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "cresora-utilities:item/rondo_melody_fragment"
+  }
+}

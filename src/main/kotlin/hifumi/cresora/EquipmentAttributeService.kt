@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.util.Identifier
+import java.util.UUID
 
 object EquipmentAttributeService {
     private val ATTACK_FLAT_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "equipment_attack_flat")
@@ -12,6 +13,7 @@ object EquipmentAttributeService {
     private val HEALTH_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "equipment_health_scalar")
     private val ARMOR_FLAT_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "equipment_armor_flat")
     private val ARMOR_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "equipment_armor_scalar")
+    private val equippedFingerprints: MutableMap<UUID, String> = mutableMapOf()
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -28,11 +30,37 @@ object EquipmentAttributeService {
                 updateModifier(healthInstance, HEALTH_SCALAR_ID, bonuses.healthScalar, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
                 updateModifier(armorInstance, ARMOR_FLAT_ID, bonuses.armorFlat, EntityAttributeModifier.Operation.ADD_VALUE)
                 updateModifier(armorInstance, ARMOR_SCALAR_ID, bonuses.armorScalar, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+                handleEquipChanged(player)
+                EquipmentEffectHookService.onTick(player)
 
                 if (player.health > player.maxHealth) {
                     player.health = player.maxHealth
                 }
             }
+        }
+    }
+
+    private fun handleEquipChanged(player: net.minecraft.server.network.ServerPlayerEntity) {
+        val fingerprint = EquipmentPlayerSupport.getEquippedEquipmentData(player)
+            .sortedBy { it.slotTypeId }
+            .joinToString("|") { data ->
+                buildString {
+                    append(data.slotTypeId)
+                    append(':')
+                    append(data.setId)
+                    append(':')
+                    append(data.rarity.id)
+                    append(':')
+                    append(data.level)
+                    append(':')
+                    append(data.mainStat.type.id)
+                    append(':')
+                    append(data.mainStat.value)
+                }
+            }
+        val previous = equippedFingerprints.put(player.uuid, fingerprint)
+        if (previous != fingerprint) {
+            EquipmentEffectHookService.onEquipChanged(player)
         }
     }
 

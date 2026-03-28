@@ -1,0 +1,417 @@
+package hifumi.cresora
+
+import net.minecraft.block.Blocks
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityType
+import net.minecraft.entity.SpawnReason
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryKey
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
+import net.minecraft.world.World
+import java.util.UUID
+
+data class DomainRewardResult(
+    val items: List<ItemStack>,
+    val credits: Int,
+    val rankXp: Int
+)
+
+data class DomainStartResult(
+    val success: Boolean,
+    val translationKey: String,
+    val args: List<Any> = emptyList()
+)
+
+private data class DomainArenaSlot(
+    val index: Int,
+    val center: BlockPos
+)
+
+private data class DomainReturnPoint(
+    val worldKey: RegistryKey<World>,
+    val position: Vec3d,
+    val yaw: Float,
+    val pitch: Float
+)
+
+private data class DomainRuntimeMob(
+    val sessionId: UUID,
+    val damageMultiplier: Double
+)
+
+private class DomainSession(
+    val id: UUID,
+    val playerUuid: UUID,
+    val domainId: String,
+    val arenaIndex: Int,
+    val returnPoint: DomainReturnPoint,
+    val sessionRank: Int
+) {
+    val activeMobUuids: MutableSet<UUID> = linkedSetOf()
+    var nextStageIndex: Int = 0
+    var nextWaveIndex: Int = 0
+    var preparingNextWave: Boolean = true
+    var nextSpawnTick: Long = 0L
+
+    fun definition(): DomainDefinition = DomainContentRegistry.requireDomain(domainId)
+
+    fun pendingWave(): DomainWaveDefinition? {
+        val stage = definition().stages.getOrNull(nextStageIndex) ?: return null
+        return stage.waves.getOrNull(nextWaveIndex)
+    }
+
+    fun consumePendingWave() {
+        val stage = definition().stages.getOrNull(nextStageIndex) ?: return
+        nextWaveIndex++
+        if (nextWaveIndex >= stage.waves.size) {
+            nextStageIndex++
+            nextWaveIndex = 0
+        }
+    }
+
+    fun totalWaveCount(): Int = definition().totalWaveCount()
+
+    fun clearedWaveCount(): Int {
+        var total = 0
+        val definition = definition()
+        for (stageIndex in 0 until nextStageIndex.coerceAtMost(definition.stages.size)) {
+            total += definition.stages[stageIndex].waves.size
+        }
+        return total + nextWaveIndex
+    }
+}
+
+object DomainService {
+    private const val ARENA_Y = 180
+    private const val ARENA_RADIUS = 7
+    private const val ARENA_FAIL_DISTANCE_SQUARED = 30.0 * 30.0
+    private const val START_DELAY_TICKS = 40L
+
+    private val ARENA_SLOTS: List<DomainArenaSlot> = listOf(
+        DomainArenaSlot(0, BlockPos(0, ARENA_Y, 0)),
+        DomainArenaSlot(1, BlockPos(96, ARENA_Y, 0)),
+        DomainArenaSlot(2, BlockPos(192, ARENA_Y, 0)),
+        DomainArenaSlot(3, BlockPos(288, ARENA_Y, 0))
+    )
+
+    private val sessionsByPlayer: MutableMap<UUID, DomainSession> = linkedMapOf()
+    private val sessionsById: MutableMap<UUID, DomainSession> = linkedMapOf()
+    private val sessionByArenaIndex: MutableMap<Int, UUID> = linkedMapOf()
+    private val mobRuntime: MutableMap<UUID, DomainRuntimeMob> = linkedMapOf()
+
+    fun startSession(player: ServerPlayerEntity, domainId: String): DomainStartResult {
+        val domain = runCatching { DomainContentRegistry.requireDomain(domainId) }.getOrElse {
+            return DomainStartResult(false, "screen.cresora.domain.invalid")
+        }
+        if (sessionsByPlayer.containsKey(player.uuid)) {
+            return DomainStartResult(false, "screen.cresora.domain.already_active")
+        }
+        val rank = AdventureRankService.getRank(player)
+        if (rank < domain.unlockRank) {
+            return DomainStartResult(false, "screen.cresora.domain.locked", listOf(domain.unlockRank))
+        }
+        if (!CreditsService.hasCredits(player, domain.entryCostCsc)) {
+            return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
+        }
+        val arena = allocateArena() ?: return DomainStartResult(false, "screen.cresora.domain.no_arena")
+        if (!CreditsService.spendCredits(player, domain.entryCostCsc)) {
+            return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
+        }
+
+        val server = player.server ?: return DomainStartResult(false, "screen.cresora.domain.invalid")
+        val arenaWorld = server.overworld
+        ensureArena(arenaWorld, arena.center)
+        val session = DomainSession(
+            id = UUID.randomUUID(),
+            playerUuid = player.uuid,
+            domainId = domain.id,
+            arenaIndex = arena.index,
+            returnPoint = DomainReturnPoint(player.world.registryKey, player.pos, player.yaw, player.pitch),
+            sessionRank = DomainCombatProfile.sessionRank(rank)
+        )
+        session.nextSpawnTick = arenaWorld.time + START_DELAY_TICKS
+        sessionsByPlayer[player.uuid] = session
+        sessionsById[session.id] = session
+        sessionByArenaIndex[arena.index] = session.id
+
+        player.heal(player.maxHealth)
+        teleportPlayer(player, arenaWorld, Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5), 180.0f, 0.0f)
+        player.sendMessage(Text.translatable("screen.cresora.domain.entered", Text.translatable(domain.nameKey), session.sessionRank), false)
+        return DomainStartResult(true, "screen.cresora.domain.entered", listOf(Text.translatable(domain.nameKey), session.sessionRank))
+    }
+
+    fun tick(server: MinecraftServer) {
+        val iterator = sessionsById.values.toList()
+        for (session in iterator) {
+            tickSession(server, session)
+        }
+    }
+
+    fun onPlayerDeath(player: ServerPlayerEntity) {
+        val session = sessionsByPlayer[player.uuid] ?: return
+        val server = player.server ?: return
+        failSession(server, session, player, "screen.cresora.domain.failed_death", restorePlayer = false)
+    }
+
+    fun onPlayerDisconnect(player: ServerPlayerEntity) {
+        val session = sessionsByPlayer[player.uuid] ?: return
+        val server = player.server ?: return
+        failSession(server, session, null, "screen.cresora.domain.failed_leave", restorePlayer = false)
+    }
+
+    fun damageMultiplier(attacker: Entity?): Double {
+        val runtime = attacker?.uuid?.let(mobRuntime::get) ?: return 1.0
+        return runtime.damageMultiplier
+    }
+
+    fun isDomainMob(entity: HostileEntity): Boolean = mobRuntime.containsKey(entity.uuid)
+
+    private fun tickSession(server: MinecraftServer, session: DomainSession) {
+        val player = server.playerManager.getPlayer(session.playerUuid)
+        if (player == null) {
+            failSession(server, session, null, "screen.cresora.domain.failed_leave", restorePlayer = false)
+            return
+        }
+        if ((player.world as? ServerWorld)?.registryKey != World.OVERWORLD || player.squaredDistanceTo(sessionArena(session)) > ARENA_FAIL_DISTANCE_SQUARED) {
+            failSession(server, session, player, "screen.cresora.domain.failed_leave", restorePlayer = true)
+            return
+        }
+
+        val world = server.overworld
+        cleanupInactiveMobs(world, session)
+
+        if (session.preparingNextWave) {
+            if (world.time >= session.nextSpawnTick) {
+                val pendingWave = session.pendingWave()
+                if (pendingWave == null) {
+                    completeSession(server, session, player)
+                } else {
+                    spawnPendingWave(world, session, player, pendingWave)
+                }
+            }
+            return
+        }
+
+        if (session.activeMobUuids.isEmpty()) {
+            val pendingWave = session.pendingWave()
+            if (pendingWave == null) {
+                completeSession(server, session, player)
+            } else {
+                session.preparingNextWave = true
+                session.nextSpawnTick = world.time + pendingWave.spawnDelayTicks.toLong().coerceAtLeast(20L)
+            }
+        }
+    }
+
+    private fun spawnPendingWave(
+        world: ServerWorld,
+        session: DomainSession,
+        player: ServerPlayerEntity,
+        wave: DomainWaveDefinition
+    ) {
+        val domain = session.definition()
+        val spawnRank = AdventureRankProgression.sanitizeRank(session.sessionRank + wave.levelOffset)
+        val scaling = DomainCombatProfile.scaling(spawnRank, wave.elite)
+        val pool = DomainContentRegistry.requireMobPool(domain.mobPoolId)
+        val totalWaveIndex = session.clearedWaveCount() + 1
+
+        repeat(wave.count.coerceAtLeast(1)) { index ->
+            val entityType = rollEntityType(pool, world.random) ?: return@repeat
+            val spawnPos = BlockPos.ofFloored(
+                sessionArena(session).x + randomOffset(world.random, index),
+                sessionArena(session).y + 1,
+                sessionArena(session).z + randomOffset(world.random, index + 13)
+            )
+            val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
+            val access = hostile as? AdventureRankMobAccess ?: return@repeat
+            access.cresoraSetMobAdventureRank(spawnRank)
+            AdventureRankService.applyMobScaling(hostile, spawnRank, scaling.healthScalar, scaling.defenseScalar, scaling.toughnessScalar)
+            hostile.target = player
+            if (wave.elite) {
+                hostile.setPersistent()
+            }
+            mobRuntime[hostile.uuid] = DomainRuntimeMob(session.id, scaling.damageScalar)
+            session.activeMobUuids += hostile.uuid
+        }
+
+        session.consumePendingWave()
+        session.preparingNextWave = false
+        player.sendMessage(
+            Text.translatable("screen.cresora.domain.wave", Text.translatable(domain.nameKey), totalWaveIndex, domain.totalWaveCount(), spawnRank),
+            false
+        )
+    }
+
+    private fun completeSession(server: MinecraftServer, session: DomainSession, player: ServerPlayerEntity) {
+        val result = generateRewards(player, session)
+        cleanupSession(server, session)
+        restorePlayerPosition(server, player, session.returnPoint)
+        for (stack in result.items) {
+            player.inventory.offerOrDrop(stack)
+        }
+        if (result.credits > 0) {
+            CreditsService.addCredits(player, result.credits)
+        }
+        if (result.rankXp > 0) {
+            AdventureRankService.addXp(player, result.rankXp)
+        }
+        player.sendMessage(Text.translatable("screen.cresora.domain.cleared", Text.translatable(session.definition().nameKey)), false)
+        ArtifactUiFlow.openDomainReward(player, DomainDisplayStackFactory.rewardDisplayStacks(result))
+    }
+
+    private fun failSession(
+        server: MinecraftServer,
+        session: DomainSession,
+        player: ServerPlayerEntity?,
+        messageKey: String,
+        restorePlayer: Boolean
+    ) {
+        cleanupSession(server, session)
+        if (player != null && restorePlayer && player.isAlive) {
+            restorePlayerPosition(server, player, session.returnPoint)
+        }
+        player?.sendMessage(Text.translatable(messageKey, Text.translatable(session.definition().nameKey)), false)
+    }
+
+    private fun cleanupSession(server: MinecraftServer, session: DomainSession) {
+        val world = server.overworld
+        for (mobUuid in session.activeMobUuids) {
+            (world.getEntity(mobUuid) as? HostileEntity)?.discard()
+            mobRuntime.remove(mobUuid)
+        }
+        session.activeMobUuids.clear()
+        sessionsByPlayer.remove(session.playerUuid)
+        sessionsById.remove(session.id)
+        sessionByArenaIndex.remove(session.arenaIndex)
+    }
+
+    private fun cleanupInactiveMobs(world: ServerWorld, session: DomainSession) {
+        val iterator = session.activeMobUuids.iterator()
+        while (iterator.hasNext()) {
+            val mobUuid = iterator.next()
+            val entity = world.getEntity(mobUuid) as? HostileEntity
+            if (entity == null || entity.isRemoved || !entity.isAlive) {
+                mobRuntime.remove(mobUuid)
+                iterator.remove()
+            }
+        }
+    }
+
+    private fun generateRewards(player: ServerPlayerEntity, session: DomainSession): DomainRewardResult {
+        val profile = DomainRewardProfileRegistry.requireProfile(session.definition().rewardProfileId)
+        val random = player.random
+        val items = mutableListOf<ItemStack>()
+
+        profile.artifactReward?.let { artifact ->
+            val candidateDefinitions = EquipmentContentRegistry.equipmentDefinitions().filter { it.setId == artifact.setId }
+            if (candidateDefinitions.isNotEmpty()) {
+                val count = randomCount(random, artifact.minCount, artifact.maxCount)
+                repeat(count) {
+                    val definition = candidateDefinitions[random.nextInt(candidateDefinitions.size)]
+                    val item = EquipmentStackSupport.itemForDefinitionId(definition.id) ?: return@repeat
+                    val rarity = artifact.rarityWeights.roll(random)
+                    val level = randomCount(random, artifact.minLevel, minOf(artifact.maxLevel, rarity.maxLevel))
+                    val stack = ItemStack(item)
+                    val data = EquipmentGenerationService.createEquipment(
+                        random = random,
+                        definition = definition,
+                        startingLevel = level,
+                        forcedRarity = rarity
+                    )
+                    EquipmentStackSupport.syncEquipmentData(stack, data)
+                    items += stack
+                }
+            }
+        }
+
+        profile.weaponFragmentReward?.let { weapon ->
+            val definition = WeaponContentRegistry.requireWeapon(weapon.weaponId)
+            val item = WeaponStackSupport.fragmentItem(definition.id)
+            if (item != null) {
+                val count = randomCount(random, weapon.minCount, weapon.maxCount)
+                if (count > 0) {
+                    items += ItemStack(item, count)
+                }
+            }
+        }
+
+        val credits = (profile.currencyReward.creditsBase + profile.currencyReward.creditsPerRank * session.sessionRank)
+            .coerceAtLeast(0)
+        val rankXp = (profile.currencyReward.rankXpBase + profile.currencyReward.rankXpPerRank * session.sessionRank)
+            .coerceAtLeast(0)
+        return DomainRewardResult(items, credits, rankXp)
+    }
+
+    private fun restorePlayerPosition(server: MinecraftServer, player: ServerPlayerEntity, returnPoint: DomainReturnPoint) {
+        val world = server.getWorld(returnPoint.worldKey) ?: server.overworld
+        teleportPlayer(player, world, returnPoint.position, returnPoint.yaw, returnPoint.pitch)
+    }
+
+    private fun teleportPlayer(player: ServerPlayerEntity, world: ServerWorld, position: Vec3d, yaw: Float, pitch: Float) {
+        player.teleport(world, position.x, position.y, position.z, setOf(), yaw, pitch, false)
+    }
+
+    private fun allocateArena(): DomainArenaSlot? {
+        return ARENA_SLOTS.firstOrNull { !sessionByArenaIndex.containsKey(it.index) }
+    }
+
+    private fun ensureArena(world: ServerWorld, center: BlockPos) {
+        val floorY = center.y
+        for (x in -ARENA_RADIUS..ARENA_RADIUS) {
+            for (z in -ARENA_RADIUS..ARENA_RADIUS) {
+                val floorPos = center.add(x, 0, z)
+                val isBorder = kotlin.math.abs(x) == ARENA_RADIUS || kotlin.math.abs(z) == ARENA_RADIUS
+                world.setBlockState(floorPos, if (isBorder) Blocks.POLISHED_DEEPSLATE.defaultState else Blocks.SMOOTH_STONE.defaultState)
+                for (y in 1..5) {
+                    val airPos = floorPos.up(y)
+                    if (isBorder && y <= 2) {
+                        world.setBlockState(airPos, Blocks.TINTED_GLASS.defaultState)
+                    } else {
+                        world.setBlockState(airPos, Blocks.AIR.defaultState)
+                    }
+                }
+            }
+        }
+        world.setBlockState(center, Blocks.SEA_LANTERN.defaultState)
+    }
+
+    private fun sessionArena(session: DomainSession): Vec3d {
+        val arena = ARENA_SLOTS.first { it.index == session.arenaIndex }
+        return Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5)
+    }
+
+    private fun randomOffset(random: net.minecraft.util.math.random.Random, salt: Int): Double {
+        val direction = if ((salt + random.nextInt(1000)) % 2 == 0) 1.0 else -1.0
+        return direction * (2.0 + random.nextDouble() * 3.2)
+    }
+
+    private fun rollEntityType(pool: DomainMobPool, random: net.minecraft.util.math.random.Random): EntityType<*>? {
+        val totalWeight = pool.entries.sumOf { it.weight.coerceAtLeast(0) }
+        if (totalWeight <= 0) {
+            return null
+        }
+        var roll = random.nextInt(totalWeight)
+        for (entry in pool.entries) {
+            roll -= entry.weight.coerceAtLeast(0)
+            if (roll < 0) {
+                return Registries.ENTITY_TYPE.get(Identifier.of(entry.entityTypeId))
+            }
+        }
+        return Registries.ENTITY_TYPE.get(Identifier.of(pool.entries.last().entityTypeId))
+    }
+
+    private fun randomCount(random: net.minecraft.util.math.random.Random, min: Int, max: Int): Int {
+        if (max <= min) {
+            return min.coerceAtLeast(0)
+        }
+        return random.nextBetween(min, max).coerceAtLeast(0)
+    }
+}

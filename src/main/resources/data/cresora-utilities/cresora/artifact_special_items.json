@@ -1,0 +1,25 @@
+{
+  "definitions": [
+    {
+      "id": "zankyo_kanata_alpha",
+      "kind": "alpha",
+      "translationKey": "item.cresora-utilities.zankyo_kanata_alpha",
+      "baseItemId": "minecraft:echo_shard",
+      "shopPrice": 10000,
+      "shopVisible": true
+    },
+    {
+      "id": "zankyo_kanata_beta",
+      "kind": "beta",
+      "translationKey": "item.cresora-utilities.zankyo_kanata_beta",
+      "baseItemId": "minecraft:nether_star",
+      "shopPrice": 500000,
+      "shopVisible": true,
+      "mobDrop": {
+        "rankMin": 45,
+        "rankMax": 70,
+        "maxChance": 0.1
+      }
+    }
+  ]
+}

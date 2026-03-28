@@ -5,6 +5,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class UpgradeScreen(
@@ -62,10 +63,11 @@ class UpgradeScreen(
         val player = client?.player ?: return
         val preview = handler.getPreview(player)
         upgradeButton.active = preview.canUpgrade
-        upgradeButton.message = if (preview.canUpgrade) {
-            Text.translatable("screen.cresora.upgrade.button")
-        } else {
-            Text.translatable("screen.cresora.upgrade.button_locked")
+        upgradeButton.message = when {
+            !preview.canUpgrade -> Text.translatable("screen.cresora.upgrade.button_locked")
+            preview.materialType == UpgradeLogic.MaterialType.ALPHA_KANATA -> Text.translatable("screen.cresora.upgrade.button_alpha")
+            preview.materialType == UpgradeLogic.MaterialType.BETA_KANATA -> Text.translatable("screen.cresora.upgrade.button_beta")
+            else -> Text.translatable("screen.cresora.upgrade.button")
         }
     }
 
@@ -97,6 +99,42 @@ class UpgradeScreen(
     private fun renderPreview(context: DrawContext) {
         val player = client?.player ?: return
         val preview = handler.getPreview(player)
+        if (preview.materialType == UpgradeLogic.MaterialType.ALPHA_KANATA) {
+            context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.cresora.upgrade.special_alpha"), 56, 53, VALUE_COLOR)
+            drawMetricLine(context, Text.literal("RATE"), Text.literal("-"), 15, 63, VALUE_COLOR, 30)
+            drawMetricLine(
+                context,
+                Text.translatable("screen.cresora.upgrade.cost_short"),
+                Text.translatable("screen.cresora.upgrade.special_cost_none"),
+                70,
+                63,
+                VALUE_COLOR,
+                24
+            )
+            context.drawCenteredTextWithShadow(textRenderer, getCompactStatusText(preview), 88, 79, READY_COLOR)
+            return
+        }
+        if (preview.materialType == UpgradeLogic.MaterialType.BETA_KANATA) {
+            context.drawCenteredTextWithShadow(
+                textRenderer,
+                Text.translatable("screen.cresora.upgrade.level_compact", preview.currentLevel, preview.resultLevel),
+                56,
+                53,
+                VALUE_COLOR
+            )
+            drawMetricLine(context, Text.literal("RATE"), Text.translatable("screen.cresora.upgrade.special_beta"), 15, 63, VALUE_COLOR, 30)
+            drawMetricLine(
+                context,
+                Text.translatable("screen.cresora.upgrade.cost_short"),
+                Text.translatable("screen.cresora.upgrade.special_cost_none"),
+                70,
+                63,
+                VALUE_COLOR,
+                24
+            )
+            context.drawCenteredTextWithShadow(textRenderer, getCompactStatusText(preview), 88, 79, READY_COLOR)
+            return
+        }
         val successRate = (preview.successRatePermille / 10.0).let {
             (it * 10.0).roundToInt() / 10.0
         }
@@ -114,7 +152,15 @@ class UpgradeScreen(
 
         context.drawCenteredTextWithShadow(textRenderer, levelText, 56, 53, VALUE_COLOR)
         drawMetricLine(context, Text.literal("RATE"), rateText, 15, 63, VALUE_COLOR, 30)
-        drawMetricLine(context, Text.literal("XP"), Text.literal(handler.getXpCost().toString()), 70, 63, VALUE_COLOR, 16)
+        drawMetricLine(
+            context,
+            Text.translatable("screen.cresora.upgrade.cost_short"),
+            Text.literal(formatWholeNumber(handler.getCreditCost())),
+            70,
+            63,
+            VALUE_COLOR,
+            24
+        )
 
         val statusText = getCompactStatusText(preview)
         val statusColor = if (preview.canUpgrade) READY_COLOR else ERROR_COLOR
@@ -192,9 +238,15 @@ class UpgradeScreen(
             "screen.cresora.upgrade.invalid_material" -> Text.translatable("screen.cresora.upgrade.invalid_material_short")
             "screen.cresora.upgrade.ready_tool" -> Text.translatable("screen.cresora.upgrade.ready_short")
             "screen.cresora.upgrade.ready_wand" -> Text.translatable("screen.cresora.upgrade.ready_short")
-            "item.cresora.not_enough_xp" -> Text.translatable("screen.cresora.upgrade.no_xp_short")
+            "screen.cresora.upgrade.ready_alpha" -> Text.translatable("screen.cresora.upgrade.ready_alpha_short")
+            "screen.cresora.upgrade.ready_beta" -> Text.translatable("screen.cresora.upgrade.ready_beta_short")
+            "item.cresora.not_enough_credits" -> Text.translatable("screen.cresora.upgrade.no_credits_short")
             "screen.cresora.upgrade.max_level" -> Text.translatable("screen.cresora.upgrade.max_level_short")
             else -> Text.empty()
         }
+    }
+
+    private fun formatWholeNumber(value: Int): String {
+        return String.format(Locale.ROOT, "%,d", value)
     }
 }

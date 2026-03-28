@@ -5,7 +5,9 @@
 - Target version migrated to `Minecraft 1.21.7`
 - `Fabric Loader` updated to `0.18.4`
 - `Fabric API` updated to `0.129.0+1.21.7`
-- Mod version unified to `1.2.0`
+- Mod version unified to `1.3.0`
+- Created the `Version_1.3.0_log.md` release note file with all supported log languages
+- Built the remapped `1.3.0` release jar under `build/libs`
 - Fixed `1.21.7` startup issues caused by missing `registryKey` during item registration
 
 ## Core Logic Fixes
@@ -20,6 +22,78 @@
 - Switched live equipment stat lookup from inventory scanning to equipped Trinkets items
 - Changed percent-based attack, health, and armor bonuses to use total-value multiplication instead of base-only multiplication
 - Removed double-counting of `ALL_DMG_BONUS` from the attack attribute path so it only affects final damage once
+
+## CSC Economy
+
+- Added persistent player currency storage for `CreSora Credits (CSC)` with save/load and respawn-copy support
+- Added the player-facing `/cresora_credits` command plus `op` subcommands for credit lookup, grant, and set
+- Added `CSC` balance output to `/cresora_stats`
+- Replaced artifact-upgrade `XP` cost checks and spending with a fixed `CSC 500` cost
+- Synced the upgrade screen preview with server-side CSC balance so the client can lock the button when funds are insufficient
+- Added CSC income from hostile kills with enemy-level-based payout scaling
+- Added CSC income from artifact pickup and upgrade-material pickup using the existing reward-classification path
+- Updated upgrade-related UI and messages across `ja_jp`, `en_us`, `zh_cn`, and `lzh` from `XP` wording to `CSC`
+
+## Expanded Hostile Reward Coverage
+
+- Expanded artifact and upgrade-material mob drops from the original `zombie / skeleton / warden` set to a much broader hostile pool, excluding the Ender Dragon
+- Added JSON-backed loot entries for additional overworld, nether, raid, ocean, and end hostile mobs such as `drowned`, `husk`, `spider`, `creeper`, `witch`, `blaze`, `guardian`, `enderman`, `vindicator`, `evoker`, `ravager`, `piglin_brute`, `shulker`, and more
+- Added shared hostile-family classification so expanded enemies now use family-specific CSC reward values, adventure-rank XP payout, and combat scaling instead of falling into one flat default bucket
+- Updated drop generation so artifact level growth, rarity-upgrade chance, and extra upgrade-material count can scale from the defeated hostile mob's `Lv`, not only from the killer's adventure rank
+- Verified the broadened hostile-drop and reward-scaling changes with a successful `./gradlew build`
+
+## Weapon System Phase 1
+
+- Added a new JSON-backed weapon content registry at `data/cresora-utilities/cresora/weapon_content.json`
+- Added the first weapon `rondo_melody` plus its crafting material `rondo_melody_fragment`
+- Added synced `weapon_data` with weapon id, rarity, base level, and skill level
+- Added a dedicated held-weapon attribute path so custom weapons can grant their own attack damage and sword-like attack speed without reusing the Trinkets artifact pipeline
+- Added the `Melody of the Rondo` right-click shield skill with a `15` second duration and `20` second cooldown
+- Added shield absorption state on players so incoming damage is consumed until the shield cap is exhausted or the duration expires
+- Added generic hostile-kill weapon drop handling so `rondo_melody_fragment` can drop from hostile mobs at `Lv 5+`, and direct `rondo_melody` drops can roll at `Lv 5 / 25 / 45 / 65+` by rarity
+- Added a dedicated weapon-upgrade screen with separate base-level and skill-level upgrades
+- Added CSC-based weapon growth rules so base levels consume `100 * n^2` CSC plus fragments, while skill levels consume `10000 * n` CSC
+- Added multilingual weapon names, upgrade UI text, and skill feedback for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
+- Verified the Phase 1 weapon-system implementation with a successful `./gradlew build`
+- Fixed the `Melody of the Rondo` shield path so damage absorption still applies when the player has no `damage_reduction` stat bonus equipped
+- Replaced the weapon skill cooldown from vanilla item cooldown state with an internal tick-based cooldown so sneak-right-click weapon leveling remains usable during cooldown
+- Improved the weapon-upgrade UI so base/skill upgrade lock reasons and current CSC are visible in-screen instead of only appearing as disabled buttons
+- Added cooldown progress feedback for weapon skills via action-bar updates while the matching weapon is held
+- Added a second JSON-backed star-2 weapon `masquerade_invitation` plus its crafting material `masquerade_invitation_fragment`
+- Added generic weapon-skill value handling so weapons can now use non-shield skill payloads such as instant healing without rewriting the weapon UI
+- Added the `heal` weapon-skill effect path and implemented `masquerade_invitation` as a `30` second cooldown self-heal weapon with `2 + 0.5n` hearts restored at skill level `n`
+- Updated weapon tooltip and weapon-upgrade UI text so skill previews now render from the actual effect type instead of hardcoded shield wording
+- Replaced the old player-global weapon cooldown with per-weapon cooldown tracking and per-weapon boss bars, so different weapons no longer lock each other out
+- Added multilingual item, tooltip, and upgrade text plus temporary item models for `masquerade_invitation`
+- Verified the new heal-weapon implementation with a successful `./gradlew build`
+
+## Artifact Targeting And Shop
+
+- Added a new JSON-backed artifact special-item registry at `data/cresora-utilities/cresora/artifact_special_items.json`
+- Added the new shop items `zankyo_kanata_alpha` and `zankyo_kanata_beta`
+- Added the player-facing `/cresora_shop` command and a chest-style shop UI that sells the two new special items for CSC
+- Added `α` conversion flow from the artifact-upgrade screen so players can open a selection UI and convert an artifact into the same slot from a different set
+- Implemented the `α` conversion backend against the JSON-driven equipment registry so future multi-set content can reuse the same selection logic
+- Added `β` reforge flow from the artifact-upgrade screen so players can select two stat types and reroll the target artifact straight to max level
+- Added a dedicated max-reroll backend for `β` that guarantees one of the selected stat types is hit at least twice during the reroll path
+- Added `β` hostile-mob drops with linear chance scaling from rank `45` to rank `70`
+- Added multilingual item, shop, and special-upgrade text for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
+- Verified the artifact shop / `α` / `β` implementation with a successful `./gradlew build`
+
+## Domain System Phase 1
+
+- Added a new JSON-backed domain registry at `data/cresora-utilities/cresora/domain_content.json`
+- Added a new JSON-backed domain reward registry at `data/cresora-utilities/cresora/domain_reward_profiles.json`
+- Added the player-facing `/cresora_domain` command and a chest-style domain selection UI
+- Added three starter domains for focused farming: `hinagata_archive`, `rondo_forge`, and `credit_drill`
+- Added fixed-arena solo domain sessions with CSC entry cost, unlock-rank checks, wave spawning, fail/clear handling, and return-position restore
+- Added session-fixed enemy Lv assignment for domain mobs so domain enemies no longer depend on nearby-player rank lookup
+- Added domain-specific combat scaling hooks on top of the existing Adventure Rank mob scaling without breaking the global HP clamp / overflow-to-defense rules
+- Added domain clear rewards for focused artifact drops, weapon fragment drops, CSC payout, and Adventure Rank XP payout
+- Added a domain reward summary UI after clear
+- Added a second weapon-fragment farming domain `masquerade_soiree` for `masquerade_invitation`
+- Added multilingual domain UI / message text for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
+- Verified the Phase 1 domain implementation with a successful `./gradlew build`
 
 ## Equipment Refactor Phase 1
 
@@ -77,15 +151,29 @@
 - Added `Trinkets Canary` as a runtime dependency for `Minecraft 1.21.7`
 - Added direct `Cardinal Components` dependencies required by the Trinkets API on the compile classpath
 - Moved pendant stat aggregation to the Trinkets equipped-item component instead of selecting the strongest inventory copy
-- Tagged `hinagatastue` for the Trinkets `chest/necklace` slot
+- Tagged `hinagata_wand` for the Trinkets `chest/necklace` slot
 - Added explicit player Trinkets slot definitions so accessory slots render for players
-- Added explicit Trinket registration for `hinagatastue` and restricted it to the `chest/necklace` slot in code
-- Added the fallback `trinkets:all` item tag for `hinagatastue` so Canary accepts pendant insertion more reliably during runtime
+- Added explicit Trinket registration for `hinagata_wand` and restricted it to the `chest/necklace` slot in code
+- Added the fallback `trinkets:all` item tag for `hinagata_wand` so Canary accepts pendant insertion more reliably during runtime
 - Expanded the artifact lineup to five Trinkets-backed slots: wand, hat, glasses, armor, and boots
 - Added temporary vanilla-backed item models for the new Hinagata hat, glasses, armor, and boots pieces
 - Generalized artifact data and generation so non-wand pieces now share the same growth backend with slot-specific roll biases
 - Added Hinagata set counting and set bonuses through the equipped Trinkets aggregation path
 - Verified the Trinkets-integrated build with a successful `./gradlew build`
+- Replaced hardcoded equipment slot / set / drop-profile tables with a JSON-driven content bundle at `data/cresora-utilities/cresora/equipment_content.json`
+- Moved slot definitions, set bonuses, equipment definitions, and mob loot rules onto ID-based runtime registries
+- Changed `EquipmentData` to store slot and set IDs instead of enum-backed values while keeping the saved component field names stable
+- Added rarity-weight support per equipment definition so future artifacts can tune 3-star / 4-star / 5-star roll odds without code edits
+- Generalized mob artifact loot pools so future artifact pieces can be routed from JSON-defined loot rules instead of hand-written `when` branches
+- Added a set-summary line to `/cresora_stats` so players can confirm active set piece counts and active thresholds in-game
+- Added placeholder set-effect hook triggers for equip change, attack dealt, damage taken, kill, and tick events so future non-numeric set effects can be attached cleanly
+- Verified the JSON-driven equipment-content refactor with a successful `./gradlew build`
+- Renamed the wand item ID and asset path from `hinagatastue` to `hinagata_wand` to match the equipment-definition naming scheme
+- Replaced hardcoded per-item equipment registration in `CreSoraUtilities` with auto-registration from `equipment_content.json`
+- Moved the upgrade-GUI open behavior into `ArtifactEquipmentItem` via a definition flag so future equipment items do not need one-off subclasses
+- Changed set-bonus tooltips to render from JSON `stats` / `effectHooks` data instead of relying on fixed translation descriptions, so tooltip text now follows the actual configured effect values
+- Replaced the temporary vanilla item textures for the Hinagata set, `rondo_melody`, `masquerade_invitation`, both weapon fragments, and `zankyo_kanata_alpha / beta` with the provided custom PNG assets from the project `texture` folder
+- Updated the corresponding item models so those assets now resolve through `cresora-utilities:item/...` instead of falling back to vanilla placeholder icons
 
 ## Local Runtime Verification
 

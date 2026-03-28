@@ -1,0 +1,112 @@
+{
+  "mobPools": [
+    {
+      "id": "verdant_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:zombie", "weight": 4 },
+        { "entityTypeId": "minecraft:husk", "weight": 2 },
+        { "entityTypeId": "minecraft:spider", "weight": 3 }
+      ]
+    },
+    {
+      "id": "forge_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:skeleton", "weight": 4 },
+        { "entityTypeId": "minecraft:stray", "weight": 2 },
+        { "entityTypeId": "minecraft:blaze", "weight": 3 }
+      ]
+    },
+    {
+      "id": "masquerade_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:witch", "weight": 4 },
+        { "entityTypeId": "minecraft:cave_spider", "weight": 3 },
+        { "entityTypeId": "minecraft:enderman", "weight": 2 }
+      ]
+    },
+    {
+      "id": "credit_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:witch", "weight": 3 },
+        { "entityTypeId": "minecraft:vindicator", "weight": 3 },
+        { "entityTypeId": "minecraft:enderman", "weight": 2 },
+        { "entityTypeId": "minecraft:piglin_brute", "weight": 1 }
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "id": "hinagata_archive",
+      "nameKey": "screen.cresora.domain.hinagata_archive",
+      "themeId": "verdant",
+      "unlockRank": 1,
+      "entryCostCsc": 1500,
+      "rewardProfileId": "hinagata_hunt",
+      "mobPoolId": "verdant_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 4, "levelOffset": 0, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 5, "levelOffset": 1, "elite": false, "spawnDelayTicks": 60 },
+            { "count": 2, "levelOffset": 3, "elite": true, "spawnDelayTicks": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rondo_forge",
+      "nameKey": "screen.cresora.domain.rondo_forge",
+      "themeId": "metal",
+      "unlockRank": 10,
+      "entryCostCsc": 2500,
+      "rewardProfileId": "rondo_forge",
+      "mobPoolId": "forge_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 4, "levelOffset": 2, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 5, "levelOffset": 4, "elite": false, "spawnDelayTicks": 60 },
+            { "count": 3, "levelOffset": 6, "elite": true, "spawnDelayTicks": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "masquerade_soiree",
+      "nameKey": "screen.cresora.domain.masquerade_soiree",
+      "themeId": "moonlit",
+      "unlockRank": 10,
+      "entryCostCsc": 2500,
+      "rewardProfileId": "masquerade_soiree",
+      "mobPoolId": "masquerade_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 4, "levelOffset": 2, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 5, "levelOffset": 4, "elite": false, "spawnDelayTicks": 60 },
+            { "count": 3, "levelOffset": 6, "elite": true, "spawnDelayTicks": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "credit_drill",
+      "nameKey": "screen.cresora.domain.credit_drill",
+      "themeId": "arcane",
+      "unlockRank": 20,
+      "entryCostCsc": 4000,
+      "rewardProfileId": "csc_training",
+      "mobPoolId": "credit_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 4, "levelOffset": 5, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 4, "levelOffset": 7, "elite": false, "spawnDelayTicks": 60 },
+            { "count": 2, "levelOffset": 9, "elite": true, "spawnDelayTicks": 80 },
+            { "count": 3, "levelOffset": 10, "elite": true, "spawnDelayTicks": 100 }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -133,6 +133,16 @@ object AdventureRankService {
     }
 
     fun applyMobScaling(entity: HostileEntity, rank: Int) {
+        applyMobScaling(entity, rank, 1.0, 1.0, 1.0)
+    }
+
+    fun applyMobScaling(
+        entity: HostileEntity,
+        rank: Int,
+        healthScalar: Double,
+        defenseScalar: Double,
+        toughnessScalar: Double
+    ) {
         val normalizedRank = AdventureRankProgression.sanitizeRank(rank)
         val maxHealthInstance = entity.attributes.getCustomInstance(EntityAttributes.MAX_HEALTH) ?: return
         val armorInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR)
@@ -140,7 +150,7 @@ object AdventureRankService {
         val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
         val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
         val baseMaxHealth = maxHealthInstance.baseValue.coerceAtLeast(1.0)
-        val rawMultiplier = AdventureRankProfile.healthMultiplier(entity.type, normalizedRank)
+        val rawMultiplier = AdventureRankProfile.healthMultiplier(entity.type, normalizedRank) * healthScalar.coerceAtLeast(0.1)
         val rawTargetHealth = baseMaxHealth * rawMultiplier
         val targetHealth = min(rawTargetHealth, AdventureRankProfile.MOB_HEALTH_CAP)
         val overflowHealth = max(0.0, rawTargetHealth - targetHealth)
@@ -165,7 +175,7 @@ object AdventureRankService {
             armorInstance?.addTemporaryModifier(
                 EntityAttributeModifier(
                     MOB_ARMOR_BONUS_ID,
-                    bonus.armorFlat,
+                    bonus.armorFlat * defenseScalar.coerceAtLeast(0.1),
                     EntityAttributeModifier.Operation.ADD_VALUE
                 )
             )
@@ -174,7 +184,7 @@ object AdventureRankService {
             toughnessInstance?.addTemporaryModifier(
                 EntityAttributeModifier(
                     MOB_TOUGHNESS_BONUS_ID,
-                    bonus.toughnessFlat,
+                    bonus.toughnessFlat * toughnessScalar.coerceAtLeast(0.1),
                     EntityAttributeModifier.Operation.ADD_VALUE
                 )
             )
@@ -195,9 +205,9 @@ object AdventureRankService {
         val access = hostile as? AdventureRankMobAccess ?: return 1.0
         val storedRank = access.cresoraGetMobAdventureRank()
         if (storedRank <= 0) {
-            return 1.0
+            return DomainService.damageMultiplier(attacker)
         }
-        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank)
+        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) * DomainService.damageMultiplier(attacker)
     }
 
     fun mobRank(entity: HostileEntity): Int {

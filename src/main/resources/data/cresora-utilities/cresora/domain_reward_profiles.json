@@ -1,0 +1,62 @@
+{
+  "rewardProfiles": [
+    {
+      "id": "hinagata_hunt",
+      "artifactReward": {
+        "setId": "hinagata",
+        "minCount": 1,
+        "maxCount": 2,
+        "minLevel": 0,
+        "maxLevel": 16,
+        "rarityWeights": {
+          "threeStar": 0.4,
+          "fourStar": 0.42,
+          "fiveStar": 0.18
+        }
+      },
+      "currencyReward": {
+        "creditsBase": 6000,
+        "creditsPerRank": 160,
+        "rankXpBase": 120,
+        "rankXpPerRank": 5
+      }
+    },
+    {
+      "id": "rondo_forge",
+      "weaponFragmentReward": {
+        "weaponId": "rondo_melody",
+        "minCount": 2,
+        "maxCount": 8
+      },
+      "currencyReward": {
+        "creditsBase": 7500,
+        "creditsPerRank": 190,
+        "rankXpBase": 150,
+        "rankXpPerRank": 6
+      }
+    },
+    {
+      "id": "masquerade_soiree",
+      "weaponFragmentReward": {
+        "weaponId": "masquerade_invitation",
+        "minCount": 2,
+        "maxCount": 8
+      },
+      "currencyReward": {
+        "creditsBase": 7500,
+        "creditsPerRank": 190,
+        "rankXpBase": 150,
+        "rankXpPerRank": 6
+      }
+    },
+    {
+      "id": "csc_training",
+      "currencyReward": {
+        "creditsBase": 11000,
+        "creditsPerRank": 250,
+        "rankXpBase": 220,
+        "rankXpPerRank": 8
+      }
+    }
+  ]
+}

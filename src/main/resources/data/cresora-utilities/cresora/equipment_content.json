@@ -1,0 +1,709 @@
+{
+  "slots": [
+    {
+      "id": "wand",
+      "translationKey": "item.cresora.equipment.slot.wand",
+      "trinketGroup": "chest",
+      "trinketSlot": "necklace",
+      "mainStatCandidates": [
+        "atk_flat",
+        "atk_percent",
+        "all_dmg_bonus"
+      ],
+      "mainWeights": {
+        "atk_flat": 3.2,
+        "atk_percent": 3.6,
+        "all_dmg_bonus": 3.4
+      },
+      "subWeights": {
+        "atk_flat": 2.8,
+        "atk_percent": 3.0,
+        "crit_rate": 2.8,
+        "crit_dmg": 3.2,
+        "all_dmg_bonus": 3.0
+      },
+      "defaultMainStat": "atk_flat"
+    },
+    {
+      "id": "hat",
+      "translationKey": "item.cresora.equipment.slot.hat",
+      "trinketGroup": "head",
+      "trinketSlot": "hat",
+      "mainStatCandidates": [
+        "hp_flat",
+        "hp_percent",
+        "def_flat",
+        "def_percent",
+        "damage_reduction"
+      ],
+      "mainWeights": {
+        "hp_flat": 2.8,
+        "hp_percent": 2.6,
+        "def_flat": 3.8,
+        "def_percent": 3.6,
+        "damage_reduction": 2.4
+      },
+      "subWeights": {
+        "hp_flat": 2.6,
+        "hp_percent": 2.4,
+        "def_flat": 3.2,
+        "def_percent": 3.0,
+        "damage_reduction": 2.4
+      },
+      "defaultMainStat": "def_flat"
+    },
+    {
+      "id": "glasses",
+      "translationKey": "item.cresora.equipment.slot.glasses",
+      "trinketGroup": "head",
+      "trinketSlot": "face",
+      "mainStatCandidates": [
+        "atk_percent",
+        "crit_rate",
+        "crit_dmg",
+        "all_dmg_bonus"
+      ],
+      "mainWeights": {
+        "atk_percent": 2.6,
+        "crit_rate": 3.4,
+        "crit_dmg": 3.2,
+        "all_dmg_bonus": 3.0
+      },
+      "subWeights": {
+        "atk_percent": 2.6,
+        "crit_rate": 3.6,
+        "crit_dmg": 3.8,
+        "all_dmg_bonus": 2.8
+      },
+      "defaultMainStat": "crit_rate"
+    },
+    {
+      "id": "armor",
+      "translationKey": "item.cresora.equipment.slot.armor",
+      "trinketGroup": "chest",
+      "trinketSlot": "back",
+      "mainStatCandidates": [
+        "hp_flat",
+        "hp_percent",
+        "def_flat",
+        "def_percent",
+        "damage_reduction"
+      ],
+      "mainWeights": {
+        "hp_flat": 3.2,
+        "hp_percent": 3.0,
+        "def_flat": 3.2,
+        "def_percent": 3.0,
+        "damage_reduction": 2.8
+      },
+      "subWeights": {
+        "hp_flat": 2.8,
+        "hp_percent": 2.6,
+        "def_flat": 2.8,
+        "def_percent": 2.8,
+        "damage_reduction": 2.8
+      },
+      "defaultMainStat": "hp_flat"
+    },
+    {
+      "id": "boots",
+      "translationKey": "item.cresora.equipment.slot.boots",
+      "trinketGroup": "feet",
+      "trinketSlot": "shoes",
+      "mainStatCandidates": [
+        "atk_percent",
+        "hp_percent",
+        "def_percent",
+        "crit_dmg",
+        "all_dmg_bonus"
+      ],
+      "mainWeights": {
+        "atk_percent": 2.8,
+        "hp_percent": 2.2,
+        "def_percent": 2.2,
+        "crit_dmg": 3.0,
+        "all_dmg_bonus": 2.8
+      },
+      "subWeights": {
+        "atk_percent": 2.6,
+        "crit_rate": 2.8,
+        "crit_dmg": 3.2,
+        "all_dmg_bonus": 2.6,
+        "def_percent": 2.0
+      },
+      "defaultMainStat": "atk_percent"
+    }
+  ],
+  "sets": [
+    {
+      "id": "hinagata",
+      "translationKey": "item.cresora.equipment.set.hinagata",
+      "bonuses": [
+        {
+          "requiredPieces": 2,
+          "stats": [
+            {
+              "type": "atk_percent",
+              "value": 3.0
+            }
+          ]
+        },
+        {
+          "requiredPieces": 4,
+          "stats": [
+            {
+              "type": "atk_percent",
+              "value": 2.0
+            },
+            {
+              "type": "crit_dmg",
+              "value": 5.0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "equipmentDefinitions": [
+    {
+      "id": "hinagata_wand",
+      "slotTypeId": "wand",
+      "setId": "hinagata",
+      "baseItemId": "minecraft:stick",
+      "opensUpgradeScreen": true,
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "hinagata_hat",
+      "slotTypeId": "hat",
+      "setId": "hinagata",
+      "baseItemId": "minecraft:chainmail_helmet",
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "hinagata_glasses",
+      "slotTypeId": "glasses",
+      "setId": "hinagata",
+      "baseItemId": "minecraft:spyglass",
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "hinagata_armor",
+      "slotTypeId": "armor",
+      "setId": "hinagata",
+      "baseItemId": "minecraft:iron_chestplate",
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "hinagata_boots",
+      "slotTypeId": "boots",
+      "setId": "hinagata",
+      "baseItemId": "minecraft:iron_boots",
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    }
+  ],
+  "dropProfiles": [
+    {
+      "id": "zombie_survivor",
+      "mainWeights": {
+        "hp_flat": 4.0,
+        "hp_percent": 3.6,
+        "def_flat": 3.2,
+        "def_percent": 3.2,
+        "damage_reduction": 2.8
+      },
+      "subWeights": {
+        "hp_flat": 3.4,
+        "hp_percent": 3.2,
+        "def_flat": 3.0,
+        "def_percent": 3.0,
+        "damage_reduction": 2.8
+      }
+    },
+    {
+      "id": "skeleton_assault",
+      "mainWeights": {
+        "atk_flat": 3.4,
+        "atk_percent": 3.4,
+        "all_dmg_bonus": 3.0
+      },
+      "subWeights": {
+        "atk_flat": 2.6,
+        "atk_percent": 2.8,
+        "crit_rate": 3.6,
+        "crit_dmg": 3.8,
+        "all_dmg_bonus": 2.8
+      }
+    },
+    {
+      "id": "warden_relic",
+      "mainWeights": {
+        "atk_percent": 3.0,
+        "hp_percent": 2.4,
+        "def_percent": 2.4,
+        "all_dmg_bonus": 3.4,
+        "damage_reduction": 2.8
+      },
+      "subWeights": {
+        "crit_rate": 3.0,
+        "crit_dmg": 3.2,
+        "all_dmg_bonus": 3.4,
+        "damage_reduction": 3.0,
+        "hp_percent": 2.2,
+        "def_percent": 2.2
+      }
+    }
+  ],
+  "mobLoot": [
+    {
+      "entityTypeId": "minecraft:zombie",
+      "artifactLoot": {
+        "chance": 0.2,
+        "levelMin": 0,
+        "levelMax": 2,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.1,
+        "levelMin": 1,
+        "levelMax": 2
+      }
+    },
+    {
+      "entityTypeId": "minecraft:drowned",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 1,
+        "levelMax": 3,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.1,
+        "levelMin": 1,
+        "levelMax": 2
+      }
+    },
+    {
+      "entityTypeId": "minecraft:husk",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 1,
+        "levelMax": 3,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.1,
+        "levelMin": 1,
+        "levelMax": 2
+      }
+    },
+    {
+      "entityTypeId": "minecraft:spider",
+      "artifactLoot": {
+        "chance": 0.16,
+        "levelMin": 0,
+        "levelMax": 2,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.08,
+        "levelMin": 1,
+        "levelMax": 2
+      }
+    },
+    {
+      "entityTypeId": "minecraft:cave_spider",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 1,
+        "levelMax": 3,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.1,
+        "levelMin": 1,
+        "levelMax": 2
+      }
+    },
+    {
+      "entityTypeId": "minecraft:silverfish",
+      "artifactLoot": {
+        "chance": 0.1,
+        "levelMin": 0,
+        "levelMax": 1,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.06,
+        "levelMin": 1,
+        "levelMax": 1
+      }
+    },
+    {
+      "entityTypeId": "minecraft:endermite",
+      "artifactLoot": {
+        "chance": 0.1,
+        "levelMin": 0,
+        "levelMax": 1,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.06,
+        "levelMin": 1,
+        "levelMax": 1
+      }
+    },
+    {
+      "entityTypeId": "minecraft:slime",
+      "artifactLoot": {
+        "chance": 0.14,
+        "levelMin": 0,
+        "levelMax": 2,
+        "forcedRarity": "3_star",
+        "dropProfileId": "zombie_survivor"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.08,
+        "levelMin": 1,
+        "levelMax": 2
+      }
+    },
+    {
+      "entityTypeId": "minecraft:skeleton",
+      "artifactLoot": {
+        "chance": 0.2,
+        "levelMin": 2,
+        "levelMax": 5,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.12,
+        "levelMin": 2,
+        "levelMax": 3
+      }
+    },
+    {
+      "entityTypeId": "minecraft:stray",
+      "artifactLoot": {
+        "chance": 0.2,
+        "levelMin": 2,
+        "levelMax": 5,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.12,
+        "levelMin": 2,
+        "levelMax": 3
+      }
+    },
+    {
+      "entityTypeId": "minecraft:creeper",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 2,
+        "levelMax": 4,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.12,
+        "levelMin": 2,
+        "levelMax": 3
+      }
+    },
+    {
+      "entityTypeId": "minecraft:phantom",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 2,
+        "levelMax": 4,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.1,
+        "levelMin": 2,
+        "levelMax": 3
+      }
+    },
+    {
+      "entityTypeId": "minecraft:pillager",
+      "artifactLoot": {
+        "chance": 0.2,
+        "levelMin": 3,
+        "levelMax": 5,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.12,
+        "levelMin": 2,
+        "levelMax": 3
+      }
+    },
+    {
+      "entityTypeId": "minecraft:breeze",
+      "artifactLoot": {
+        "chance": 0.22,
+        "levelMin": 3,
+        "levelMax": 6,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.14,
+        "levelMin": 2,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:witch",
+      "artifactLoot": {
+        "chance": 0.2,
+        "levelMin": 3,
+        "levelMax": 6,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.14,
+        "levelMin": 2,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:blaze",
+      "artifactLoot": {
+        "chance": 0.22,
+        "levelMin": 4,
+        "levelMax": 7,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.14,
+        "levelMin": 3,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:magma_cube",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 3,
+        "levelMax": 5,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.12,
+        "levelMin": 2,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:ghast",
+      "artifactLoot": {
+        "chance": 0.2,
+        "levelMin": 4,
+        "levelMax": 7,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.14,
+        "levelMin": 3,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:guardian",
+      "artifactLoot": {
+        "chance": 0.22,
+        "levelMin": 4,
+        "levelMax": 7,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.14,
+        "levelMin": 3,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:zombified_piglin",
+      "artifactLoot": {
+        "chance": 0.18,
+        "levelMin": 4,
+        "levelMax": 7,
+        "forcedRarity": "4_star",
+        "dropProfileId": "skeleton_assault"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.12,
+        "levelMin": 2,
+        "levelMax": 4
+      }
+    },
+    {
+      "entityTypeId": "minecraft:enderman",
+      "artifactLoot": {
+        "chance": 0.22,
+        "levelMin": 5,
+        "levelMax": 8,
+        "forcedRarity": "4_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.15,
+        "levelMin": 3,
+        "levelMax": 5
+      }
+    },
+    {
+      "entityTypeId": "minecraft:hoglin",
+      "artifactLoot": {
+        "chance": 0.22,
+        "levelMin": 5,
+        "levelMax": 8,
+        "forcedRarity": "4_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.15,
+        "levelMin": 3,
+        "levelMax": 5
+      }
+    },
+    {
+      "entityTypeId": "minecraft:vindicator",
+      "artifactLoot": {
+        "chance": 0.24,
+        "levelMin": 5,
+        "levelMax": 8,
+        "forcedRarity": "4_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.16,
+        "levelMin": 3,
+        "levelMax": 5
+      }
+    },
+    {
+      "entityTypeId": "minecraft:evoker",
+      "artifactLoot": {
+        "chance": 0.28,
+        "levelMin": 6,
+        "levelMax": 9,
+        "forcedRarity": "4_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.18,
+        "levelMin": 4,
+        "levelMax": 5
+      }
+    },
+    {
+      "entityTypeId": "minecraft:ravager",
+      "artifactLoot": {
+        "chance": 0.35,
+        "levelMin": 7,
+        "levelMax": 10,
+        "forcedRarity": "5_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.22,
+        "levelMin": 4,
+        "levelMax": 6
+      }
+    },
+    {
+      "entityTypeId": "minecraft:piglin_brute",
+      "artifactLoot": {
+        "chance": 0.28,
+        "levelMin": 6,
+        "levelMax": 9,
+        "forcedRarity": "4_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.18,
+        "levelMin": 4,
+        "levelMax": 5
+      }
+    },
+    {
+      "entityTypeId": "minecraft:elder_guardian",
+      "artifactLoot": {
+        "chance": 0.55,
+        "levelMin": 7,
+        "levelMax": 10,
+        "forcedRarity": "5_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.25,
+        "levelMin": 4,
+        "levelMax": 6
+      }
+    },
+    {
+      "entityTypeId": "minecraft:shulker",
+      "artifactLoot": {
+        "chance": 0.26,
+        "levelMin": 6,
+        "levelMax": 9,
+        "forcedRarity": "4_star",
+        "dropProfileId": "warden_relic"
+      },
+      "upgradeMaterialLoot": {
+        "chance": 0.16,
+        "levelMin": 3,
+        "levelMax": 5
+      }
+    },
+    {
+      "entityTypeId": "minecraft:warden",
+      "artifactLoot": {
+        "chance": 1.0,
+        "levelMin": 8,
+        "levelMax": 12,
+        "forcedRarity": "5_star",
+        "dropProfileId": "warden_relic"
+      }
+    }
+  ]
+}

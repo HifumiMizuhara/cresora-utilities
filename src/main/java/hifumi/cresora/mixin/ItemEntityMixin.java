@@ -3,6 +3,9 @@ package hifumi.cresora.mixin;
 import hifumi.cresora.AdventureRankRewardClassifier;
 import hifumi.cresora.AdventureRankRewardSource;
 import hifumi.cresora.AdventureRankService;
+import hifumi.cresora.CreditsRewardClassifier;
+import hifumi.cresora.CreditsRewardSource;
+import hifumi.cresora.CreditsService;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -40,6 +43,11 @@ public abstract class ItemEntityMixin {
         AdventureRankRewardSource source = AdventureRankRewardClassifier.INSTANCE.classify(this.cresora$pickupSnapshot);
         if (source != null) {
             AdventureRankService.INSTANCE.addReward(serverPlayer, source, pickedCount);
+        }
+
+        CreditsRewardSource creditsSource = CreditsRewardClassifier.INSTANCE.classify(this.cresora$pickupSnapshot);
+        if (creditsSource != null) {
+            CreditsService.INSTANCE.addPickupReward(serverPlayer, creditsSource, pickedCount);
         }
 
         this.cresora$pickupSnapshot = ItemStack.EMPTY;

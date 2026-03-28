@@ -10,11 +10,15 @@ object EquipmentGenerationService {
         definition: EquipmentDefinition,
         startingLevel: Int = 0,
         forcedRarity: EquipmentRarity? = null,
-        dropProfile: EquipmentDropProfile? = null
+        dropProfile: EquipmentDropProfile? = null,
+        blockedMainStatTypes: Set<StatType> = emptySet()
     ): EquipmentData {
-        val rarity = forcedRarity ?: rollRarity(random)
-        val mainType = rollWeightedStat(definition.slotType.mainStatCandidates, random) { type ->
-            definition.slotType.mainWeight(type) * (dropProfile?.mainWeight(type) ?: 1.0)
+        val slotType = definition.slotType()
+        val rarity = forcedRarity ?: rollRarity(random, definition)
+        val mainCandidates = slotType.mainStatCandidates.filterNot(blockedMainStatTypes::contains)
+            .ifEmpty { slotType.mainStatCandidates }
+        val mainType = rollWeightedStat(mainCandidates, random) { type ->
+            slotType.mainWeight(type) * (dropProfile?.mainWeight(type) ?: 1.0)
         }
         var data = EquipmentData(
             rarity = rarity,
@@ -22,7 +26,7 @@ object EquipmentGenerationService {
             mainStat = StatEntry(mainType, rollMainStatValue(mainType, rarity, random)),
             subStats = emptyList(),
             upgradeCount = 0,
-            slotType = definition.slotType,
+            slotTypeId = definition.slotTypeId,
             setId = definition.setId
         )
 
@@ -45,7 +49,7 @@ object EquipmentGenerationService {
     ): EquipmentData {
         return createEquipment(
             random = random,
-            definition = EquipmentDefinitions.HINAGATA_WAND,
+            definition = EquipmentDefinitions.HINAGATA_WAND.resolve(),
             startingLevel = startingLevel,
             forcedRarity = forcedRarity,
             dropProfile = dropProfile
@@ -53,11 +57,12 @@ object EquipmentGenerationService {
     }
 
     fun rollNewSubStat(data: EquipmentData, random: Random, dropProfile: EquipmentDropProfile? = null): StatEntry {
+        val slotType = EquipmentContentRegistry.requireSlot(data.slotTypeId)
         val excludedTypes = data.subStats.mapTo(mutableSetOf()) { it.type }
         excludedTypes += data.mainStat.type
         val candidates = SUB_STAT_POOL.filterNot(excludedTypes::contains)
         val type = rollWeightedStat(candidates, random) { statType ->
-            data.slotType.subWeight(statType) * (dropProfile?.subWeight(statType) ?: 1.0)
+            slotType.subWeight(statType) * (dropProfile?.subWeight(statType) ?: 1.0)
         }
         return StatEntry(type, rollSubStatValue(type, data.rarity, random))
     }
@@ -70,12 +75,16 @@ object EquipmentGenerationService {
         return rollValue(type, rarity, subStat = false, random = random) * 0.45
     }
 
-    private fun rollRarity(random: Random): EquipmentRarity {
-        return when (random.nextInt(100)) {
-            in 0..49 -> EquipmentRarity.THREE_STAR
-            in 50..84 -> EquipmentRarity.FOUR_STAR
-            else -> EquipmentRarity.FIVE_STAR
+    private fun rollRarity(random: Random, definition: EquipmentDefinition): EquipmentRarity {
+        val weights = definition.rarityWeights
+        if (weights.isEmpty()) {
+            return when (random.nextInt(100)) {
+                in 0..49 -> EquipmentRarity.THREE_STAR
+                in 50..84 -> EquipmentRarity.FOUR_STAR
+                else -> EquipmentRarity.FIVE_STAR
+            }
         }
+        return rollWeightedStat(EquipmentRarity.entries, random) { rarity -> weights[rarity] ?: 0.0 }
     }
 
     private fun rollMainStatValue(type: StatType, rarity: EquipmentRarity, random: Random): Double {
@@ -91,6 +100,33 @@ object EquipmentGenerationService {
         random: Random,
         weightProvider: (StatType) -> Double
     ): StatType {
+        if (candidates.size == 1) {
+            return candidates.first()
+        }
+
+        var totalWeight = 0.0
+        val weights = candidates.associateWith { candidate ->
+            weightProvider(candidate).coerceAtLeast(0.0).also { totalWeight += it }
+        }
+        if (totalWeight <= 0.0) {
+            return candidates[random.nextInt(candidates.size)]
+        }
+
+        var roll = random.nextDouble() * totalWeight
+        for (candidate in candidates) {
+            roll -= weights.getValue(candidate)
+            if (roll <= 0.0) {
+                return candidate
+            }
+        }
+        return candidates.last()
+    }
+
+    private fun rollWeightedStat(
+        candidates: List<EquipmentRarity>,
+        random: Random,
+        weightProvider: (EquipmentRarity) -> Double
+    ): EquipmentRarity {
         if (candidates.size == 1) {
             return candidates.first()
         }

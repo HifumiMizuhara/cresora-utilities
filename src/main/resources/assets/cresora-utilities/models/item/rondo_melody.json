@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "cresora-utilities:item/rondo_melody"
+  }
+}

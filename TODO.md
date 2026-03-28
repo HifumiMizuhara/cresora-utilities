@@ -4,13 +4,16 @@
 - Expand the generalized equipment system so future equipment classes can reuse the same generation and growth backend
 - Add more Trinkets slot mappings and item categories for future non-pendant equipment parts
 - Revisit balance numbers for rarity rates, stat roll ranges, and sacrifice-upgrade payoff
+- Implement real handlers for the new set-effect hook triggers so future stack-based / event-based set bonuses can do more than flat stat grants
+- Consider splitting `equipment_content.json` into multiple resource files once the number of sets grows, while keeping the same registry-facing schema
+- Re-run in-game verification that `/cresora_stats` set summaries match actual equipped-piece counts and active 2-piece / 4-piece thresholds
 - Continue in-game GUI polishing, especially visual balance between slots, metrics, and button placement
 - Sub-TODO: Move upgrade details out of the fragile main GUI and into mouse-hover tooltips wherever possible
 - Keep reducing text noise and rely more on layout, hierarchy, and short labels
 - Reserve more generic slot validation and display logic for future upgradable equipment beyond the current item
 - Re-evaluate whether the current upgrade button should become a more vanilla workstation-like interaction
 - Decide whether `upgrade.png` should remain as a resource or be fully replaced by code-driven / vanilla texture rendering
-- Re-run in-game verification that `hinagatastue` can be inserted into the Trinkets UI `necklace` slot after the explicit Trinket registration fallback
+- Re-run in-game verification that `hinagata_wand` can be inserted into the Trinkets UI `necklace` slot after the auto-registration refactor
 - Re-run in-game verification that the new Hinagata hat, glasses, armor, and boots each equip into the intended Trinkets slots
 - Re-run in-game verification that the Hinagata 2-piece and 4-piece bonuses apply correctly to `/cresora_stats` and live combat damage
 - Re-run in-game verification that upgraded non-wand artifacts preserve their slot type, set ID, and tooltip data correctly
@@ -30,3 +33,42 @@
 - Re-run in-game verification that zombie drops skew toward survival stats, skeleton drops skew toward offense/crit, and warden drops skew toward premium mixed stats
 - Re-run in-game combat verification of the new base crit profile and confirm the default `5%` crit chance feels correct with the current damage pacing
 - Re-run in-game verification that outgoing damage bonus and incoming damage reduction now surface in action-bar feedback cleanly during live combat
+- Re-run in-game verification that `/cresora_credits` shows correct balances for normal players and admin subcommands
+- Re-run in-game verification that artifact upgrades consume `CSC 500` and no longer consume player XP
+- Re-run in-game verification that the upgrade GUI locks and unlocks correctly when CSC balance changes
+- Revisit CSC reward coefficients after live play and confirm low-rank and high-rank income pacing both feel right
+- Decide later whether CSC reward values should move from code constants into JSON content data
+- Re-run in-game verification that the expanded hostile pool actually drops artifacts and upgrade materials at the intended rates across overworld, nether, ocean, raid, and end mobs
+- Re-run in-game verification that expanded hostile families grant sensible CSC and adventure-rank XP values at low and high `Lv`
+- Re-run in-game verification that elite enemies such as `evoker`, `ravager`, `piglin_brute`, `elder_guardian`, `shulker`, and `warden` feel rewarding without flooding high-rarity drops
+- Re-run in-game verification that `rondo_melody_fragment` drops from hostile mobs at `Lv 5+` and that `rondo_melody` rarity rolls begin at `Lv 5 / 25 / 45 / 65`
+- Re-run in-game verification that `Lv 70+` mobs give the intended five-star / fragment bonus behavior for `rondo_melody`
+- Re-run in-game verification that `Melody of the Rondo` starts near wooden-sword strength and exceeds diamond-tier damage after enough base levels
+- Re-run in-game verification that the shield skill lasts `15` seconds, absorbs the configured amount, and respects the `20` second cooldown
+- Re-run in-game verification that `masquerade_invitation` heals the intended amount at each skill level and still triggers its `30` second cooldown correctly
+- Re-run in-game verification that sneak-right-click opens the weapon upgrade UI while normal right-click still triggers the skill
+- Re-run in-game verification that the `Melody of the Rondo` shield now blocks damage correctly even with `damage_reduction` at `0%`
+- Re-run in-game verification that weapon-skill cooldown no longer blocks sneak-right-click weapon leveling
+- Re-run in-game verification that mixed weapon effect types now render correctly in tooltip and weapon-upgrade UI without leaving any hardcoded shield wording behind
+- Re-run in-game verification that `rondo_melody` and `masquerade_invitation` now maintain separate cooldown boss bars and do not share cooldown state
+- Re-run in-game verification that base weapon leveling works cleanly once fragments are present and the new UI status text matches the real blocker
+- Re-run in-game verification that the new cooldown progress action-bar feedback feels readable and not too spammy during combat
+- Re-run in-game verification that the newly imported custom item PNG textures render correctly in inventory, tooltip, GUI, and held-item contexts
+- Revisit whether weapon base-level upgrades should keep using a flat one-fragment cost per level or move to a richer formula later
+- Decide later whether weapon fragments should also award CSC or adventure-rank XP on pickup
+- Add distinct high-rarity weapon upgrade formulas once star `3 / 4 / 5` balancing is defined
+- Re-run in-game verification that `/cresora_shop` opens for normal players, shows current CSC, and correctly deducts CSC on purchase
+- Re-run in-game verification that `zankyo_kanata_alpha` opens its selection UI from the artifact-upgrade right slot and safely returns items when canceled
+- Re-run in-game verification that `zankyo_kanata_alpha` correctly swaps to the same slot on another set once a second set is added to `equipment_content.json`
+- Re-run in-game verification that `zankyo_kanata_beta` rerolls the target artifact to max level and guarantees at least two hits on one of the two selected stat types
+- Decide later whether `zankyo_kanata_alpha` should preserve rarity or level once the multi-set farming loop is balanced in live play
+- Revisit whether `artifact_special_items.json` should also drive item-model fallback selection instead of relying on manually added resource files
+- Re-run in-game verification that `/cresora_domain` opens for normal players and shows all starter domains with correct unlock gates and entry costs
+- Re-run in-game verification that domain entry correctly consumes CSC once, teleports into the arena, and returns the player to the original position after clear
+- Re-run in-game verification that domain failure on death and manual leave cleans up spawned mobs and frees the arena slot
+- Re-run in-game verification that domain waves spawn in the intended order and use the session-fixed enemy Lv instead of nearby-player rank lookup
+- Re-run in-game verification that domain mobs still feel fair under the added domain combat scalars, especially elite waves near rank `55-70`
+- Re-run in-game verification that `hinagata_archive` drops focused Hinagata pieces, `rondo_forge` drops focused Rondo fragments, and `credit_drill` pays out CSC / rank XP at the intended pace
+- Re-run in-game verification that `masquerade_soiree` drops focused `masquerade_invitation_fragment` rewards at the intended rate
+- Decide later whether domain mobs should keep their normal field-drop behavior or switch to clear-reward-only for tighter economy control
+- Decide later whether domain selection should surface more per-domain detail in-screen instead of relying on compact slot names

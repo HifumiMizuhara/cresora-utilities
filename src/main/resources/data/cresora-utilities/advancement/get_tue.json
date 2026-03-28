@@ -2,7 +2,7 @@
   "parent": "cresora-utilities:root",
   "display": {
     "icon": {
-      "id": "cresora-utilities:hinagatastue"
+      "id": "cresora-utilities:hinagata_wand"
     },
     "title": {
       "translate": "advancement.cresora.get_hinagatas_tue.title"
@@ -21,7 +21,7 @@
       "conditions": {
         "items": [
           {
-            "items": ["cresora-utilities:hinagatastue"]
+            "items": ["cresora-utilities:hinagata_wand"]
           }
         ]
       }

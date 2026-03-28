@@ -1,0 +1,128 @@
+{
+  "weaponDefinitions": [
+    {
+      "id": "rondo_melody",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 4.0,
+      "attackDamagePerLevel": 0.14,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "skill": {
+        "effectId": "shield",
+        "durationSeconds": 15,
+        "cooldownSeconds": 20,
+        "shieldBaseHearts": 3.0,
+        "shieldPerLevelHearts": 0.5
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "rondo_melody_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "2_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 5,
+          "chance": 0.08,
+          "minCount": 1,
+          "maxCount": 1,
+          "bonusCountAtLevel70": 1
+        },
+        "directDropTiers": [
+          {
+            "rarity": "2_star",
+            "minMobLevel": 5,
+            "chance": 0.012
+          },
+          {
+            "rarity": "3_star",
+            "minMobLevel": 25,
+            "chance": 0.008
+          },
+          {
+            "rarity": "4_star",
+            "minMobLevel": 45,
+            "chance": 0.005
+          },
+          {
+            "rarity": "5_star",
+            "minMobLevel": 65,
+            "chance": 0.0025
+          }
+        ],
+        "directDropBaseLevelMultiplier": 0.5,
+        "fiveStarChanceMultiplierAtLevel70": 1.5
+      }
+    },
+    {
+      "id": "masquerade_invitation",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 4.0,
+      "attackDamagePerLevel": 0.14,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "skill": {
+        "effectId": "heal",
+        "durationSeconds": 0,
+        "cooldownSeconds": 30,
+        "shieldBaseHearts": 2.0,
+        "shieldPerLevelHearts": 0.5
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "masquerade_invitation_fragment",
+        "fragmentBaseItemId": "minecraft:amethyst_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "2_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 5,
+          "chance": 0.08,
+          "minCount": 1,
+          "maxCount": 1,
+          "bonusCountAtLevel70": 1
+        },
+        "directDropTiers": [
+          {
+            "rarity": "2_star",
+            "minMobLevel": 5,
+            "chance": 0.012
+          },
+          {
+            "rarity": "3_star",
+            "minMobLevel": 25,
+            "chance": 0.008
+          },
+          {
+            "rarity": "4_star",
+            "minMobLevel": 45,
+            "chance": 0.005
+          },
+          {
+            "rarity": "5_star",
+            "minMobLevel": 65,
+            "chance": 0.0025
+          }
+        ],
+        "directDropBaseLevelMultiplier": 0.5,
+        "fiveStarChanceMultiplierAtLevel70": 1.5
+      }
+    }
+  ]
+}

@@ -5,25 +5,30 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.math.random.Random
 
 object EquipmentStackSupport {
-    fun getDefinition(item: Item): EquipmentDefinition? {
-        return when (item) {
-            CreSoraUtilities.STRENGTH_PENDANT -> EquipmentDefinitions.HINAGATA_WAND
-            CreSoraUtilities.HINAGATA_HAT -> EquipmentDefinitions.HINAGATA_HAT
-            CreSoraUtilities.HINAGATA_GLASSES -> EquipmentDefinitions.HINAGATA_GLASSES
-            CreSoraUtilities.HINAGATA_ARMOR -> EquipmentDefinitions.HINAGATA_ARMOR
-            CreSoraUtilities.HINAGATA_BOOTS -> EquipmentDefinitions.HINAGATA_BOOTS
-            else -> null
-        }
+    private val definitionsByItem: MutableMap<Item, EquipmentDefinitionRef> = linkedMapOf()
+    private val itemsByDefinitionId: MutableMap<String, Item> = linkedMapOf()
+
+    fun registerEquipmentItem(item: Item, definition: EquipmentDefinitionRef) {
+        definitionsByItem[item] = definition
+        itemsByDefinitionId[definition.id] = item
     }
+
+    fun getDefinitionRef(item: Item): EquipmentDefinitionRef? = definitionsByItem[item]
+
+    fun getDefinition(item: Item): EquipmentDefinition? = definitionsByItem[item]?.resolve()
 
     fun getDefinition(stack: ItemStack): EquipmentDefinition? = getDefinition(stack.item)
 
-    fun isEquipment(stack: ItemStack): Boolean = getDefinition(stack) != null
+    fun itemForDefinitionId(definitionId: String): Item? = itemsByDefinitionId[definitionId]
+
+    fun allEquipmentItems(): List<Item> = itemsByDefinitionId.values.toList()
+
+    fun isEquipment(stack: ItemStack): Boolean = definitionsByItem.containsKey(stack.item)
 
     fun getEquipmentData(stack: ItemStack): EquipmentData? {
         val definition = getDefinition(stack) ?: return null
         val existing = stack.get(ModDataComponents.EQUIPMENT_DATA)
-            ?.copy(slotType = definition.slotType, setId = definition.setId)
+            ?.copy(slotTypeId = definition.slotTypeId, setId = definition.setId)
             ?.normalized()
         if (existing != null) {
             return existing
@@ -39,22 +44,24 @@ object EquipmentStackSupport {
 
     fun defaultEquipmentData(definition: EquipmentDefinition, level: Int = 1): EquipmentData {
         val normalizedLevel = level.coerceAtLeast(0)
+        val slotType = definition.slotType()
+        val defaultMainStat = slotType.defaultMainStat()
         return EquipmentData(
             rarity = rarityForLevel(normalizedLevel),
             level = normalizedLevel,
             mainStat = StatEntry(
-                definition.slotType.defaultMainStat(),
-                defaultMainStatValue(definition.slotType.defaultMainStat(), normalizedLevel)
+                defaultMainStat,
+                defaultMainStatValue(defaultMainStat, normalizedLevel)
             ),
             subStats = emptyList(),
             upgradeCount = normalizedLevel / 4,
-            slotType = definition.slotType,
+            slotTypeId = definition.slotTypeId,
             setId = definition.setId
         ).normalized()
     }
 
     fun defaultPendantData(level: Int = 1): EquipmentData {
-        return defaultEquipmentData(EquipmentDefinitions.HINAGATA_WAND, level)
+        return defaultEquipmentData(EquipmentDefinitions.HINAGATA_WAND.resolve(), level)
     }
 
     fun ensureEquipmentData(stack: ItemStack, random: Random? = null): EquipmentData {
@@ -83,7 +90,7 @@ object EquipmentStackSupport {
 
     fun syncEquipmentData(stack: ItemStack, data: EquipmentData): EquipmentData {
         val definition = getDefinition(stack) ?: return data.normalized()
-        val normalized = data.copy(slotType = definition.slotType, setId = definition.setId).normalized()
+        val normalized = data.copy(slotTypeId = definition.slotTypeId, setId = definition.setId).normalized()
         stack.set(ModDataComponents.EQUIPMENT_DATA, normalized)
         stack.set(ModDataComponents.LEVEL, normalized.level)
         return normalized

@@ -11,6 +11,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import java.util.Locale
 
 object Commands {
     fun init() {
@@ -35,7 +36,9 @@ object Commands {
 
                         context.source.sendFeedback({ Text.translatable("commands.cresora.stats.header") }, false)
                         context.source.sendFeedback({ buildRankSummaryLine(player) }, false)
+                        context.source.sendFeedback({ buildCreditsSummaryLine(player) }, false)
                         context.source.sendFeedback({ Text.translatable("commands.cresora.stats.equipment_section") }, false)
+                        context.source.sendFeedback({ buildSetSummaryLine(player) }, false)
                         context.source.sendFeedback(
                             { buildStatGroupLine(totals, StatType.ATK_FLAT, StatType.ATK_PERCENT, StatType.HP_FLAT, StatType.HP_PERCENT) },
                             false
@@ -133,6 +136,100 @@ object Commands {
                             )
                     )
             )
+
+            dispatcher.register(
+                literal("cresora_credits")
+                    .executes { context ->
+                        showCredits(context.source, context.source.playerOrThrow)
+                        1
+                    }
+                    .then(
+                        literal("get")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .then(
+                                argument("player", EntityArgumentType.player())
+                                    .executes { context ->
+                                        val target = EntityArgumentType.getPlayer(context, "player")
+                                        context.source.sendFeedback(
+                                            { buildCreditsTargetLine(target) },
+                                            false
+                                        )
+                                        1
+                                    }
+                            )
+                    )
+                    .then(
+                        literal("add")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .then(
+                                argument("player", EntityArgumentType.player())
+                                    .then(
+                                        argument("amount", integer(1))
+                                            .executes { context ->
+                                                val target = EntityArgumentType.getPlayer(context, "player")
+                                                val amount = getInteger(context, "amount")
+                                                val total = CreditsService.addCredits(target, amount)
+                                                context.source.sendFeedback(
+                                                    {
+                                                        Text.translatable(
+                                                            "commands.cresora.credits.add_feedback",
+                                                            formatWholeNumber(amount),
+                                                            target.displayName,
+                                                            formatWholeNumber(total)
+                                                        )
+                                                    },
+                                                    true
+                                                )
+                                                1
+                                            }
+                                    )
+                            )
+                    )
+                    .then(
+                        literal("set")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .then(
+                                argument("player", EntityArgumentType.player())
+                                    .then(
+                                        argument("amount", integer(0))
+                                            .executes { context ->
+                                                val target = EntityArgumentType.getPlayer(context, "player")
+                                                val amount = getInteger(context, "amount")
+                                                val total = CreditsService.setCredits(target, amount)
+                                                context.source.sendFeedback(
+                                                    {
+                                                        Text.translatable(
+                                                            "commands.cresora.credits.set_feedback",
+                                                            target.displayName,
+                                                            formatWholeNumber(total)
+                                                        )
+                                                    },
+                                                    true
+                                                )
+                                                1
+                                            }
+                                    )
+                            )
+                    )
+            )
+
+            dispatcher.register(
+                literal("cresora_shop")
+                    .requires { source -> source.entity is ServerPlayerEntity }
+                    .executes { context ->
+                        ArtifactUiFlow.openShop(context.source.playerOrThrow)
+                        1
+                    }
+            )
+
+            dispatcher.register(
+                literal("cresora_domain")
+                    .requires { source -> source.entity is ServerPlayerEntity }
+                    .executes { context ->
+                        ArtifactUiFlow.openDomainSelection(context.source.playerOrThrow)
+                        1
+                    }
+            )
         }
     }
 
@@ -170,6 +267,35 @@ object Commands {
         }
     }
 
+    private fun buildCreditsSummaryLine(player: ServerPlayerEntity): Text {
+        return Text.translatable("commands.cresora.stats.credits_line", formatWholeNumber(CreditsService.getCredits(player)))
+    }
+
+    private fun buildSetSummaryLine(player: ServerPlayerEntity): Text {
+        val summaries = EquipmentPlayerSupport.getActiveSetSummaries(player)
+        if (summaries.isEmpty()) {
+            return Text.translatable("commands.cresora.stats.sets_none")
+        }
+
+        val line = Text.empty().append(Text.translatable("commands.cresora.stats.sets_label")).append(Text.literal(" "))
+        summaries.forEachIndexed { index, summary ->
+            if (index > 0) {
+                line.append(Text.literal(" | "))
+            }
+            val thresholds = summary.activeThresholds.joinToString("/")
+            line.append(
+                Text.translatable(
+                    "commands.cresora.stats.sets_entry",
+                    Text.translatable(summary.set.translationKey()),
+                    summary.pieceCount,
+                    EquipmentContentRegistry.equipmentCountForSet(summary.set.id),
+                    thresholds
+                )
+            )
+        }
+        return line
+    }
+
     private fun showRank(source: ServerCommandSource, player: ServerPlayerEntity) {
         val progress = AdventureRankService.getProgress(player)
         source.sendFeedback({ Text.translatable("commands.cresora.rank.header") }, false)
@@ -188,6 +314,19 @@ object Commands {
                 }
             },
             false
+        )
+    }
+
+    private fun showCredits(source: ServerCommandSource, player: ServerPlayerEntity) {
+        source.sendFeedback({ Text.translatable("commands.cresora.credits.header") }, false)
+        source.sendFeedback({ buildCreditsSummaryLine(player) }, false)
+    }
+
+    private fun buildCreditsTargetLine(player: ServerPlayerEntity): Text {
+        return Text.translatable(
+            "commands.cresora.credits.target",
+            player.displayName,
+            formatWholeNumber(CreditsService.getCredits(player))
         )
     }
 
@@ -223,5 +362,9 @@ object Commands {
         } else {
             rounded.toString()
         }
+    }
+
+    private fun formatWholeNumber(value: Int): String {
+        return String.format(Locale.ROOT, "%,d", value)
     }
 }

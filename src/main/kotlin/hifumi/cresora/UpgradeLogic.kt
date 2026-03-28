@@ -2,17 +2,20 @@ package hifumi.cresora
 
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.math.max
 
 object UpgradeLogic {
-    const val XP_COST = 2
+    const val CSC_COST = 500
 
     enum class MaterialType {
         NONE,
         TUESHOKAKU,
         PENDANT,
+        ALPHA_KANATA,
+        BETA_KANATA,
         INVALID
     }
 
@@ -31,7 +34,7 @@ object UpgradeLogic {
         val message: Text
     )
 
-    fun getPreview(baseStack: ItemStack, materialStack: ItemStack, player: PlayerEntity?): Preview {
+    fun getPreview(baseStack: ItemStack, materialStack: ItemStack, availableCredits: Int?): Preview {
         if (!EquipmentStackSupport.isEquipment(baseStack)) {
             return Preview(MaterialType.NONE, 0, 0, 0, false, "screen.cresora.upgrade.need_base")
         }
@@ -46,8 +49,30 @@ object UpgradeLogic {
             return Preview(MaterialType.NONE, currentLevel, currentLevel, 0, false, "screen.cresora.upgrade.insert_material")
         }
 
-        if (player != null && player.experienceLevel < XP_COST) {
-            return Preview(MaterialType.NONE, currentLevel, currentLevel, 0, false, "item.cresora.not_enough_xp")
+        if (ArtifactSpecialItemSupport.isKind(materialStack, ArtifactSpecialItemKind.ALPHA)) {
+            return Preview(
+                MaterialType.ALPHA_KANATA,
+                currentLevel,
+                0,
+                1000,
+                true,
+                "screen.cresora.upgrade.ready_alpha"
+            )
+        }
+
+        if (ArtifactSpecialItemSupport.isKind(materialStack, ArtifactSpecialItemKind.BETA)) {
+            return Preview(
+                MaterialType.BETA_KANATA,
+                currentLevel,
+                baseData.rarity.maxLevel,
+                1000,
+                true,
+                "screen.cresora.upgrade.ready_beta"
+            )
+        }
+
+        if (availableCredits != null && availableCredits < CSC_COST) {
+            return Preview(MaterialType.NONE, currentLevel, currentLevel, 0, false, "item.cresora.not_enough_credits")
         }
 
         if (materialStack.isOf(CreSoraUtilities.TUESHOKAKU)) {
@@ -83,18 +108,19 @@ object UpgradeLogic {
     }
 
     fun attemptUpgrade(player: PlayerEntity, baseStack: ItemStack, materialStack: ItemStack): AttemptResult {
-        val preview = getPreview(baseStack, materialStack, player)
+        val serverPlayer = player as? ServerPlayerEntity
+            ?: return AttemptResult(false, false, Text.translatable("item.cresora.not_enough_credits").formatted(Formatting.RED))
+        val preview = getPreview(baseStack, materialStack, CreditsService.getCredits(serverPlayer))
         if (!preview.canUpgrade) {
             return AttemptResult(false, false, Text.translatable(preview.messageKey ?: "screen.cresora.upgrade.invalid_material").formatted(Formatting.RED))
         }
 
-        if (player.experienceLevel < XP_COST) {
-            return AttemptResult(false, false, Text.translatable("item.cresora.not_enough_xp").formatted(Formatting.RED))
+        if (!CreditsService.spendCredits(serverPlayer, CSC_COST)) {
+            return AttemptResult(false, false, Text.translatable("item.cresora.not_enough_credits").formatted(Formatting.RED))
         }
 
         val denominator = 1000 / preview.successRatePermille
         val success = player.random.nextInt(denominator) == 0
-        player.addExperienceLevels(-XP_COST)
 
         return when (preview.materialType) {
             MaterialType.TUESHOKAKU -> {

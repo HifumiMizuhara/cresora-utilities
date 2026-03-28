@@ -1,12 +1,13 @@
 package hifumi.cresora
 
+import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.emi.trinkets.api.TrinketsApi
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.entity.EntityType
+import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.loot.LootPool
@@ -29,6 +30,7 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
 import java.util.Optional
+import kotlin.math.max
 
 val version: String
 	get() = FabricLoader.getInstance()
@@ -40,31 +42,66 @@ object CreSoraUtilities : ModInitializer {
 	const val MOD_ID = "cresora-utilities"
 
 	private val logger = LoggerFactory.getLogger(MOD_ID)
-	private val HINAGATASTUE_ID: Identifier = Identifier.of(MOD_ID, "hinagatastue")
-	private val HINAGATA_HAT_ID: Identifier = Identifier.of(MOD_ID, "hinagata_hat")
-	private val HINAGATA_GLASSES_ID: Identifier = Identifier.of(MOD_ID, "hinagata_glasses")
-	private val HINAGATA_ARMOR_ID: Identifier = Identifier.of(MOD_ID, "hinagata_armor")
-	private val HINAGATA_BOOTS_ID: Identifier = Identifier.of(MOD_ID, "hinagata_boots")
 	private val TUESHOKAKU_ID: Identifier = Identifier.of(MOD_ID, "tueshokaku")
 	private val VERSION_VERIFIER_ID: Identifier = Identifier.of("${MOD_ID}$version", "versionverifier")
 
-	val STRENGTH_PENDANT: ArtifactEquipmentItem = Hinagatas_Tue(itemSettings(HINAGATASTUE_ID))
-	val HINAGATA_HAT: ArtifactEquipmentItem = ArtifactEquipmentItem(EquipmentDefinitions.HINAGATA_HAT, itemSettings(HINAGATA_HAT_ID))
-	val HINAGATA_GLASSES: ArtifactEquipmentItem = ArtifactEquipmentItem(EquipmentDefinitions.HINAGATA_GLASSES, itemSettings(HINAGATA_GLASSES_ID))
-	val HINAGATA_ARMOR: ArtifactEquipmentItem = ArtifactEquipmentItem(EquipmentDefinitions.HINAGATA_ARMOR, itemSettings(HINAGATA_ARMOR_ID))
-	val HINAGATA_BOOTS: ArtifactEquipmentItem = ArtifactEquipmentItem(EquipmentDefinitions.HINAGATA_BOOTS, itemSettings(HINAGATA_BOOTS_ID))
+	private val EQUIPMENT_ITEMS: MutableMap<String, ArtifactEquipmentItem> = linkedMapOf()
+	private val WEAPON_ITEMS: MutableMap<String, CresoraWeaponItem> = linkedMapOf()
+	private val WEAPON_FRAGMENT_ITEMS: MutableMap<String, WeaponFragmentItem> = linkedMapOf()
+	private val ARTIFACT_SPECIAL_ITEMS: MutableMap<String, ArtifactSpecialItem> = linkedMapOf()
 	val TUESHOKAKU: Item = tueshokaku(itemSettings(TUESHOKAKU_ID))
 	val VERIFY: Item = Item(itemSettings(VERSION_VERIFIER_ID))
 
 	lateinit var UPGRADE_SCREEN_HANDLER: ScreenHandlerType<UpgradeScreenHandler>
+	lateinit var WEAPON_UPGRADE_SCREEN_HANDLER: ScreenHandlerType<WeaponUpgradeScreenHandler>
+	lateinit var DOMAIN_SELECTION_SCREEN_HANDLER: ScreenHandlerType<DomainSelectionScreenHandler>
+	lateinit var DOMAIN_REWARD_SCREEN_HANDLER: ScreenHandlerType<DomainRewardScreenHandler>
+	lateinit var ARTIFACT_SHOP_SCREEN_HANDLER: ScreenHandlerType<ArtifactShopScreenHandler>
+	lateinit var ARTIFACT_ALPHA_SCREEN_HANDLER: ScreenHandlerType<ArtifactAlphaScreenHandler>
+	lateinit var ARTIFACT_BETA_SCREEN_HANDLER: ScreenHandlerType<ArtifactBetaScreenHandler>
 	lateinit var SET_LEVEL_LOOT_FUNCTION: LootFunctionType<SetLevelLootFunction>
 
 	override fun onInitialize() {
 		ModDataComponents.initialize()
+		EquipmentContentRegistry.init()
+		WeaponContentRegistry.init()
+		ArtifactSpecialItemRegistry.init()
+		DomainRewardProfileRegistry.init()
+		DomainContentRegistry.init()
 		UPGRADE_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "upgrade"),
-			ScreenHandlerType(::UpgradeScreenHandler, FeatureFlags.VANILLA_FEATURES)
+			ScreenHandlerType({ syncId, playerInventory -> UpgradeScreenHandler(syncId, playerInventory) }, FeatureFlags.VANILLA_FEATURES)
+		)
+		WEAPON_UPGRADE_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "weapon_upgrade"),
+			ScreenHandlerType(::WeaponUpgradeScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		DOMAIN_SELECTION_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "domain_selection"),
+			ScreenHandlerType(::DomainSelectionScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		DOMAIN_REWARD_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "domain_reward"),
+			ScreenHandlerType(::DomainRewardScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		ARTIFACT_SHOP_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "artifact_shop"),
+			ScreenHandlerType(::ArtifactShopScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		ARTIFACT_ALPHA_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "artifact_alpha"),
+			ScreenHandlerType(::ArtifactAlphaScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		ARTIFACT_BETA_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "artifact_beta"),
+			ScreenHandlerType(::ArtifactBetaScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
 		SET_LEVEL_LOOT_FUNCTION = Registry.register(
 			Registries.LOOT_FUNCTION_TYPE,
@@ -75,28 +112,68 @@ object CreSoraUtilities : ModInitializer {
 		Join.init()
 		Commands.init()
 		AdventureRankHooks.init()
+		DomainHooks.init()
 		EquipmentAttributeService.init()
+		WeaponAttributeService.init()
+		WeaponSkillService.init()
+		registerEquipmentItems()
+		registerWeaponItems()
+		registerArtifactSpecialItems()
 		modifyLootTables()
 
-		Registry.register(Registries.ITEM, HINAGATASTUE_ID, STRENGTH_PENDANT)
-		Registry.register(Registries.ITEM, HINAGATA_HAT_ID, HINAGATA_HAT)
-		Registry.register(Registries.ITEM, HINAGATA_GLASSES_ID, HINAGATA_GLASSES)
-		Registry.register(Registries.ITEM, HINAGATA_ARMOR_ID, HINAGATA_ARMOR)
-		Registry.register(Registries.ITEM, HINAGATA_BOOTS_ID, HINAGATA_BOOTS)
 		Registry.register(Registries.ITEM, TUESHOKAKU_ID, TUESHOKAKU)
 		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
-
-		TrinketsApi.registerTrinket(STRENGTH_PENDANT, STRENGTH_PENDANT)
-		TrinketsApi.registerTrinket(HINAGATA_HAT, HINAGATA_HAT)
-		TrinketsApi.registerTrinket(HINAGATA_GLASSES, HINAGATA_GLASSES)
-		TrinketsApi.registerTrinket(HINAGATA_ARMOR, HINAGATA_ARMOR)
-		TrinketsApi.registerTrinket(HINAGATA_BOOTS, HINAGATA_BOOTS)
 
 		logger.info("CreSora Utilities initialized!")
 	}
 
+	fun equipmentItem(definitionId: String): ArtifactEquipmentItem {
+		return EQUIPMENT_ITEMS[definitionId] ?: error("Unknown registered equipment item: $definitionId")
+	}
+
+	fun weaponItem(definitionId: String): CresoraWeaponItem {
+		return WEAPON_ITEMS[definitionId] ?: error("Unknown registered weapon item: $definitionId")
+	}
+
+	fun artifactSpecialItem(definitionId: String): ArtifactSpecialItem {
+		return ARTIFACT_SPECIAL_ITEMS[definitionId] ?: error("Unknown registered artifact special item: $definitionId")
+	}
+
 	private fun itemSettings(id: Identifier): Item.Settings {
 		return Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, id))
+	}
+
+	private fun registerEquipmentItems() {
+		for (definition in EquipmentContentRegistry.equipmentDefinitions()) {
+			val itemId = Identifier.of(MOD_ID, definition.id)
+			val item = ArtifactEquipmentItem(EquipmentDefinitionRef(definition.id), itemSettings(itemId))
+			EQUIPMENT_ITEMS[definition.id] = Registry.register(Registries.ITEM, itemId, item)
+			EquipmentStackSupport.registerEquipmentItem(item, EquipmentDefinitionRef(definition.id))
+			TrinketsApi.registerTrinket(item, item)
+		}
+	}
+
+	private fun registerWeaponItems() {
+		for (definition in WeaponContentRegistry.weaponDefinitions()) {
+			val weaponId = Identifier.of(MOD_ID, definition.id)
+			val weaponItem = CresoraWeaponItem(WeaponDefinitionRef(definition.id), itemSettings(weaponId).maxCount(1))
+			WEAPON_ITEMS[definition.id] = Registry.register(Registries.ITEM, weaponId, weaponItem)
+			WeaponStackSupport.registerWeaponItem(weaponItem, WeaponDefinitionRef(definition.id))
+
+			val fragmentId = Identifier.of(MOD_ID, definition.craft.fragmentItemId)
+			val fragmentItem = WeaponFragmentItem(WeaponDefinitionRef(definition.id), itemSettings(fragmentId))
+			WEAPON_FRAGMENT_ITEMS[definition.id] = Registry.register(Registries.ITEM, fragmentId, fragmentItem)
+			WeaponStackSupport.registerFragmentItem(fragmentItem, WeaponDefinitionRef(definition.id))
+		}
+	}
+
+	private fun registerArtifactSpecialItems() {
+		for (definition in ArtifactSpecialItemRegistry.definitions()) {
+			val itemId = Identifier.of(MOD_ID, definition.id)
+			val item = ArtifactSpecialItem(definition.id, itemSettings(itemId))
+			ARTIFACT_SPECIAL_ITEMS[definition.id] = Registry.register(Registries.ITEM, itemId, item)
+			ArtifactSpecialItemSupport.registerItem(item, definition.id)
+		}
 	}
 
 	private fun modifyLootTables() {
@@ -105,48 +182,22 @@ object CreSoraUtilities : ModInitializer {
 				return@register
 			}
 
-			when (key) {
-				EntityType.ZOMBIE.getLootTableKey().orElse(null) -> {
-					tableBuilder.pool(
-						createArtifactLootPool(
-							chance = 0.2f,
-							levelProvider = UniformLootNumberProvider.create(0.0f, 2.0f),
-							rarity = EquipmentRarity.THREE_STAR,
-							dropProfile = EquipmentDropProfile.ZOMBIE_SURVIVOR
-						)
-					)
+			for (lootDefinition in EquipmentContentRegistry.mobLootRules()) {
+				val entityType = Registries.ENTITY_TYPE.get(Identifier.of(lootDefinition.entityTypeId))
+				if (entityType.getLootTableKey().orElse(null) != key) {
+					continue
+				}
+				lootDefinition.artifactLoot?.let { artifactLoot ->
+					createArtifactLootPool(artifactLoot)?.let(tableBuilder::pool)
+				}
+				lootDefinition.upgradeMaterialLoot?.let { upgradeToolLoot ->
 					tableBuilder.pool(
 						createUpgradeToolLootPool(
-							chance = 0.1f,
-							levelProvider = UniformLootNumberProvider.create(1.0f, 2.0f)
-						)
-					)
-				}
-
-				EntityType.SKELETON.getLootTableKey().orElse(null) -> {
-					tableBuilder.pool(
-						createArtifactLootPool(
-							chance = 0.2f,
-							levelProvider = UniformLootNumberProvider.create(2.0f, 5.0f),
-							rarity = EquipmentRarity.FOUR_STAR,
-							dropProfile = EquipmentDropProfile.SKELETON_ASSAULT
-						)
-					)
-					tableBuilder.pool(
-						createUpgradeToolLootPool(
-							chance = 0.12f,
-							levelProvider = UniformLootNumberProvider.create(2.0f, 3.0f)
-						)
-					)
-				}
-
-				EntityType.WARDEN.getLootTableKey().orElse(null) -> {
-					tableBuilder.pool(
-						createArtifactLootPool(
-							chance = 1.0f,
-							levelProvider = UniformLootNumberProvider.create(8.0f, 12.0f),
-							rarity = EquipmentRarity.FIVE_STAR,
-							dropProfile = EquipmentDropProfile.WARDEN_RELIC
+							chance = upgradeToolLoot.chance,
+							levelProvider = UniformLootNumberProvider.create(
+								upgradeToolLoot.levelMin.toFloat(),
+								upgradeToolLoot.levelMax.toFloat()
+							)
 						)
 					)
 				}
@@ -155,22 +206,32 @@ object CreSoraUtilities : ModInitializer {
 	}
 
 	private fun createArtifactLootPool(
-		chance: Float,
-		levelProvider: LootNumberProvider,
-		rarity: EquipmentRarity,
-		dropProfile: EquipmentDropProfile
-	): LootPool {
-		return LootPool.builder()
+		rule: EquipmentArtifactLootRule
+	): LootPool? {
+		val equipmentItems = if (rule.equipmentIds.isEmpty()) {
+			EquipmentStackSupport.allEquipmentItems()
+		} else {
+			rule.equipmentIds.mapNotNull(EquipmentStackSupport::itemForDefinitionId)
+		}
+		if (equipmentItems.isEmpty()) {
+			return null
+		}
+
+		val builder = LootPool.builder()
 			.rolls(ConstantLootNumberProvider.create(1.0f))
-			.conditionally(RandomChanceLootCondition.builder(chance))
-			.with(ItemEntry.builder(STRENGTH_PENDANT))
-			.with(ItemEntry.builder(HINAGATA_HAT))
-			.with(ItemEntry.builder(HINAGATA_GLASSES))
-			.with(ItemEntry.builder(HINAGATA_ARMOR))
-			.with(ItemEntry.builder(HINAGATA_BOOTS))
+			.conditionally(RandomChanceLootCondition.builder(rule.chance))
 			.apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 1.0f)))
-			.apply(SetLevelLootFunction(levelProvider, rarity, dropProfile))
-			.build()
+			.apply(
+				SetLevelLootFunction(
+					levelProvider = UniformLootNumberProvider.create(rule.levelMin.toFloat(), rule.levelMax.toFloat()),
+					forcedRarity = rule.forcedRarity,
+					dropProfileId = rule.dropProfileId
+				)
+			)
+		for (item in equipmentItems) {
+			builder.with(ItemEntry.builder(item))
+		}
+		return builder.build()
 	}
 
 	private fun createUpgradeToolLootPool(
@@ -190,7 +251,7 @@ object CreSoraUtilities : ModInitializer {
 class SetLevelLootFunction(
 	val levelProvider: LootNumberProvider,
 	val forcedRarity: EquipmentRarity? = null,
-	val dropProfile: EquipmentDropProfile? = null
+	val dropProfileId: String? = null
 ) : LootFunction {
 
 	override fun getType(): LootFunctionType<*> = CreSoraUtilities.SET_LEVEL_LOOT_FUNCTION
@@ -203,16 +264,23 @@ class SetLevelLootFunction(
 				context.get(net.minecraft.loot.context.LootContextParameters.ATTACKING_ENTITY) as? net.minecraft.server.network.ServerPlayerEntity
 			else -> null
 		}
+		val hostileLevel = when {
+			context.hasParameter(net.minecraft.loot.context.LootContextParameters.THIS_ENTITY) ->
+				(context.get(net.minecraft.loot.context.LootContextParameters.THIS_ENTITY) as? HostileEntity)?.let(AdventureRankService::mobLevel)
+			else -> null
+		} ?: AdventureRankProgression.MIN_RANK
 
 		val adventureRank = player?.let { AdventureRankService.getRank(it) } ?: AdventureRankProgression.MIN_RANK
-		val lootBonus = AdventureRankProfile.lootBonus(adventureRank)
+		val effectiveLootRank = max(adventureRank, hostileLevel)
+		val lootBonus = AdventureRankProfile.lootBonus(effectiveLootRank)
 		val randomLevel = (levelProvider.nextInt(context) + lootBonus.levelBonus).coerceAtLeast(0)
 		stack.set(ModDataComponents.LEVEL, randomLevel)
 
 		if (EquipmentStackSupport.isEquipment(stack)) {
 			val definition = EquipmentStackSupport.getDefinition(stack) ?: return stack
 			val baseRarity = forcedRarity ?: EquipmentStackSupport.rarityForLevel(randomLevel)
-			val scaledRarity = AdventureRankProfile.upgradeRarity(baseRarity, adventureRank, context.random)
+			val scaledRarity = AdventureRankProfile.upgradeRarity(baseRarity, effectiveLootRank, context.random)
+			val dropProfile = dropProfileId?.let(EquipmentContentRegistry::requireDropProfile)
 			EquipmentStackSupport.syncEquipmentData(
 				stack,
 				EquipmentGenerationService.createEquipment(
@@ -226,7 +294,7 @@ class SetLevelLootFunction(
 		}
 
 		if (stack.isIn(ModItemTags.ADVENTURE_RANK_UPGRADE_MATERIALS)) {
-			val extraCount = AdventureRankProfile.extraUpgradeMaterialCount(adventureRank, context.random)
+			val extraCount = AdventureRankProfile.extraUpgradeMaterialCount(effectiveLootRank, context.random)
 			if (extraCount > 0) {
 				stack.count += extraCount
 			}
@@ -240,10 +308,10 @@ class SetLevelLootFunction(
 				LootNumberProviderTypes.CODEC.fieldOf("level_provider").forGetter(SetLevelLootFunction::levelProvider),
 				EquipmentRarity.CODEC.optionalFieldOf("forced_rarity")
 					.forGetter { Optional.ofNullable(it.forcedRarity) },
-				EquipmentDropProfile.CODEC.optionalFieldOf("drop_profile")
-					.forGetter { Optional.ofNullable(it.dropProfile) }
-			).apply(instance) { levelProvider, forcedRarity, dropProfile ->
-				SetLevelLootFunction(levelProvider, forcedRarity.orElse(null), dropProfile.orElse(null))
+				Codec.STRING.optionalFieldOf("drop_profile")
+					.forGetter { Optional.ofNullable(it.dropProfileId) }
+			).apply(instance) { levelProvider: LootNumberProvider, forcedRarity: Optional<EquipmentRarity>, dropProfileId: Optional<String> ->
+				SetLevelLootFunction(levelProvider, forcedRarity.orElse(null), dropProfileId.orElse(null))
 			}
 		}
 	}
