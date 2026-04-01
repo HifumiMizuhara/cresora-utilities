@@ -12,13 +12,19 @@ enum class StatType(val id: String) {
     CRIT_RATE("crit_rate"),
     CRIT_DMG("crit_dmg"),
     ALL_DMG_BONUS("all_dmg_bonus"),
+    PHYSICAL_RESISTANCE("physical_resistance"),
+    ARCANE_RESISTANCE("arcane_resistance"),
     DAMAGE_REDUCTION("damage_reduction");
 
     fun translationKey(): String = "item.cresora.equipment.stat.$id"
 
+    fun isLegacyOnly(): Boolean {
+        return this == DAMAGE_REDUCTION
+    }
+
     fun isPercent(): Boolean {
         return when (this) {
-            ATK_PERCENT, HP_PERCENT, DEF_PERCENT, CRIT_RATE, CRIT_DMG, ALL_DMG_BONUS, DAMAGE_REDUCTION -> true
+            ATK_PERCENT, HP_PERCENT, DEF_PERCENT, CRIT_RATE, CRIT_DMG, ALL_DMG_BONUS, PHYSICAL_RESISTANCE, ARCANE_RESISTANCE, DAMAGE_REDUCTION -> true
             ATK_FLAT, HP_FLAT, DEF_FLAT -> false
         }
     }
@@ -26,12 +32,15 @@ enum class StatType(val id: String) {
     fun allowedAsMainStat(): Boolean {
         return when (this) {
             CRIT_RATE, CRIT_DMG -> false
-            ATK_FLAT, ATK_PERCENT, HP_FLAT, HP_PERCENT, DEF_FLAT, DEF_PERCENT, ALL_DMG_BONUS, DAMAGE_REDUCTION -> true
+            ATK_FLAT, ATK_PERCENT, HP_FLAT, HP_PERCENT, DEF_FLAT, DEF_PERCENT, ALL_DMG_BONUS, PHYSICAL_RESISTANCE, ARCANE_RESISTANCE, DAMAGE_REDUCTION -> true
         }
     }
 
     companion object {
         private val BY_ID = entries.associateBy(StatType::id)
+
+        @JvmStatic
+        fun activeEntries(): List<StatType> = entries.filter { !it.isLegacyOnly() }
 
         val CODEC: Codec<StatType> = Codec.STRING.xmap(
             { id -> BY_ID[id] ?: throw IllegalArgumentException("Unknown stat type: $id") },

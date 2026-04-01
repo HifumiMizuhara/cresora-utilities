@@ -214,20 +214,22 @@ object EquipmentContentRegistry {
                     translationKeyId = "item.cresora.equipment.slot.hat",
                     trinketGroup = "head",
                     trinketSlot = "hat",
-                    mainStatCandidates = listOf(StatType.HP_FLAT, StatType.HP_PERCENT, StatType.DEF_FLAT, StatType.DEF_PERCENT, StatType.DAMAGE_REDUCTION),
+                    mainStatCandidates = listOf(StatType.HP_FLAT, StatType.HP_PERCENT, StatType.DEF_FLAT, StatType.DEF_PERCENT, StatType.PHYSICAL_RESISTANCE, StatType.ARCANE_RESISTANCE),
                     mainWeights = mapOf(
                         StatType.HP_FLAT to 2.8,
                         StatType.HP_PERCENT to 2.6,
                         StatType.DEF_FLAT to 3.8,
                         StatType.DEF_PERCENT to 3.6,
-                        StatType.DAMAGE_REDUCTION to 2.4
+                        StatType.PHYSICAL_RESISTANCE to 2.2,
+                        StatType.ARCANE_RESISTANCE to 2.2
                     ),
                     subWeights = mapOf(
                         StatType.HP_FLAT to 2.6,
                         StatType.HP_PERCENT to 2.4,
                         StatType.DEF_FLAT to 3.2,
                         StatType.DEF_PERCENT to 3.0,
-                        StatType.DAMAGE_REDUCTION to 2.4
+                        StatType.PHYSICAL_RESISTANCE to 2.1,
+                        StatType.ARCANE_RESISTANCE to 2.1
                     ),
                     defaultMainStatType = StatType.DEF_FLAT
                 ),
@@ -256,20 +258,22 @@ object EquipmentContentRegistry {
                     translationKeyId = "item.cresora.equipment.slot.armor",
                     trinketGroup = "chest",
                     trinketSlot = "back",
-                    mainStatCandidates = listOf(StatType.HP_FLAT, StatType.HP_PERCENT, StatType.DEF_FLAT, StatType.DEF_PERCENT, StatType.DAMAGE_REDUCTION),
+                    mainStatCandidates = listOf(StatType.HP_FLAT, StatType.HP_PERCENT, StatType.DEF_FLAT, StatType.DEF_PERCENT, StatType.PHYSICAL_RESISTANCE, StatType.ARCANE_RESISTANCE),
                     mainWeights = mapOf(
                         StatType.HP_FLAT to 3.2,
                         StatType.HP_PERCENT to 3.0,
                         StatType.DEF_FLAT to 3.2,
                         StatType.DEF_PERCENT to 3.0,
-                        StatType.DAMAGE_REDUCTION to 2.8
+                        StatType.PHYSICAL_RESISTANCE to 2.5,
+                        StatType.ARCANE_RESISTANCE to 2.5
                     ),
                     subWeights = mapOf(
                         StatType.HP_FLAT to 2.8,
                         StatType.HP_PERCENT to 2.6,
                         StatType.DEF_FLAT to 2.8,
                         StatType.DEF_PERCENT to 2.8,
-                        StatType.DAMAGE_REDUCTION to 2.8
+                        StatType.PHYSICAL_RESISTANCE to 2.3,
+                        StatType.ARCANE_RESISTANCE to 2.3
                     ),
                     defaultMainStatType = StatType.HP_FLAT
                 ),
@@ -350,14 +354,16 @@ object EquipmentContentRegistry {
                         StatType.HP_PERCENT to 3.6,
                         StatType.DEF_FLAT to 3.2,
                         StatType.DEF_PERCENT to 3.2,
-                        StatType.DAMAGE_REDUCTION to 2.8
+                        StatType.PHYSICAL_RESISTANCE to 2.5,
+                        StatType.ARCANE_RESISTANCE to 2.1
                     ),
                     subWeights = mapOf(
                         StatType.HP_FLAT to 3.4,
                         StatType.HP_PERCENT to 3.2,
                         StatType.DEF_FLAT to 3.0,
                         StatType.DEF_PERCENT to 3.0,
-                        StatType.DAMAGE_REDUCTION to 2.8
+                        StatType.PHYSICAL_RESISTANCE to 2.4,
+                        StatType.ARCANE_RESISTANCE to 2.0
                     )
                 ),
                 EquipmentDropProfile(
@@ -382,13 +388,15 @@ object EquipmentContentRegistry {
                         StatType.HP_PERCENT to 2.4,
                         StatType.DEF_PERCENT to 2.4,
                         StatType.ALL_DMG_BONUS to 3.4,
-                        StatType.DAMAGE_REDUCTION to 2.8
+                        StatType.PHYSICAL_RESISTANCE to 2.4,
+                        StatType.ARCANE_RESISTANCE to 2.4
                     ),
                     subWeights = mapOf(
                         StatType.CRIT_RATE to 3.0,
                         StatType.CRIT_DMG to 3.2,
                         StatType.ALL_DMG_BONUS to 3.4,
-                        StatType.DAMAGE_REDUCTION to 3.0,
+                        StatType.PHYSICAL_RESISTANCE to 2.6,
+                        StatType.ARCANE_RESISTANCE to 2.6,
                         StatType.HP_PERCENT to 2.2,
                         StatType.DEF_PERCENT to 2.2
                     )

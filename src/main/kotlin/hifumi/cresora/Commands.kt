@@ -2,6 +2,8 @@ package hifumi.cresora
 
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
+import com.mojang.brigadier.arguments.StringArgumentType.getString
+import com.mojang.brigadier.arguments.StringArgumentType.word
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.entity.attribute.EntityAttributes
@@ -20,6 +22,15 @@ object Commands {
                 literal("about")
                     .executes { context ->
                         context.source.sendFeedback({ Text.translatable("commands.cresora.about", version) }, false)
+                        1
+                    }
+            )
+
+            dispatcher.register(
+                literal("cresora")
+                    .requires { source -> source.entity is ServerPlayerEntity }
+                    .executes { context ->
+                        ArtifactUiFlow.openMenu(context.source.playerOrThrow)
                         1
                     }
             )
@@ -48,7 +59,7 @@ object Commands {
                             false
                         )
                         context.source.sendFeedback(
-                            { buildStatGroupLine(totals, StatType.ALL_DMG_BONUS, StatType.DAMAGE_REDUCTION) },
+                            { buildStatGroupLine(totals, StatType.ALL_DMG_BONUS, StatType.PHYSICAL_RESISTANCE, StatType.ARCANE_RESISTANCE) },
                             false
                         )
                         context.source.sendFeedback({ Text.translatable("commands.cresora.stats.attribute_section") }, false)
@@ -230,6 +241,88 @@ object Commands {
                         1
                     }
             )
+
+            dispatcher.register(
+                literal("cresora_masquerade")
+                    .requires { source -> source.entity is ServerPlayerEntity }
+                    .executes { context ->
+                        ArtifactUiFlow.openMasqueradeLoadout(context.source.playerOrThrow)
+                        1
+                    }
+            )
+
+            dispatcher.register(
+                literal("cresora_story")
+                    .requires { source -> source.entity is ServerPlayerEntity }
+                    .executes { context ->
+                        ArtifactUiFlow.openStoryChapterSelection(context.source.playerOrThrow)
+                        1
+                    }
+                    .then(
+                        literal("list")
+                            .executes { context ->
+                                showStoryChapters(context.source)
+                                1
+                            }
+                    )
+                    .then(
+                        literal("start")
+                            .then(
+                                argument("chapter_id", word())
+                                    .executes { context ->
+                                        val player = context.source.playerOrThrow
+                                        val chapterId = getString(context, "chapter_id")
+                                        val result = StoryService.startSession(player, chapterId)
+                                        context.source.sendFeedback(
+                                            { Text.translatable(result.translationKey, *result.args.toTypedArray()) },
+                                            false
+                                        )
+                                        if (result.success) 1 else 0
+                                    }
+                            )
+                    )
+            )
+
+            dispatcher.register(
+                literal("cresora_resonance")
+                    .executes { context ->
+                        ArtifactUiFlow.openResonance(context.source.playerOrThrow)
+                        1
+                    }
+                    .then(
+                        literal("currency")
+                            .executes { context ->
+                                showResonanceCurrency(context.source, context.source.playerOrThrow)
+                                1
+                            }
+                    )
+                    .then(
+                        literal("get")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .then(
+                                argument("player", EntityArgumentType.player())
+                                    .executes { context ->
+                                        val target = EntityArgumentType.getPlayer(context, "player")
+                                        context.source.sendFeedback({ buildResonanceTargetLine(target) }, false)
+                                        1
+                                    }
+                            )
+                    )
+                    .then(
+                        literal("add")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .then(resonanceCurrencyLiteral(1, "commands.cresora.resonance.add_feedback") { target, type, amount ->
+                                ResonanceService.addCurrency(target, type, amount)
+                            })
+                    )
+                    .then(
+                        literal("set")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .then(resonanceCurrencyLiteral(0, "commands.cresora.resonance.set_feedback") { target, type, amount ->
+                                ResonanceService.setCurrency(target, type, amount)
+                            })
+                    )
+            )
         }
     }
 
@@ -322,6 +415,11 @@ object Commands {
         source.sendFeedback({ buildCreditsSummaryLine(player) }, false)
     }
 
+    private fun showResonanceCurrency(source: ServerCommandSource, player: ServerPlayerEntity) {
+        source.sendFeedback({ Text.translatable("commands.cresora.resonance.header") }, false)
+        source.sendFeedback({ buildResonanceCurrencyLine(player) }, false)
+    }
+
     private fun buildCreditsTargetLine(player: ServerPlayerEntity): Text {
         return Text.translatable(
             "commands.cresora.credits.target",
@@ -329,6 +427,100 @@ object Commands {
             formatWholeNumber(CreditsService.getCredits(player))
         )
     }
+
+    private fun showStoryChapters(source: ServerCommandSource) {
+        source.sendFeedback({ Text.translatable("commands.cresora.story.header") }, false)
+        for (chapter in StoryContentRegistry.chapters()) {
+            val player = source.player
+            val missingPrerequisite = if (player != null) StoryProgressService.missingPrerequisite(player, chapter) else chapter.prerequisiteChapterId
+            source.sendFeedback(
+                {
+                    if (missingPrerequisite != null) {
+                        Text.translatable("commands.cresora.story.entry_prerequisite", chapter.id, chapter.displayName, missingPrerequisite)
+                    } else {
+                        Text.translatable(
+                            "commands.cresora.story.entry",
+                            chapter.id,
+                            chapter.displayName,
+                            chapter.unlockRank
+                        )
+                    }
+                },
+                false
+            )
+        }
+    }
+
+    private fun buildResonanceTargetLine(player: ServerPlayerEntity): Text {
+        return Text.translatable(
+            "commands.cresora.resonance.target",
+            player.displayName,
+            formatWholeNumber(ResonanceService.getCurrency(player, ResonanceCurrencyType.CHORD_PROGRESSION)),
+            formatWholeNumber(ResonanceService.getCurrency(player, ResonanceCurrencyType.SUBSTITUTE_CHORD))
+        )
+    }
+
+    private fun buildResonanceCurrencyLine(player: ServerPlayerEntity): Text {
+        return Text.translatable(
+            "commands.cresora.resonance.line",
+            formatWholeNumber(ResonanceService.getCurrency(player, ResonanceCurrencyType.CHORD_PROGRESSION)),
+            formatWholeNumber(ResonanceService.getCurrency(player, ResonanceCurrencyType.SUBSTITUTE_CHORD))
+        )
+    }
+
+    private fun resonanceCurrencyLiteral(
+        minimumAmount: Int,
+        feedbackKey: String,
+        operation: (ServerPlayerEntity, ResonanceCurrencyType, Int) -> Int
+    ) = argument("player", EntityArgumentType.player())
+        .then(
+            literal(ResonanceCurrencyType.CHORD_PROGRESSION.id)
+                .then(
+                    argument("amount", integer(minimumAmount))
+                        .executes { context ->
+                            val target = EntityArgumentType.getPlayer(context, "player")
+                            val amount = getInteger(context, "amount")
+                            val total = operation(target, ResonanceCurrencyType.CHORD_PROGRESSION, amount)
+                            context.source.sendFeedback(
+                                {
+                                    Text.translatable(
+                                        feedbackKey,
+                                        Text.translatable(ResonanceCurrencyType.CHORD_PROGRESSION.translationKey),
+                                        formatWholeNumber(amount),
+                                        target.displayName,
+                                        formatWholeNumber(total)
+                                    )
+                                },
+                                true
+                            )
+                            1
+                        }
+                )
+        )
+        .then(
+            literal(ResonanceCurrencyType.SUBSTITUTE_CHORD.id)
+                .then(
+                    argument("amount", integer(minimumAmount))
+                        .executes { context ->
+                            val target = EntityArgumentType.getPlayer(context, "player")
+                            val amount = getInteger(context, "amount")
+                            val total = operation(target, ResonanceCurrencyType.SUBSTITUTE_CHORD, amount)
+                            context.source.sendFeedback(
+                                {
+                                    Text.translatable(
+                                        feedbackKey,
+                                        Text.translatable(ResonanceCurrencyType.SUBSTITUTE_CHORD.translationKey),
+                                        formatWholeNumber(amount),
+                                        target.displayName,
+                                        formatWholeNumber(total)
+                                    )
+                                },
+                                true
+                            )
+                            1
+                        }
+                )
+        )
 
     private fun buildAdminRankFeedback(
         key: String,

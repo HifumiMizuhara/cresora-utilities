@@ -26,7 +26,7 @@ class ArtifactBetaScreenHandler(
 
     private val optionInventory: Inventory = object : SimpleInventory(OPTION_SLOT_COUNT) {}
     private val properties: PropertyDelegate = ArrayPropertyDelegate(1)
-    private val availableStats = StatType.entries
+    private val availableStats = StatType.activeEntries()
     private val selectedStats: MutableList<StatType> = mutableListOf()
     private var baseStack: ItemStack = ItemStack.EMPTY
     private var materialStack: ItemStack = ItemStack.EMPTY

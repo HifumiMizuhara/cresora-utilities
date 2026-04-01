@@ -142,6 +142,8 @@ object EquipmentStackSupport {
             StatType.CRIT_RATE -> 1.4 + level * 0.45
             StatType.CRIT_DMG -> 2.8 + level * 0.8
             StatType.ALL_DMG_BONUS -> 1.8 + level * 0.7
+            StatType.PHYSICAL_RESISTANCE -> 1.0 + level * 0.35
+            StatType.ARCANE_RESISTANCE -> 1.0 + level * 0.35
             StatType.DAMAGE_REDUCTION -> 1.6 + level * 0.55
         }
     }

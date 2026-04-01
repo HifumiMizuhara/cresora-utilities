@@ -5,7 +5,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.tooltip.TooltipType
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
@@ -44,8 +43,35 @@ class CresoraWeaponItem(
             ).formatted(Formatting.RED)
         )
         textConsumer.accept(
+            Text.translatable(
+                "item.cresora.weapon.damage_type",
+                Text.translatable(resolved.damageType.translationKey())
+            ).formatted(Formatting.GRAY)
+        )
+        if (resolved.critRateBonusPercent > 0.0) {
+            textConsumer.accept(
+                Text.translatable(
+                    "item.cresora.weapon.crit_rate_bonus",
+                    formatNumber(resolved.critRateBonusPercent)
+                ).formatted(Formatting.YELLOW)
+            )
+        }
+        val currentAllDamageBonus = WeaponCombatSupport.allDamageBonusPercent(resolved, data)
+        if (currentAllDamageBonus > 0.0) {
+            textConsumer.accept(
+                Text.translatable(
+                    "item.cresora.weapon.all_damage_bonus",
+                    formatNumber(currentAllDamageBonus)
+                ).formatted(Formatting.LIGHT_PURPLE)
+            )
+        }
+        textConsumer.accept(
             buildSkillTooltipLine(resolved, data).copy().formatted(Formatting.AQUA)
         )
+        if (resolved.id == "hanwu_juanxue") {
+            textConsumer.accept(Text.translatable("item.cresora.weapon.passive.hanwu_juanxue").formatted(Formatting.BLUE))
+            textConsumer.accept(Text.translatable("item.cresora.weapon.special.hanwu_juanxue").formatted(Formatting.WHITE))
+        }
         textConsumer.accept(Text.translatable("item.cresora.weapon.sneak_upgrade").formatted(Formatting.DARK_GREEN))
         super.appendTooltip(stack, context, displayComponent, textConsumer, type)
     }
@@ -57,12 +83,7 @@ class CresoraWeaponItem(
         }
         if (user.isSneaking) {
             if (!world.isClient) {
-                user.openHandledScreen(
-                    SimpleNamedScreenHandlerFactory(
-                        { syncId, playerInventory, _ -> WeaponUpgradeScreenHandler(syncId, playerInventory) },
-                        Text.translatable("screen.cresora.weapon_upgrade")
-                    )
-                )
+                ArtifactUiFlow.openWeaponUpgrade(user as ServerPlayerEntity)
             }
             return ActionResult.SUCCESS
         }
@@ -79,19 +100,61 @@ class CresoraWeaponItem(
 
     private fun buildSkillTooltipLine(definition: WeaponDefinition, data: WeaponData): Text {
         val effectName = Text.translatable("item.cresora.weapon.skill.${definition.skill.effectId}")
-        val value = formatNumber(WeaponCombatSupport.skillValueHearts(definition, data))
+        val heartValue = formatNumber(WeaponCombatSupport.skillValueHearts(definition, data))
+        val secondaryHeartValue = formatNumber(WeaponCombatSupport.secondarySkillValueHearts(definition, data))
+        val percentValue = formatNumber(WeaponCombatSupport.skillValuePercent(definition, data))
         return when (definition.skill.effectId) {
             "heal" -> Text.translatable(
                 "item.cresora.weapon.skill_line_heal",
                 effectName,
-                value,
+                heartValue,
                 Text.translatable("item.cresora.weapon.unit.hearts"),
                 definition.skill.cooldownSeconds
+            )
+            "flame_aura" -> Text.translatable(
+                "item.cresora.weapon.skill_line_flame_aura",
+                effectName,
+                percentValue,
+                Text.translatable("item.cresora.weapon.unit.seconds"),
+                formatNumber(definition.skill.radiusMeters),
+                definition.skill.durationSeconds,
+                definition.skill.cooldownSeconds
+            )
+            "current_hp_true_damage" -> Text.translatable(
+                "item.cresora.weapon.skill_line_percent_burst",
+                effectName,
+                percentValue,
+                Text.translatable("item.cresora.weapon.unit.percent_current_hp"),
+                formatNumber(definition.skill.radiusMeters),
+                definition.skill.cooldownSeconds
+            )
+            "snow_frost" -> Text.translatable(
+                "item.cresora.weapon.skill_line_snow_frost",
+                effectName,
+                heartValue,
+                Text.translatable("item.cresora.weapon.unit.hearts"),
+                definition.skill.durationSeconds,
+                definition.skill.cooldownSeconds
+            )
+            "healing_aura" -> Text.translatable(
+                "item.cresora.weapon.skill_line_healing_aura",
+                effectName,
+                heartValue,
+                Text.translatable("item.cresora.weapon.unit.hearts"),
+                secondaryHeartValue,
+                Text.translatable("item.cresora.weapon.unit.hearts"),
+                formatNumber(definition.skill.radiusMeters),
+                definition.skill.durationSeconds,
+                definition.skill.cooldownSeconds
+            )
+            "none" -> Text.translatable(
+                "item.cresora.weapon.skill_line_none",
+                effectName
             )
             else -> Text.translatable(
                 "item.cresora.weapon.skill_line_shield",
                 effectName,
-                value,
+                heartValue,
                 Text.translatable("item.cresora.weapon.unit.hearts"),
                 definition.skill.durationSeconds,
                 definition.skill.cooldownSeconds

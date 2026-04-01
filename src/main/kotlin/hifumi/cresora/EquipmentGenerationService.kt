@@ -3,7 +3,7 @@ package hifumi.cresora
 import net.minecraft.util.math.random.Random
 
 object EquipmentGenerationService {
-    private val SUB_STAT_POOL = StatType.entries
+    private val SUB_STAT_POOL = StatType.activeEntries()
 
     fun createEquipment(
         random: Random,
@@ -166,6 +166,8 @@ object EquipmentGenerationService {
             StatType.CRIT_RATE -> 1.4
             StatType.CRIT_DMG -> 2.8
             StatType.ALL_DMG_BONUS -> 1.8
+            StatType.PHYSICAL_RESISTANCE -> 1.0
+            StatType.ARCANE_RESISTANCE -> 1.0
             StatType.DAMAGE_REDUCTION -> 1.6
         }
         val variance = 0.92 + random.nextDouble() * 0.16

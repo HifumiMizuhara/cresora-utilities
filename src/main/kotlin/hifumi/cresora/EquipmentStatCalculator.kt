@@ -60,6 +60,8 @@ object EquipmentStatCalculator {
             (totals[StatType.CRIT_DMG] ?: 0.0) * 1.1 +
             (totals[StatType.HP_PERCENT] ?: 0.0) * 0.5 +
             (totals[StatType.DEF_PERCENT] ?: 0.0) * 0.4 +
+            (totals[StatType.PHYSICAL_RESISTANCE] ?: 0.0) * 0.45 +
+            (totals[StatType.ARCANE_RESISTANCE] ?: 0.0) * 0.45 +
             (totals[StatType.DAMAGE_REDUCTION] ?: 0.0) * 0.8
     }
 

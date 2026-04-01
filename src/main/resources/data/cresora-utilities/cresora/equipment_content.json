@@ -34,21 +34,24 @@
         "hp_percent",
         "def_flat",
         "def_percent",
-        "damage_reduction"
+        "physical_resistance",
+        "arcane_resistance"
       ],
       "mainWeights": {
         "hp_flat": 2.8,
         "hp_percent": 2.6,
         "def_flat": 3.8,
         "def_percent": 3.6,
-        "damage_reduction": 2.4
+        "physical_resistance": 2.2,
+        "arcane_resistance": 2.2
       },
       "subWeights": {
         "hp_flat": 2.6,
         "hp_percent": 2.4,
         "def_flat": 3.2,
         "def_percent": 3.0,
-        "damage_reduction": 2.4
+        "physical_resistance": 2.1,
+        "arcane_resistance": 2.1
       },
       "defaultMainStat": "def_flat"
     },
@@ -87,21 +90,24 @@
         "hp_percent",
         "def_flat",
         "def_percent",
-        "damage_reduction"
+        "physical_resistance",
+        "arcane_resistance"
       ],
       "mainWeights": {
         "hp_flat": 3.2,
         "hp_percent": 3.0,
         "def_flat": 3.2,
         "def_percent": 3.0,
-        "damage_reduction": 2.8
+        "physical_resistance": 2.5,
+        "arcane_resistance": 2.5
       },
       "subWeights": {
         "hp_flat": 2.8,
         "hp_percent": 2.6,
         "def_flat": 2.8,
         "def_percent": 2.8,
-        "damage_reduction": 2.8
+        "physical_resistance": 2.3,
+        "arcane_resistance": 2.3
       },
       "defaultMainStat": "hp_flat"
     },
@@ -182,6 +188,7 @@
       "slotTypeId": "hat",
       "setId": "hinagata",
       "baseItemId": "minecraft:chainmail_helmet",
+      "opensUpgradeScreen": true,
       "rarityWeights": {
         "3_star": 50.0,
         "4_star": 35.0,
@@ -193,6 +200,7 @@
       "slotTypeId": "glasses",
       "setId": "hinagata",
       "baseItemId": "minecraft:spyglass",
+      "opensUpgradeScreen": true,
       "rarityWeights": {
         "3_star": 50.0,
         "4_star": 35.0,
@@ -204,6 +212,7 @@
       "slotTypeId": "armor",
       "setId": "hinagata",
       "baseItemId": "minecraft:iron_chestplate",
+      "opensUpgradeScreen": true,
       "rarityWeights": {
         "3_star": 50.0,
         "4_star": 35.0,
@@ -215,6 +224,7 @@
       "slotTypeId": "boots",
       "setId": "hinagata",
       "baseItemId": "minecraft:iron_boots",
+      "opensUpgradeScreen": true,
       "rarityWeights": {
         "3_star": 50.0,
         "4_star": 35.0,
@@ -230,14 +240,16 @@
         "hp_percent": 3.6,
         "def_flat": 3.2,
         "def_percent": 3.2,
-        "damage_reduction": 2.8
+        "physical_resistance": 2.5,
+        "arcane_resistance": 2.1
       },
       "subWeights": {
         "hp_flat": 3.4,
         "hp_percent": 3.2,
         "def_flat": 3.0,
         "def_percent": 3.0,
-        "damage_reduction": 2.8
+        "physical_resistance": 2.4,
+        "arcane_resistance": 2.0
       }
     },
     {
@@ -262,13 +274,15 @@
         "hp_percent": 2.4,
         "def_percent": 2.4,
         "all_dmg_bonus": 3.4,
-        "damage_reduction": 2.8
+        "physical_resistance": 2.4,
+        "arcane_resistance": 2.4
       },
       "subWeights": {
         "crit_rate": 3.0,
         "crit_dmg": 3.2,
         "all_dmg_bonus": 3.4,
-        "damage_reduction": 3.0,
+        "physical_resistance": 2.6,
+        "arcane_resistance": 2.6,
         "hp_percent": 2.2,
         "def_percent": 2.2
       }

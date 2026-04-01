@@ -7,12 +7,30 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 
+data class WeaponAttackCurvePoint(
+    val level: Int,
+    val attackDamage: Double
+) {
+    companion object {
+        val CODEC: Codec<WeaponAttackCurvePoint> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                Codec.INT.fieldOf("level").forGetter(WeaponAttackCurvePoint::level),
+                Codec.DOUBLE.fieldOf("attackDamage").forGetter(WeaponAttackCurvePoint::attackDamage)
+            ).apply(instance, ::WeaponAttackCurvePoint)
+        }
+    }
+}
+
 data class WeaponSkillDefinition(
     val effectId: String,
     val durationSeconds: Int,
     val cooldownSeconds: Int,
-    val shieldBaseHearts: Double,
-    val shieldPerLevelHearts: Double
+    val baseValue: Double,
+    val valuePerLevel: Double,
+    val radiusMeters: Double = 0.0,
+    val secondaryBaseValue: Double = 0.0,
+    val secondaryValuePerLevel: Double = 0.0,
+    val tickIntervalSeconds: Double = 1.0
 ) {
     companion object {
         val CODEC: Codec<WeaponSkillDefinition> = RecordCodecBuilder.create { instance ->
@@ -20,8 +38,12 @@ data class WeaponSkillDefinition(
                 Codec.STRING.fieldOf("effectId").forGetter(WeaponSkillDefinition::effectId),
                 Codec.INT.fieldOf("durationSeconds").forGetter(WeaponSkillDefinition::durationSeconds),
                 Codec.INT.fieldOf("cooldownSeconds").forGetter(WeaponSkillDefinition::cooldownSeconds),
-                Codec.DOUBLE.fieldOf("shieldBaseHearts").forGetter(WeaponSkillDefinition::shieldBaseHearts),
-                Codec.DOUBLE.fieldOf("shieldPerLevelHearts").forGetter(WeaponSkillDefinition::shieldPerLevelHearts)
+                Codec.DOUBLE.fieldOf("baseValue").forGetter(WeaponSkillDefinition::baseValue),
+                Codec.DOUBLE.fieldOf("valuePerLevel").forGetter(WeaponSkillDefinition::valuePerLevel),
+                Codec.DOUBLE.optionalFieldOf("radiusMeters", 0.0).forGetter(WeaponSkillDefinition::radiusMeters),
+                Codec.DOUBLE.optionalFieldOf("secondaryBaseValue", 0.0).forGetter(WeaponSkillDefinition::secondaryBaseValue),
+                Codec.DOUBLE.optionalFieldOf("secondaryValuePerLevel", 0.0).forGetter(WeaponSkillDefinition::secondaryValuePerLevel),
+                Codec.DOUBLE.optionalFieldOf("tickIntervalSeconds", 1.0).forGetter(WeaponSkillDefinition::tickIntervalSeconds)
             ).apply(instance, ::WeaponSkillDefinition)
         }
     }
@@ -30,15 +52,31 @@ data class WeaponSkillDefinition(
 data class WeaponUpgradeDefinition(
     val baseCscQuadraticCoefficient: Int,
     val skillCscLinearCoefficient: Int,
-    val baseFragmentCost: Int
+    val skillCscQuadraticCoefficient: Int = 0,
+    val baseFragmentCost: Int,
+    val skillArtifactMinRarity: EquipmentRarity? = null,
+    val skillArtifactCountPerLevel: Int = 0
 ) {
     companion object {
         val CODEC: Codec<WeaponUpgradeDefinition> = RecordCodecBuilder.create { instance ->
             instance.group(
                 Codec.INT.fieldOf("baseCscQuadraticCoefficient").forGetter(WeaponUpgradeDefinition::baseCscQuadraticCoefficient),
                 Codec.INT.fieldOf("skillCscLinearCoefficient").forGetter(WeaponUpgradeDefinition::skillCscLinearCoefficient),
-                Codec.INT.fieldOf("baseFragmentCost").forGetter(WeaponUpgradeDefinition::baseFragmentCost)
-            ).apply(instance, ::WeaponUpgradeDefinition)
+                Codec.INT.optionalFieldOf("skillCscQuadraticCoefficient", 0).forGetter(WeaponUpgradeDefinition::skillCscQuadraticCoefficient),
+                Codec.INT.fieldOf("baseFragmentCost").forGetter(WeaponUpgradeDefinition::baseFragmentCost),
+                EquipmentRarity.CODEC.optionalFieldOf("skillArtifactMinRarity")
+                    .forGetter { java.util.Optional.ofNullable(it.skillArtifactMinRarity) },
+                Codec.INT.optionalFieldOf("skillArtifactCountPerLevel", 0).forGetter(WeaponUpgradeDefinition::skillArtifactCountPerLevel)
+            ).apply(instance) { baseCoeff, skillLinear, skillQuadratic, fragmentCost, artifactRarity, artifactCount ->
+                WeaponUpgradeDefinition(
+                    baseCscQuadraticCoefficient = baseCoeff,
+                    skillCscLinearCoefficient = skillLinear,
+                    skillCscQuadraticCoefficient = skillQuadratic,
+                    baseFragmentCost = fragmentCost,
+                    skillArtifactMinRarity = artifactRarity.orElse(null),
+                    skillArtifactCountPerLevel = artifactCount
+                )
+            }
         }
     }
 }
@@ -127,12 +165,17 @@ data class WeaponDefinition(
     val totalAttackSpeed: Double,
     val maxBaseLevel: Int,
     val maxSkillLevel: Int,
+    val critRateBonusPercent: Double = 0.0,
+    val maxAllDamageBonusPercent: Double = 0.0,
+    val damageType: CombatDamageType = CombatDamageType.PHYSICAL,
+    val attackCurve: List<WeaponAttackCurvePoint> = emptyList(),
     val skill: WeaponSkillDefinition,
     val upgrades: WeaponUpgradeDefinition,
     val craft: WeaponCraftDefinition,
     val drops: WeaponDropDefinition
 ) {
     fun translationKey(): String = "item.cresora-utilities.$id"
+
     fun fragmentTranslationKey(): String = "item.cresora-utilities.${craft.fragmentItemId}"
 }
 
@@ -167,6 +210,10 @@ object WeaponContentRegistry {
             Codec.DOUBLE.fieldOf("totalAttackSpeed").forGetter(WeaponDefinition::totalAttackSpeed),
             Codec.INT.fieldOf("maxBaseLevel").forGetter(WeaponDefinition::maxBaseLevel),
             Codec.INT.fieldOf("maxSkillLevel").forGetter(WeaponDefinition::maxSkillLevel),
+            Codec.DOUBLE.optionalFieldOf("critRateBonusPercent", 0.0).forGetter(WeaponDefinition::critRateBonusPercent),
+            Codec.DOUBLE.optionalFieldOf("maxAllDamageBonusPercent", 0.0).forGetter(WeaponDefinition::maxAllDamageBonusPercent),
+            CombatDamageType.CODEC.optionalFieldOf("damageType", CombatDamageType.PHYSICAL).forGetter(WeaponDefinition::damageType),
+            WeaponAttackCurvePoint.CODEC.listOf().optionalFieldOf("attackCurve", emptyList()).forGetter(WeaponDefinition::attackCurve),
             WeaponSkillDefinition.CODEC.fieldOf("skill").forGetter(WeaponDefinition::skill),
             WeaponUpgradeDefinition.CODEC.fieldOf("upgrades").forGetter(WeaponDefinition::upgrades),
             WeaponCraftDefinition.CODEC.fieldOf("craft").forGetter(WeaponDefinition::craft),
@@ -217,6 +264,17 @@ object WeaponContentRegistry {
         for (definition in bundle.weaponDefinitions) {
             require(definition.maxBaseLevel >= 1) { "Weapon '${definition.id}' maxBaseLevel must be >= 1" }
             require(definition.maxSkillLevel >= 1) { "Weapon '${definition.id}' maxSkillLevel must be >= 1" }
+            require(definition.craft.fragmentsRequired >= 0) { "Weapon '${definition.id}' has negative fragmentsRequired" }
+            require(definition.upgrades.baseFragmentCost >= 0) { "Weapon '${definition.id}' has negative baseFragmentCost" }
+            require(definition.upgrades.skillArtifactCountPerLevel >= 0) { "Weapon '${definition.id}' has negative skillArtifactCountPerLevel" }
+            if (definition.attackCurve.isNotEmpty()) {
+                val sorted = definition.attackCurve.sortedBy(WeaponAttackCurvePoint::level)
+                require(sorted == definition.attackCurve) { "Weapon '${definition.id}' attackCurve must be sorted by level" }
+                require(sorted.first().level == 1) { "Weapon '${definition.id}' attackCurve must start at level 1" }
+                require(sorted.last().level == definition.maxBaseLevel) {
+                    "Weapon '${definition.id}' attackCurve must end at maxBaseLevel ${definition.maxBaseLevel}"
+                }
+            }
         }
         weapons = weaponMap
     }
@@ -227,8 +285,8 @@ object WeaponContentRegistry {
                 WeaponDefinition(
                     id = "rondo_melody",
                     baseItemId = "minecraft:wooden_sword",
-                    baseAttackDamage = 4.0,
-                    attackDamagePerLevel = 0.14,
+                    baseAttackDamage = 7.0,
+                    attackDamagePerLevel = 0.18,
                     totalAttackSpeed = 1.6,
                     maxBaseLevel = 60,
                     maxSkillLevel = 10,
@@ -236,8 +294,8 @@ object WeaponContentRegistry {
                         effectId = "shield",
                         durationSeconds = 15,
                         cooldownSeconds = 20,
-                        shieldBaseHearts = 3.0,
-                        shieldPerLevelHearts = 0.5
+                        baseValue = 3.0,
+                        valuePerLevel = 0.5
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -252,29 +310,13 @@ object WeaponContentRegistry {
                         craftedBaseLevel = 1,
                         craftedSkillLevel = 1
                     ),
-                    drops = WeaponDropDefinition(
-                        fragmentDrop = WeaponFragmentDropDefinition(
-                            minMobLevel = 5,
-                            chance = 0.08,
-                            minCount = 1,
-                            maxCount = 1,
-                            bonusCountAtLevel70 = 1
-                        ),
-                        directDropTiers = listOf(
-                            WeaponDropTier(WeaponRarity.TWO_STAR, 5, 0.012),
-                            WeaponDropTier(WeaponRarity.THREE_STAR, 25, 0.008),
-                            WeaponDropTier(WeaponRarity.FOUR_STAR, 45, 0.005),
-                            WeaponDropTier(WeaponRarity.FIVE_STAR, 65, 0.0025)
-                        ),
-                        directDropBaseLevelMultiplier = 0.5,
-                        fiveStarChanceMultiplierAtLevel70 = 1.5
-                    )
+                    drops = fragmentFieldDrops()
                 ),
                 WeaponDefinition(
                     id = "masquerade_invitation",
                     baseItemId = "minecraft:wooden_sword",
-                    baseAttackDamage = 4.0,
-                    attackDamagePerLevel = 0.14,
+                    baseAttackDamage = 7.0,
+                    attackDamagePerLevel = 0.18,
                     totalAttackSpeed = 1.6,
                     maxBaseLevel = 60,
                     maxSkillLevel = 10,
@@ -282,8 +324,8 @@ object WeaponContentRegistry {
                         effectId = "heal",
                         durationSeconds = 0,
                         cooldownSeconds = 30,
-                        shieldBaseHearts = 2.0,
-                        shieldPerLevelHearts = 0.5
+                        baseValue = 2.0,
+                        valuePerLevel = 0.5
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -298,41 +340,221 @@ object WeaponContentRegistry {
                         craftedBaseLevel = 1,
                         craftedSkillLevel = 1
                     ),
-                    drops = WeaponDropDefinition(
-                        fragmentDrop = WeaponFragmentDropDefinition(
-                            minMobLevel = 5,
-                            chance = 0.08,
-                            minCount = 1,
-                            maxCount = 1,
-                            bonusCountAtLevel70 = 1
-                        ),
-                        directDropTiers = listOf(
-                            WeaponDropTier(
-                                rarity = WeaponRarity.TWO_STAR,
-                                minMobLevel = 5,
-                                chance = 0.012
-                            ),
-                            WeaponDropTier(
-                                rarity = WeaponRarity.THREE_STAR,
-                                minMobLevel = 25,
-                                chance = 0.008
-                            ),
-                            WeaponDropTier(
-                                rarity = WeaponRarity.FOUR_STAR,
-                                minMobLevel = 45,
-                                chance = 0.005
-                            ),
-                            WeaponDropTier(
-                                rarity = WeaponRarity.FIVE_STAR,
-                                minMobLevel = 65,
-                                chance = 0.0025
-                            )
-                        ),
-                        directDropBaseLevelMultiplier = 0.5,
-                        fiveStarChanceMultiplierAtLevel70 = 1.5
-                    )
+                    drops = fragmentFieldDrops()
+                ),
+                WeaponDefinition(
+                    id = "lakeside_stride",
+                    baseItemId = "minecraft:diamond_sword",
+                    baseAttackDamage = 7.0,
+                    attackDamagePerLevel = 0.0,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 10,
+                    critRateBonusPercent = 10.0,
+                    attackCurve = listOf(
+                        WeaponAttackCurvePoint(1, 7.0),
+                        WeaponAttackCurvePoint(5, 8.0),
+                        WeaponAttackCurvePoint(10, 9.5),
+                        WeaponAttackCurvePoint(30, 13.5),
+                        WeaponAttackCurvePoint(50, 18.0),
+                        WeaponAttackCurvePoint(60, 22.0)
+                    ),
+                    skill = WeaponSkillDefinition(
+                        effectId = "current_hp_true_damage",
+                        durationSeconds = 0,
+                        cooldownSeconds = 50,
+                        baseValue = 0.0,
+                        valuePerLevel = 5.0,
+                        radiusMeters = 5.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 0,
+                        skillCscQuadraticCoefficient = 10_000,
+                        baseFragmentCost = 1,
+                        skillArtifactMinRarity = EquipmentRarity.FOUR_STAR,
+                        skillArtifactCountPerLevel = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "lakeside_stride_fragment",
+                        fragmentBaseItemId = "minecraft:prismarine_crystals",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FIVE_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "hanwu_juanxue",
+                    baseItemId = "minecraft:diamond_sword",
+                    baseAttackDamage = 8.0,
+                    attackDamagePerLevel = 0.0,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 10,
+                    damageType = CombatDamageType.ARCANE,
+                    attackCurve = listOf(
+                        WeaponAttackCurvePoint(1, 8.0),
+                        WeaponAttackCurvePoint(5, 9.5),
+                        WeaponAttackCurvePoint(10, 11.0),
+                        WeaponAttackCurvePoint(30, 15.5),
+                        WeaponAttackCurvePoint(50, 21.5),
+                        WeaponAttackCurvePoint(60, 26.0)
+                    ),
+                    skill = WeaponSkillDefinition(
+                        effectId = "snow_frost",
+                        durationSeconds = 10,
+                        cooldownSeconds = 25,
+                        baseValue = 1.0,
+                        valuePerLevel = 0.3
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 0,
+                        skillCscQuadraticCoefficient = 10_000,
+                        baseFragmentCost = 1,
+                        skillArtifactMinRarity = EquipmentRarity.FOUR_STAR,
+                        skillArtifactCountPerLevel = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "hanwu_juanxue_fragment",
+                        fragmentBaseItemId = "minecraft:snowball",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FIVE_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "requiem_toward_dawn",
+                    baseItemId = "minecraft:iron_sword",
+                    baseAttackDamage = 8.5,
+                    attackDamagePerLevel = 0.20,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 10,
+                    maxAllDamageBonusPercent = 10.0,
+                    damageType = CombatDamageType.ARCANE,
+                    skill = WeaponSkillDefinition(
+                        effectId = "flame_aura",
+                        durationSeconds = 10,
+                        cooldownSeconds = 25,
+                        baseValue = 3.0,
+                        valuePerLevel = 1.0,
+                        radiusMeters = 4.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 10_000,
+                        baseFragmentCost = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "requiem_toward_dawn_fragment",
+                        fragmentBaseItemId = "minecraft:iron_ingot",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FOUR_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "gaoshan_liushui",
+                    baseItemId = "minecraft:iron_sword",
+                    baseAttackDamage = 8.5,
+                    attackDamagePerLevel = 0.20,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 10,
+                    skill = WeaponSkillDefinition(
+                        effectId = "healing_aura",
+                        durationSeconds = 8,
+                        cooldownSeconds = 20,
+                        baseValue = 2.0,
+                        valuePerLevel = 0.5,
+                        radiusMeters = 5.0,
+                        secondaryBaseValue = 0.75,
+                        secondaryValuePerLevel = 0.25,
+                        tickIntervalSeconds = 2.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 10_000,
+                        baseFragmentCost = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "gaoshan_liushui_fragment",
+                        fragmentBaseItemId = "minecraft:lapis_lazuli",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FOUR_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "dummy_four_star_b",
+                    baseItemId = "minecraft:golden_sword",
+                    baseAttackDamage = 8.5,
+                    attackDamagePerLevel = 0.20,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 1,
+                    skill = WeaponSkillDefinition(
+                        effectId = "none",
+                        durationSeconds = 0,
+                        cooldownSeconds = 0,
+                        baseValue = 0.0,
+                        valuePerLevel = 0.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 0,
+                        baseFragmentCost = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "dummy_four_star_b_fragment",
+                        fragmentBaseItemId = "minecraft:gold_ingot",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FOUR_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
                 )
             )
+        )
+    }
+
+    private fun fragmentFieldDrops(): WeaponDropDefinition {
+        return WeaponDropDefinition(
+            fragmentDrop = WeaponFragmentDropDefinition(
+                minMobLevel = 5,
+                chance = 0.08,
+                minCount = 1,
+                maxCount = 1,
+                bonusCountAtLevel70 = 1
+            ),
+            directDropTiers = emptyList(),
+            directDropBaseLevelMultiplier = 0.0,
+            fiveStarChanceMultiplierAtLevel70 = 1.0
+        )
+    }
+
+    private fun resonanceOnlyDrops(): WeaponDropDefinition {
+        return WeaponDropDefinition(
+            fragmentDrop = WeaponFragmentDropDefinition(
+                minMobLevel = 999,
+                chance = 0.0,
+                minCount = 0,
+                maxCount = 0,
+                bonusCountAtLevel70 = 0
+            ),
+            directDropTiers = emptyList(),
+            directDropBaseLevelMultiplier = 0.0,
+            fiveStarChanceMultiplierAtLevel70 = 1.0
         )
     }
 }

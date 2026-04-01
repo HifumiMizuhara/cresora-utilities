@@ -5,9 +5,23 @@
 - Target version migrated to `Minecraft 1.21.7`
 - `Fabric Loader` updated to `0.18.4`
 - `Fabric API` updated to `0.129.0+1.21.7`
-- Mod version unified to `1.3.0`
-- Created the `Version_1.3.0_log.md` release note file with all supported log languages
-- Built the remapped `1.3.0` release jar under `build/libs`
+- Mod version unified to `1.3.1`
+- Mod version updated to `1.3.2`
+- Mod version updated to `1.3.2.2`
+- Mod version updated to `1.3.2.3`
+- Mod version updated to `1.3.2.4`
+- Mod version updated to `1.3.2.5`
+- Created the `Version_1.3.0_log.md` and `Version_1.3.1_log.md` release note files with all supported log languages
+- Created the `Version_1.3.2_log.md` release note file with all supported log languages
+- Created the `Version_1.3.2.2_log.md` release note file with all supported log languages
+- Created the `Version_1.3.2.3_log.md` release note file with all supported log languages
+- Created the `Version_1.3.2.4_log.md` release note file with all supported log languages
+- Created the `Version_1.3.2.5_log.md` release note file with all supported log languages
+- Built the remapped `1.3.0` and `1.3.1` release jars under `build/libs`
+- Built the remapped `1.3.2` release jar under `build/libs`
+- Built the remapped `1.3.2.2` release jar under `build/libs`
+- Built the remapped `1.3.2.3` release jar under `build/libs`
+- Built the remapped `1.3.2.4` release jar under `build/libs`
 - Fixed `1.21.7` startup issues caused by missing `registryKey` during item registration
 
 ## Core Logic Fixes
@@ -22,6 +36,13 @@
 - Switched live equipment stat lookup from inventory scanning to equipped Trinkets items
 - Changed percent-based attack, health, and armor bonuses to use total-value multiplication instead of base-only multiplication
 - Removed double-counting of `ALL_DMG_BONUS` from the attack attribute path so it only affects final damage once
+- Replaced vanilla hunger-based natural regeneration with a custom Adventure Rank table that scales combat and non-combat healing by the player's food bar
+- Added combat-state tracking for both dealt and received hits so the custom natural regeneration swaps cleanly between battle and out-of-battle rates
+- Moved player `damage_reduction` application from the generic `LivingEntity.damage` hook to `PlayerEntity.damage` so the stat now applies on the real player override path instead of being skipped by the player damage chain
+- Added a Masquerade-only safety cap so total player `damage_reduction` cannot exceed `50%` during Masquerade runs, preventing support-buff stacking from trivializing the mode
+- Split combat damage into `physical` and `arcane` weapon types, with `requiem_toward_dawn` and `hanwu_juanxue` classified as `arcane` and all other current weapons classified as `physical`
+- Added new player-facing `physical_resistance` and `arcane_resistance` stats, surfaced them in `/cresora_stats`, and kept legacy `damage_reduction` as a compatibility layer that still contributes to both resistances
+- Updated equipment generation, fallback content defaults, JSON content data, and weapon tooltips so new resistance rolls and damage-type labels now match the split combat model
 
 ## CSC Economy
 
@@ -33,6 +54,11 @@
 - Added CSC income from hostile kills with enemy-level-based payout scaling
 - Added CSC income from artifact pickup and upgrade-material pickup using the existing reward-classification path
 - Updated upgrade-related UI and messages across `ja_jp`, `en_us`, `zh_cn`, and `lzh` from `XP` wording to `CSC`
+- Expanded `/cresora_shop` into a mixed purchase-and-sale screen with vanilla resource offers and Echo selling
+- Added JSON-backed vanilla resource shop offers so iron and other standard materials can be listed in the shop without code edits
+- Added fixed CSC sell values for Echoes based on rarity and level, with in-screen sale preview and sale confirmation
+- Added new CSC income routes for completed advancements, friendly-mob kills, and positive experience gain
+- Routed advancement completion through a dedicated mixin hook so CSC reward is paid when an advancement actually completes, not merely when the UI is opened
 
 ## Expanded Hostile Reward Coverage
 
@@ -55,6 +81,7 @@
 - Added CSC-based weapon growth rules so base levels consume `100 * n^2` CSC plus fragments, while skill levels consume `10000 * n` CSC
 - Added multilingual weapon names, upgrade UI text, and skill feedback for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
 - Verified the Phase 1 weapon-system implementation with a successful `./gradlew build`
+- Rebalanced weapon attack values so star-2, star-4, and star-5 weapons no longer start below strong vanilla melee options
 - Fixed the `Melody of the Rondo` shield path so damage absorption still applies when the player has no `damage_reduction` stat bonus equipped
 - Replaced the weapon skill cooldown from vanilla item cooldown state with an internal tick-based cooldown so sneak-right-click weapon leveling remains usable during cooldown
 - Improved the weapon-upgrade UI so base/skill upgrade lock reasons and current CSC are visible in-screen instead of only appearing as disabled buttons
@@ -66,6 +93,20 @@
 - Replaced the old player-global weapon cooldown with per-weapon cooldown tracking and per-weapon boss bars, so different weapons no longer lock each other out
 - Added multilingual item, tooltip, and upgrade text plus temporary item models for `masquerade_invitation`
 - Verified the new heal-weapon implementation with a successful `./gradlew build`
+- Replaced one dummy four-star weapon with `requiem_toward_dawn`, a real four-star weapon with a scaling all-damage bonus and a flame-aura skill
+- Added the new four-star weapon `gaoshan_liushui` with the composite `healing_aura` skill: immediate self-heal, overflow-to-temporary-guard conversion, and an 8-second nearby ally support aura that heals every 2 seconds and knocks back nearby hostile mobs
+- Extended weapon skill definitions to support secondary skill values and tick intervals so composite JSON-driven weapon skills no longer need hardcoded one-off numbers
+- Added multilingual tooltip / activation text plus resonance-pool registration for `gaoshan_liushui`, and wired temporary placeholder item resources so it renders without missing-model errors
+- Added the new five-star standard weapon `hanwu_juanxue` with a 10-second `snow_frost` combat state, on-hit Frost application, and `Lingering Snow` crit-damage stacks during the skill window
+- Added a non-stacking Frost debuff runtime that reapplies slowness and deals escalating freeze damage once per second up to the weapon's current skill cap
+- Added the `hanwu_juanxue` snow-environment special rule so its holder gains `+50%` attack while standing in cold / snowy terrain
+- Added multilingual tooltip, passive description, activation text, stack feedback, and standard-resonance banner registration for `hanwu_juanxue`
+- Added persistent world save data for field treasure chests so spawned chest positions and rewards now survive server restarts instead of degrading into untracked vanilla chests
+- Increased `lakeside_stride` true-damage ratio from `0.5n%` to `5n%`
+- Added dedicated temporary texture paths for `requiem_toward_dawn` and its fragment so the weapon no longer points at missing placeholder texture ids
+- Added weapon dismantling to the weapon-upgrade screen so weapons can be broken back into their own fragments with level-aware partial refund rules
+- Added two new fragment-farming domains, `requiem_reliquary` and `lakeside_sanctum`, for focused `requiem_toward_dawn` and `lakeside_stride` shard runs
+- Added three-click confirmation protection for weapon dismantling and for artifact-to-artifact sacrifice upgrades so destructive actions are harder to trigger by mistake
 
 ## Artifact Targeting And Shop
 
@@ -94,6 +135,42 @@
 - Added a second weapon-fragment farming domain `masquerade_soiree` for `masquerade_invitation`
 - Added multilingual domain UI / message text for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
 - Verified the Phase 1 domain implementation with a successful `./gradlew build`
+- Fixed the domain-exit edge case where a full inventory could interfere with clean reward delivery by forcing overflow rewards to drop at the player's feet after return
+- Added an explicit close button to the domain reward screen so players can leave the summary UI cleanly after clear
+- Added a JSON-driven story system scaffold with chapter id support such as `0-0`, `0-1`, and `0-2`
+- Added story chapters with separate `preBattleStory`, `battle`, and `postBattleStory` sections plus JSON-defined CSC and resonance-currency rewards
+- Implemented story chapter `0-0` with its requested pre-battle line, a single `Lv 2` zombie battle wave, its requested post-battle line, and rewards of `CSC 3450`, `代理コード x100`, and `コード進行 x100`
+- Added the player-facing `/cresora_story` command plus `/cresora_story start <chapter_id>` execution flow
+- Added a shared reward-summary opener so stories can reuse the reward UI without pretending to be domains
+- Added a new `/cresora` root command that opens a chest-style CreSora menu for Story, Domains, Shop, and Resonance
+- Added chest-style Story chapter-group and stage selection screens so players can choose `第0章 -> 0-0` without typing the chapter id
+- Kept the existing `/cresora_domain`, `/cresora_shop`, `/cresora_resonance`, and `/cresora_story start <chapter_id>` commands intact while repointing `/cresora_story` itself to the new story UI
+- Reworked story dialogue lines to support translation keys so chapter text can localize per language instead of being hardwired to Japanese
+- Added a visible `3, 2, 1` countdown right before story combat begins
+- Renamed the user-facing story feature label from `ストーリー / Story` to `楽章演奏` across menus, screens, rewards, and command feedback
+- Moved story dialogue text out of `lang/*.json` into a dedicated `data/cresora-utilities/cresora/story_texts.json` bundle so scenario structure and localized prose are now stored separately
+- Switched story dialogue rendering to resolve lines from the dedicated story-text bundle with per-player locale lookup plus locale fallback
+- Added a shared inventory-entry gate for stage content so both `楽章演奏` and `秘境` now refuse to start when the player's main inventory is completely full
+- Extended story chapter content to support JSON-driven `combatHints` and temporary `grantedWeapons` loadouts
+- Implemented story chapter `0-1` as the first weapon tutorial, including the requested pre/post dialogue, a `Lv 30` zombie battle, right-click skill guidance, temporary maxed `湖畔を歩む` / `円舞曲のメロディ` distribution, and automatic cleanup of the loaned weapons on exit
+- Added a dedicated synced item marker component for story-loaned weapons so temporary tutorial weapons can be reclaimed reliably when a story session ends
+- Changed story clear handling so empty-reward chapters no longer open a blank reward chest screen
+- Added full `en_us`, `zh_cn`, and `lzh` translations for story chapter `0-1` in the dedicated story text bundle and kept the built-in fallback registry in sync
+- Added persistent story-clear progression on players and wired it through save/load plus respawn-copy
+- Added prerequisite-chapter support to story chapter definitions, then gated chapter `0-1` behind `0-0` clear in both the UI and `/cresora_story start`
+- Updated story list and stage-selection labels so locked chapters now surface their prerequisite chapter instead of pretending they are freely available
+- Changed movement-performance rewards to first-clear-only while keeping story chapter replay available
+- Added the new `Masquerade` endgame mode with a `/cresora` menu entry plus `/cresora_masquerade`
+- Added JSON-backed Masquerade wave definitions, per-wave enemy stat modifiers, and JSON-backed support-buff definitions in `masquerade_content.json`
+- Added the Masquerade four-weapon loadout selection screen and per-wave `Performance Support` pick screen
+- Added Masquerade runtime reward payout based on cleared waves with `CSC` and `Chord Progression`
+- Added Masquerade-only combat modifiers including wave enemy damage reduction, stat-buff aggregation, wave-skip support, and five-wave guard support
+- Added inventory snapshot / restore handling for Masquerade runs so players only fight with the selected loadout during the session
+- Added localized Masquerade UI and support-buff text for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
+- Verified at server startup that `masquerade_content.json` loads successfully through the runtime registry path
+- Added season-driven Masquerade progress persistence keyed by `seasonId` from `masquerade_content.json`
+- Added automatic season rollover that archives the old season best wave / attempts / total cleared waves and resets the current season back to wave `1`
+- Added current-season and previous-season Masquerade record display to the loadout screen so the last season best wave remains visible after season updates
 
 ## Equipment Refactor Phase 1
 
@@ -218,6 +295,13 @@
 - Added mob-type-specific enemy health curves, including a separate Warden curve
 - Extended adventure-rank progression from `10` to `70` and replaced the short fixed XP table with a long-form rank curve
 - Rebalanced hostile scaling so higher ranks add moderate HP plus rank-based defense instead of relying on raw HP inflation
+- Changed field hostile level assignment from exact nearest-player rank to a randomized `nearest rank ±5` roll so natural spawns have local level spread
+
+## Music Echo
+
+- Added a JSON-backed `Music Echo` content registry for recurring version-based mob tuning
+- Activated the `v1.3.2` music echo so all mobs now take `3%` less damage
+- Verified the `Music Echo` implementation with a successful `./gradlew build`
 - Added hostile overhead labels that show live `Lv` and current `HP / Max HP`
 - Added floating damage numbers above hostile mobs on successful hits
 - Switched hostile spawn-time rank assignment from the highest nearby player to the nearest nearby player
@@ -228,6 +312,33 @@
 - Added adventure-rank summary output to `/cresora_stats`
 - Added localized adventure-rank command and stat text for `ja_jp`, `en_us`, `zh_cn`, and `lzh`
 - Verified the adventure-rank implementation with a successful `./gradlew build`
+
+## Resonance System
+
+- Added a JSON-backed resonance banner registry at `data/cresora-utilities/cresora/resonance_content.json`
+- Added `/cresora_resonance` with a chest-style UI for the limited and standard resonance banners
+- Added the new resonance currency items `chord_progression` and `substitute_chord`
+- Added persistent player resonance progress for limited pity, standard pull count, deep-pity streak, and `Arpeggio Concerto` readiness, including respawn-copy support
+- Implemented the limited-banner pity curve from pull `100` to `150` and the one-time `Arpeggio Concerto` guarantee within `100` pulls after three consecutive deep-pity featured wins
+- Added a resonance result screen and banner/result display stacks so pulls can be checked in-game without relying on chat only
+- Migrated resonance currency spending from item-count checks to persistent player-side balance data, matching the `CSC` storage model
+- Added `/cresora_resonance currency` plus admin `get / add / set` subcommands for the new resonance balances
+- Added result-screen action buttons so players can return to the resonance menu or pull the same banner again immediately
+- Corrected the Chinese resonance wording from `代码` to `和弦` in the supported UI strings
+
+## Weapon System Phase 2
+
+- Extended weapon definitions with crit-rate bonuses, optional attack curves, effect-specific skill values, quadratic skill CSC scaling, and artifact-material requirements
+- Added the limited `5-star` weapon `lakeside_stride` with `+10%` crit rate, a custom level curve, and a right-click skill that deals fixed current-HP-based damage in a `5m` radius
+- Added two placeholder `4-star` resonance-pool weapons, `dummy_four_star_a` and `dummy_four_star_b`, as no-effect fillers so the `4-star` banner table is no longer empty
+- Added a dedicated weapon-skill material selection UI for weapons whose skill upgrades consume `4-star+` artifacts instead of using the old instant-upgrade path
+- Added placeholder fragment items and vanilla-texture-backed item models for the new resonance and weapon entries
+- Updated held-weapon crit handling so weapon crit-rate bonuses apply during live combat instead of staying tooltip-only
+- Verified the resonance / weapon expansion build with a successful `GRADLE_USER_HOME=.gradle-user ./gradlew build --console=plain` on `2026-03-28`
+- Removed the old weapon-from-fragment crafting interaction so weapon stacks now come from resonance, not right-clicking fragments
+- Stopped direct field drops of complete `rondo_melody` and `masquerade_invitation` weapon stacks while keeping fragment drops for growth material loops
+- Added dynamic treasure chests around players that award `CSC` plus `Chord Progression`, with star-3 / star-4 / star-5 payouts of `400 + 100`, `1000 + 125`, and `1500 + 150`
+- Changed treasure-chest behavior so they no longer expire, no longer enforce owner locks, and now maintain up to `5` active chests per player instead of `1`
 
 ## Current State
 

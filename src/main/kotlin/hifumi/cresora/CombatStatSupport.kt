@@ -9,6 +9,8 @@ object CombatStatSupport {
         return when (type) {
             StatType.CRIT_RATE -> BASE_CRIT_RATE_PERCENT + (totals[StatType.CRIT_RATE] ?: 0.0)
             StatType.CRIT_DMG -> BASE_CRIT_DAMAGE_PERCENT + (totals[StatType.CRIT_DMG] ?: 0.0)
+            StatType.PHYSICAL_RESISTANCE -> CombatDamageTypeSupport.effectiveResistancePercent(totals, CombatDamageType.PHYSICAL)
+            StatType.ARCANE_RESISTANCE -> CombatDamageTypeSupport.effectiveResistancePercent(totals, CombatDamageType.ARCANE)
             else -> totals[type] ?: 0.0
         }
     }
