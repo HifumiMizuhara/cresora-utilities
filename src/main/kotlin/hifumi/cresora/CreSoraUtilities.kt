@@ -54,11 +54,19 @@ object CreSoraUtilities : ModInitializer {
 
 	lateinit var UPGRADE_SCREEN_HANDLER: ScreenHandlerType<UpgradeScreenHandler>
 	lateinit var WEAPON_UPGRADE_SCREEN_HANDLER: ScreenHandlerType<WeaponUpgradeScreenHandler>
+	lateinit var WEAPON_SKILL_MATERIAL_SCREEN_HANDLER: ScreenHandlerType<WeaponSkillMaterialScreenHandler>
+	lateinit var CRESORA_MENU_SCREEN_HANDLER: ScreenHandlerType<CresoraMenuScreenHandler>
 	lateinit var DOMAIN_SELECTION_SCREEN_HANDLER: ScreenHandlerType<DomainSelectionScreenHandler>
 	lateinit var DOMAIN_REWARD_SCREEN_HANDLER: ScreenHandlerType<DomainRewardScreenHandler>
+	lateinit var STORY_CHAPTER_SELECTION_SCREEN_HANDLER: ScreenHandlerType<StoryChapterSelectionScreenHandler>
+	lateinit var STORY_STAGE_SELECTION_SCREEN_HANDLER: ScreenHandlerType<StoryStageSelectionScreenHandler>
+	lateinit var MASQUERADE_LOADOUT_SCREEN_HANDLER: ScreenHandlerType<MasqueradeLoadoutScreenHandler>
+	lateinit var MASQUERADE_SUPPORT_SCREEN_HANDLER: ScreenHandlerType<MasqueradeSupportScreenHandler>
 	lateinit var ARTIFACT_SHOP_SCREEN_HANDLER: ScreenHandlerType<ArtifactShopScreenHandler>
 	lateinit var ARTIFACT_ALPHA_SCREEN_HANDLER: ScreenHandlerType<ArtifactAlphaScreenHandler>
 	lateinit var ARTIFACT_BETA_SCREEN_HANDLER: ScreenHandlerType<ArtifactBetaScreenHandler>
+	lateinit var RESONANCE_SCREEN_HANDLER: ScreenHandlerType<ResonanceScreenHandler>
+	lateinit var RESONANCE_RESULT_SCREEN_HANDLER: ScreenHandlerType<ResonanceResultScreenHandler>
 	lateinit var SET_LEVEL_LOOT_FUNCTION: LootFunctionType<SetLevelLootFunction>
 
 	override fun onInitialize() {
@@ -66,8 +74,16 @@ object CreSoraUtilities : ModInitializer {
 		EquipmentContentRegistry.init()
 		WeaponContentRegistry.init()
 		ArtifactSpecialItemRegistry.init()
+		ShopContentRegistry.init()
+		MobCombatProfileRegistry.init()
 		DomainRewardProfileRegistry.init()
 		DomainContentRegistry.init()
+		MasqueradeContentRegistry.init()
+		StoryTextRegistry.init()
+		StoryContentRegistry.init()
+		ResonanceContentRegistry.init()
+		MusicEchoContentRegistry.init()
+		StoryDialogueNetworking.init()
 		UPGRADE_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "upgrade"),
@@ -78,6 +94,16 @@ object CreSoraUtilities : ModInitializer {
 			Identifier.of(MOD_ID, "weapon_upgrade"),
 			ScreenHandlerType(::WeaponUpgradeScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
+		WEAPON_SKILL_MATERIAL_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "weapon_skill_material"),
+			ScreenHandlerType(::WeaponSkillMaterialScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		CRESORA_MENU_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "cresora_menu"),
+			ScreenHandlerType(::CresoraMenuScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
 		DOMAIN_SELECTION_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "domain_selection"),
@@ -87,6 +113,26 @@ object CreSoraUtilities : ModInitializer {
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "domain_reward"),
 			ScreenHandlerType(::DomainRewardScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		STORY_CHAPTER_SELECTION_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "story_chapter_selection"),
+			ScreenHandlerType(::StoryChapterSelectionScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		STORY_STAGE_SELECTION_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "story_stage_selection"),
+			ScreenHandlerType(::StoryStageSelectionScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		MASQUERADE_LOADOUT_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "masquerade_loadout"),
+			ScreenHandlerType(::MasqueradeLoadoutScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		MASQUERADE_SUPPORT_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "masquerade_support"),
+			ScreenHandlerType(::MasqueradeSupportScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
 		ARTIFACT_SHOP_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,
@@ -103,6 +149,16 @@ object CreSoraUtilities : ModInitializer {
 			Identifier.of(MOD_ID, "artifact_beta"),
 			ScreenHandlerType(::ArtifactBetaScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
+		RESONANCE_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "resonance"),
+			ScreenHandlerType(::ResonanceScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		RESONANCE_RESULT_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "resonance_result"),
+			ScreenHandlerType(::ResonanceResultScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
 		SET_LEVEL_LOOT_FUNCTION = Registry.register(
 			Registries.LOOT_FUNCTION_TYPE,
 			Identifier.of(MOD_ID, "set_level"),
@@ -113,9 +169,13 @@ object CreSoraUtilities : ModInitializer {
 		Commands.init()
 		AdventureRankHooks.init()
 		DomainHooks.init()
+		StoryHooks.init()
+		MasqueradeHooks.init()
+		TreasureChestService.init()
 		EquipmentAttributeService.init()
 		WeaponAttributeService.init()
 		WeaponSkillService.init()
+		NaturalRegenService.init()
 		registerEquipmentItems()
 		registerWeaponItems()
 		registerArtifactSpecialItems()

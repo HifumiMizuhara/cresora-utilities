@@ -56,6 +56,9 @@ object EquipmentPlayerSupport {
                 totals[bonus.type] = (totals[bonus.type] ?: 0.0) + bonus.value
             }
         }
+        for ((type, value) in MasqueradeService.getAggregatedSupportStats(player)) {
+            totals[type] = (totals[type] ?: 0.0) + value
+        }
         return totals
     }
 

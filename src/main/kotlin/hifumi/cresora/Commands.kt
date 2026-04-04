@@ -430,18 +430,23 @@ object Commands {
 
     private fun showStoryChapters(source: ServerCommandSource) {
         source.sendFeedback({ Text.translatable("commands.cresora.story.header") }, false)
+        val player = source.player
+        val locale = StoryTextRegistry.resolvePlayerLocale(player)
         for (chapter in StoryContentRegistry.chapters()) {
-            val player = source.player
             val missingPrerequisite = if (player != null) StoryProgressService.missingPrerequisite(player, chapter) else chapter.prerequisiteChapterId
+            val title = StoryTextRegistry.chapterTitle(locale, chapter)
+            val prerequisiteLabel = missingPrerequisite?.let {
+                runCatching { StoryTextRegistry.chapterLabel(locale, StoryContentRegistry.requireChapter(it)) }.getOrDefault(it)
+            }
             source.sendFeedback(
                 {
-                    if (missingPrerequisite != null) {
-                        Text.translatable("commands.cresora.story.entry_prerequisite", chapter.id, chapter.displayName, missingPrerequisite)
+                    if (prerequisiteLabel != null) {
+                        Text.translatable("commands.cresora.story.entry_prerequisite", chapter.displayName, title, prerequisiteLabel)
                     } else {
                         Text.translatable(
                             "commands.cresora.story.entry",
-                            chapter.id,
                             chapter.displayName,
+                            title,
                             chapter.unlockRank
                         )
                     }

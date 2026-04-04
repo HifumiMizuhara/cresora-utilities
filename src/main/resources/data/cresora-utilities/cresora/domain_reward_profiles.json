@@ -50,6 +50,34 @@
       }
     },
     {
+      "id": "requiem_reliquary",
+      "weaponFragmentReward": {
+        "weaponId": "requiem_toward_dawn",
+        "minCount": 2,
+        "maxCount": 7
+      },
+      "currencyReward": {
+        "creditsBase": 9000,
+        "creditsPerRank": 220,
+        "rankXpBase": 180,
+        "rankXpPerRank": 7
+      }
+    },
+    {
+      "id": "lakeside_sanctum",
+      "weaponFragmentReward": {
+        "weaponId": "lakeside_stride",
+        "minCount": 1,
+        "maxCount": 4
+      },
+      "currencyReward": {
+        "creditsBase": 12000,
+        "creditsPerRank": 260,
+        "rankXpBase": 240,
+        "rankXpPerRank": 8
+      }
+    },
+    {
       "id": "csc_training",
       "currencyReward": {
         "creditsBase": 11000,

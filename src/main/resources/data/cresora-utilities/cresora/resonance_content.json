@@ -1,0 +1,129 @@
+{
+  "banners": [
+    {
+      "id": "limited_lakeside",
+      "type": "limited",
+      "familyId": "minor_1_3",
+      "translationKey": "screen.cresora.resonance.banner.limited_lakeside",
+      "currencyItemId": "chord_progression",
+      "cost": 325,
+      "featuredFiveStarWeaponId": "lakeside_stride",
+      "rates": {
+        "fiveStarChance": 0.01,
+        "fourStarChance": 0.0325,
+        "threeStarChance": 0.0799,
+        "twoStarChance": 0.8776
+      },
+      "fiveStarPool": [
+        {
+          "weaponId": "lakeside_stride",
+          "rarity": "5_star",
+          "weight": 1.0
+        }
+      ],
+      "fourStarPool": [
+        {
+          "weaponId": "requiem_toward_dawn",
+          "rarity": "4_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "gaoshan_liushui",
+          "rarity": "4_star",
+          "weight": 1.0
+        }
+      ],
+      "threeStarPool": [
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "3_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "masquerade_invitation",
+          "rarity": "3_star",
+          "weight": 1.0
+        }
+      ],
+      "twoStarPool": [
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "2_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "masquerade_invitation",
+          "rarity": "2_star",
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "id": "standard_ensemble",
+      "type": "standard",
+      "familyId": "standard",
+      "translationKey": "screen.cresora.resonance.banner.standard_ensemble",
+      "currencyItemId": "substitute_chord",
+      "cost": 325,
+      "rates": {
+        "fiveStarChance": 0.01,
+        "fourStarChance": 0.0325,
+        "threeStarChance": 0.0799,
+        "twoStarChance": 0.8776
+      },
+      "fiveStarPool": [
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "5_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "masquerade_invitation",
+          "rarity": "5_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "hanwu_juanxue",
+          "rarity": "5_star",
+          "weight": 1.0
+        }
+      ],
+      "fourStarPool": [
+        {
+          "weaponId": "requiem_toward_dawn",
+          "rarity": "4_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "gaoshan_liushui",
+          "rarity": "4_star",
+          "weight": 1.0
+        }
+      ],
+      "threeStarPool": [
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "3_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "masquerade_invitation",
+          "rarity": "3_star",
+          "weight": 1.0
+        }
+      ],
+      "twoStarPool": [
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "2_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "masquerade_invitation",
+          "rarity": "2_star",
+          "weight": 1.0
+        }
+      ]
+    }
+  ]
+}

@@ -22,10 +22,12 @@ class UpgradeScreenHandler(
 
     companion object {
         const val BUTTON_UPGRADE = 0
+        private const val REQUIRED_DESTRUCTIVE_CLICKS = 3
         private const val TARGET_SLOT = 0
         private const val MATERIAL_SLOT = 1
         private const val CUSTOM_SLOT_COUNT = 2
         private const val PROPERTY_AVAILABLE_CREDITS_LOW = 0
+        private const val PROPERTY_CONFIRM_CLICKS = 2
     }
 
     private val upgradeInventory: Inventory = object : SimpleInventory(CUSTOM_SLOT_COUNT) {
@@ -34,7 +36,8 @@ class UpgradeScreenHandler(
             onContentChanged(this)
         }
     }
-    private val properties: PropertyDelegate = ArrayPropertyDelegate(2)
+    private val properties: PropertyDelegate = ArrayPropertyDelegate(3)
+    private var destructiveConfirmClicks: Int = 0
 
     init {
         refreshCreditProperty()
@@ -69,7 +72,7 @@ class UpgradeScreenHandler(
 
         if (!playerInventory.player.world.isClient) {
             if (initialTarget.isEmpty) {
-                tryMoveSelectedWand()
+                tryMoveSelectedEquipment()
             }
         }
     }
@@ -78,7 +81,13 @@ class UpgradeScreenHandler(
 
     override fun sendContentUpdates() {
         refreshCreditProperty()
+        properties.set(PROPERTY_CONFIRM_CLICKS, destructiveConfirmClicks)
         super.sendContentUpdates()
+    }
+
+    override fun onContentChanged(inventory: Inventory) {
+        super.onContentChanged(inventory)
+        resetDestructiveConfirmation()
     }
 
     override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {
@@ -139,7 +148,19 @@ class UpgradeScreenHandler(
                 }
             }
         }
+        val preview = getPreview(player)
+        if (preview.materialType == UpgradeLogic.MaterialType.PENDANT && preview.canUpgrade) {
+            val remainingClicks = requireDestructiveConfirmation()
+            if (remainingClicks > 0) {
+                player.sendMessage(Text.translatable("screen.cresora.upgrade.confirm_sacrifice", remainingClicks), false)
+                sendContentUpdates()
+                return true
+            }
+        } else {
+            resetDestructiveConfirmation()
+        }
         val result = UpgradeLogic.attemptUpgrade(player, baseStack, materialStack)
+        resetDestructiveConfirmation()
         player.sendMessage(result.message, false)
         sendContentUpdates()
         return true
@@ -169,9 +190,14 @@ class UpgradeScreenHandler(
 
     fun getCreditCost(): Int = UpgradeLogic.CSC_COST
 
+    fun destructiveConfirmRemaining(): Int {
+        val clicks = properties.get(PROPERTY_CONFIRM_CLICKS)
+        return if (clicks <= 0) 0 else (REQUIRED_DESTRUCTIVE_CLICKS - clicks).coerceAtLeast(0)
+    }
+
     fun getScreenTitle(): Text = Text.translatable("screen.cresora.upgrade")
 
-    private fun tryMoveSelectedWand() {
+    private fun tryMoveSelectedEquipment() {
         val selectedSlot = playerInventory.selectedSlot
         val selectedStack = playerInventory.getStack(selectedSlot)
         if (!EquipmentStackSupport.isEquipment(selectedStack) || slots[TARGET_SLOT].hasStack()) {
@@ -213,5 +239,20 @@ class UpgradeScreenHandler(
         } else {
             ScreenSyncSupport.readInt(properties, PROPERTY_AVAILABLE_CREDITS_LOW)
         }
+    }
+
+    private fun requireDestructiveConfirmation(): Int {
+        destructiveConfirmClicks += 1
+        return if (destructiveConfirmClicks >= REQUIRED_DESTRUCTIVE_CLICKS) {
+            destructiveConfirmClicks = 0
+            0
+        } else {
+            REQUIRED_DESTRUCTIVE_CLICKS - destructiveConfirmClicks
+        }
+    }
+
+    private fun resetDestructiveConfirmation() {
+        destructiveConfirmClicks = 0
+        properties.set(PROPERTY_CONFIRM_CLICKS, 0)
     }
 }

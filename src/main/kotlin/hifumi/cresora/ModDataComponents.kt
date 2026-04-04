@@ -36,6 +36,24 @@ object ModDataComponents {
             .build()
     )
 
+    val STORY_LOAN_SESSION_ID: ComponentType<String> = Registry.register(
+        Registries.DATA_COMPONENT_TYPE,
+        Identifier.of(CreSoraUtilities.MOD_ID, "story_loan_session_id"),
+        ComponentType.builder<String>()
+            .codec(Codec.STRING)
+            .packetCodec(PacketCodecs.STRING)
+            .build()
+    )
+
+    val MASQUERADE_SESSION_ID: ComponentType<String> = Registry.register(
+        Registries.DATA_COMPONENT_TYPE,
+        Identifier.of(CreSoraUtilities.MOD_ID, "masquerade_session_id"),
+        ComponentType.builder<String>()
+            .codec(Codec.STRING)
+            .packetCodec(PacketCodecs.STRING)
+            .build()
+    )
+
     // このメソッドをModの初期化時に呼ぶことで、クラスがロードされコンポーネントが登録される
     fun initialize() {}
 }

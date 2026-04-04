@@ -1,0 +1,321 @@
+{
+  "chapters": [
+    {
+      "id": "0-0",
+      "displayName": "0-0",
+      "sortOrder": 0,
+      "titleTextId": "story.cresora.chapter.0_0.title",
+      "domainRewardIds": ["rondo_forge", "masquerade_soiree"],
+      "unlockRank": 1,
+      "preBattleStory": [
+        {
+          "speakerId": "story.cresora.chapter.0_0.speaker",
+          "textId": "story.cresora.chapter.0_0.pre_0"
+        }
+      ],
+      "battle": [
+        {
+          "enemyRank": 2,
+          "spawnDelayTicks": 40,
+          "spawns": [
+            {
+              "entityTypeId": "minecraft:zombie",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "postBattleStory": [
+        {
+          "speakerId": "story.cresora.chapter.0_0.speaker",
+          "textId": "story.cresora.chapter.0_0.post_0"
+        }
+      ],
+      "rewards": {
+        "credits": 3450,
+        "resonanceCurrencies": [
+          {
+            "type": "substitute_chord",
+            "amount": 100
+          },
+          {
+            "type": "chord_progression",
+            "amount": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": "0-1",
+      "displayName": "0-1",
+      "sortOrder": 10,
+      "titleTextId": "story.cresora.chapter.0_1.title",
+      "domainRewardIds": ["credit_drill"],
+      "unlockRank": 1,
+      "prerequisiteChapterId": "0-0",
+      "preBattleStory": [
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.unknown",
+          "textId": "story.cresora.chapter.0_1.pre_0"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.unknown",
+          "textId": "story.cresora.chapter.0_1.pre_1"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.pre_2"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.player",
+          "textId": "story.cresora.chapter.0_1.pre_3"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.pre_4"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.unknown",
+          "textId": "story.cresora.chapter.0_1.pre_5"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.pre_6"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.pre_7"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.unknown",
+          "textId": "story.cresora.chapter.0_1.pre_8"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.pre_9"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.pre_10"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.pre_11"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.pre_12"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.pre_13"
+        }
+      ],
+      "combatHints": [
+        {
+          "textId": "story.cresora.chapter.0_1.hint_0"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.hint_1"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.hint_2"
+        }
+      ],
+      "grantedWeapons": [
+        {
+          "weaponId": "lakeside_stride",
+          "rarity": "5_star",
+          "baseLevel": 60,
+          "skillLevel": 10,
+          "removeOnExit": true
+        },
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "2_star",
+          "baseLevel": 60,
+          "skillLevel": 10,
+          "removeOnExit": true
+        }
+      ],
+      "battle": [
+        {
+          "enemyRank": 50,
+          "spawnDelayTicks": 40,
+          "spawns": [
+            {
+              "entityTypeId": "minecraft:zombie",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "postBattleStory": [
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.player",
+          "textId": "story.cresora.chapter.0_1.post_0"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.player",
+          "textId": "story.cresora.chapter.0_1.post_1"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.post_2"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.post_3"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.post_4"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.player",
+          "textId": "story.cresora.chapter.0_1.post_5"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.post_6"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.post_7"
+        },
+        {
+          "textId": "story.cresora.chapter.0_1.post_8"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.player",
+          "textId": "story.cresora.chapter.0_1.post_9"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.lumine",
+          "textId": "story.cresora.chapter.0_1.post_10"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_1.speaker.player",
+          "textId": "story.cresora.chapter.0_1.post_11"
+        }
+      ],
+      "rewards": {
+        "credits": 3250,
+        "resonanceCurrencies": [
+          {
+            "type": "substitute_chord",
+            "amount": 200
+          },
+          {
+            "type": "chord_progression",
+            "amount": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": "D0-1",
+      "displayName": "D0-1",
+      "groupId": "0",
+      "sortOrder": 20,
+      "titleTextId": "story.cresora.chapter.d0_1.title",
+      "linkedDomainId": "lakeside_sanctum",
+      "unlockRank": 1,
+      "prerequisiteChapterId": "0-1",
+      "preBattleStory": [],
+      "combatHints": [],
+      "grantedWeapons": [],
+      "battle": [],
+      "postBattleStory": [],
+      "rewards": {
+        "credits": 0,
+        "resonanceCurrencies": []
+      }
+    },
+    {
+      "id": "D0-2",
+      "displayName": "D0-2",
+      "groupId": "0",
+      "sortOrder": 30,
+      "titleTextId": "story.cresora.chapter.d0_2.title",
+      "linkedDomainId": "hinagata_archive",
+      "unlockRank": 1,
+      "prerequisiteChapterId": "0-1",
+      "preBattleStory": [],
+      "combatHints": [],
+      "grantedWeapons": [],
+      "battle": [],
+      "postBattleStory": [],
+      "rewards": {
+        "credits": 0,
+        "resonanceCurrencies": []
+      }
+    },
+    {
+      "id": "0-2",
+      "displayName": "0-2",
+      "sortOrder": 40,
+      "titleTextId": "story.cresora.chapter.0_2.title",
+      "unlockRank": 1,
+      "prerequisiteChapterId": "0-1",
+      "preBattleStory": [
+        { "textId": "story.cresora.chapter.0_2.pre_0" },
+        { "textId": "story.cresora.chapter.0_2.pre_1" },
+        { "textId": "story.cresora.chapter.0_2.pre_2" },
+        { "textId": "story.cresora.chapter.0_2.pre_3" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_4" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.pre_5" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_6" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_7" },
+        { "textId": "story.cresora.chapter.0_2.pre_8" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.pre_9" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_10" },
+        { "textId": "story.cresora.chapter.0_2.pre_11" },
+        { "textId": "story.cresora.chapter.0_2.pre_12" }
+      ],
+      "combatHints": [
+        { "textId": "story.cresora.chapter.0_2.hint_0" },
+        { "textId": "story.cresora.chapter.0_2.hint_1" },
+        { "textId": "story.cresora.chapter.0_2.hint_2" }
+      ],
+      "grantedWeapons": [
+        {
+          "weaponId": "rondo_melody",
+          "rarity": "2_star",
+          "baseLevel": 60,
+          "skillLevel": 10,
+          "removeOnExit": true
+        }
+      ],
+      "battleObjective": {
+        "type": "survive_time",
+        "durationSeconds": 45
+      },
+      "battle": [
+        {
+          "enemyRank": 50,
+          "spawnDelayTicks": 40,
+          "spawns": [
+            {
+              "entityTypeId": "minecraft:skeleton",
+              "count": 1
+            }
+          ],
+          "modifiers": {
+            "damageReductionPercent": 100.0,
+            "trueDamageImmune": true
+          }
+        }
+      ],
+      "postBattleStory": [
+        { "textId": "story.cresora.chapter.0_2.post_0" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_1" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.post_2" },
+        { "textId": "story.cresora.chapter.0_2.post_3" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_4" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.post_5" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_6" },
+        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_7" },
+        { "textId": "story.cresora.chapter.0_2.post_8" },
+        { "textId": "story.cresora.chapter.0_2.post_9" }
+      ],
+      "rewards": {
+        "credits": 0,
+        "resonanceCurrencies": []
+      }
+    }
+  ]
+}

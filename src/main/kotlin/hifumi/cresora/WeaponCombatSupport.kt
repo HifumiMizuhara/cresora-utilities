@@ -5,7 +5,25 @@ object WeaponCombatSupport {
     private const val PLAYER_BASE_ATTACK_SPEED = 4.0
 
     fun attackDamage(definition: WeaponDefinition, data: WeaponData): Double {
-        return definition.baseAttackDamage + (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel
+        val curve = definition.attackCurve
+        if (curve.isEmpty()) {
+            return definition.baseAttackDamage + (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel
+        }
+        val level = data.baseLevel.coerceIn(1, definition.maxBaseLevel)
+        if (level <= curve.first().level) {
+            return curve.first().attackDamage
+        }
+        for (index in 1 until curve.size) {
+            val previous = curve[index - 1]
+            val next = curve[index]
+            if (level > next.level) {
+                continue
+            }
+            val span = (next.level - previous.level).coerceAtLeast(1)
+            val progress = (level - previous.level).toDouble() / span.toDouble()
+            return previous.attackDamage + (next.attackDamage - previous.attackDamage) * progress
+        }
+        return curve.last().attackDamage
     }
 
     fun attackDamageModifier(definition: WeaponDefinition, data: WeaponData): Double {
@@ -16,12 +34,35 @@ object WeaponCombatSupport {
         return definition.totalAttackSpeed - PLAYER_BASE_ATTACK_SPEED
     }
 
+    fun critRateBonusPercent(definition: WeaponDefinition): Double = definition.critRateBonusPercent
+
+    fun allDamageBonusPercent(definition: WeaponDefinition, data: WeaponData): Double {
+        val maxBonus = definition.maxAllDamageBonusPercent.coerceAtLeast(0.0)
+        if (maxBonus <= 0.0 || definition.maxBaseLevel <= 1) {
+            return 0.0
+        }
+        val progress = (data.baseLevel.coerceIn(1, definition.maxBaseLevel) - 1).toDouble() / (definition.maxBaseLevel - 1).toDouble()
+        return maxBonus * progress.coerceIn(0.0, 1.0)
+    }
+
     fun skillValueHearts(definition: WeaponDefinition, data: WeaponData): Double {
-        return definition.skill.shieldBaseHearts + definition.skill.shieldPerLevelHearts * data.skillLevel
+        return definition.skill.baseValue + definition.skill.valuePerLevel * data.skillLevel
+    }
+
+    fun secondarySkillValueHearts(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.secondaryBaseValue + definition.skill.secondaryValuePerLevel * data.skillLevel
+    }
+
+    fun skillValuePercent(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.baseValue + definition.skill.valuePerLevel * data.skillLevel
     }
 
     fun skillValueHp(definition: WeaponDefinition, data: WeaponData): Float {
         return (skillValueHearts(definition, data) * 2.0).toFloat()
+    }
+
+    fun secondarySkillValueHp(definition: WeaponDefinition, data: WeaponData): Float {
+        return (secondarySkillValueHearts(definition, data) * 2.0).toFloat()
     }
 
     fun shieldHearts(definition: WeaponDefinition, data: WeaponData): Double {
@@ -38,5 +79,9 @@ object WeaponCombatSupport {
 
     fun healHp(definition: WeaponDefinition, data: WeaponData): Float {
         return skillValueHp(definition, data)
+    }
+
+    fun currentHpTrueDamageRatio(definition: WeaponDefinition, data: WeaponData): Double {
+        return (skillValuePercent(definition, data) / 100.0).coerceAtLeast(0.0)
     }
 }

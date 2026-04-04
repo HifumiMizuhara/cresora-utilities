@@ -7,6 +7,14 @@ import net.minecraft.item.Items
 import net.minecraft.text.Text
 
 object DomainDisplayStackFactory {
+    fun storyLinkedDisplay(chapter: StoryChapterDefinition, domain: DomainDefinition): ItemStack {
+        val rewardProfile = DomainRewardProfileRegistry.requireProfile(domain.rewardProfileId)
+        val displayItem = domainDisplayItem(rewardProfile)
+        return ItemStack(displayItem).apply {
+            set(DataComponentTypes.CUSTOM_NAME, Text.literal(chapter.displayName))
+        }
+    }
+
     fun domainDisplay(definition: DomainDefinition): ItemStack {
         val rewardProfile = DomainRewardProfileRegistry.requireProfile(definition.rewardProfileId)
         val displayItem = domainDisplayItem(rewardProfile)

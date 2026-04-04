@@ -1,5 +1,7 @@
 package hifumi.cresora
 
+import net.minecraft.advancement.AdvancementEntry
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.server.network.ServerPlayerEntity
 
@@ -64,5 +66,17 @@ object CreditsService {
 
     fun addHostileKillReward(player: ServerPlayerEntity, entity: HostileEntity): Int {
         return addCredits(player, CreditsRewardProfile.hostileKill(entity))
+    }
+
+    fun addFriendlyKillReward(player: ServerPlayerEntity, entity: MobEntity): Int {
+        return addCredits(player, CreditsRewardProfile.friendlyKill(entity))
+    }
+
+    fun addAdvancementReward(player: ServerPlayerEntity, advancement: AdvancementEntry): Int {
+        return addCredits(player, CreditsRewardProfile.advancementReward(advancement))
+    }
+
+    fun addExperienceReward(player: ServerPlayerEntity, amount: Int): Int {
+        return addPickupReward(player, CreditsRewardSource.EXPERIENCE_GAIN, amount)
     }
 }

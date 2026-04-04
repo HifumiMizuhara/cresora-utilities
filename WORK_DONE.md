@@ -43,6 +43,9 @@
 - Split combat damage into `physical` and `arcane` weapon types, with `requiem_toward_dawn` and `hanwu_juanxue` classified as `arcane` and all other current weapons classified as `physical`
 - Added new player-facing `physical_resistance` and `arcane_resistance` stats, surfaced them in `/cresora_stats`, and kept legacy `damage_reduction` as a compatibility layer that still contributes to both resistances
 - Updated equipment generation, fallback content defaults, JSON content data, and weapon tooltips so new resistance rolls and damage-type labels now match the split combat model
+- Added JSON-backed hostile combat profiles with species-fixed attack types plus per-mob `physical` / `arcane` resistance values
+- Applied hostile-side resistance reduction during live combat, so enemy archetypes now actually mitigate incoming typed damage instead of the split model living only on the player side
+- Expanded combat feedback to show typed outgoing / incoming damage, enemy resistance lines on hostile overhead labels, and typed floating damage markers including fixed-damage hits
 
 ## CSC Economy
 
@@ -160,6 +163,19 @@
 - Added prerequisite-chapter support to story chapter definitions, then gated chapter `0-1` behind `0-0` clear in both the UI and `/cresora_story start`
 - Updated story list and stage-selection labels so locked chapters now surface their prerequisite chapter instead of pretending they are freely available
 - Changed movement-performance rewards to first-clear-only while keeping story chapter replay available
+- Added per-chapter story titles backed by the dedicated `story_texts.json` bundle, and surfaced those titles in story selection and `/cresora_story list`
+- Added story chapter `0-2` `狂奏`, including the requested pre/post dialogue, temporary max-level `円舞曲のメロディ`, and automatic cleanup of the loaned weapon on exit
+- Extended story battle definitions with a survival objective and enemy damage-reduction modifiers, then used them in `0-2` for the `45` second survival fight against a `100%` damage-reduction skeleton
+- Refined story dialogue rendering so voiced lines now separate speaker and body more clearly in chat, reducing wrap-induced speaker confusion during long scenes
+- Extended story battle modifiers with `trueDamageImmune`, then used it in `0-2` so the training skeleton now ignores fixed-damage burst skills as intended
+- Added a live survival countdown action bar for `survive_time` story battles and raised chapter `0-2` enemy rank from `25` to `50`
+- Added a dedicated client-side story dialogue screen with `Continue`, `Auto`, and `Skip` controls, replacing the old chat-line-by-line story delivery path
+- Added story-specific play-stage payloads so the server now pushes dialogue and countdown state to the client while keeping battle flow authoritative on the server
+- Added objective and combat-hint display to both the dedicated dialogue screen and story stage selection tooltips
+- Fixed a `Minecraft 1.21.7` client crash in the dedicated story dialogue screen by removing the duplicate per-frame blur path from the custom full-screen renderer
+- Fixed a second `Minecraft 1.21.7` story-dialogue client crash by stopping runtime writes to `Screen.title` during dialogue-state updates, which broke when `AUTO` advanced to the next line
+- Fixed the story-dialogue close packet so the empty `story_dialogue_close` payload now uses one shared singleton instance, preventing server-side custom-payload encode failures on dialogue exit
+- Fixed story chapter `0-2` post-battle speaker assignments so Lumine's concealed-answer line remains voiced and the following memory-loss / pity lines render as narration instead of fake spoken dialogue
 - Added the new `Masquerade` endgame mode with a `/cresora` menu entry plus `/cresora_masquerade`
 - Added JSON-backed Masquerade wave definitions, per-wave enemy stat modifiers, and JSON-backed support-buff definitions in `masquerade_content.json`
 - Added the Masquerade four-weapon loadout selection screen and per-wave `Performance Support` pick screen
@@ -171,6 +187,13 @@
 - Added season-driven Masquerade progress persistence keyed by `seasonId` from `masquerade_content.json`
 - Added automatic season rollover that archives the old season best wave / attempts / total cleared waves and resets the current season back to wave `1`
 - Added current-season and previous-season Masquerade record display to the loadout screen so the last season best wave remains visible after season updates
+- Merged existing domain progression into `楽章演奏` by adding domain-linked story stages `0-0A`, `0-0B`, `0-1A`, `D0-1`, and `D0-2` while keeping the underlying domain combat/reward runtime reusable
+- Wired domain-linked story stages so launching from `楽章演奏` now starts the linked domain session, and clearing that session records story progression under the linked stage id
+- Removed `requiem_reliquary` from the active domain content bundle for now, leaving it out of the runtime-selectable domain list
+- Added localized story-stage titles for the new linked domain entries in `story_texts.json` and updated story-stage card lore to show domain objective, reward focus, entry CSC, and recommended level band
+- Updated `/cresora_story list` to show the user-facing stage display labels instead of internal chapter ids
+- Folded the `rondo_forge + masquerade_soiree` reward loop into story stage `0-0` itself and folded `credit_drill` rewards into `0-1`, so those chapters now grant repeatable domain-style drops after the story battle ends instead of opening separate `0-0A / 0-0B / 0-1A` stages
+- Kept `D0-1` and `D0-2` as the remaining domain-linked side stages inside `楽章演奏`, while removing rank-gate enforcement from the linked-story launch path and lowering current domain unlock ranks to `1`
 
 ## Equipment Refactor Phase 1
 

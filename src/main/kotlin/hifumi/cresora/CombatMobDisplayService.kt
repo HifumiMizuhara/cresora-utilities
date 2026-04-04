@@ -5,7 +5,10 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.decoration.DisplayEntity
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.math.abs
@@ -39,12 +42,45 @@ object CombatMobDisplayService {
         }
 
         val rank = AdventureRankService.mobLevel(entity)
-        entity.customName = Text.translatable(
-            "combat.cresora.mob_label",
-            rank,
-            entity.type.name,
-            formatNumber(entity.health.toDouble().coerceAtLeast(0.0)),
-            formatNumber(entity.maxHealth.toDouble().coerceAtLeast(1.0))
+        val physicalResistance = MobCombatProfileRegistry.resistancePercent(entity.type, CombatDamageType.PHYSICAL)
+        val arcaneResistance = MobCombatProfileRegistry.resistancePercent(entity.type, CombatDamageType.ARCANE)
+        entity.customName = Text.empty()
+            .append(
+                Text.translatable(
+                    "combat.cresora.mob_label",
+                    rank,
+                    entity.type.name,
+                    formatNumber(entity.health.toDouble().coerceAtLeast(0.0)),
+                    formatNumber(entity.maxHealth.toDouble().coerceAtLeast(1.0))
+                )
+            )
+            .append(Text.literal("\n"))
+            .append(
+                Text.translatable(
+                    "combat.cresora.mob_resistance_line",
+                    formatPercent(physicalResistance),
+                    formatPercent(arcaneResistance)
+                ).formatted(Formatting.GRAY)
+            )
+    }
+
+    fun showIncomingDamage(player: ServerPlayerEntity, source: DamageSource, damage: Double) {
+        if (damage <= 0.0 || player.isRemoved) {
+            return
+        }
+        val damageType = CombatDamageTypeSupport.damageSourceType(source)
+        val totals = EquipmentPlayerSupport.getAggregatedStats(player)
+        var resistanceRatio = CombatDamageTypeSupport.effectiveResistanceRatio(totals, damageType)
+        resistanceRatio = MasqueradeService.clampPlayerDamageReduction(player, resistanceRatio)
+        resistanceRatio = resistanceRatio.coerceIn(0.0, 0.95)
+        player.sendMessage(
+            Text.translatable(
+                "combat.cresora.incoming_hit",
+                formatNumber(damage),
+                shortDamageTypeText(damageType),
+                formatPercent(resistanceRatio * 100.0)
+            ),
+            true
         )
     }
 
@@ -58,7 +94,91 @@ object CombatMobDisplayService {
         if (!hasViewer) {
             return
         }
+        val damageType = CombatDamageTypeSupport.damageSourceType(source)
+        val resistancePercent = if (target is HostileEntity) {
+            MobCombatProfileRegistry.resistancePercent(target.type, damageType)
+        } else {
+            0.0
+        }
+        spawnDamageDisplay(world, target, damage, damageType, false)
+        val attacker = source.attacker as? ServerPlayerEntity
+        val hostileTarget = target as? HostileEntity
+        if (attacker != null && hostileTarget != null) {
+            showOutgoingDamage(attacker, damage, damageType, resistancePercent, false)
+        }
+    }
 
+    fun showDamage(target: LivingEntity, damage: Double) {
+        if (damage <= 0.0 || target.isRemoved) {
+            return
+        }
+
+        val world = target.world as? ServerWorld ?: return
+        val hasViewer = world.players.any { !it.isSpectator && it.squaredDistanceTo(target) <= DISPLAY_RANGE * DISPLAY_RANGE }
+        if (!hasViewer) {
+            return
+        }
+        spawnDamageDisplay(world, target, damage, CombatDamageType.PHYSICAL, false)
+    }
+
+    fun showTrueDamage(target: LivingEntity, attacker: ServerPlayerEntity, damage: Double) {
+        if (damage <= 0.0 || target.isRemoved) {
+            return
+        }
+        val world = target.world as? ServerWorld ?: return
+        val hasViewer = world.players.any { !it.isSpectator && it.squaredDistanceTo(target) <= DISPLAY_RANGE * DISPLAY_RANGE }
+        if (!hasViewer && attacker.squaredDistanceTo(target) > DISPLAY_RANGE * DISPLAY_RANGE) {
+            return
+        }
+        spawnDamageDisplay(world, target, damage, null, true)
+        showOutgoingDamage(attacker, damage, null, 0.0, true)
+    }
+
+    private fun showOutgoingDamage(
+        player: ServerPlayerEntity,
+        damage: Double,
+        damageType: CombatDamageType?,
+        resistancePercent: Double,
+        trueDamage: Boolean
+    ) {
+        if (trueDamage) {
+            player.sendMessage(
+                Text.translatable(
+                    "combat.cresora.outgoing_hit_true",
+                    formatNumber(damage),
+                    shortTrueDamageText()
+                ),
+                true
+            )
+            return
+        }
+        val critMultiplier = CombatFeedbackService.consumeCrit(player)
+        val message = if (critMultiplier != null) {
+            Text.translatable(
+                "combat.cresora.outgoing_hit_crit",
+                formatNumber(damage),
+                shortDamageTypeText(damageType ?: CombatDamageType.PHYSICAL),
+                formatPercent(resistancePercent),
+                formatNumber(critMultiplier)
+            )
+        } else {
+            Text.translatable(
+                "combat.cresora.outgoing_hit",
+                formatNumber(damage),
+                shortDamageTypeText(damageType ?: CombatDamageType.PHYSICAL),
+                formatPercent(resistancePercent)
+            )
+        }
+        player.sendMessage(message, true)
+    }
+
+    private fun spawnDamageDisplay(
+        world: ServerWorld,
+        target: LivingEntity,
+        damage: Double,
+        damageType: CombatDamageType?,
+        trueDamage: Boolean
+    ) {
         val display = DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world)
         val offsetX = if (target.id % 2 == 0) FLOAT_SIDE_OFFSET else -FLOAT_SIDE_OFFSET
         val offsetZ = if (target.age % 2 == 0) -FLOAT_SIDE_OFFSET else FLOAT_SIDE_OFFSET
@@ -76,7 +196,19 @@ object CombatMobDisplayService {
         display.setNoGravity(true)
         display.isInvulnerable = true
         display.isSilent = true
-        display.setText(Text.literal(formatNumber(damage)).formatted(colorForDamage(damage)))
+        val color = colorForDamage(damageType, trueDamage)
+        display.setText(
+            Text.empty()
+                .append(Text.literal(formatNumber(damage)).formatted(color))
+                .append(Text.literal(" ").formatted(color))
+                .append(
+                    if (trueDamage) {
+                        shortTrueDamageText().formatted(color)
+                    } else {
+                        shortDamageTypeText(damageType ?: CombatDamageType.PHYSICAL).formatted(color)
+                    }
+                )
+        )
         world.spawnEntity(display)
         activeIndicators[display.id] = DamageIndicator(world, display.id, world.time + FLOAT_LIFETIME_TICKS)
     }
@@ -100,11 +232,21 @@ object CombatMobDisplayService {
         }
     }
 
-    private fun colorForDamage(damage: Double): Formatting {
+    private fun shortDamageTypeText(damageType: CombatDamageType): MutableText {
+        return Text.translatable("combat.cresora.damage_type.short.${damageType.id}")
+    }
+
+    private fun shortTrueDamageText(): MutableText {
+        return Text.translatable("combat.cresora.damage_type.short.true_damage")
+    }
+
+    private fun colorForDamage(damageType: CombatDamageType?, trueDamage: Boolean): Formatting {
+        if (trueDamage) {
+            return Formatting.GOLD
+        }
         return when {
-            damage >= 150.0 -> Formatting.GOLD
-            damage >= 50.0 -> Formatting.YELLOW
-            damage >= 20.0 -> Formatting.WHITE
+            damageType == CombatDamageType.ARCANE -> Formatting.AQUA
+            damageType == CombatDamageType.PHYSICAL -> Formatting.WHITE
             else -> Formatting.GRAY
         }
     }
@@ -116,5 +258,9 @@ object CombatMobDisplayService {
         } else {
             rounded.toString()
         }
+    }
+
+    private fun formatPercent(value: Double): String {
+        return "${formatNumber(value)}%"
     }
 }

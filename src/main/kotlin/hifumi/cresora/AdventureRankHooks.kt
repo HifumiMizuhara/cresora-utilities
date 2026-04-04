@@ -5,18 +5,25 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.server.network.ServerPlayerEntity
 
 object AdventureRankHooks {
     fun init() {
         ServerLivingEntityEvents.AFTER_DEATH.register(ServerLivingEntityEvents.AfterDeath { entity, damageSource ->
-            val hostile = entity as? HostileEntity ?: return@AfterDeath
             val killer = damageSource.attacker as? ServerPlayerEntity ?: return@AfterDeath
-            AdventureRankService.addXp(killer, AdventureRankService.hostileKillXp(hostile))
-            CreditsService.addHostileKillReward(killer, hostile)
-            WeaponDropService.onHostileKilled(killer, hostile)
-            ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, hostile)
-            EquipmentEffectHookService.onKill(killer, hostile)
+            when (entity) {
+                is HostileEntity -> {
+                    AdventureRankService.addXp(killer, AdventureRankService.hostileKillXp(entity))
+                    CreditsService.addHostileKillReward(killer, entity)
+                    WeaponDropService.onHostileKilled(killer, entity)
+                    ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
+                    EquipmentEffectHookService.onKill(killer, entity)
+                }
+                is MobEntity -> {
+                    CreditsService.addFriendlyKillReward(killer, entity)
+                }
+            }
         })
 
         ServerEntityEvents.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, world ->
@@ -28,6 +35,10 @@ object AdventureRankHooks {
         ServerPlayerEvents.COPY_FROM.register(ServerPlayerEvents.CopyFrom { oldPlayer, newPlayer, _ ->
             AdventureRankService.copyTo(oldPlayer, newPlayer)
             CreditsService.copyTo(oldPlayer, newPlayer)
+            ResonanceService.copyTo(oldPlayer, newPlayer)
+            StoryProgressService.copyTo(oldPlayer, newPlayer)
+            MasqueradeProgressService.copyTo(oldPlayer, newPlayer)
+            MasqueradeService.restoreAfterRespawn(newPlayer)
         })
 
         ServerTickEvents.END_WORLD_TICK.register(ServerTickEvents.EndWorldTick { world ->

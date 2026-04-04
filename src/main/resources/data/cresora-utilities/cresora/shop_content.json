@@ -1,0 +1,60 @@
+{
+  "resourceOffers": [
+    {
+      "id": "iron_ingot_pack",
+      "itemId": "minecraft:iron_ingot",
+      "count": 16,
+      "price": 2400,
+      "visible": true
+    },
+    {
+      "id": "coal_pack",
+      "itemId": "minecraft:coal",
+      "count": 32,
+      "price": 2600,
+      "visible": true
+    },
+    {
+      "id": "redstone_pack",
+      "itemId": "minecraft:redstone",
+      "count": 32,
+      "price": 3200,
+      "visible": true
+    },
+    {
+      "id": "lapis_pack",
+      "itemId": "minecraft:lapis_lazuli",
+      "count": 32,
+      "price": 3200,
+      "visible": true
+    },
+    {
+      "id": "gold_ingot_pack",
+      "itemId": "minecraft:gold_ingot",
+      "count": 16,
+      "price": 4200,
+      "visible": true
+    },
+    {
+      "id": "quartz_pack",
+      "itemId": "minecraft:quartz",
+      "count": 24,
+      "price": 4800,
+      "visible": true
+    },
+    {
+      "id": "emerald_pack",
+      "itemId": "minecraft:emerald",
+      "count": 8,
+      "price": 9600,
+      "visible": true
+    },
+    {
+      "id": "diamond_pack",
+      "itemId": "minecraft:diamond",
+      "count": 4,
+      "price": 12000,
+      "visible": true
+    }
+  ]
+}

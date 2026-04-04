@@ -20,10 +20,14 @@ class WeaponUpgradeScreenHandler(
     companion object {
         const val BUTTON_BASE_UPGRADE = 0
         const val BUTTON_SKILL_UPGRADE = 1
+        const val BUTTON_DISMANTLE = 2
+        private const val REQUIRED_DISMANTLE_CLICKS = 3
         private const val WEAPON_SLOT = 0
         private const val CUSTOM_SLOT_COUNT = 1
         private const val PROPERTY_CREDITS_LOW = 0
         private const val PROPERTY_FRAGMENTS = 2
+        private const val PROPERTY_ARTIFACTS = 3
+        private const val PROPERTY_DISMANTLE_CONFIRM = 4
     }
 
     private val weaponInventory: Inventory = object : SimpleInventory(CUSTOM_SLOT_COUNT) {
@@ -32,7 +36,8 @@ class WeaponUpgradeScreenHandler(
             onContentChanged(this)
         }
     }
-    private val properties: PropertyDelegate = ArrayPropertyDelegate(3)
+    private val properties: PropertyDelegate = ArrayPropertyDelegate(5)
+    private var dismantleConfirmClicks: Int = 0
 
     init {
         addSlot(object : Slot(weaponInventory, WEAPON_SLOT, 44, 32) {
@@ -52,7 +57,13 @@ class WeaponUpgradeScreenHandler(
 
     override fun sendContentUpdates() {
         refreshProperties()
+        properties.set(PROPERTY_DISMANTLE_CONFIRM, dismantleConfirmClicks)
         super.sendContentUpdates()
+    }
+
+    override fun onContentChanged(inventory: Inventory) {
+        super.onContentChanged(inventory)
+        resetDismantleConfirmation()
     }
 
     override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {
@@ -85,11 +96,32 @@ class WeaponUpgradeScreenHandler(
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
         val stack = slots[WEAPON_SLOT].stack
         val result = when (id) {
-            BUTTON_BASE_UPGRADE -> WeaponUpgradeLogic.attemptUpgrade(player, stack, WeaponUpgradeLogic.UpgradeType.BASE)
-            BUTTON_SKILL_UPGRADE -> WeaponUpgradeLogic.attemptUpgrade(player, stack, WeaponUpgradeLogic.UpgradeType.SKILL)
+            BUTTON_BASE_UPGRADE -> {
+                resetDismantleConfirmation()
+                WeaponUpgradeLogic.attemptUpgrade(player, stack, WeaponUpgradeLogic.UpgradeType.BASE)
+            }
+            BUTTON_SKILL_UPGRADE -> {
+                resetDismantleConfirmation()
+                attemptSkillAction(player, stack)
+            }
+            BUTTON_DISMANTLE -> {
+                val preview = getDismantlePreview()
+                if (!preview.canDismantle) {
+                    WeaponUpgradeLogic.AttemptResult(false, Text.translatable(preview.messageKey ?: "screen.cresora.weapon_upgrade.cannot_dismantle"))
+                } else {
+                    val remainingClicks = requireDismantleConfirmation()
+                    if (remainingClicks > 0) {
+                        player.sendMessage(Text.translatable("screen.cresora.weapon_upgrade.confirm_dismantle", remainingClicks), false)
+                        sendContentUpdates()
+                        return true
+                    }
+                    WeaponUpgradeLogic.attemptUpgrade(player, stack, WeaponUpgradeLogic.UpgradeType.DISMANTLE)
+                }
+            }
             else -> return super.onButtonClick(player, id)
         }
         player.sendMessage(result.message, false)
+        slots[WEAPON_SLOT].markDirty()
         sendContentUpdates()
         return true
     }
@@ -114,7 +146,11 @@ class WeaponUpgradeScreenHandler(
     }
 
     fun getSkillPreview(player: PlayerEntity): WeaponUpgradeLogic.SkillPreview {
-        return WeaponUpgradeLogic.getSkillPreview(getWeaponStack(), availableCredits(player))
+        return WeaponUpgradeLogic.getSkillPreview(getWeaponStack(), availableCredits(player), availableArtifacts(player))
+    }
+
+    fun getDismantlePreview(): WeaponUpgradeLogic.DismantlePreview {
+        return WeaponUpgradeLogic.getDismantlePreview(getWeaponStack())
     }
 
     fun getScreenTitle(): Text = Text.translatable("screen.cresora.weapon_upgrade")
@@ -123,11 +159,19 @@ class WeaponUpgradeScreenHandler(
 
     fun currentFragments(): Int = properties.get(PROPERTY_FRAGMENTS)
 
+    fun currentArtifacts(): Int = properties.get(PROPERTY_ARTIFACTS)
+
+    fun dismantleConfirmRemaining(): Int {
+        val clicks = properties.get(PROPERTY_DISMANTLE_CONFIRM)
+        return if (clicks <= 0) 0 else (REQUIRED_DISMANTLE_CLICKS - clicks).coerceAtLeast(0)
+    }
+
     private fun refreshProperties() {
         val player = playerInventory.player as? ServerPlayerEntity ?: return
         ScreenSyncSupport.writeInt(properties, PROPERTY_CREDITS_LOW, CreditsService.getCredits(player))
         val definition = WeaponStackSupport.getDefinition(getWeaponStack())
         properties.set(PROPERTY_FRAGMENTS, definition?.let { WeaponStackSupport.countFragments(player, it) } ?: 0)
+        properties.set(PROPERTY_ARTIFACTS, definition?.let { WeaponSkillArtifactSupport.eligibleArtifacts(player, it).size } ?: 0)
     }
 
     private fun availableCredits(player: PlayerEntity): Int? {
@@ -140,6 +184,49 @@ class WeaponUpgradeScreenHandler(
         } else {
             properties.get(PROPERTY_FRAGMENTS)
         }
+    }
+
+    private fun availableArtifacts(player: PlayerEntity): Int? {
+        return if (player is ServerPlayerEntity) {
+            WeaponStackSupport.getDefinition(getWeaponStack())?.let { WeaponSkillArtifactSupport.eligibleArtifacts(player, it).size } ?: 0
+        } else {
+            properties.get(PROPERTY_ARTIFACTS)
+        }
+    }
+
+    private fun requireDismantleConfirmation(): Int {
+        dismantleConfirmClicks += 1
+        return if (dismantleConfirmClicks >= REQUIRED_DISMANTLE_CLICKS) {
+            dismantleConfirmClicks = 0
+            0
+        } else {
+            REQUIRED_DISMANTLE_CLICKS - dismantleConfirmClicks
+        }
+    }
+
+    private fun resetDismantleConfirmation() {
+        dismantleConfirmClicks = 0
+        properties.set(PROPERTY_DISMANTLE_CONFIRM, 0)
+    }
+
+    private fun attemptSkillAction(player: PlayerEntity, stack: ItemStack): WeaponUpgradeLogic.AttemptResult {
+        val serverPlayer = player as? ServerPlayerEntity
+            ?: return WeaponUpgradeLogic.AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.need_weapon"))
+        val definition = WeaponStackSupport.getDefinition(stack)
+            ?: return WeaponUpgradeLogic.AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.need_weapon"))
+        val preview = WeaponUpgradeLogic.getSkillPreview(
+            stack,
+            CreditsService.getCredits(serverPlayer),
+            WeaponSkillArtifactSupport.eligibleArtifacts(serverPlayer, definition).size
+        )
+        if (!preview.canUpgrade) {
+            return WeaponUpgradeLogic.AttemptResult(false, Text.translatable(preview.messageKey ?: "screen.cresora.weapon_upgrade.need_weapon"))
+        }
+        if (preview.artifactCost > 0) {
+            ArtifactUiFlow.openWeaponSkillMaterialSelection(serverPlayer, stack)
+            return WeaponUpgradeLogic.AttemptResult(true, Text.translatable("screen.cresora.weapon_upgrade.open_material_selection"))
+        }
+        return WeaponUpgradeLogic.attemptUpgrade(player, stack, WeaponUpgradeLogic.UpgradeType.SKILL)
     }
 
     private fun tryMoveSelectedWeapon() {

@@ -1,6 +1,7 @@
 package hifumi.cresora
 
 import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.LoreComponent
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -34,14 +35,56 @@ object ArtifactDisplayStackFactory {
 
     fun storyChapterEntryDisplay(chapter: StoryChapterDefinition, player: net.minecraft.server.network.ServerPlayerEntity?): ItemStack {
         val missingPrerequisite = player?.let { StoryProgressService.missingPrerequisite(it, chapter) }
-        return ItemStack(Items.WRITTEN_BOOK).apply {
+        val locale = StoryTextRegistry.resolvePlayerLocale(player)
+        val chapterLabel = StoryTextRegistry.chapterLabel(locale, chapter)
+        val prerequisiteLabel = missingPrerequisite?.let {
+            runCatching { StoryTextRegistry.chapterLabel(locale, StoryContentRegistry.requireChapter(it)) }.getOrDefault(it)
+        }
+        val linkedDomain = chapter.linkedDomainId?.let(DomainContentRegistry::requireDomain)
+        val stack = if (linkedDomain != null) DomainDisplayStackFactory.storyLinkedDisplay(chapter, linkedDomain) else ItemStack(Items.WRITTEN_BOOK)
+        return stack.apply {
             set(
                 DataComponentTypes.CUSTOM_NAME,
-                if (missingPrerequisite != null) {
-                    Text.translatable("screen.cresora.story.chapter_entry_prerequisite", chapter.displayName, missingPrerequisite)
+                if (prerequisiteLabel != null) {
+                    Text.translatable("screen.cresora.story.chapter_entry_prerequisite", chapterLabel, prerequisiteLabel)
                 } else {
-                    Text.translatable("screen.cresora.story.chapter_entry", chapter.displayName, chapter.unlockRank)
+                    Text.translatable("screen.cresora.story.chapter_entry", chapterLabel, chapter.unlockRank)
                 }
+            )
+            set(
+                DataComponentTypes.LORE,
+                LoreComponent(
+                    buildList {
+                        add(Text.translatable("screen.cresora.story.objective_label"))
+                        if (linkedDomain != null) {
+                            val rewardProfile = DomainRewardProfileRegistry.requireProfile(linkedDomain.rewardProfileId)
+                            val playerRank = player?.let(AdventureRankService::getRank) ?: linkedDomain.unlockRank
+                            val recommendedBand = DomainCombatProfile.recommendedBand(maxOf(playerRank, linkedDomain.unlockRank))
+                            add(Text.translatable("screen.cresora.story.objective.domain_clear"))
+                            add(Text.translatable("screen.cresora.story.domain_reward_line", DomainDisplayStackFactory.rewardLabel(rewardProfile)))
+                            add(Text.translatable("screen.cresora.story.domain_cost_line", ArtifactSpecialItem.formatWholeNumber(linkedDomain.entryCostCsc)))
+                            add(Text.translatable("screen.cresora.story.domain_band_line", recommendedBand.first, recommendedBand.second))
+                        } else {
+                            add(StoryDisplayText.objectiveText(chapter))
+                            if (chapter.domainRewardIds.isNotEmpty()) {
+                                for (domainRewardId in chapter.domainRewardIds) {
+                                    val rewardDomain = DomainContentRegistry.requireDomain(domainRewardId)
+                                    val rewardProfile = DomainRewardProfileRegistry.requireProfile(rewardDomain.rewardProfileId)
+                                    add(
+                                        Text.translatable(
+                                            "screen.cresora.story.domain_reward_line",
+                                            DomainDisplayStackFactory.rewardLabel(rewardProfile)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                        if (chapter.combatHints.isNotEmpty()) {
+                            add(Text.translatable("screen.cresora.story.hints_label"))
+                            addAll(StoryDisplayText.combatHintTexts(player, chapter))
+                        }
+                    }
+                )
             )
         }
     }

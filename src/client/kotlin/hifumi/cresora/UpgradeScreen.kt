@@ -65,6 +65,8 @@ class UpgradeScreen(
         upgradeButton.active = preview.canUpgrade
         upgradeButton.message = when {
             !preview.canUpgrade -> Text.translatable("screen.cresora.upgrade.button_locked")
+            preview.materialType == UpgradeLogic.MaterialType.PENDANT && handler.destructiveConfirmRemaining() in 1..2 ->
+                Text.translatable("screen.cresora.upgrade.button_confirm", handler.destructiveConfirmRemaining())
             preview.materialType == UpgradeLogic.MaterialType.ALPHA_KANATA -> Text.translatable("screen.cresora.upgrade.button_alpha")
             preview.materialType == UpgradeLogic.MaterialType.BETA_KANATA -> Text.translatable("screen.cresora.upgrade.button_beta")
             else -> Text.translatable("screen.cresora.upgrade.button")
@@ -237,7 +239,13 @@ class UpgradeScreen(
             "screen.cresora.upgrade.insert_material" -> Text.translatable("screen.cresora.upgrade.insert_material_short")
             "screen.cresora.upgrade.invalid_material" -> Text.translatable("screen.cresora.upgrade.invalid_material_short")
             "screen.cresora.upgrade.ready_tool" -> Text.translatable("screen.cresora.upgrade.ready_short")
-            "screen.cresora.upgrade.ready_wand" -> Text.translatable("screen.cresora.upgrade.ready_short")
+            "screen.cresora.upgrade.ready_wand" -> {
+                if (handler.destructiveConfirmRemaining() in 1..2) {
+                    Text.translatable("screen.cresora.upgrade.confirm_short", handler.destructiveConfirmRemaining())
+                } else {
+                    Text.translatable("screen.cresora.upgrade.ready_short")
+                }
+            }
             "screen.cresora.upgrade.ready_alpha" -> Text.translatable("screen.cresora.upgrade.ready_alpha_short")
             "screen.cresora.upgrade.ready_beta" -> Text.translatable("screen.cresora.upgrade.ready_beta_short")
             "item.cresora.not_enough_credits" -> Text.translatable("screen.cresora.upgrade.no_credits_short")

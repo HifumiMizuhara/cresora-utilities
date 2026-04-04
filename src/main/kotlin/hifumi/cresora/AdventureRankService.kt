@@ -19,6 +19,7 @@ object AdventureRankService {
     private const val PLAYER_RANK_XP_KEY = "cresora_adventure_rank_xp"
     private const val MOB_RANK_KEY = "cresora_mob_adventure_rank"
     private const val SEARCH_RADIUS = 64.0
+    private const val FIELD_MOB_RANK_VARIANCE = 5
 
     private val MOB_HEALTH_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_health_scalar")
     private val MOB_ARMOR_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_armor_bonus")
@@ -127,7 +128,7 @@ object AdventureRankService {
             return AdventureRankProgression.sanitizeRank(existing)
         }
 
-        val assigned = findNearestNearbyRank(world, entity.x, entity.y, entity.z)
+        val assigned = rollNearbyFieldRank(entity, world, entity.x, entity.y, entity.z)
         access.cresoraSetMobAdventureRank(assigned)
         return assigned
     }
@@ -204,10 +205,12 @@ object AdventureRankService {
         val hostile = attacker as? HostileEntity ?: return 1.0
         val access = hostile as? AdventureRankMobAccess ?: return 1.0
         val storedRank = access.cresoraGetMobAdventureRank()
+        val domainMultiplier = DomainService.damageMultiplier(attacker)
+        val masqueradeMultiplier = MasqueradeService.damageMultiplier(attacker)
         if (storedRank <= 0) {
-            return DomainService.damageMultiplier(attacker)
+            return domainMultiplier * masqueradeMultiplier
         }
-        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) * DomainService.damageMultiplier(attacker)
+        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) * domainMultiplier * masqueradeMultiplier
     }
 
     fun mobRank(entity: HostileEntity): Int {
@@ -228,6 +231,27 @@ object AdventureRankService {
         CombatMobDisplayService.showDamage(target, source, damage.toDouble())
     }
 
+    fun showMobDamage(target: LivingEntity, damage: Float) {
+        if (damage <= 0.0f) {
+            return
+        }
+        CombatMobDisplayService.showDamage(target, damage.toDouble())
+    }
+
+    fun showMobTrueDamage(target: LivingEntity, attacker: ServerPlayerEntity, damage: Float) {
+        if (damage <= 0.0f) {
+            return
+        }
+        CombatMobDisplayService.showTrueDamage(target, attacker, damage.toDouble())
+    }
+
+    fun showPlayerDamageFeedback(player: ServerPlayerEntity, source: DamageSource, damage: Float) {
+        if (damage <= 0.0f) {
+            return
+        }
+        CombatMobDisplayService.showIncomingDamage(player, source, damage.toDouble())
+    }
+
     private fun findNearestNearbyRank(world: ServerWorld, x: Double, y: Double, z: Double): Int {
         var nearestRank = AdventureRankProgression.MIN_RANK
         var nearestDistance = Double.MAX_VALUE
@@ -243,5 +267,15 @@ object AdventureRankService {
             }
         }
         return nearestRank
+    }
+
+    private fun rollNearbyFieldRank(entity: HostileEntity, world: ServerWorld, x: Double, y: Double, z: Double): Int {
+        val anchorRank = findNearestNearbyRank(world, x, y, z)
+        val variance = FIELD_MOB_RANK_VARIANCE.coerceAtLeast(0)
+        if (variance == 0) {
+            return anchorRank
+        }
+        val offset = entity.random.nextBetween(-variance, variance)
+        return AdventureRankProgression.sanitizeRank(anchorRank + offset)
     }
 }

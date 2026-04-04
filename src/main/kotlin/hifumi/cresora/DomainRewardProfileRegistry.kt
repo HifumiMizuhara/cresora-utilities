@@ -236,6 +236,34 @@ object DomainRewardProfileRegistry {
                     )
                 ),
                 DomainRewardProfile(
+                    id = "requiem_reliquary",
+                    weaponFragmentReward = DomainWeaponFragmentRewardDefinition(
+                        weaponId = "requiem_toward_dawn",
+                        minCount = 2,
+                        maxCount = 7
+                    ),
+                    currencyReward = DomainCurrencyRewardDefinition(
+                        creditsBase = 9_000,
+                        creditsPerRank = 220,
+                        rankXpBase = 180,
+                        rankXpPerRank = 7
+                    )
+                ),
+                DomainRewardProfile(
+                    id = "lakeside_sanctum",
+                    weaponFragmentReward = DomainWeaponFragmentRewardDefinition(
+                        weaponId = "lakeside_stride",
+                        minCount = 1,
+                        maxCount = 4
+                    ),
+                    currencyReward = DomainCurrencyRewardDefinition(
+                        creditsBase = 12_000,
+                        creditsPerRank = 260,
+                        rankXpBase = 240,
+                        rankXpPerRank = 8
+                    )
+                ),
+                DomainRewardProfile(
                     id = "csc_training",
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 11_000,

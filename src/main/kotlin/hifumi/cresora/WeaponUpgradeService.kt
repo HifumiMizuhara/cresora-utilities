@@ -8,6 +8,12 @@ object WeaponUpgradeService {
 
     fun skillUpgradeCost(definition: WeaponDefinition, currentLevel: Int): Int {
         val level = currentLevel.coerceAtLeast(1)
-        return definition.upgrades.skillCscLinearCoefficient * level
+        return definition.upgrades.skillCscLinearCoefficient * level +
+            definition.upgrades.skillCscQuadraticCoefficient * level * level
+    }
+
+    fun skillArtifactCost(definition: WeaponDefinition, currentLevel: Int): Int {
+        val level = currentLevel.coerceAtLeast(1)
+        return definition.upgrades.skillArtifactCountPerLevel * level
     }
 }

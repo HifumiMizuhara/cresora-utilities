@@ -1,5 +1,7 @@
 package hifumi.cresora
 
+import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.player.PlayerEntity
@@ -17,10 +19,19 @@ object CombatDamageTypeSupport {
     }
 
     @JvmStatic
+    fun entityAttackDamageType(entity: Entity?): CombatDamageType? {
+        return when (entity) {
+            is PlayerEntity -> playerAttackDamageType(entity)
+            is LivingEntity -> MobCombatProfileRegistry.attackType(entity.type)
+            else -> null
+        }
+    }
+
+    @JvmStatic
     fun damageSourceType(source: DamageSource): CombatDamageType {
-        val attacker = source.attacker
-        if (attacker is PlayerEntity) {
-            return playerAttackDamageType(attacker)
+        entityAttackDamageType(source.attacker ?: source.source)?.let { return it }
+        if (source.attacker is PlayerEntity) {
+            return playerAttackDamageType(source.attacker as PlayerEntity)
         }
         if (
             source.isOf(DamageTypes.MAGIC) ||

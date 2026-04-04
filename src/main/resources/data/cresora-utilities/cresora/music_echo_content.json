@@ -1,0 +1,13 @@
+{
+  "activeEchoIds": [
+    "v1_3_2_music_echo"
+  ],
+  "echoes": [
+    {
+      "id": "v1_3_2_music_echo",
+      "nameKey": "music_echo.cresora.v1_3_2",
+      "mobDamageTakenMultiplier": 0.97,
+      "enabled": true
+    }
+  ]
+}

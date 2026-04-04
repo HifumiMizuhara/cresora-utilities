@@ -31,7 +31,9 @@
 - Re-run in-game verification that high `damage_reduction` values such as `80-95%` now materially reduce incoming zombie / skeleton damage on live server runtime
 - Re-run in-game verification that Masquerade clamps total player `damage_reduction` to `50%` even when equipment and support buffs together exceed that value on paper
 - Re-run in-game verification that `physical_resistance` reduces melee / projectile damage while `arcane_resistance` reduces fire / frost / magic-class damage, and confirm the legacy `damage_reduction` fallback still behaves correctly on old debug gear
-- Revisit whether hostile mobs should gain their own future `physical` / `arcane` resistance layer once more enemy archetypes and spellcasters are added; right now the split only changes weapon typing and player-side defenses
+- Re-run in-game verification that hostile combat profiles apply the intended species-fixed attack type, especially `witch / blaze / ghast / guardian / evoker / elder_guardian / shulker`
+- Re-run in-game verification that hostile-side `physical` / `arcane` resistance actually changes live damage numbers for zombies, skeletons, casters, and Warden-tier enemies
+- Re-run in-game verification that hostile overhead labels now show both `物耐 / 術耐` and remain readable in crowded combat
 - Re-run in-game verification that adventure-rank loot scaling feels appropriate for zombies, skeletons, and wardens at low and high ranks
 - Decide whether nearest-player mob rank assignment should remain the long-term multiplayer rule or become configurable later
 - Re-run in-game verification of the revised drop tiers and confirm zombie, skeleton, and warden drops now match their intended rarity and level bands
@@ -39,6 +41,7 @@
 - Re-run in-game verification that zombie drops skew toward survival stats, skeleton drops skew toward offense/crit, and warden drops skew toward premium mixed stats
 - Re-run in-game combat verification of the new base crit profile and confirm the default `5%` crit chance feels correct with the current damage pacing
 - Re-run in-game verification that outgoing damage bonus and incoming damage reduction now surface in action-bar feedback cleanly during live combat
+- Re-run in-game verification that the new typed hit feedback shows `物 / 術 / 確` correctly for melee, arcane weapons, and fixed-damage skills without burying crit visibility
 - Re-run in-game verification that `/cresora_credits` shows correct balances for normal players and admin subcommands
 - Re-run in-game verification that artifact upgrades consume `CSC 500` and no longer consume player XP
 - Re-run in-game verification that the upgrade GUI locks and unlocks correctly when CSC balance changes
@@ -85,11 +88,20 @@
 - Decide later whether `zankyo_kanata_alpha` should preserve rarity or level once the multi-set farming loop is balanced in live play
 - Revisit whether `artifact_special_items.json` should also drive item-model fallback selection instead of relying on manually added resource files
 - Re-run in-game verification that `/cresora_domain` opens for normal players and shows all starter domains with correct unlock gates and entry costs
+- Decide whether the old `秘境` menu should remain as a backward-compatibility launcher or be hidden now that the same stages also live under `楽章演奏`
+- Re-run in-game verification that `楽章演奏` group `0` now lists `0-0 -> 0-1 -> D0-1 -> D0-2 -> 0-2` in the intended order
+- Re-run in-game verification that domain-linked story stages preserve repeatable domain rewards while still unlocking their own stage clear flag exactly once
+- Re-run in-game verification that story chapter `0-0` now pays both `rondo_forge` and `masquerade_soiree` reward pools after clear, while `0-1` pays the `credit_drill` reward pool without needing separate side-stage entries
 - Re-run in-game verification that domain entry correctly consumes CSC once, teleports into the arena, and returns the player to the original position after clear
 - Re-run in-game verification that clearing a domain with a full inventory still returns the player immediately and drops overflow rewards at the return point
 - Re-run in-game verification that `/cresora_story start 0-0` plays the pre-battle line, spawns exactly one `Lv 2` zombie, then plays the post-battle line and grants the configured rewards
 - Re-run in-game verification that story dialogue now follows the active client language and that the `3, 2, 1` countdown is readable right before combat starts
+- Re-run in-game verification that the dedicated story dialogue screen advances correctly with `Continue`, `Auto`, and `Skip`, and that it closes cleanly on battle start, fail, reward open, death, and disconnect
+- Re-run in-game verification that repeated `AUTO` advancement across multiple story lines no longer crashes the client after the `Screen.title` update fix
+- Re-run in-game verification that the dedicated story dialogue screen can close on countdown-start, chapter clear, and chapter fail without disconnecting the client after the `story_dialogue_close` packet fix
 - Re-run in-game verification that story dialogue still resolves correctly after the split to `story_texts.json`, including fallback behavior when the client locale is unsupported
+- Re-run in-game verification that story titles now appear correctly in chapter selection, stage selection, `/cresora_story list`, and start/clear/fail messages for all supported locales
+- Re-run in-game verification that chapter `0-2` stays locked until `0-1` is cleared, grants the temporary max-level `円舞曲のメロディ`, shows the per-second survival countdown cleanly, and succeeds exactly after `45` seconds of survival against the `Lv 50` fixed-damage-immune `100%` damage-reduction skeleton
 - Re-run in-game verification that `楽章演奏` and `秘境` both reject entry when the main inventory is completely full and still allow entry again as soon as one slot is freed
 - Re-run in-game verification that story chapter `0-1` grants both temporary tutorial weapons, shows the three combat hint lines, starts a single `Lv 30` zombie fight, and reclaims the loaned weapons on clear / fail / leave
 - Re-run in-game verification that `0-1` stays locked until `0-0` is cleared, including after death / relog, and that it unlocks immediately once `0-0` clear is recorded
@@ -101,7 +113,7 @@
 - Re-run in-game verification that the `skip wave divisible by 4` and `five-wave 50% damage nullify` supports behave correctly under live combat timing
 - Re-run in-game verification that changing `seasonId` in `masquerade_content.json` archives the old season record, resets the current season stats, and still shows the previous season best wave correctly
 - Revisit the first-pass Masquerade wave table after runtime testing; the current 30-wave JSON is a functional scaffold, not final balance
-- Decide later whether story dialogue should move from plain chat lines to a dedicated staged UI with portraits, pacing control, and skip behavior
+- Re-run in-game verification that opening `楽章演奏` no longer crashes the client after the 1.21.7 blur-path fix in the dedicated story dialogue screen
 - Re-run in-game verification that domain failure on death and manual leave cleans up spawned mobs and frees the arena slot
 - Re-run in-game verification that domain waves spawn in the intended order and use the session-fixed enemy Lv instead of nearby-player rank lookup
 - Re-run in-game verification that domain mobs still feel fair under the added domain combat scalars, especially elite waves near rank `55-70`

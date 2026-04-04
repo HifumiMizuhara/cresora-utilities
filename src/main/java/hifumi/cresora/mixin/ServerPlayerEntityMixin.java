@@ -5,6 +5,12 @@ import hifumi.cresora.AdventureRankProgression;
 import hifumi.cresora.AdventureRankService;
 import hifumi.cresora.CreditsAccess;
 import hifumi.cresora.CreditsService;
+import hifumi.cresora.MasqueradeProgressAccess;
+import hifumi.cresora.MasqueradeProgressService;
+import hifumi.cresora.ResonanceAccess;
+import hifumi.cresora.ResonanceService;
+import hifumi.cresora.StoryProgressAccess;
+import hifumi.cresora.StoryProgressService;
 import hifumi.cresora.WeaponSkillAccess;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.storage.ReadView;
@@ -16,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
-public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAccess, WeaponSkillAccess {
+public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAccess, WeaponSkillAccess, ResonanceAccess, StoryProgressAccess, MasqueradeProgressAccess {
     @Unique
     private int cresora$adventureRank = AdventureRankProgression.MIN_RANK;
 
@@ -25,6 +31,12 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
 
     @Unique
     private int cresora$credits = 0;
+
+    @Unique
+    private int cresora$chordProgression = 0;
+
+    @Unique
+    private int cresora$substituteChord = 0;
 
     @Unique
     private float cresora$shieldHp = 0.0F;
@@ -41,11 +53,53 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Unique
     private String cresora$skillCooldownWeaponId = null;
 
+    @Unique
+    private int cresora$limitedPityPulls = 0;
+
+    @Unique
+    private int cresora$standardPulls = 0;
+
+    @Unique
+    private int cresora$deepPityStreak = 0;
+
+    @Unique
+    private boolean cresora$arpeggioReady = false;
+
+    @Unique
+    private String cresora$storyClearsRaw = "";
+
+    @Unique
+    private String cresora$masqueradeCurrentSeasonId = "";
+
+    @Unique
+    private int cresora$masqueradeBestWave = 0;
+
+    @Unique
+    private int cresora$masqueradeAttemptCount = 0;
+
+    @Unique
+    private int cresora$masqueradeTotalClearedWaves = 0;
+
+    @Unique
+    private String cresora$masqueradeArchiveRaw = "";
+
     @Inject(method = "writeCustomData", at = @At("TAIL"))
     private void cresora$writeAdventureRank(WriteView view, CallbackInfo ci) {
         view.putInt(AdventureRankService.INSTANCE.playerRankKey(), this.cresora$adventureRank);
         view.putInt(AdventureRankService.INSTANCE.playerRankXpKey(), this.cresora$adventureRankXp);
         view.putInt(CreditsService.INSTANCE.playerCreditsKey(), this.cresora$credits);
+        view.putInt(ResonanceService.INSTANCE.chordProgressionKey(), this.cresora$chordProgression);
+        view.putInt(ResonanceService.INSTANCE.substituteChordKey(), this.cresora$substituteChord);
+        view.putInt(ResonanceService.INSTANCE.limitedPityKey(), this.cresora$limitedPityPulls);
+        view.putInt(ResonanceService.INSTANCE.standardPullsKey(), this.cresora$standardPulls);
+        view.putInt(ResonanceService.INSTANCE.deepPityStreakKey(), this.cresora$deepPityStreak);
+        view.putInt(ResonanceService.INSTANCE.arpeggioReadyKey(), this.cresora$arpeggioReady ? 1 : 0);
+        view.putString(StoryProgressService.INSTANCE.playerStoryClearsKey(), this.cresora$storyClearsRaw);
+        view.putString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), this.cresora$masqueradeCurrentSeasonId);
+        view.putInt(MasqueradeProgressService.INSTANCE.playerBestWaveKey(), this.cresora$masqueradeBestWave);
+        view.putInt(MasqueradeProgressService.INSTANCE.playerAttemptCountKey(), this.cresora$masqueradeAttemptCount);
+        view.putInt(MasqueradeProgressService.INSTANCE.playerTotalClearedWavesKey(), this.cresora$masqueradeTotalClearedWaves);
+        view.putString(MasqueradeProgressService.INSTANCE.playerArchiveKey(), this.cresora$masqueradeArchiveRaw);
     }
 
     @Inject(method = "readCustomData", at = @At("TAIL"))
@@ -53,6 +107,18 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$adventureRank = view.getInt(AdventureRankService.INSTANCE.playerRankKey(), AdventureRankProgression.MIN_RANK);
         this.cresora$adventureRankXp = view.getInt(AdventureRankService.INSTANCE.playerRankXpKey(), 0);
         this.cresora$credits = view.getInt(CreditsService.INSTANCE.playerCreditsKey(), 0);
+        this.cresora$chordProgression = view.getInt(ResonanceService.INSTANCE.chordProgressionKey(), 0);
+        this.cresora$substituteChord = view.getInt(ResonanceService.INSTANCE.substituteChordKey(), 0);
+        this.cresora$limitedPityPulls = view.getInt(ResonanceService.INSTANCE.limitedPityKey(), 0);
+        this.cresora$standardPulls = view.getInt(ResonanceService.INSTANCE.standardPullsKey(), 0);
+        this.cresora$deepPityStreak = view.getInt(ResonanceService.INSTANCE.deepPityStreakKey(), 0);
+        this.cresora$arpeggioReady = view.getInt(ResonanceService.INSTANCE.arpeggioReadyKey(), 0) != 0;
+        this.cresora$storyClearsRaw = view.getString(StoryProgressService.INSTANCE.playerStoryClearsKey(), "");
+        this.cresora$masqueradeCurrentSeasonId = view.getString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), "");
+        this.cresora$masqueradeBestWave = view.getInt(MasqueradeProgressService.INSTANCE.playerBestWaveKey(), 0);
+        this.cresora$masqueradeAttemptCount = view.getInt(MasqueradeProgressService.INSTANCE.playerAttemptCountKey(), 0);
+        this.cresora$masqueradeTotalClearedWaves = view.getInt(MasqueradeProgressService.INSTANCE.playerTotalClearedWavesKey(), 0);
+        this.cresora$masqueradeArchiveRaw = view.getString(MasqueradeProgressService.INSTANCE.playerArchiveKey(), "");
     }
 
     @Override
@@ -133,5 +199,125 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetSkillCooldownWeaponId(String value) {
         this.cresora$skillCooldownWeaponId = value;
+    }
+
+    @Override
+    public int cresoraGetLimitedPityPulls() {
+        return this.cresora$limitedPityPulls;
+    }
+
+    @Override
+    public int cresoraGetChordProgression() {
+        return this.cresora$chordProgression;
+    }
+
+    @Override
+    public void cresoraSetChordProgression(int value) {
+        this.cresora$chordProgression = value;
+    }
+
+    @Override
+    public int cresoraGetSubstituteChord() {
+        return this.cresora$substituteChord;
+    }
+
+    @Override
+    public void cresoraSetSubstituteChord(int value) {
+        this.cresora$substituteChord = value;
+    }
+
+    @Override
+    public void cresoraSetLimitedPityPulls(int value) {
+        this.cresora$limitedPityPulls = value;
+    }
+
+    @Override
+    public int cresoraGetStandardPulls() {
+        return this.cresora$standardPulls;
+    }
+
+    @Override
+    public void cresoraSetStandardPulls(int value) {
+        this.cresora$standardPulls = value;
+    }
+
+    @Override
+    public int cresoraGetDeepPityStreak() {
+        return this.cresora$deepPityStreak;
+    }
+
+    @Override
+    public void cresoraSetDeepPityStreak(int value) {
+        this.cresora$deepPityStreak = value;
+    }
+
+    @Override
+    public boolean cresoraGetArpeggioReady() {
+        return this.cresora$arpeggioReady;
+    }
+
+    @Override
+    public void cresoraSetArpeggioReady(boolean value) {
+        this.cresora$arpeggioReady = value;
+    }
+
+    @Override
+    public String cresoraGetStoryClearsRaw() {
+        return this.cresora$storyClearsRaw;
+    }
+
+    @Override
+    public void cresoraSetStoryClearsRaw(String value) {
+        this.cresora$storyClearsRaw = value == null ? "" : value;
+    }
+
+    @Override
+    public String cresoraGetMasqueradeCurrentSeasonId() {
+        return this.cresora$masqueradeCurrentSeasonId;
+    }
+
+    @Override
+    public void cresoraSetMasqueradeCurrentSeasonId(String value) {
+        this.cresora$masqueradeCurrentSeasonId = value == null ? "" : value;
+    }
+
+    @Override
+    public int cresoraGetMasqueradeBestWave() {
+        return this.cresora$masqueradeBestWave;
+    }
+
+    @Override
+    public void cresoraSetMasqueradeBestWave(int value) {
+        this.cresora$masqueradeBestWave = value;
+    }
+
+    @Override
+    public int cresoraGetMasqueradeAttemptCount() {
+        return this.cresora$masqueradeAttemptCount;
+    }
+
+    @Override
+    public void cresoraSetMasqueradeAttemptCount(int value) {
+        this.cresora$masqueradeAttemptCount = value;
+    }
+
+    @Override
+    public int cresoraGetMasqueradeTotalClearedWaves() {
+        return this.cresora$masqueradeTotalClearedWaves;
+    }
+
+    @Override
+    public void cresoraSetMasqueradeTotalClearedWaves(int value) {
+        this.cresora$masqueradeTotalClearedWaves = value;
+    }
+
+    @Override
+    public String cresoraGetMasqueradeArchiveRaw() {
+        return this.cresora$masqueradeArchiveRaw;
+    }
+
+    @Override
+    public void cresoraSetMasqueradeArchiveRaw(String value) {
+        this.cresora$masqueradeArchiveRaw = value == null ? "" : value;
     }
 }

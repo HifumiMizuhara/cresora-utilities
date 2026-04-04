@@ -15,7 +15,7 @@ data class EquipmentDefinition(
     val setId: String,
     val rarityWeights: Map<EquipmentRarity, Double> = emptyMap(),
     val baseItemId: String? = null,
-    val opensUpgradeScreen: Boolean = false
+    val opensUpgradeScreen: Boolean = true
 ) {
     fun slotType(): EquipmentSlotType = EquipmentContentRegistry.requireSlot(slotTypeId)
 
@@ -32,7 +32,7 @@ data class EquipmentDefinition(
                     .forGetter(EquipmentDefinition::rarityWeights),
                 Codec.STRING.optionalFieldOf("baseItemId")
                     .forGetter { java.util.Optional.ofNullable(it.baseItemId) },
-                Codec.BOOL.optionalFieldOf("opensUpgradeScreen", false)
+                Codec.BOOL.optionalFieldOf("opensUpgradeScreen", true)
                     .forGetter(EquipmentDefinition::opensUpgradeScreen)
             ).apply(instance) { id, slotTypeId, setId, rarityWeights, baseItemId, opensUpgradeScreen ->
                 EquipmentDefinition(id, slotTypeId, setId, rarityWeights, baseItemId.orElse(null), opensUpgradeScreen)

@@ -53,7 +53,8 @@ private class DomainSession(
     val domainId: String,
     val arenaIndex: Int,
     val returnPoint: DomainReturnPoint,
-    val sessionRank: Int
+    val sessionRank: Int,
+    val linkedStoryChapterId: String? = null
 ) {
     val activeMobUuids: MutableSet<UUID> = linkedSetOf()
     var nextStageIndex: Int = 0
@@ -107,26 +108,63 @@ object DomainService {
     private val sessionByArenaIndex: MutableMap<Int, UUID> = linkedMapOf()
     private val mobRuntime: MutableMap<UUID, DomainRuntimeMob> = linkedMapOf()
 
+    fun hasActiveSession(player: ServerPlayerEntity): Boolean = sessionsByPlayer.containsKey(player.uuid)
+
+    fun generateOneOffRewards(
+        player: ServerPlayerEntity,
+        domainId: String,
+        sessionRank: Int = DomainCombatProfile.sessionRank(AdventureRankService.getRank(player))
+    ): DomainRewardResult {
+        val domain = DomainContentRegistry.requireDomain(domainId)
+        return generateRewardsForProfile(player, domain.rewardProfileId, sessionRank)
+    }
+
     fun startSession(player: ServerPlayerEntity, domainId: String): DomainStartResult {
         val domain = runCatching { DomainContentRegistry.requireDomain(domainId) }.getOrElse {
             return DomainStartResult(false, "screen.cresora.domain.invalid")
         }
+        return startSessionInternal(player, domain, null)
+    }
+
+    fun startLinkedStoryStage(player: ServerPlayerEntity, chapter: StoryChapterDefinition): StoryStartResult {
+        val domainId = chapter.linkedDomainId ?: return StoryStartResult(false, "commands.cresora.story.invalid", listOf(chapter.id))
+        val domain = runCatching { DomainContentRegistry.requireDomain(domainId) }.getOrElse {
+            return StoryStartResult(false, "commands.cresora.story.invalid", listOf(chapter.id))
+        }
+        val result = startSessionInternal(player, domain, chapter.id)
+        return StoryStartResult(result.success, result.translationKey, result.args)
+    }
+
+    private fun startSessionInternal(
+        player: ServerPlayerEntity,
+        domain: DomainDefinition,
+        linkedStoryChapterId: String?
+    ): DomainStartResult {
         if (sessionsByPlayer.containsKey(player.uuid)) {
-            return DomainStartResult(false, "screen.cresora.domain.already_active")
+            return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.already_active" else "commands.cresora.story.already_active")
+        }
+        if (StoryService.hasActiveSession(player)) {
+            return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.blocked_story" else "commands.cresora.story.already_active")
+        }
+        if (MasqueradeService.hasActiveSession(player)) {
+            return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.blocked_masquerade" else "commands.cresora.story.blocked_masquerade")
         }
         val rank = AdventureRankService.getRank(player)
-        if (rank < domain.unlockRank) {
-            return DomainStartResult(false, "screen.cresora.domain.locked", listOf(domain.unlockRank))
+        if (linkedStoryChapterId == null && rank < domain.unlockRank) {
+            return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.locked" else "commands.cresora.story.locked", listOf(domain.unlockRank))
+        }
+        if (!InventoryGate.hasFreeMainSlot(player)) {
+            return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.inventory_full" else "commands.cresora.story.inventory_full", listOf(1))
         }
         if (!CreditsService.hasCredits(player, domain.entryCostCsc)) {
             return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
         }
-        val arena = allocateArena() ?: return DomainStartResult(false, "screen.cresora.domain.no_arena")
+        val arena = allocateArena() ?: return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.no_arena" else "commands.cresora.story.no_arena")
         if (!CreditsService.spendCredits(player, domain.entryCostCsc)) {
             return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
         }
 
-        val server = player.server ?: return DomainStartResult(false, "screen.cresora.domain.invalid")
+        val server = player.server ?: return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.invalid" else "commands.cresora.story.invalid")
         val arenaWorld = server.overworld
         ensureArena(arenaWorld, arena.center)
         val session = DomainSession(
@@ -135,17 +173,24 @@ object DomainService {
             domainId = domain.id,
             arenaIndex = arena.index,
             returnPoint = DomainReturnPoint(player.world.registryKey, player.pos, player.yaw, player.pitch),
-            sessionRank = DomainCombatProfile.sessionRank(rank)
+            sessionRank = DomainCombatProfile.sessionRank(rank),
+            linkedStoryChapterId = linkedStoryChapterId
         )
         session.nextSpawnTick = arenaWorld.time + START_DELAY_TICKS
         sessionsByPlayer[player.uuid] = session
         sessionsById[session.id] = session
         sessionByArenaIndex[arena.index] = session.id
 
-        player.heal(player.maxHealth)
+        player.health = player.maxHealth
         teleportPlayer(player, arenaWorld, Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5), 180.0f, 0.0f)
-        player.sendMessage(Text.translatable("screen.cresora.domain.entered", Text.translatable(domain.nameKey), session.sessionRank), false)
-        return DomainStartResult(true, "screen.cresora.domain.entered", listOf(Text.translatable(domain.nameKey), session.sessionRank))
+        if (linkedStoryChapterId == null) {
+            player.sendMessage(Text.translatable("screen.cresora.domain.entered", Text.translatable(domain.nameKey), session.sessionRank), false)
+            return DomainStartResult(true, "screen.cresora.domain.entered", listOf(Text.translatable(domain.nameKey), session.sessionRank))
+        }
+        val chapter = StoryContentRegistry.requireChapter(linkedStoryChapterId)
+        val chapterLabel = StoryTextRegistry.chapterLabel(StoryTextRegistry.resolvePlayerLocale(player), chapter)
+        player.sendMessage(Text.translatable("commands.cresora.story.started", chapterLabel), false)
+        return DomainStartResult(true, "commands.cresora.story.started", listOf(chapterLabel))
     }
 
     fun tick(server: MinecraftServer) {
@@ -254,16 +299,25 @@ object DomainService {
         val result = generateRewards(player, session)
         cleanupSession(server, session)
         restorePlayerPosition(server, player, session.returnPoint)
-        for (stack in result.items) {
-            player.inventory.offerOrDrop(stack)
-        }
+        val droppedItemCount = deliverRewardItems(player, result.items)
         if (result.credits > 0) {
             CreditsService.addCredits(player, result.credits)
         }
         if (result.rankXp > 0) {
             AdventureRankService.addXp(player, result.rankXp)
         }
-        player.sendMessage(Text.translatable("screen.cresora.domain.cleared", Text.translatable(session.definition().nameKey)), false)
+        val linkedStoryChapterId = session.linkedStoryChapterId
+        if (linkedStoryChapterId == null) {
+            player.sendMessage(Text.translatable("screen.cresora.domain.cleared", Text.translatable(session.definition().nameKey)), false)
+        } else {
+            StoryProgressService.markCleared(player, linkedStoryChapterId)
+            val chapter = StoryContentRegistry.requireChapter(linkedStoryChapterId)
+            val chapterLabel = StoryTextRegistry.chapterLabel(StoryTextRegistry.resolvePlayerLocale(player), chapter)
+            player.sendMessage(Text.translatable("commands.cresora.story.cleared", chapterLabel), false)
+        }
+        if (droppedItemCount > 0) {
+            player.sendMessage(Text.translatable("screen.cresora.domain.reward_overflow", ArtifactSpecialItem.formatWholeNumber(droppedItemCount)), false)
+        }
         ArtifactUiFlow.openDomainReward(player, DomainDisplayStackFactory.rewardDisplayStacks(result))
     }
 
@@ -278,7 +332,17 @@ object DomainService {
         if (player != null && restorePlayer && player.isAlive) {
             restorePlayerPosition(server, player, session.returnPoint)
         }
-        player?.sendMessage(Text.translatable(messageKey, Text.translatable(session.definition().nameKey)), false)
+        if (player == null) {
+            return
+        }
+        val linkedStoryChapterId = session.linkedStoryChapterId
+        if (linkedStoryChapterId == null) {
+            player.sendMessage(Text.translatable(messageKey, Text.translatable(session.definition().nameKey)), false)
+            return
+        }
+        val chapter = StoryContentRegistry.requireChapter(linkedStoryChapterId)
+        val chapterLabel = StoryTextRegistry.chapterLabel(StoryTextRegistry.resolvePlayerLocale(player), chapter)
+        player.sendMessage(Text.translatable("commands.cresora.story.failed", chapterLabel), false)
     }
 
     private fun cleanupSession(server: MinecraftServer, session: DomainSession) {
@@ -306,7 +370,15 @@ object DomainService {
     }
 
     private fun generateRewards(player: ServerPlayerEntity, session: DomainSession): DomainRewardResult {
-        val profile = DomainRewardProfileRegistry.requireProfile(session.definition().rewardProfileId)
+        return generateRewardsForProfile(player, session.definition().rewardProfileId, session.sessionRank)
+    }
+
+    private fun generateRewardsForProfile(
+        player: ServerPlayerEntity,
+        rewardProfileId: String,
+        sessionRank: Int
+    ): DomainRewardResult {
+        val profile = DomainRewardProfileRegistry.requireProfile(rewardProfileId)
         val random = player.random
         val items = mutableListOf<ItemStack>()
 
@@ -343,11 +415,28 @@ object DomainService {
             }
         }
 
-        val credits = (profile.currencyReward.creditsBase + profile.currencyReward.creditsPerRank * session.sessionRank)
+        val credits = (profile.currencyReward.creditsBase + profile.currencyReward.creditsPerRank * sessionRank)
             .coerceAtLeast(0)
-        val rankXp = (profile.currencyReward.rankXpBase + profile.currencyReward.rankXpPerRank * session.sessionRank)
+        val rankXp = (profile.currencyReward.rankXpBase + profile.currencyReward.rankXpPerRank * sessionRank)
             .coerceAtLeast(0)
         return DomainRewardResult(items, credits, rankXp)
+    }
+
+    private fun deliverRewardItems(player: ServerPlayerEntity, rewards: List<ItemStack>): Int {
+        var droppedItemCount = 0
+        for (reward in rewards) {
+            if (reward.isEmpty) {
+                continue
+            }
+            val remaining = reward.copy()
+            player.inventory.insertStack(remaining)
+            if (!remaining.isEmpty) {
+                droppedItemCount += remaining.count
+                player.dropItem(remaining, false)
+            }
+        }
+        player.playerScreenHandler.sendContentUpdates()
+        return droppedItemCount
     }
 
     private fun restorePlayerPosition(server: MinecraftServer, player: ServerPlayerEntity, returnPoint: DomainReturnPoint) {

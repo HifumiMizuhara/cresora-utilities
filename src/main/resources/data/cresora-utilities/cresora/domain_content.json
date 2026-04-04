@@ -32,6 +32,15 @@
         { "entityTypeId": "minecraft:enderman", "weight": 2 },
         { "entityTypeId": "minecraft:piglin_brute", "weight": 1 }
       ]
+    },
+    {
+      "id": "lakeside_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:drowned", "weight": 4 },
+        { "entityTypeId": "minecraft:guardian", "weight": 3 },
+        { "entityTypeId": "minecraft:enderman", "weight": 2 },
+        { "entityTypeId": "minecraft:witch", "weight": 1 }
+      ]
     }
   ],
   "domains": [
@@ -57,7 +66,7 @@
       "id": "rondo_forge",
       "nameKey": "screen.cresora.domain.rondo_forge",
       "themeId": "metal",
-      "unlockRank": 10,
+      "unlockRank": 1,
       "entryCostCsc": 2500,
       "rewardProfileId": "rondo_forge",
       "mobPoolId": "forge_trial",
@@ -75,7 +84,7 @@
       "id": "masquerade_soiree",
       "nameKey": "screen.cresora.domain.masquerade_soiree",
       "themeId": "moonlit",
-      "unlockRank": 10,
+      "unlockRank": 1,
       "entryCostCsc": 2500,
       "rewardProfileId": "masquerade_soiree",
       "mobPoolId": "masquerade_trial",
@@ -93,7 +102,7 @@
       "id": "credit_drill",
       "nameKey": "screen.cresora.domain.credit_drill",
       "themeId": "arcane",
-      "unlockRank": 20,
+      "unlockRank": 1,
       "entryCostCsc": 4000,
       "rewardProfileId": "csc_training",
       "mobPoolId": "credit_trial",
@@ -104,6 +113,25 @@
             { "count": 4, "levelOffset": 7, "elite": false, "spawnDelayTicks": 60 },
             { "count": 2, "levelOffset": 9, "elite": true, "spawnDelayTicks": 80 },
             { "count": 3, "levelOffset": 10, "elite": true, "spawnDelayTicks": 100 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lakeside_sanctum",
+      "nameKey": "screen.cresora.domain.lakeside_sanctum",
+      "themeId": "arcane",
+      "unlockRank": 1,
+      "entryCostCsc": 6500,
+      "rewardProfileId": "lakeside_sanctum",
+      "mobPoolId": "lakeside_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 4, "levelOffset": 10, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 4, "levelOffset": 12, "elite": false, "spawnDelayTicks": 60 },
+            { "count": 2, "levelOffset": 14, "elite": true, "spawnDelayTicks": 80 },
+            { "count": 3, "levelOffset": 16, "elite": true, "spawnDelayTicks": 100 }
           ]
         }
       ]

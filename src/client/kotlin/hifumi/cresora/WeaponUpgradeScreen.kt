@@ -14,6 +14,7 @@ class WeaponUpgradeScreen(
 ) : HandledScreen<WeaponUpgradeScreenHandler>(handler, inventory, title) {
     private lateinit var baseButton: ButtonWidget
     private lateinit var skillButton: ButtonWidget
+    private lateinit var dismantleButton: ButtonWidget
 
     init {
         backgroundWidth = 176
@@ -26,12 +27,16 @@ class WeaponUpgradeScreen(
 
     override fun init() {
         super.init()
+        dismantleButton = ButtonWidget.builder(Text.translatable("screen.cresora.weapon_upgrade.dismantle_button")) {
+            client?.interactionManager?.clickButton(handler.syncId, WeaponUpgradeScreenHandler.BUTTON_DISMANTLE)
+        }.dimensions(x + 100, y + 6, 68, 16).build()
         baseButton = ButtonWidget.builder(Text.translatable("screen.cresora.weapon_upgrade.base_button")) {
             client?.interactionManager?.clickButton(handler.syncId, WeaponUpgradeScreenHandler.BUTTON_BASE_UPGRADE)
         }.dimensions(x + 100, y + 28, 68, 20).build()
         skillButton = ButtonWidget.builder(Text.translatable("screen.cresora.weapon_upgrade.skill_button")) {
             client?.interactionManager?.clickButton(handler.syncId, WeaponUpgradeScreenHandler.BUTTON_SKILL_UPGRADE)
         }.dimensions(x + 100, y + 52, 68, 20).build()
+        addDrawableChild(dismantleButton)
         addDrawableChild(baseButton)
         addDrawableChild(skillButton)
     }
@@ -41,8 +46,10 @@ class WeaponUpgradeScreen(
         val player = client?.player ?: return
         val basePreview = handler.getBasePreview(player)
         val skillPreview = handler.getSkillPreview(player)
+        val dismantlePreview = handler.getDismantlePreview()
         baseButton.active = basePreview.canUpgrade
         skillButton.active = skillPreview.canUpgrade
+        dismantleButton.active = dismantlePreview.canDismantle
         baseButton.message = if (basePreview.canUpgrade) {
             Text.translatable("screen.cresora.weapon_upgrade.base_button")
         } else {
@@ -52,6 +59,15 @@ class WeaponUpgradeScreen(
             Text.translatable("screen.cresora.weapon_upgrade.skill_button")
         } else {
             compactStatus(skillPreview.messageKey, false)
+        }
+        dismantleButton.message = if (dismantlePreview.canDismantle) {
+            if (handler.dismantleConfirmRemaining() in 1..2) {
+                Text.translatable("screen.cresora.weapon_upgrade.dismantle_button_confirm", handler.dismantleConfirmRemaining())
+            } else {
+                Text.translatable("screen.cresora.weapon_upgrade.dismantle_button_value", formatWhole(dismantlePreview.returnCount))
+            }
+        } else {
+            Text.translatable("screen.cresora.weapon_upgrade.dismantle_button")
         }
     }
 
@@ -118,7 +134,7 @@ class WeaponUpgradeScreen(
                 Text.translatable("item.cresora.weapon.skill.${skillPreview.effectId}"),
                 formatOne(skillPreview.currentValueHearts),
                 formatOne(skillPreview.resultValueHearts),
-                Text.translatable("item.cresora.weapon.unit.hearts")
+                skillUnit(skillPreview.effectId)
             ),
             95,
             88,
@@ -149,8 +165,22 @@ class WeaponUpgradeScreen(
             0x2F1D0D,
             false
         )
+        if (skillPreview.artifactCost > 0) {
+            context.drawText(
+                textRenderer,
+                Text.translatable(
+                    "screen.cresora.weapon_upgrade.skill_artifacts",
+                    formatWhole(skillPreview.artifactCost),
+                    formatWhole(handler.currentArtifacts())
+                ),
+                95,
+                108,
+                0x2F1D0D,
+                false
+            )
+        }
         context.drawText(textRenderer, compactStatus(basePreview.messageKey, true), 8, 74, statusColor(basePreview.canUpgrade), false)
-        context.drawText(textRenderer, compactStatus(skillPreview.messageKey, false), 95, 108, statusColor(skillPreview.canUpgrade), false)
+        context.drawText(textRenderer, compactStatus(skillPreview.messageKey, false), 95, if (skillPreview.artifactCost > 0) 118 else 108, statusColor(skillPreview.canUpgrade), false)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -165,14 +195,31 @@ class WeaponUpgradeScreen(
 
     private fun statusColor(ready: Boolean): Int = if (ready) 0x1F6A52 else 0x8F2E23
 
+    private fun skillUnit(effectId: String): Text {
+        return when (effectId) {
+            "current_hp_true_damage" -> Text.translatable("item.cresora.weapon.unit.percent_current_hp")
+            "flame_aura" -> Text.translatable("item.cresora.weapon.unit.seconds")
+            else -> Text.translatable("item.cresora.weapon.unit.hearts")
+        }
+    }
+
     private fun compactStatus(messageKey: String?, base: Boolean): Text {
         return when (messageKey) {
             "screen.cresora.weapon_upgrade.need_weapon" -> Text.translatable("screen.cresora.weapon_upgrade.need_weapon")
             "screen.cresora.weapon_upgrade.max_base" -> Text.translatable("screen.cresora.weapon_upgrade.max_base")
             "screen.cresora.weapon_upgrade.max_skill" -> Text.translatable("screen.cresora.weapon_upgrade.max_skill")
             "screen.cresora.weapon_upgrade.no_fragments" -> Text.translatable("screen.cresora.weapon_upgrade.no_fragments")
+            "screen.cresora.weapon_upgrade.no_artifact_materials" -> Text.translatable("screen.cresora.weapon_upgrade.no_artifact_materials")
             "screen.cresora.weapon_upgrade.ready_base" -> Text.translatable("screen.cresora.weapon_upgrade.ready_base")
             "screen.cresora.weapon_upgrade.ready_skill" -> Text.translatable("screen.cresora.weapon_upgrade.ready_skill")
+            "screen.cresora.weapon_upgrade.ready_skill_select" -> Text.translatable("screen.cresora.weapon_upgrade.ready_skill_select")
+            "screen.cresora.weapon_upgrade.ready_dismantle" -> {
+                if (handler.dismantleConfirmRemaining() in 1..2) {
+                    Text.translatable("screen.cresora.weapon_upgrade.confirm_short", handler.dismantleConfirmRemaining())
+                } else {
+                    Text.translatable("screen.cresora.weapon_upgrade.ready_dismantle")
+                }
+            }
             "item.cresora.not_enough_credits" -> Text.translatable("screen.cresora.weapon_upgrade.no_credits")
             else -> if (base) Text.translatable("screen.cresora.weapon_upgrade.base_button") else Text.translatable("screen.cresora.weapon_upgrade.skill_button")
         }

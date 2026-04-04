@@ -1,0 +1,642 @@
+{
+  "seasonId": "season_1",
+  "unlockRank": 3,
+  "maxWaveCount": 30,
+  "defaultTimeLimitSeconds": 180,
+  "rewardPerClearedWave": {
+    "creditsPerWave": 10000,
+    "chordProgressionPerWave": 3250
+  },
+  "waves": [
+    {
+      "waveNumber": 1,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:zombie",
+          "rank": 5,
+          "count": 1,
+          "modifiers": {
+            "damageReductionPercent": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 2,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:zombie",
+          "rank": 6,
+          "count": 2,
+          "modifiers": {
+            "healthScalar": 1.1,
+            "damageReductionPercent": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 3,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:spider",
+          "rank": 7,
+          "count": 3,
+          "modifiers": {
+            "healthScalar": 1.1,
+            "damageScalar": 1.05
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 4,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:skeleton",
+          "rank": 8,
+          "count": 3,
+          "modifiers": {
+            "healthScalar": 1.15,
+            "damageScalar": 1.1,
+            "damageReductionPercent": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 5,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:husk",
+          "rank": 10,
+          "count": 3,
+          "modifiers": {
+            "healthScalar": 1.2,
+            "damageScalar": 1.1,
+            "defenseScalar": 1.05
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 6,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:zombie",
+          "rank": 11,
+          "count": 4,
+          "modifiers": {
+            "healthScalar": 1.25,
+            "damageScalar": 1.12,
+            "damageReductionPercent": 15.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 7,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:drowned",
+          "rank": 12,
+          "count": 4,
+          "modifiers": {
+            "healthScalar": 1.25,
+            "damageScalar": 1.15
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 8,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:witch",
+          "rank": 14,
+          "count": 2,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 1.4,
+            "damageScalar": 1.2,
+            "damageReductionPercent": 18.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 9,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:enderman",
+          "rank": 15,
+          "count": 2,
+          "modifiers": {
+            "healthScalar": 1.45,
+            "damageScalar": 1.2,
+            "defenseScalar": 1.08
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 10,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:creeper",
+          "rank": 16,
+          "count": 4,
+          "modifiers": {
+            "healthScalar": 1.35,
+            "damageScalar": 1.18,
+            "damageReductionPercent": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 11,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:stray",
+          "rank": 18,
+          "count": 4,
+          "modifiers": {
+            "healthScalar": 1.4,
+            "damageScalar": 1.22
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 12,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:blaze",
+          "rank": 20,
+          "count": 3,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 1.55,
+            "damageScalar": 1.25,
+            "damageReductionPercent": 22.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 13,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:cave_spider",
+          "rank": 21,
+          "count": 5,
+          "modifiers": {
+            "healthScalar": 1.45,
+            "damageScalar": 1.24
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 14,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:wither_skeleton",
+          "rank": 23,
+          "count": 4,
+          "modifiers": {
+            "healthScalar": 1.55,
+            "damageScalar": 1.28,
+            "defenseScalar": 1.1,
+            "damageReductionPercent": 24.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 15,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:vindicator",
+          "rank": 25,
+          "count": 3,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 1.7,
+            "damageScalar": 1.32,
+            "defenseScalar": 1.12
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 16,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:pillager",
+          "rank": 27,
+          "count": 5,
+          "modifiers": {
+            "healthScalar": 1.6,
+            "damageScalar": 1.3,
+            "damageReductionPercent": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 17,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:enderman",
+          "rank": 29,
+          "count": 3,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 1.8,
+            "damageScalar": 1.35,
+            "defenseScalar": 1.12
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 18,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:piglin_brute",
+          "rank": 31,
+          "count": 3,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 1.95,
+            "damageScalar": 1.38,
+            "defenseScalar": 1.16,
+            "damageReductionPercent": 28.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 19,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:witch",
+          "rank": 33,
+          "count": 4,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 1.85,
+            "damageScalar": 1.35,
+            "damageReductionPercent": 26.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 20,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:ravager",
+          "rank": 35,
+          "count": 1,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.2,
+            "damageScalar": 1.42,
+            "defenseScalar": 1.2,
+            "toughnessScalar": 1.2,
+            "damageReductionPercent": 30.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 21,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:shulker",
+          "rank": 38,
+          "count": 3,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.0,
+            "damageScalar": 1.42,
+            "damageReductionPercent": 30.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 22,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:guardian",
+          "rank": 40,
+          "count": 4,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.1,
+            "damageScalar": 1.45,
+            "defenseScalar": 1.18
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 23,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:elder_guardian",
+          "rank": 43,
+          "count": 1,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.35,
+            "damageScalar": 1.48,
+            "defenseScalar": 1.22,
+            "toughnessScalar": 1.25,
+            "damageReductionPercent": 32.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 24,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:evoker",
+          "rank": 46,
+          "count": 3,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.2,
+            "damageScalar": 1.5,
+            "damageReductionPercent": 32.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 25,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:blaze",
+          "rank": 49,
+          "count": 5,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.1,
+            "damageScalar": 1.55,
+            "damageReductionPercent": 34.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 26,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:piglin_brute",
+          "rank": 52,
+          "count": 4,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.35,
+            "damageScalar": 1.6,
+            "defenseScalar": 1.22,
+            "damageReductionPercent": 35.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 27,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:shulker",
+          "rank": 56,
+          "count": 4,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.45,
+            "damageScalar": 1.62,
+            "damageReductionPercent": 36.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 28,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:ravager",
+          "rank": 60,
+          "count": 2,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.7,
+            "damageScalar": 1.68,
+            "defenseScalar": 1.25,
+            "toughnessScalar": 1.3,
+            "damageReductionPercent": 38.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 29,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:evoker",
+          "rank": 64,
+          "count": 4,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 2.6,
+            "damageScalar": 1.72,
+            "damageReductionPercent": 40.0
+          }
+        }
+      ]
+    },
+    {
+      "waveNumber": 30,
+      "timeLimitSeconds": 180,
+      "spawns": [
+        {
+          "entityTypeId": "minecraft:warden",
+          "rank": 70,
+          "count": 1,
+          "elite": true,
+          "modifiers": {
+            "healthScalar": 3.0,
+            "damageScalar": 1.85,
+            "defenseScalar": 1.3,
+            "toughnessScalar": 1.35,
+            "damageReductionPercent": 42.0
+          }
+        }
+      ]
+    }
+  ],
+  "supportBuffs": [
+    {
+      "id": "atk_boost_minor",
+      "rarity": "3_star",
+      "nameKey": "screen.cresora.masquerade.support.atk_minor",
+      "descriptionKey": "screen.cresora.masquerade.support.atk_minor.desc",
+      "effectId": "stat_bonus",
+      "statType": "atk_percent",
+      "statValue": 10.0,
+      "weight": 1.2
+    },
+    {
+      "id": "hp_boost_minor",
+      "rarity": "3_star",
+      "nameKey": "screen.cresora.masquerade.support.hp_minor",
+      "descriptionKey": "screen.cresora.masquerade.support.hp_minor.desc",
+      "effectId": "stat_bonus",
+      "statType": "hp_percent",
+      "statValue": 10.0,
+      "weight": 1.0
+    },
+    {
+      "id": "def_boost_minor",
+      "rarity": "3_star",
+      "nameKey": "screen.cresora.masquerade.support.def_minor",
+      "descriptionKey": "screen.cresora.masquerade.support.def_minor.desc",
+      "effectId": "stat_bonus",
+      "statType": "def_percent",
+      "statValue": 10.0,
+      "weight": 1.0
+    },
+    {
+      "id": "crit_rate_minor",
+      "rarity": "3_star",
+      "nameKey": "screen.cresora.masquerade.support.crit_rate_minor",
+      "descriptionKey": "screen.cresora.masquerade.support.crit_rate_minor.desc",
+      "effectId": "stat_bonus",
+      "statType": "crit_rate",
+      "statValue": 5.0,
+      "weight": 0.8
+    },
+    {
+      "id": "all_dmg_minor",
+      "rarity": "3_star",
+      "nameKey": "screen.cresora.masquerade.support.all_dmg_minor",
+      "descriptionKey": "screen.cresora.masquerade.support.all_dmg_minor.desc",
+      "effectId": "stat_bonus",
+      "statType": "all_dmg_bonus",
+      "statValue": 8.0,
+      "weight": 0.9
+    },
+    {
+      "id": "atk_boost_major",
+      "rarity": "4_star",
+      "nameKey": "screen.cresora.masquerade.support.atk_major",
+      "descriptionKey": "screen.cresora.masquerade.support.atk_major.desc",
+      "effectId": "stat_bonus",
+      "statType": "atk_percent",
+      "statValue": 30.0,
+      "weight": 0.7
+    },
+    {
+      "id": "hp_boost_major",
+      "rarity": "4_star",
+      "nameKey": "screen.cresora.masquerade.support.hp_major",
+      "descriptionKey": "screen.cresora.masquerade.support.hp_major.desc",
+      "effectId": "stat_bonus",
+      "statType": "hp_percent",
+      "statValue": 30.0,
+      "weight": 0.6
+    },
+    {
+      "id": "def_boost_major",
+      "rarity": "4_star",
+      "nameKey": "screen.cresora.masquerade.support.def_major",
+      "descriptionKey": "screen.cresora.masquerade.support.def_major.desc",
+      "effectId": "stat_bonus",
+      "statType": "def_percent",
+      "statValue": 25.0,
+      "weight": 0.6
+    },
+    {
+      "id": "crit_dmg_major",
+      "rarity": "4_star",
+      "nameKey": "screen.cresora.masquerade.support.crit_dmg_major",
+      "descriptionKey": "screen.cresora.masquerade.support.crit_dmg_major.desc",
+      "effectId": "stat_bonus",
+      "statType": "crit_dmg",
+      "statValue": 25.0,
+      "weight": 0.5
+    },
+    {
+      "id": "damage_reduction_major",
+      "rarity": "4_star",
+      "nameKey": "screen.cresora.masquerade.support.damage_reduction_major",
+      "descriptionKey": "screen.cresora.masquerade.support.damage_reduction_major.desc",
+      "effectId": "stat_bonus",
+      "statType": "damage_reduction",
+      "statValue": 12.0,
+      "weight": 0.5
+    },
+    {
+      "id": "skip_multiple_of_four",
+      "rarity": "5_star",
+      "nameKey": "screen.cresora.masquerade.support.skip_four",
+      "descriptionKey": "screen.cresora.masquerade.support.skip_four.desc",
+      "effectId": "skip_multiple_of_four",
+      "weight": 0.22,
+      "eligibility": {
+        "minWave": 2,
+        "maxWave": 24
+      }
+    },
+    {
+      "id": "guard_every_five_wave",
+      "rarity": "5_star",
+      "nameKey": "screen.cresora.masquerade.support.guard_five",
+      "descriptionKey": "screen.cresora.masquerade.support.guard_five.desc",
+      "effectId": "guard_every_five_wave",
+      "weight": 0.18,
+      "procChance": 0.5,
+      "cooldownSeconds": 5,
+      "triggerWaveMultiple": 5,
+      "eligibility": {
+        "minWave": 4,
+        "maxWave": 30
+      }
+    }
+  ]
+}

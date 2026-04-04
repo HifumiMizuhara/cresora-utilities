@@ -212,6 +212,24 @@ object DomainContentRegistry {
                         DomainMobPoolEntry("minecraft:enderman", 2),
                         DomainMobPoolEntry("minecraft:piglin_brute", 1)
                     )
+                ),
+                DomainMobPool(
+                    id = "requiem_trial",
+                    entries = listOf(
+                        DomainMobPoolEntry("minecraft:skeleton", 3),
+                        DomainMobPoolEntry("minecraft:blaze", 3),
+                        DomainMobPoolEntry("minecraft:wither_skeleton", 2),
+                        DomainMobPoolEntry("minecraft:witch", 2)
+                    )
+                ),
+                DomainMobPool(
+                    id = "lakeside_trial",
+                    entries = listOf(
+                        DomainMobPoolEntry("minecraft:drowned", 4),
+                        DomainMobPoolEntry("minecraft:guardian", 3),
+                        DomainMobPoolEntry("minecraft:enderman", 2),
+                        DomainMobPoolEntry("minecraft:witch", 1)
+                    )
                 )
             ),
             domains = listOf(
@@ -284,6 +302,43 @@ object DomainContentRegistry {
                                 DomainWaveDefinition(4, 7, false, 60),
                                 DomainWaveDefinition(2, 9, true, 80),
                                 DomainWaveDefinition(3, 10, true, 100)
+                            )
+                        )
+                    )
+                ),
+                DomainDefinition(
+                    id = "requiem_reliquary",
+                    nameKey = "screen.cresora.domain.requiem_reliquary",
+                    themeId = "metal",
+                    unlockRank = 20,
+                    entryCostCsc = 4_500,
+                    rewardProfileId = "requiem_reliquary",
+                    mobPoolId = "requiem_trial",
+                    stages = listOf(
+                        DomainStageDefinition(
+                            waves = listOf(
+                                DomainWaveDefinition(4, 6, false, 40),
+                                DomainWaveDefinition(5, 8, false, 60),
+                                DomainWaveDefinition(3, 10, true, 80)
+                            )
+                        )
+                    )
+                ),
+                DomainDefinition(
+                    id = "lakeside_sanctum",
+                    nameKey = "screen.cresora.domain.lakeside_sanctum",
+                    themeId = "arcane",
+                    unlockRank = 35,
+                    entryCostCsc = 6_500,
+                    rewardProfileId = "lakeside_sanctum",
+                    mobPoolId = "lakeside_trial",
+                    stages = listOf(
+                        DomainStageDefinition(
+                            waves = listOf(
+                                DomainWaveDefinition(4, 10, false, 40),
+                                DomainWaveDefinition(4, 12, false, 60),
+                                DomainWaveDefinition(2, 14, true, 80),
+                                DomainWaveDefinition(3, 16, true, 100)
                             )
                         )
                     )
