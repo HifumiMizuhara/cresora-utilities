@@ -84,7 +84,10 @@ object ArtifactSpecialUpgradeService {
     }
 
     fun tryDropSpecialItems(player: ServerPlayerEntity, hostile: HostileEntity) {
-        val hostileRank = AdventureRankService.mobLevel(hostile)
+        tryDropSpecialItems(player, AdventureRankService.mobLevel(hostile))
+    }
+
+    fun tryDropSpecialItems(player: ServerPlayerEntity, hostileRank: Int) {
         for (definition in ArtifactSpecialItemRegistry.definitionsWithMobDrop()) {
             val mobDrop = definition.mobDrop ?: continue
             val chance = scaledDropChance(hostileRank, mobDrop)

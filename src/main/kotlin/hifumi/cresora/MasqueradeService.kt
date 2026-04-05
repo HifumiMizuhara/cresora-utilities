@@ -29,11 +29,6 @@ data class MasqueradeStartResult(
     val args: List<Any> = emptyList()
 )
 
-private data class MasqueradeArenaSlot(
-    val index: Int,
-    val center: BlockPos
-)
-
 private data class MasqueradeReturnPoint(
     val worldKey: RegistryKey<World>,
     val position: Vec3d,
@@ -62,7 +57,7 @@ private enum class MasqueradePhase {
 private class MasqueradeSession(
     val id: UUID,
     val playerUuid: UUID,
-    val arenaIndex: Int,
+    val arenaCenter: BlockPos,
     val returnPoint: MasqueradeReturnPoint,
     val inventorySnapshot: MasqueradeInventorySnapshot
 ) {
@@ -85,24 +80,14 @@ private class MasqueradeSession(
 }
 
 object MasqueradeService {
-    private const val ARENA_Y = 180
-    private const val ARENA_RADIUS = 9
     private const val ARENA_FAIL_DISTANCE_SQUARED = 34.0 * 34.0
     private const val START_DELAY_TICKS = 40L
     private const val BETWEEN_WAVE_DELAY_TICKS = 20L
     private const val SUPPORT_REOPEN_TICKS = 20L
     private const val MAX_PLAYER_DAMAGE_REDUCTION_RATIO = 0.50
 
-    private val ARENA_SLOTS: List<MasqueradeArenaSlot> = listOf(
-        MasqueradeArenaSlot(0, BlockPos(0, ARENA_Y, -128)),
-        MasqueradeArenaSlot(1, BlockPos(96, ARENA_Y, -128)),
-        MasqueradeArenaSlot(2, BlockPos(192, ARENA_Y, -128)),
-        MasqueradeArenaSlot(3, BlockPos(288, ARENA_Y, -128))
-    )
-
     private val sessionsByPlayer: MutableMap<UUID, MasqueradeSession> = linkedMapOf()
     private val sessionsById: MutableMap<UUID, MasqueradeSession> = linkedMapOf()
-    private val sessionByArenaIndex: MutableMap<Int, UUID> = linkedMapOf()
     private val mobRuntime: MutableMap<UUID, MasqueradeRuntimeMob> = linkedMapOf()
     private val pendingRespawnSnapshots: MutableMap<UUID, MasqueradeInventorySnapshot> = linkedMapOf()
 
@@ -164,27 +149,28 @@ object MasqueradeService {
         if (selectedWeapons.size != normalizedSlots.size) {
             return MasqueradeStartResult(false, "screen.cresora.masquerade.invalid_loadout")
         }
-        val arena = allocateArena() ?: return MasqueradeStartResult(false, "screen.cresora.masquerade.no_arena")
+
         val server = player.server ?: return MasqueradeStartResult(false, "screen.cresora.masquerade.invalid")
-        val world = server.overworld
-        ensureArena(world, arena.center)
+        val world = ArenaManager.getDomainWorld(server) ?: return MasqueradeStartResult(false, "screen.cresora.domain.no_world")
+        
+        val arenaCenter = ArenaManager.getArenaPosForPlayer(player.uuid)
+        ArenaManager.ensureArena(world, arenaCenter)
 
         val snapshot = snapshotInventory(player)
         val session = MasqueradeSession(
             id = UUID.randomUUID(),
             playerUuid = player.uuid,
-            arenaIndex = arena.index,
+            arenaCenter = arenaCenter,
             returnPoint = MasqueradeReturnPoint(player.world.registryKey, player.pos, player.yaw, player.pitch),
             inventorySnapshot = snapshot
         )
         session.nextEventTick = world.time + START_DELAY_TICKS
         sessionsByPlayer[player.uuid] = session
         sessionsById[session.id] = session
-        sessionByArenaIndex[arena.index] = session.id
 
         prepareRunInventory(player, session, selectedWeapons)
         player.health = player.maxHealth
-        teleportPlayer(player, world, Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5), 180.0f, 0.0f)
+        teleportPlayer(player, world, Vec3d(arenaCenter.x + 0.5, arenaCenter.y + 1.0, arenaCenter.z + 0.5), 180.0f, 0.0f)
         player.sendMessage(Text.translatable("screen.cresora.masquerade.entered"), false)
         return MasqueradeStartResult(true, "screen.cresora.masquerade.entered")
     }
@@ -283,12 +269,13 @@ object MasqueradeService {
             cleanupSession(server, session)
             return
         }
-        if ((player.world as? ServerWorld)?.registryKey != World.OVERWORLD || player.squaredDistanceTo(sessionArena(session)) > ARENA_FAIL_DISTANCE_SQUARED) {
+        
+        val world = ArenaManager.getDomainWorld(server) ?: return
+        if (player.world.registryKey != ArenaManager.DOMAIN_WORLD_KEY || player.squaredDistanceTo(session.arenaCenter.toCenterPos()) > ARENA_FAIL_DISTANCE_SQUARED) {
             endSession(server, session, player, EndReason.LEAVE_ARENA)
             return
         }
 
-        val world = server.overworld
         cleanupInactiveMobs(world, session)
 
         when (session.phase) {
@@ -365,13 +352,14 @@ object MasqueradeService {
             val entityType = Registries.ENTITY_TYPE.get(Identifier.of(spawn.entityTypeId))
             repeat(spawn.count.coerceAtLeast(1)) { countIndex ->
                 val spawnPos = BlockPos.ofFloored(
-                    sessionArena(session).x + randomOffset(world.random, spawnIndex * 17 + countIndex),
-                    sessionArena(session).y + 1,
-                    sessionArena(session).z + randomOffset(world.random, spawnIndex * 37 + countIndex + 11)
+                    session.arenaCenter.x + 0.5 + randomOffset(world.random, spawnIndex * 17 + countIndex),
+                    session.arenaCenter.y + 1.0,
+                    session.arenaCenter.z + 0.5 + randomOffset(world.random, spawnIndex * 37 + countIndex + 11)
                 )
                 val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
                 val access = hostile as? AdventureRankMobAccess ?: return@repeat
                 access.cresoraSetMobAdventureRank(spawn.rank)
+                FieldMobPackService.markExplicit(hostile, spawn.elite)
                 AdventureRankService.applyMobScaling(
                     hostile,
                     spawn.rank,
@@ -465,7 +453,7 @@ object MasqueradeService {
         cleanupSession(server, session)
         when (reason) {
             EndReason.DEATH -> {
-                cleanupRunItems(server.overworld, player?.pos ?: sessionArena(session), session.loanMarker())
+                cleanupRunItems(server.overworld, player?.pos ?: session.arenaCenter.toCenterPos(), session.loanMarker())
                 pendingRespawnSnapshots[session.playerUuid] = session.inventorySnapshot
             }
             else -> if (player != null && player.isAlive) {
@@ -489,16 +477,15 @@ object MasqueradeService {
     }
 
     private fun cleanupSession(server: MinecraftServer, session: MasqueradeSession) {
-        val world = server.overworld
+        val world = ArenaManager.getDomainWorld(server) ?: return
         for (mobUuid in session.activeMobUuids) {
             (world.getEntity(mobUuid) as? HostileEntity)?.discard()
             mobRuntime.remove(mobUuid)
         }
         session.activeMobUuids.clear()
-        cleanupRunItems(world, sessionArena(session), session.loanMarker())
+        cleanupRunItems(world, session.arenaCenter.toCenterPos(), session.loanMarker())
         sessionsByPlayer.remove(session.playerUuid)
         sessionsById.remove(session.id)
-        sessionByArenaIndex.remove(session.arenaIndex)
     }
 
     private fun cleanupInactiveMobs(world: ServerWorld, session: MasqueradeSession) {
@@ -564,34 +551,6 @@ object MasqueradeService {
 
     private fun teleportPlayer(player: ServerPlayerEntity, world: ServerWorld, position: Vec3d, yaw: Float, pitch: Float) {
         player.teleport(world, position.x, position.y, position.z, setOf(), yaw, pitch, false)
-    }
-
-    private fun allocateArena(): MasqueradeArenaSlot? {
-        return ARENA_SLOTS.firstOrNull { !sessionByArenaIndex.containsKey(it.index) }
-    }
-
-    private fun ensureArena(world: ServerWorld, center: BlockPos) {
-        for (x in -ARENA_RADIUS..ARENA_RADIUS) {
-            for (z in -ARENA_RADIUS..ARENA_RADIUS) {
-                val floorPos = center.add(x, 0, z)
-                val isBorder = kotlin.math.abs(x) == ARENA_RADIUS || kotlin.math.abs(z) == ARENA_RADIUS
-                world.setBlockState(floorPos, if (isBorder) Blocks.DEEPSLATE_TILES.defaultState else Blocks.POLISHED_DEEPSLATE.defaultState)
-                for (y in 1..6) {
-                    val airPos = floorPos.up(y)
-                    if (isBorder && y <= 3) {
-                        world.setBlockState(airPos, Blocks.TINTED_GLASS.defaultState)
-                    } else {
-                        world.setBlockState(airPos, Blocks.AIR.defaultState)
-                    }
-                }
-            }
-        }
-        world.setBlockState(center, Blocks.SOUL_LANTERN.defaultState)
-    }
-
-    private fun sessionArena(session: MasqueradeSession): Vec3d {
-        val arena = ARENA_SLOTS.first { it.index == session.arenaIndex }
-        return Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5)
     }
 
     private fun currentWorldTime(player: ServerPlayerEntity): Long {

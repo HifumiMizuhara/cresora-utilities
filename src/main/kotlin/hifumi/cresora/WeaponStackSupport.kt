@@ -5,9 +5,11 @@ import net.minecraft.item.ItemStack
 
 object WeaponStackSupport {
     private val weaponsByItem: MutableMap<Item, WeaponDefinitionRef> = linkedMapOf()
-    private val fragmentsByItem: MutableMap<Item, WeaponDefinitionRef> = linkedMapOf()
+    private val legacyFragmentsByItem: MutableMap<Item, WeaponDefinitionRef> = linkedMapOf()
     private val itemsByWeaponId: MutableMap<String, Item> = linkedMapOf()
-    private val fragmentItemsByWeaponId: MutableMap<String, Item> = linkedMapOf()
+    private val legacyFragmentItemsByWeaponId: MutableMap<String, Item> = linkedMapOf()
+    private val genericFragmentItemsByRarity: MutableMap<WeaponRarity, Item> = linkedMapOf()
+    private val legacyFragmentItemsByRarity: MutableMap<WeaponRarity, MutableSet<Item>> = linkedMapOf()
 
     fun registerWeaponItem(item: Item, definition: WeaponDefinitionRef) {
         weaponsByItem[item] = definition
@@ -15,21 +17,33 @@ object WeaponStackSupport {
     }
 
     fun registerFragmentItem(item: Item, definition: WeaponDefinitionRef) {
-        fragmentsByItem[item] = definition
-        fragmentItemsByWeaponId[definition.id] = item
+        val resolved = definition.resolve()
+        legacyFragmentsByItem[item] = definition
+        legacyFragmentItemsByWeaponId[definition.id] = item
+        legacyFragmentItemsByRarity.getOrPut(resolved.craft.craftedRarity) { linkedSetOf() }.add(item)
+    }
+
+    fun registerRarityFragmentItem(item: Item, rarity: WeaponRarity) {
+        genericFragmentItemsByRarity[rarity] = item
     }
 
     fun isWeapon(stack: ItemStack): Boolean = weaponsByItem.containsKey(stack.item)
 
-    fun isWeaponFragment(stack: ItemStack): Boolean = fragmentsByItem.containsKey(stack.item)
+    fun isWeaponFragment(stack: ItemStack): Boolean =
+        legacyFragmentsByItem.containsKey(stack.item) || genericFragmentItemsByRarity.containsValue(stack.item)
 
     fun getDefinition(stack: ItemStack): WeaponDefinition? = weaponsByItem[stack.item]?.resolve()
 
-    fun getFragmentDefinition(stack: ItemStack): WeaponDefinition? = fragmentsByItem[stack.item]?.resolve()
+    fun getFragmentDefinition(stack: ItemStack): WeaponDefinition? = legacyFragmentsByItem[stack.item]?.resolve()
 
     fun weaponItem(definitionId: String): Item? = itemsByWeaponId[definitionId]
 
-    fun fragmentItem(definitionId: String): Item? = fragmentItemsByWeaponId[definitionId]
+    fun fragmentItem(definitionId: String): Item? {
+        val definition = runCatching { WeaponContentRegistry.requireWeapon(definitionId) }.getOrNull() ?: return legacyFragmentItemsByWeaponId[definitionId]
+        return genericFragmentItemsByRarity[definition.craft.craftedRarity] ?: legacyFragmentItemsByWeaponId[definitionId]
+    }
+
+    fun legacyFragmentItem(definitionId: String): Item? = legacyFragmentItemsByWeaponId[definitionId]
 
     fun getWeaponData(stack: ItemStack): WeaponData? {
         val definition = getDefinition(stack) ?: return null
@@ -84,10 +98,11 @@ object WeaponStackSupport {
     }
 
     fun countFragments(player: net.minecraft.entity.player.PlayerEntity, definition: WeaponDefinition): Int {
-        val fragmentItem = fragmentItem(definition.id) ?: return 0
+        val acceptedItems = acceptedFragmentItems(definition)
+        if (acceptedItems.isEmpty()) return 0
         return (0 until player.inventory.size()).sumOf { slot ->
             val stack = player.inventory.getStack(slot)
-            if (stack.item == fragmentItem) stack.count else 0
+            if (acceptedItems.contains(stack.item)) stack.count else 0
         }
     }
 
@@ -96,13 +111,13 @@ object WeaponStackSupport {
         if (remaining == 0) {
             return true
         }
-        val fragmentItem = fragmentItem(definition.id) ?: return false
         if (countFragments(player, definition) < remaining) {
             return false
         }
+        val acceptedItems = acceptedFragmentItems(definition)
         for (slot in 0 until player.inventory.size()) {
             val stack = player.inventory.getStack(slot)
-            if (stack.item != fragmentItem || stack.isEmpty) {
+            if (!acceptedItems.contains(stack.item) || stack.isEmpty) {
                 continue
             }
             val decrement = minOf(remaining, stack.count)
@@ -115,5 +130,12 @@ object WeaponStackSupport {
         }
         player.inventory.markDirty()
         return remaining == 0
+    }
+
+    private fun acceptedFragmentItems(definition: WeaponDefinition): Set<Item> {
+        val accepted = linkedSetOf<Item>()
+        genericFragmentItemsByRarity[definition.craft.craftedRarity]?.let(accepted::add)
+        legacyFragmentItemsByRarity[definition.craft.craftedRarity]?.let(accepted::addAll)
+        return accepted
     }
 }

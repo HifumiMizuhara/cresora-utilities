@@ -42,26 +42,32 @@ object CombatMobDisplayService {
         }
 
         val rank = AdventureRankService.mobLevel(entity)
-        val physicalResistance = MobCombatProfileRegistry.resistancePercent(entity.type, CombatDamageType.PHYSICAL)
-        val arcaneResistance = MobCombatProfileRegistry.resistancePercent(entity.type, CombatDamageType.ARCANE)
-        entity.customName = Text.empty()
-            .append(
-                Text.translatable(
-                    "combat.cresora.mob_label",
-                    rank,
-                    entity.type.name,
-                    formatNumber(entity.health.toDouble().coerceAtLeast(0.0)),
-                    formatNumber(entity.maxHealth.toDouble().coerceAtLeast(1.0))
-                )
-            )
-            .append(Text.literal("\n"))
-            .append(
-                Text.translatable(
-                    "combat.cresora.mob_resistance_line",
-                    formatPercent(physicalResistance),
-                    formatPercent(arcaneResistance)
-                ).formatted(Formatting.GRAY)
-            )
+        val classificationTag = FieldMobPackService.classificationTag(entity)
+        val statusSuffix = getStatusSuffix(entity)
+        entity.customName = Text.translatable(
+            "combat.cresora.mob_label",
+            rank,
+            entity.type.name,
+            formatNumber(entity.health.toDouble().coerceAtLeast(0.0)),
+            formatNumber(entity.maxHealth.toDouble().coerceAtLeast(1.0))
+        ).append(classificationTag).append(statusSuffix)
+    }
+
+    private fun getStatusSuffix(entity: LivingEntity): Text {
+        val now = entity.world.time
+        val status = WeaponSkillService.getPhysicalResistanceOffset(entity) // This is just one way, but let's be more explicit if possible
+        // Better: let's add a proper check in WeaponSkillService for display
+        
+        val markers = mutableListOf<Text>()
+        if (WeaponSkillService.hasStatus(entity, "dark")) markers.add(Text.translatable("status.cresora.dark").formatted(Formatting.DARK_GRAY))
+        if (WeaponSkillService.hasStatus(entity, "lux")) markers.add(Text.translatable("status.cresora.lux").formatted(Formatting.AQUA))
+        if (WeaponSkillService.hasStatus(entity, "entanglement")) markers.add(Text.translatable("status.cresora.entanglement").formatted(Formatting.RED))
+        
+        val result = Text.empty()
+        for (m in markers) {
+            result.append(m)
+        }
+        return result
     }
 
     fun showIncomingDamage(player: ServerPlayerEntity, source: DamageSource, damage: Double) {

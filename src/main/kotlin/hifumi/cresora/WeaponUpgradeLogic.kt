@@ -75,11 +75,13 @@ object WeaponUpgradeLogic {
         val currentValue = when (definition.skill.effectId) {
             "current_hp_true_damage" -> WeaponCombatSupport.skillValuePercent(definition, data)
             "flame_aura" -> WeaponCombatSupport.skillValuePercent(definition, data)
+            "sunlit_haste" -> WeaponCombatSupport.skillValuePercent(definition, data)
             else -> WeaponCombatSupport.skillValueHearts(definition, data)
         }
         val resultValue = when (definition.skill.effectId) {
             "current_hp_true_damage" -> WeaponCombatSupport.skillValuePercent(definition, data.copy(skillLevel = data.skillLevel + 1).normalized(definition))
             "flame_aura" -> WeaponCombatSupport.skillValuePercent(definition, data.copy(skillLevel = data.skillLevel + 1).normalized(definition))
+            "sunlit_haste" -> WeaponCombatSupport.skillValuePercent(definition, data.copy(skillLevel = data.skillLevel + 1).normalized(definition))
             else -> WeaponCombatSupport.skillValueHearts(definition, data.copy(skillLevel = data.skillLevel + 1).normalized(definition))
         }
         if (data.skillLevel >= definition.maxSkillLevel) {

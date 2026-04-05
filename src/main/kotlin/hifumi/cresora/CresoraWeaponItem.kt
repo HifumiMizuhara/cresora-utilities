@@ -72,6 +72,9 @@ class CresoraWeaponItem(
             textConsumer.accept(Text.translatable("item.cresora.weapon.passive.hanwu_juanxue").formatted(Formatting.BLUE))
             textConsumer.accept(Text.translatable("item.cresora.weapon.special.hanwu_juanxue").formatted(Formatting.WHITE))
         }
+        if (resolved.id == "cadenza_allegro") {
+            textConsumer.accept(Text.translatable("item.cresora.weapon.passive.cadenza_allegro").formatted(Formatting.BLUE))
+        }
         textConsumer.accept(Text.translatable("item.cresora.weapon.sneak_upgrade").formatted(Formatting.DARK_GREEN))
         super.appendTooltip(stack, context, displayComponent, textConsumer, type)
     }
@@ -103,6 +106,7 @@ class CresoraWeaponItem(
         val heartValue = formatNumber(WeaponCombatSupport.skillValueHearts(definition, data))
         val secondaryHeartValue = formatNumber(WeaponCombatSupport.secondarySkillValueHearts(definition, data))
         val percentValue = formatNumber(WeaponCombatSupport.skillValuePercent(definition, data))
+        val secondaryPercentValue = formatNumber(WeaponCombatSupport.secondarySkillValuePercent(definition, data))
         return when (definition.skill.effectId) {
             "heal" -> Text.translatable(
                 "item.cresora.weapon.skill_line_heal",
@@ -145,6 +149,41 @@ class CresoraWeaponItem(
                 Text.translatable("item.cresora.weapon.unit.hearts"),
                 formatNumber(definition.skill.radiusMeters),
                 definition.skill.durationSeconds,
+                definition.skill.cooldownSeconds
+            )
+            "dark_lux" -> Text.translatable(
+                "item.cresora.weapon.skill_line_dark_lux",
+                effectName,
+                definition.skill.durationSeconds,
+                definition.skill.cooldownSeconds
+            )
+            "sunlit_haste" -> Text.translatable(
+                "item.cresora.weapon.skill_line_sunlit_haste",
+                effectName,
+                percentValue,
+                secondaryPercentValue,
+                definition.skill.durationSeconds,
+                definition.skill.cooldownSeconds
+            )
+            "baa_mimic" -> {
+                val targetCount = when {
+                    data.baseLevel >= 61 -> 3
+                    data.baseLevel >= 41 -> 2
+                    else -> 1
+                }
+                Text.translatable(
+                    "item.cresora.weapon.skill_line_baa_mimic",
+                    effectName,
+                    targetCount,
+                    formatNumber(definition.skill.radiusMeters),
+                    definition.skill.cooldownSeconds
+                )
+            }
+            "orchid_pavilion_echo" -> Text.translatable(
+                "item.cresora.weapon.skill_line_orchid_pavilion_echo",
+                effectName,
+                definition.skill.durationSeconds,
+                formatNumber(definition.skill.tickIntervalSeconds),
                 definition.skill.cooldownSeconds
             )
             "none" -> Text.translatable(

@@ -7,9 +7,11 @@
 		"ItemEntityMixin",
 		"LivingEntityMixin",
 		"MobEntityMixin",
+		"MobEntitySpawnMixin",
 		"PlayerAdvancementTrackerMixin",
 		"ServerPlayerEntityMixin",
-		"PlayerEntityMixin"
+		"PlayerEntityMixin",
+		"SheepEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

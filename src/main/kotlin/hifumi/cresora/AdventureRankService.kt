@@ -151,7 +151,10 @@ object AdventureRankService {
         val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
         val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
         val baseMaxHealth = maxHealthInstance.baseValue.coerceAtLeast(1.0)
-        val rawMultiplier = AdventureRankProfile.healthMultiplier(entity.type, normalizedRank) * healthScalar.coerceAtLeast(0.1)
+        val effectiveHealthScalar = healthScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteHealthScalar(entity)
+        val effectiveDefenseScalar = defenseScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteDefenseScalar(entity)
+        val effectiveToughnessScalar = toughnessScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteToughnessScalar(entity)
+        val rawMultiplier = AdventureRankProfile.healthMultiplier(entity.type, normalizedRank) * effectiveHealthScalar
         val rawTargetHealth = baseMaxHealth * rawMultiplier
         val targetHealth = min(rawTargetHealth, AdventureRankProfile.MOB_HEALTH_CAP)
         val overflowHealth = max(0.0, rawTargetHealth - targetHealth)
@@ -176,7 +179,7 @@ object AdventureRankService {
             armorInstance?.addTemporaryModifier(
                 EntityAttributeModifier(
                     MOB_ARMOR_BONUS_ID,
-                    bonus.armorFlat * defenseScalar.coerceAtLeast(0.1),
+                    bonus.armorFlat * effectiveDefenseScalar,
                     EntityAttributeModifier.Operation.ADD_VALUE
                 )
             )
@@ -185,7 +188,7 @@ object AdventureRankService {
             toughnessInstance?.addTemporaryModifier(
                 EntityAttributeModifier(
                     MOB_TOUGHNESS_BONUS_ID,
-                    bonus.toughnessFlat * toughnessScalar.coerceAtLeast(0.1),
+                    bonus.toughnessFlat * effectiveToughnessScalar,
                     EntityAttributeModifier.Operation.ADD_VALUE
                 )
             )
@@ -210,7 +213,10 @@ object AdventureRankService {
         if (storedRank <= 0) {
             return domainMultiplier * masqueradeMultiplier
         }
-        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) * domainMultiplier * masqueradeMultiplier
+        return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) *
+            FieldMobPackService.eliteDamageScalar(hostile) *
+            domainMultiplier *
+            masqueradeMultiplier
     }
 
     fun mobRank(entity: HostileEntity): Int {

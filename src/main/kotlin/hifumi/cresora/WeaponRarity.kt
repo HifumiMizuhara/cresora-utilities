@@ -12,6 +12,8 @@ enum class WeaponRarity(
     FIVE_STAR("5_star", 5);
 
     fun translationKey(): String = "item.cresora.weapon.rarity.$id"
+    fun fragmentItemId(): String = "weapon_fragment_$id"
+    fun fragmentTranslationKey(): String = "item.cresora-utilities.${fragmentItemId()}"
 
     companion object {
         val CODEC: Codec<WeaponRarity> = Codec.STRING.xmap(

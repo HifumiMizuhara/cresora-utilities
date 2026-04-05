@@ -48,6 +48,7 @@ object CreSoraUtilities : ModInitializer {
 	private val EQUIPMENT_ITEMS: MutableMap<String, ArtifactEquipmentItem> = linkedMapOf()
 	private val WEAPON_ITEMS: MutableMap<String, CresoraWeaponItem> = linkedMapOf()
 	private val WEAPON_FRAGMENT_ITEMS: MutableMap<String, WeaponFragmentItem> = linkedMapOf()
+	private val WEAPON_RARITY_FRAGMENT_ITEMS: MutableMap<WeaponRarity, Item> = linkedMapOf()
 	private val ARTIFACT_SPECIAL_ITEMS: MutableMap<String, ArtifactSpecialItem> = linkedMapOf()
 	val TUESHOKAKU: Item = tueshokaku(itemSettings(TUESHOKAKU_ID))
 	val VERIFY: Item = Item(itemSettings(VERSION_VERIFIER_ID))
@@ -177,6 +178,7 @@ object CreSoraUtilities : ModInitializer {
 		WeaponSkillService.init()
 		NaturalRegenService.init()
 		registerEquipmentItems()
+		registerWeaponRarityFragmentItems()
 		registerWeaponItems()
 		registerArtifactSpecialItems()
 		modifyLootTables()
@@ -224,6 +226,15 @@ object CreSoraUtilities : ModInitializer {
 			val fragmentItem = WeaponFragmentItem(WeaponDefinitionRef(definition.id), itemSettings(fragmentId))
 			WEAPON_FRAGMENT_ITEMS[definition.id] = Registry.register(Registries.ITEM, fragmentId, fragmentItem)
 			WeaponStackSupport.registerFragmentItem(fragmentItem, WeaponDefinitionRef(definition.id))
+		}
+	}
+
+	private fun registerWeaponRarityFragmentItems() {
+		for (rarity in WeaponRarity.entries) {
+			val itemId = Identifier.of(MOD_ID, rarity.fragmentItemId())
+			val item = Item(itemSettings(itemId))
+			WEAPON_RARITY_FRAGMENT_ITEMS[rarity] = Registry.register(Registries.ITEM, itemId, item)
+			WeaponStackSupport.registerRarityFragmentItem(item, rarity)
 		}
 	}
 

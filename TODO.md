@@ -1,137 +1,33 @@
 # TODO
 
-- Follow the dedicated refactor plan in [TODO_EQUIPMENT_REFACTOR.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/TODO_EQUIPMENT_REFACTOR.md)
-- Expand the generalized equipment system so future equipment classes can reuse the same generation and growth backend
-- Add more Trinkets slot mappings and item categories for future non-pendant equipment parts
-- Revisit balance numbers for rarity rates, stat roll ranges, and sacrifice-upgrade payoff
-- Implement real handlers for the new set-effect hook triggers so future stack-based / event-based set bonuses can do more than flat stat grants
-- Consider splitting `equipment_content.json` into multiple resource files once the number of sets grows, while keeping the same registry-facing schema
-- Re-run in-game verification that `/cresora_stats` set summaries match actual equipped-piece counts and active 2-piece / 4-piece thresholds
-- Continue in-game GUI polishing, especially visual balance between slots, metrics, and button placement
-- Sub-TODO: Move upgrade details out of the fragile main GUI and into mouse-hover tooltips wherever possible
-- Keep reducing text noise and rely more on layout, hierarchy, and short labels
-- Reserve more generic slot validation and display logic for future upgradable equipment beyond the current item
-- Re-evaluate whether the current upgrade button should become a more vanilla workstation-like interaction
-- Decide whether `upgrade.png` should remain as a resource or be fully replaced by code-driven / vanilla texture rendering
-- Re-run in-game verification that `hinagata_wand` can be inserted into the Trinkets UI `necklace` slot after the auto-registration refactor
-- Re-run in-game verification that the new Hinagata hat, glasses, armor, and boots each equip into the intended Trinkets slots
-- Re-run in-game verification that the Hinagata 2-piece and 4-piece bonuses apply correctly to `/cresora_stats` and live combat damage
-- Re-run in-game verification that upgraded non-wand artifacts preserve their slot type, set ID, and tooltip data correctly
-- Re-run in-game verification of the player-facing `/cresora_stats` command in each supported language and confirm all 10 localized stat lines render cleanly
-- Re-run in-game verification of `/cresora_rank` and confirm rank progression, admin overrides, and localized output all behave correctly
-- Re-run in-game verification that hostile mobs now show `Lv` and live `HP` above their heads without causing visual clutter in crowded fights
-- Re-run in-game verification that floating damage numbers render correctly for melee and projectile hits and disappear cleanly
-- Re-run in-game verification that Adventure Rank `70` progression pace feels reasonable from early game to endgame
-- Re-run in-game verification that adventure-rank-based enemy HP scaling prevents easy one-shots without feeling too tanky
-- Re-run in-game verification that natural hostile mobs now spawn within the intended local `nearest rank ±5` band and still feel coherent around multiplayer groups
-- Re-run in-game verification of the new `500` HP clamp and overflow-to-defense conversion, especially on Warden-tier mobs
-- Re-run in-game verification that the new rank-based base-defense curve prevents one-shots without making low-tier mobs feel spongey
-- Re-run in-game verification that adventure-rank-based enemy outgoing damage still feels fair with current `damage_reduction` values
-- Re-run in-game verification that the new Adventure Rank natural-regeneration table uses the intended combat / non-combat rates across rank bands and scales down correctly with low food
-- Re-run in-game verification that high `damage_reduction` values such as `80-95%` now materially reduce incoming zombie / skeleton damage on live server runtime
-- Re-run in-game verification that Masquerade clamps total player `damage_reduction` to `50%` even when equipment and support buffs together exceed that value on paper
-- Re-run in-game verification that `physical_resistance` reduces melee / projectile damage while `arcane_resistance` reduces fire / frost / magic-class damage, and confirm the legacy `damage_reduction` fallback still behaves correctly on old debug gear
-- Re-run in-game verification that hostile combat profiles apply the intended species-fixed attack type, especially `witch / blaze / ghast / guardian / evoker / elder_guardian / shulker`
-- Re-run in-game verification that hostile-side `physical` / `arcane` resistance actually changes live damage numbers for zombies, skeletons, casters, and Warden-tier enemies
-- Re-run in-game verification that hostile overhead labels now show both `物耐 / 術耐` and remain readable in crowded combat
-- Re-run in-game verification that adventure-rank loot scaling feels appropriate for zombies, skeletons, and wardens at low and high ranks
-- Decide whether nearest-player mob rank assignment should remain the long-term multiplayer rule or become configurable later
-- Re-run in-game verification of the revised drop tiers and confirm zombie, skeleton, and warden drops now match their intended rarity and level bands
-- Re-run in-game verification that artifact drops now rotate across all five Hinagata set pieces with sensible slot diversity
-- Re-run in-game verification that zombie drops skew toward survival stats, skeleton drops skew toward offense/crit, and warden drops skew toward premium mixed stats
-- Re-run in-game combat verification of the new base crit profile and confirm the default `5%` crit chance feels correct with the current damage pacing
-- Re-run in-game verification that outgoing damage bonus and incoming damage reduction now surface in action-bar feedback cleanly during live combat
-- Re-run in-game verification that the new typed hit feedback shows `物 / 術 / 確` correctly for melee, arcane weapons, and fixed-damage skills without burying crit visibility
-- Re-run in-game verification that `/cresora_credits` shows correct balances for normal players and admin subcommands
-- Re-run in-game verification that artifact upgrades consume `CSC 500` and no longer consume player XP
-- Re-run in-game verification that the upgrade GUI locks and unlocks correctly when CSC balance changes
-- Revisit CSC reward coefficients after live play and confirm low-rank and high-rank income pacing both feel right
-- Decide later whether CSC reward values should move from code constants into JSON content data
-- Re-run in-game verification that the expanded hostile pool actually drops artifacts and upgrade materials at the intended rates across overworld, nether, ocean, raid, and end mobs
-- Re-run in-game verification that expanded hostile families grant sensible CSC and adventure-rank XP values at low and high `Lv`
-- Re-run in-game verification that elite enemies such as `evoker`, `ravager`, `piglin_brute`, `elder_guardian`, `shulker`, and `warden` feel rewarding without flooding high-rarity drops
-- Re-run in-game verification that `rondo_melody_fragment` drops from hostile mobs at `Lv 5+` and that `rondo_melody` rarity rolls begin at `Lv 5 / 25 / 45 / 65`
-- Re-run in-game verification that `Lv 70+` mobs give the intended five-star / fragment bonus behavior for `rondo_melody`
-- Re-run in-game verification that `Melody of the Rondo` starts near wooden-sword strength and exceeds diamond-tier damage after enough base levels
-- Re-run in-game verification that the shield skill lasts `15` seconds, absorbs the configured amount, and respects the `20` second cooldown
-- Re-run in-game verification that `masquerade_invitation` heals the intended amount at each skill level and still triggers its `30` second cooldown correctly
-- Re-run in-game verification that sneak-right-click opens the weapon upgrade UI while normal right-click still triggers the skill
-- Re-run in-game verification that the `Melody of the Rondo` shield now blocks damage correctly even with `damage_reduction` at `0%`
-- Re-run in-game verification that weapon-skill cooldown no longer blocks sneak-right-click weapon leveling
-- Re-run in-game verification that mixed weapon effect types now render correctly in tooltip and weapon-upgrade UI without leaving any hardcoded shield wording behind
-- Re-run in-game verification that `rondo_melody` and `masquerade_invitation` now maintain separate cooldown boss bars and do not share cooldown state
-- Re-run in-game verification that `gaoshan_liushui` applies `子期 / 伯牙` correctly: self-heal, overflow-to-temporary-guard, ally pulses every 2 seconds, and hostile knockback around buffed allies
-- Re-run in-game verification that `hanwu_juanxue` only gains `残雪` stacks during its 10-second skill window, caps at 5 stacks, and adds the intended crit-damage bonus in live combat
-- Re-run in-game verification that `hanwu_juanxue` Frost refreshes cleanly without stacking duplicate debuffs, ramps damage once per second, and respects the per-second damage cap at each skill level
-- Re-run in-game verification that the `hanwu_juanxue` snowfield `+50%` attack bonus triggers in snowy biomes / snow blocks and stays inactive elsewhere
-- Re-run in-game verification that treasure chests remain special after full server restart and still award the saved `CSC / CP` values when opened later
-- Re-run in-game verification that base weapon leveling works cleanly once fragments are present and the new UI status text matches the real blocker
-- Re-run in-game verification that the new cooldown progress action-bar feedback feels readable and not too spammy during combat
-- Re-run in-game verification that weapon dismantling returns the intended fragment counts for dropped versus leveled weapons and never enables craft-profit loops
-- Re-run in-game verification that the new three-click confirmation flow resets correctly when the target or material stack changes mid-operation
-- Re-run in-game verification that the newly imported custom item PNG textures render correctly in inventory, tooltip, GUI, and held-item contexts
-- Replace the temporary copied PNGs for `requiem_toward_dawn` and `requiem_toward_dawn_fragment` once final art is ready
-- Re-run in-game verification that the active `v1.3.2` Music Echo really applies `all mob damage taken x0.97` in live combat, including passive mobs and hostile mobs
-- Decide later whether `Music Echo` should remain global for all `MobEntity` instances or split into separate hostile / passive / boss bands once more seasonal balance rules exist
-- Revisit whether weapon base-level upgrades should keep using a flat one-fragment cost per level or move to a richer formula later
-- Decide later whether weapon fragments should also award CSC or adventure-rank XP on pickup
-- Add distinct high-rarity weapon upgrade formulas once star `3 / 4 / 5` balancing is defined
-- Re-run in-game verification that `/cresora_shop` opens for normal players, shows current CSC, and correctly deducts CSC on purchase
-- Re-run in-game verification that `/cresora_shop` can sell Echoes for the displayed CSC value and returns the correct balance immediately
-- Re-run in-game verification that the new vanilla resource packs in `/cresora_shop` deliver the intended item counts and pricing
-- Re-run in-game verification that completed advancements now grant CSC exactly once on completion
-- Re-run in-game verification that positive XP gain grants CSC without double-counting unusual sources such as commands, furnaces, or bottle o' enchanting
-- Re-run in-game verification that passive or neutral mob kills grant CSC at the intended low-but-meaningful pace
-- Re-run in-game verification that `zankyo_kanata_alpha` opens its selection UI from the artifact-upgrade right slot and safely returns items when canceled
-- Re-run in-game verification that `zankyo_kanata_alpha` correctly swaps to the same slot on another set once a second set is added to `equipment_content.json`
-- Re-run in-game verification that `zankyo_kanata_beta` rerolls the target artifact to max level and guarantees at least two hits on one of the two selected stat types
-- Decide later whether `zankyo_kanata_alpha` should preserve rarity or level once the multi-set farming loop is balanced in live play
-- Revisit whether `artifact_special_items.json` should also drive item-model fallback selection instead of relying on manually added resource files
-- Re-run in-game verification that `/cresora_domain` opens for normal players and shows all starter domains with correct unlock gates and entry costs
-- Decide whether the old `秘境` menu should remain as a backward-compatibility launcher or be hidden now that the same stages also live under `楽章演奏`
-- Re-run in-game verification that `楽章演奏` group `0` now lists `0-0 -> 0-1 -> D0-1 -> D0-2 -> 0-2` in the intended order
-- Re-run in-game verification that domain-linked story stages preserve repeatable domain rewards while still unlocking their own stage clear flag exactly once
-- Re-run in-game verification that story chapter `0-0` now pays both `rondo_forge` and `masquerade_soiree` reward pools after clear, while `0-1` pays the `credit_drill` reward pool without needing separate side-stage entries
-- Re-run in-game verification that domain entry correctly consumes CSC once, teleports into the arena, and returns the player to the original position after clear
-- Re-run in-game verification that clearing a domain with a full inventory still returns the player immediately and drops overflow rewards at the return point
-- Re-run in-game verification that `/cresora_story start 0-0` plays the pre-battle line, spawns exactly one `Lv 2` zombie, then plays the post-battle line and grants the configured rewards
-- Re-run in-game verification that story dialogue now follows the active client language and that the `3, 2, 1` countdown is readable right before combat starts
-- Re-run in-game verification that the dedicated story dialogue screen advances correctly with `Continue`, `Auto`, and `Skip`, and that it closes cleanly on battle start, fail, reward open, death, and disconnect
-- Re-run in-game verification that repeated `AUTO` advancement across multiple story lines no longer crashes the client after the `Screen.title` update fix
-- Re-run in-game verification that the dedicated story dialogue screen can close on countdown-start, chapter clear, and chapter fail without disconnecting the client after the `story_dialogue_close` packet fix
-- Re-run in-game verification that story dialogue still resolves correctly after the split to `story_texts.json`, including fallback behavior when the client locale is unsupported
-- Re-run in-game verification that story titles now appear correctly in chapter selection, stage selection, `/cresora_story list`, and start/clear/fail messages for all supported locales
-- Re-run in-game verification that chapter `0-2` stays locked until `0-1` is cleared, grants the temporary max-level `円舞曲のメロディ`, shows the per-second survival countdown cleanly, and succeeds exactly after `45` seconds of survival against the `Lv 50` fixed-damage-immune `100%` damage-reduction skeleton
-- Re-run in-game verification that `楽章演奏` and `秘境` both reject entry when the main inventory is completely full and still allow entry again as soon as one slot is freed
-- Re-run in-game verification that story chapter `0-1` grants both temporary tutorial weapons, shows the three combat hint lines, starts a single `Lv 30` zombie fight, and reclaims the loaned weapons on clear / fail / leave
-- Re-run in-game verification that `0-1` stays locked until `0-0` is cleared, including after death / relog, and that it unlocks immediately once `0-0` clear is recorded
-- Re-run in-game verification that `/cresora` opens the new root menu and each menu tile routes to the intended screen
-- Re-run in-game verification that Story chapter selection shows `第0章` and then `0-0` in the next screen with the expected unlock text
-- Re-run in-game verification that replaying a cleared movement performance no longer grants CSC / resonance rewards a second time
-- Re-run in-game verification that Masquerade loadout selection only accepts custom weapons and restores the original inventory correctly after clear, timeout, death, and disconnect
-- Re-run in-game verification that Masquerade support choices appear after each cleared wave, stay cumulative, and stop appearing once the current support pool is exhausted
-- Re-run in-game verification that the `skip wave divisible by 4` and `five-wave 50% damage nullify` supports behave correctly under live combat timing
-- Re-run in-game verification that changing `seasonId` in `masquerade_content.json` archives the old season record, resets the current season stats, and still shows the previous season best wave correctly
-- Revisit the first-pass Masquerade wave table after runtime testing; the current 30-wave JSON is a functional scaffold, not final balance
-- Re-run in-game verification that opening `楽章演奏` no longer crashes the client after the 1.21.7 blur-path fix in the dedicated story dialogue screen
-- Re-run in-game verification that domain failure on death and manual leave cleans up spawned mobs and frees the arena slot
-- Re-run in-game verification that domain waves spawn in the intended order and use the session-fixed enemy Lv instead of nearby-player rank lookup
-- Re-run in-game verification that domain mobs still feel fair under the added domain combat scalars, especially elite waves near rank `55-70`
-- Re-run in-game verification that `hinagata_archive` drops focused Hinagata pieces, `rondo_forge` drops focused Rondo fragments, and `credit_drill` pays out CSC / rank XP at the intended pace
-- Re-run in-game verification that `masquerade_soiree` drops focused `masquerade_invitation_fragment` rewards at the intended rate
-- Re-run in-game verification that `requiem_reliquary` and `lakeside_sanctum` unlock at the intended ranks and pay out the correct focused weapon fragments
-- Decide later whether domain mobs should keep their normal field-drop behavior or switch to clear-reward-only for tighter economy control
-- Decide later whether domain selection should surface more per-domain detail in-screen instead of relying on compact slot names
-- Re-run in-game verification that `/cresora_resonance` opens for normal players, consumes exactly `325` resonance currency per pull, and grants the rolled weapon without desync
-- Re-run in-game verification that the new persistent resonance balances survive death, relog, and server restart exactly like `CSC`
-- Re-run in-game verification that the resonance result screen `Back` / `Pull Again` buttons target the correct banner and refuse pulls cleanly when balance is insufficient
-- Re-run in-game verification that limited resonance pity rises correctly from pull `100` onward and guarantees the featured `5-star` by pull `150`
-- Re-run in-game verification that `Arpeggio Concerto` arms after three consecutive `100+` pull featured wins and then forces the next featured `5-star` within `100` pulls
-- Re-run in-game verification that the resonance result screen always shows the actual pulled weapon and rarity after both limited and standard pulls
-- Re-run in-game verification that `lakeside_stride` shows its crit-rate bonus, level curve, and percent-damage skill correctly in tooltip and weapon-upgrade UI
-- Re-run in-game verification that `lakeside_stride` skill upgrade consumes the intended `CSC 10,000n^2` plus exactly `n` selected `4-star+` artifacts
-- Re-run in-game verification that the weapon-skill material selection screen cannot be abused to consume invalid artifacts or duplicate upgraded weapons
-- Decide later whether limited resonance should keep a pure featured-only `5-star` pool or introduce off-banner `5-star` outcomes once more premium weapons exist
-- Re-run in-game verification that treasure chests spawn at sensible nearby positions in caves, surface terrain, forests, and tight indoor spaces
-- Re-run in-game verification that five active treasure chests per player feels readable and does not over-clutter multiplayer staging areas
-- Re-run in-game verification that permanent treasure chests do not create unacceptable world clutter or stray chest blocks across relog / restart scenarios
+## System Expansion & Refinement
+- 汎用装備システムを拡張し、将来の新しい装備カテゴリが同じ生成・成長バックエンドを再利用できるようにする
+- 新しいセット効果フック（equip change, attack dealt, damage taken, kill, tick）の本格的なハンドラを実装し、ステータス加算以外の動的なセットボーナスを可能にする
+- `equipment_content.json` の肥大化に備え、レジストリスキーマを維持したままリソースファイルを分割することを検討する
+- 武器のベースレベルアップグレードについて、一律フラグメント1個のコストを維持するか、より複雑な式に移行するかを再検討する
+- 星3/4/5のバランスが定義された後、高レアリティ武器専用のアップグレード式を追加する
+
+## Balancing & Decision Making
+- レアリティごとの出現率、ステータスのロール範囲、および生贄強化のペイオフバランスを再調整する
+- CSC報酬係数を実機プレイ後に再評価し、低ランクと高ランクの収入ペースを最適化する
+- マスカレードのウェーブテーブル（現在の30ウェーブ）は機能的な足場に過ぎないため、実戦テストに基づき本質的なバランス調整を行う
+- マルチプレイ時におけるモブランクの割り当てルール（最短距離のプレイヤー参照）を長期的な仕様とするか、設定可能にするか決定する
+- CSC報酬値をコード定数からJSONコンテンツデータに移動するか検討する
+- 武器フラグメントの入手時にCSCや冒険ランクXPも付与するか検討する
+- ドメインのモブに通常のフィールドドロップを維持させるか、経済制御のためにクリア報酬のみに切り替えるか検討する
+- ドメイン選択画面で、スロット名だけでなく詳細な情報を表示するようにUIを洗練させるか検討する
+- 限定レゾナンスの星5プールをピックアップ確定のみにするか、恒常星5を含めるか検討する（武器の種類が増えた段階で）
+- 「楽曲の残響 (Music Echo)」を全モブ共通のグローバル設定とするか、敵対/受動/ボスなどのカテゴリに分割するか検討する
+- `cadenza_allegro` の実機確認を行い、変身羊の元モブ通常ドロップ・Cresora追加ドロップ・エリート除外が各 hostile family で期待どおり揃っているか検証する
+- `kyokusui_no_ryusho` の実機確認を行い、`詠歌` の自然回復段階上昇、`着手` の石盾耐久、`揮毫` の無敵重複、`之` の貫通ダメージが戦闘中に期待どおり噛み合うか検証する
+- 共通化後の武器欠片について、旧欠片在庫と新共通欠片が混在した状態で base 強化・分解・秘境報酬表示が期待どおり動くか実機確認する
+- `/jikki-tesuto` による実機起動フローの安定性を継続的に確認する (2026-04-05 成功)
+
+## Assets & GUI
+- `requiem_toward_dawn` およびそのフラグメントの最終アートが完成次第、一時的なPNGを差し替える
+- 装備アップグレードの詳細表示をGUIパネルからマウスオーバーのツールチップへ集約する作業を継続する
+- 視認性向上のため、テキストノイズを減らし、レイアウトと階層構造による直感的なGUIデザインを追求する
+- 新規追加アイテムのテクスチャ差し替え時は `models/item` だけでなく `assets/cresora-utilities/items/*.json` の存在も合わせて確認する
+
+## Documentation
+- `cresora_document.md` を今後の weapon / story / registry 変更に追従させ、JSON スキーマ差分とコード側の責務分離を崩さない

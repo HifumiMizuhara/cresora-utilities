@@ -24,6 +24,11 @@
 - Built the remapped `1.3.2.4` release jar under `build/libs`
 - Fixed `1.21.7` startup issues caused by missing `registryKey` during item registration
 
+## Documentation
+
+- Created `cresora_document.md` at the project root, summarizing the current internal API surface across initialization, data components, registries, services, commands, and JSON-driven content entry points
+- Fixed `Minecraft 1.21.7` item-render routing for recently added weapon / fragment assets by adding the missing `assets/cresora-utilities/items/*.json` item-definition files for `cadenza_allegro`, `kyokusui_no_ryusho`, `pastoral_flute_reverie`, and the shared `weapon_fragment_*` items
+
 ## Core Logic Fixes
 
 - Corrected `MOD_ID` to `cresora-utilities`
@@ -46,6 +51,11 @@
 - Added JSON-backed hostile combat profiles with species-fixed attack types plus per-mob `physical` / `arcane` resistance values
 - Applied hostile-side resistance reduction during live combat, so enemy archetypes now actually mitigate incoming typed damage instead of the split model living only on the player side
 - Expanded combat feedback to show typed outgoing / incoming damage, enemy resistance lines on hostile overhead labels, and typed floating damage markers including fixed-damage hits
+- Fixed `TreasureChestService` so it no longer probes unloaded chunks during cleanup / particle passes or chest-state restore, which was a strong candidate for the post-logout `Can't keep up!` spikes after all player chunks unloaded
+- Added persistent hostile classification data for `normal / elite` mob tags plus optional pack IDs, saved directly on mobs alongside the existing Adventure Rank data
+- Added natural field pack spawning with a fixed chance, generating `3-5` monsters per pack and guaranteeing `1-2` elites inside each generated pack
+- Added visible overhead classification markers and command tags (`cresora_normal_mob`, `cresora_elite_mob`, `cresora_pack_mob`) so normal mobs and elite mobs can now be targeted or inspected cleanly
+- Added modest field-only elite combat scaling for pack elites without inflating already-scripted domain / Masquerade elites
 
 ## CSC Economy
 
@@ -104,6 +114,8 @@
 - Added a non-stacking Frost debuff runtime that reapplies slowness and deals escalating freeze damage once per second up to the weapon's current skill cap
 - Added the `hanwu_juanxue` snow-environment special rule so its holder gains `+50%` attack while standing in cold / snowy terrain
 - Added multilingual tooltip, passive description, activation text, stack feedback, and standard-resonance banner registration for `hanwu_juanxue`
+- Fixed the new `dark_lux` on-hit status path so normal attacks now actually apply `Dark`; the previous implementation returned early on non-`hanwu_juanxue` weapons and left the `Dark Lux` branch unreachable
+- Reduced `dark_lux` skill cooldown from `40` seconds to `30` seconds in both JSON content and the built-in fallback registry
 - Added persistent world save data for field treasure chests so spawned chest positions and rewards now survive server restarts instead of degrading into untracked vanilla chests
 - Increased `lakeside_stride` true-damage ratio from `0.5n%` to `5n%`
 - Added dedicated temporary texture paths for `requiem_toward_dawn` and its fragment so the weapon no longer points at missing placeholder texture ids
@@ -306,7 +318,15 @@
 - Removed the non-critical outgoing-damage action-bar spam so crit feedback remains visible during live combat
 - Updated the crit-combo action-bar text ordering across all supported languages
 - Expanded the upgrade screen flow so any supported artifact piece can be upgraded or used as sacrifice material
-- Verified the five-piece artifact expansion with a successful `./gradlew build`
+- Re-run local runtime verification on `2026-04-04` using the `/jikki-tesuto` workflow
+- Successfully started both dedicated server and client on `Minecraft 1.21.7`
+- Confirmed the client can connect to the local server (`localhost:25565`)
+- Automatically detected player join (`Player990`) and granted `op` status
+- Verified chat feedback for the `op` command in the client console
+- Successfully executed the `/jikki-tesuto` (integrated server/client test) on `2026-04-05`
+- Confirmed the dedicated server starts, accepts player `Player24`, and automatically grants `op` status
+- Confirmed the client connects successfully and receives the `op` feedback in the chat HUD
+
 
 ## Adventure Rank System
 
@@ -363,6 +383,42 @@
 - Added dynamic treasure chests around players that award `CSC` plus `Chord Progression`, with star-3 / star-4 / star-5 payouts of `400 + 100`, `1000 + 125`, and `1500 + 150`
 - Changed treasure-chest behavior so they no longer expire, no longer enforce owner locks, and now maintain up to `5` active chests per player instead of `1`
 
+## Weapon System Phase 3: Dark Lux
+
+- Added the new ★5 weapon `Dark Lux` (ダーク・ルクス / 暗芒) with complex binary status interaction mechanics
+- Implemented the `Dark` status (10s duration) applied on normal attacks, reducing Physical Resistance by `20%`
+- Implemented the `Lux` status (30s duration) applied to all monsters within a 5m radius on skill activation, reducing Arcane Resistance by `20%`
+- Added the `Binary Interaction` logic triggered when both Dark and Lux exist simultaneously:
+    - **Annihilation (20%)**: Target loses `90%` of current HP; up to 3 nearby mobs take `20%` of their Max HP as true damage. Statuses cleared.
+    - **Entanglement (20%)**: Target's Physical and Arcane resistance reduced by `50%` for 10s. Prevents re-application of Dark/Lux during this period. Statuses cleared.
+    - **Dark Collapse (60%)**: Player heals `5%` Max HP; skill cooldown reduced based on player's missing HP percentage (e.g., `95%` reduction at `1/20` HP).
+- Updated `LivingEntityMixin` to dynamically apply resistance offsets from these status effects during damage calculation
+- Added `[D]`, `[L]`, and `[E]` status markers to the mob overhead labels in `CombatMobDisplayService` for visual feedback
+- Verified the implementation with a successful `./gradlew classes` build
+- Added the new `3-star` weapon `牧笛の追想 / 牧笛追想 / Pastoral Flute Reverie` as `pastoral_flute_reverie`
+- Implemented the `sunlit_haste` skill so the weapon grants `+40%` move speed for `50s`, upgrades to `+60%` under direct sunlight, and loops cleanly on a matching `50s` cooldown
+- Added `pastoral_flute_reverie` to both resonance banner `3-star` pools, localized all supported languages, and supplied placeholder item models so it renders cleanly before custom textures arrive
+- Updated weapon-upgrade UI value/unit handling so percent-based move-speed skills no longer display as heart-based effects
+
+- Added the new ★4 weapon `cadenza_allegro` (意気羊々たるカデンツァ / 得意羊羊狂想曲) with the "Baa-Mimic" skill
+- Implemented the `baa_mimic` skill logic in `WeaponSkillService` to transform $n$ nearby non-elite enemies into sheep, with $n$ scaling by weapon level (Lv 1-40: 1, 41-60: 2, 61+: 3)
+- Added `SheepEntityMixin` to handle loot inheritance from the original transformed monster and implement the "Fluffy Blessing" passive (doubles wool drops when the weapon is in inventory)
+- Added localized strings for the new weapon and its unique effects in `ja_jp.json`
+- Fixed the `baa_mimic` loot pipeline for `Minecraft 1.21.7` by moving transformed-sheep death handling onto the shared `LivingEntity.dropLoot` path, rebuilding original hostile loot generation with `LootWorldContext`, and preserving Cresora weapon/special drop logic after transformation kills
+- Fixed the `cadenza_allegro` passive so sheep death and shearing now grant only the intended extra wool instead of duplicating whole loot tables, and excluded transformed mimic sheep from the passive bonus
+- Added the missing `cadenza_allegro` item model, fallback registry entry, resonance-pool registration, multilingual tooltip/passive text, and corrected its JSON upgrade settings to a non-scaling skill configuration
+- Repaired corrupted trailing JSON in `en_us`, `zh_cn`, and `lzh` language files and re-verified the whole project with a successful `./gradlew build`
+- Added the new standard ★5 weapon `kyokusui_no_ryusho` (曲水流觞 / Kyokusui no Ryusho) with the `orchid_pavilion_echo` skill, including JSON/fallback definitions, placeholder item models, standard resonance registration, and multilingual names/tooltips
+- Implemented the full `蘭亭の絶唱 / Orchid Pavilion Echo` runtime: 16-second random 2-second pulses, `Raise a Cup` attack/crit/[之] piercing stacks, `Recite Poetry` armor/natural-regen-stage boosts, `Place a Stone` stackable stone guard, `Ink Brush` invulnerability windows plus nearby ally healing, and automatic cleanup when the skill expires
+- Extended live combat hooks so `kyokusui_no_ryusho` buffs now feed into attack attributes, armor attributes, crit damage, natural regeneration, and true-damage follow-up hits, then verified the whole project with a successful `./gradlew build`
+- Reworked weapon fragments from weapon-specific items to rarity-shared items (`★2 / ★3 / ★4 / ★5`), added the new shared fragment items/models/localization, and switched domain rewards, field drops, dismantle returns, and upgrade cost checks to the rarity fragment path
+- Preserved backward compatibility for legacy weapon-specific fragments by keeping the old items registered and allowing them to be consumed as equivalent same-rarity materials, while blocking all new acquisition routes from producing those legacy fragment items
+- Updated domain / linked-story reward labels so `楽章演奏` and domain previews now show the new shared rarity fragment names instead of obsolete weapon-specific fragment names
+- Successfully executed the `/jikki-tesuto` (integrated server/client test) on `2026-04-05`
+- Confirmed the dedicated server starts, accepts player `Player24`, and automatically grants `op` status
+- Confirmed the client connects successfully and receives the `op` feedback in the chat HUD
+
+
 ## Current State
 
 - Core upgrade logic is working
@@ -373,3 +429,10 @@
 - The project is ready to continue feature work from a dedicated `dev` branch
 - Added [Version_1.2.0_log.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/version_log/Version_1.2.0_log.md) as a multilingual version log entry under `version_log/`
 - Expanded [Version_1.2.0_log.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/version_log/Version_1.2.0_log.md) with a Literary Chinese (Simplified Script) section for release notes only
+- Client Mixin added to hide Vanilla player HP bar and render it as numeric text (HP: xxx / yyy) via InGameHudMixin.
+- Successfully executed the `/jikki-tesuto` (integrated server/client test) on `2026-04-05`
+- Confirmed the dedicated server starts with the updated `ArenaManager.kt` ceiling and lighting logic
+- Corrected the `BlockRotation` import path to `net.minecraft.util.BlockRotation` following a compilation failure after manual user changes
+- Automatically granted `op` status to `Player798` and verified connection stability
+- Confirmed the client connects successfully and receives the `op` feedback in the chat HUD
+- Verified that the server properly compiles the new ceiling logic into the fallback arena generation

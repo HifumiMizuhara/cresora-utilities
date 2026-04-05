@@ -31,6 +31,11 @@
           "weaponId": "gaoshan_liushui",
           "rarity": "4_star",
           "weight": 1.0
+        },
+        {
+          "weaponId": "cadenza_allegro",
+          "rarity": "4_star",
+          "weight": 1.0
         }
       ],
       "threeStarPool": [
@@ -41,6 +46,11 @@
         },
         {
           "weaponId": "masquerade_invitation",
+          "rarity": "3_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "pastoral_flute_reverie",
           "rarity": "3_star",
           "weight": 1.0
         }
@@ -86,6 +96,11 @@
           "weaponId": "hanwu_juanxue",
           "rarity": "5_star",
           "weight": 1.0
+        },
+        {
+          "weaponId": "kyokusui_no_ryusho",
+          "rarity": "5_star",
+          "weight": 1.0
         }
       ],
       "fourStarPool": [
@@ -98,6 +113,11 @@
           "weaponId": "gaoshan_liushui",
           "rarity": "4_star",
           "weight": 1.0
+        },
+        {
+          "weaponId": "cadenza_allegro",
+          "rarity": "4_star",
+          "weight": 1.0
         }
       ],
       "threeStarPool": [
@@ -108,6 +128,11 @@
         },
         {
           "weaponId": "masquerade_invitation",
+          "rarity": "3_star",
+          "weight": 1.0
+        },
+        {
+          "weaponId": "pastoral_flute_reverie",
           "rarity": "3_star",
           "weight": 1.0
         }

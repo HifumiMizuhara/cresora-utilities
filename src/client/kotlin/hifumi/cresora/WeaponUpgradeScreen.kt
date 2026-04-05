@@ -199,6 +199,7 @@ class WeaponUpgradeScreen(
         return when (effectId) {
             "current_hp_true_damage" -> Text.translatable("item.cresora.weapon.unit.percent_current_hp")
             "flame_aura" -> Text.translatable("item.cresora.weapon.unit.seconds")
+            "sunlit_haste" -> Text.translatable("item.cresora.weapon.unit.percent")
             else -> Text.translatable("item.cresora.weapon.unit.hearts")
         }
     }

@@ -57,6 +57,10 @@ object WeaponCombatSupport {
         return definition.skill.baseValue + definition.skill.valuePerLevel * data.skillLevel
     }
 
+    fun secondarySkillValuePercent(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.secondaryBaseValue + definition.skill.secondaryValuePerLevel * data.skillLevel
+    }
+
     fun skillValueHp(definition: WeaponDefinition, data: WeaponData): Float {
         return (skillValueHearts(definition, data) * 2.0).toFloat()
     }

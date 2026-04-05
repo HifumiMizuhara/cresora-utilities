@@ -9,6 +9,8 @@ object WeaponAttributeService {
     private val ATTACK_DAMAGE_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_attack_damage")
     private val ATTACK_SPEED_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_attack_speed")
     private val SNOW_ATTACK_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_snow_attack_scalar")
+    private val ORCHID_PAVILION_ATTACK_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_orchid_pavilion_attack_scalar")
+    private val ORCHID_PAVILION_ARMOR_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_orchid_pavilion_armor_scalar")
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -32,6 +34,18 @@ object WeaponAttributeService {
                     player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE),
                     SNOW_ATTACK_SCALAR_ID,
                     if (definition != null && data != null) WeaponSkillService.snowEnvironmentAttackScalar(player, definition.id) else 0.0,
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+                updateModifier(
+                    player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE),
+                    ORCHID_PAVILION_ATTACK_SCALAR_ID,
+                    WeaponSkillService.orchidPavilionAttackScalar(player),
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+                updateModifier(
+                    player.attributes.getCustomInstance(EntityAttributes.ARMOR),
+                    ORCHID_PAVILION_ARMOR_SCALAR_ID,
+                    WeaponSkillService.orchidPavilionArmorScalar(player),
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
             }

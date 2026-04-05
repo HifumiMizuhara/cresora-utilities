@@ -29,6 +29,7 @@ object AdventureRankHooks {
         ServerEntityEvents.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, world ->
             val hostile = entity as? HostileEntity ?: return@Load
             val rank = AdventureRankService.getOrAssignMobRank(hostile, world)
+            FieldMobPackService.ensureClassification(hostile)
             AdventureRankService.applyMobScaling(hostile, rank)
         })
 

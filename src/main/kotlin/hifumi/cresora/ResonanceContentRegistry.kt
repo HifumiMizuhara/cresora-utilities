@@ -204,7 +204,8 @@ object ResonanceContentRegistry {
                     fiveStarPool = listOf(
                         ResonanceWeaponEntry("rondo_melody", WeaponRarity.FIVE_STAR, 1.0),
                         ResonanceWeaponEntry("masquerade_invitation", WeaponRarity.FIVE_STAR, 1.0),
-                        ResonanceWeaponEntry("hanwu_juanxue", WeaponRarity.FIVE_STAR, 1.0)
+                        ResonanceWeaponEntry("hanwu_juanxue", WeaponRarity.FIVE_STAR, 1.0),
+                        ResonanceWeaponEntry("kyokusui_no_ryusho", WeaponRarity.FIVE_STAR, 1.0)
                     ),
                     fourStarPool = standardFourStarPool(),
                     threeStarPool = standardThreeStarPool(),
@@ -226,14 +227,16 @@ object ResonanceContentRegistry {
     private fun standardFourStarPool(): List<ResonanceWeaponEntry> {
         return listOf(
             ResonanceWeaponEntry("requiem_toward_dawn", WeaponRarity.FOUR_STAR, 1.0),
-            ResonanceWeaponEntry("gaoshan_liushui", WeaponRarity.FOUR_STAR, 1.0)
+            ResonanceWeaponEntry("gaoshan_liushui", WeaponRarity.FOUR_STAR, 1.0),
+            ResonanceWeaponEntry("cadenza_allegro", WeaponRarity.FOUR_STAR, 1.0)
         )
     }
 
     private fun standardThreeStarPool(): List<ResonanceWeaponEntry> {
         return listOf(
             ResonanceWeaponEntry("rondo_melody", WeaponRarity.THREE_STAR, 1.0),
-            ResonanceWeaponEntry("masquerade_invitation", WeaponRarity.THREE_STAR, 1.0)
+            ResonanceWeaponEntry("masquerade_invitation", WeaponRarity.THREE_STAR, 1.0),
+            ResonanceWeaponEntry("pastoral_flute_reverie", WeaponRarity.THREE_STAR, 1.0)
         )
     }
 

@@ -30,11 +30,6 @@ data class DomainStartResult(
     val args: List<Any> = emptyList()
 )
 
-private data class DomainArenaSlot(
-    val index: Int,
-    val center: BlockPos
-)
-
 private data class DomainReturnPoint(
     val worldKey: RegistryKey<World>,
     val position: Vec3d,
@@ -51,7 +46,7 @@ private class DomainSession(
     val id: UUID,
     val playerUuid: UUID,
     val domainId: String,
-    val arenaIndex: Int,
+    val arenaCenter: BlockPos,
     val returnPoint: DomainReturnPoint,
     val sessionRank: Int,
     val linkedStoryChapterId: String? = null
@@ -91,21 +86,11 @@ private class DomainSession(
 }
 
 object DomainService {
-    private const val ARENA_Y = 180
-    private const val ARENA_RADIUS = 7
-    private const val ARENA_FAIL_DISTANCE_SQUARED = 30.0 * 30.0
+    private const val ARENA_FAIL_DISTANCE_SQUARED = 32.0 * 32.0
     private const val START_DELAY_TICKS = 40L
-
-    private val ARENA_SLOTS: List<DomainArenaSlot> = listOf(
-        DomainArenaSlot(0, BlockPos(0, ARENA_Y, 0)),
-        DomainArenaSlot(1, BlockPos(96, ARENA_Y, 0)),
-        DomainArenaSlot(2, BlockPos(192, ARENA_Y, 0)),
-        DomainArenaSlot(3, BlockPos(288, ARENA_Y, 0))
-    )
 
     private val sessionsByPlayer: MutableMap<UUID, DomainSession> = linkedMapOf()
     private val sessionsById: MutableMap<UUID, DomainSession> = linkedMapOf()
-    private val sessionByArenaIndex: MutableMap<Int, UUID> = linkedMapOf()
     private val mobRuntime: MutableMap<UUID, DomainRuntimeMob> = linkedMapOf()
 
     fun hasActiveSession(player: ServerPlayerEntity): Boolean = sessionsByPlayer.containsKey(player.uuid)
@@ -159,19 +144,22 @@ object DomainService {
         if (!CreditsService.hasCredits(player, domain.entryCostCsc)) {
             return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
         }
-        val arena = allocateArena() ?: return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.no_arena" else "commands.cresora.story.no_arena")
+
+        val server = player.server ?: return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.invalid" else "commands.cresora.story.invalid")
+        val arenaWorld = ArenaManager.getDomainWorld(server) ?: return DomainStartResult(false, "screen.cresora.domain.no_world")
+        
         if (!CreditsService.spendCredits(player, domain.entryCostCsc)) {
             return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
         }
 
-        val server = player.server ?: return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.invalid" else "commands.cresora.story.invalid")
-        val arenaWorld = server.overworld
-        ensureArena(arenaWorld, arena.center)
+        val arenaCenter = ArenaManager.getArenaPosForPlayer(player.uuid)
+        ArenaManager.ensureArena(arenaWorld, arenaCenter)
+
         val session = DomainSession(
             id = UUID.randomUUID(),
             playerUuid = player.uuid,
             domainId = domain.id,
-            arenaIndex = arena.index,
+            arenaCenter = arenaCenter,
             returnPoint = DomainReturnPoint(player.world.registryKey, player.pos, player.yaw, player.pitch),
             sessionRank = DomainCombatProfile.sessionRank(rank),
             linkedStoryChapterId = linkedStoryChapterId
@@ -179,10 +167,9 @@ object DomainService {
         session.nextSpawnTick = arenaWorld.time + START_DELAY_TICKS
         sessionsByPlayer[player.uuid] = session
         sessionsById[session.id] = session
-        sessionByArenaIndex[arena.index] = session.id
 
         player.health = player.maxHealth
-        teleportPlayer(player, arenaWorld, Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5), 180.0f, 0.0f)
+        teleportPlayer(player, arenaWorld, Vec3d(arenaCenter.x + 0.5, arenaCenter.y + 1.0, arenaCenter.z + 0.5), 180.0f, 0.0f)
         if (linkedStoryChapterId == null) {
             player.sendMessage(Text.translatable("screen.cresora.domain.entered", Text.translatable(domain.nameKey), session.sessionRank), false)
             return DomainStartResult(true, "screen.cresora.domain.entered", listOf(Text.translatable(domain.nameKey), session.sessionRank))
@@ -225,12 +212,13 @@ object DomainService {
             failSession(server, session, null, "screen.cresora.domain.failed_leave", restorePlayer = false)
             return
         }
-        if ((player.world as? ServerWorld)?.registryKey != World.OVERWORLD || player.squaredDistanceTo(sessionArena(session)) > ARENA_FAIL_DISTANCE_SQUARED) {
+        
+        val world = ArenaManager.getDomainWorld(server) ?: return
+        if (player.world.registryKey != ArenaManager.DOMAIN_WORLD_KEY || player.squaredDistanceTo(session.arenaCenter.toCenterPos()) > ARENA_FAIL_DISTANCE_SQUARED) {
             failSession(server, session, player, "screen.cresora.domain.failed_leave", restorePlayer = true)
             return
         }
 
-        val world = server.overworld
         cleanupInactiveMobs(world, session)
 
         if (session.preparingNextWave) {
@@ -271,13 +259,14 @@ object DomainService {
         repeat(wave.count.coerceAtLeast(1)) { index ->
             val entityType = rollEntityType(pool, world.random) ?: return@repeat
             val spawnPos = BlockPos.ofFloored(
-                sessionArena(session).x + randomOffset(world.random, index),
-                sessionArena(session).y + 1,
-                sessionArena(session).z + randomOffset(world.random, index + 13)
+                session.arenaCenter.x + 0.5 + randomOffset(world.random, index),
+                session.arenaCenter.y + 1.0,
+                session.arenaCenter.z + 0.5 + randomOffset(world.random, index + 13)
             )
             val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
             val access = hostile as? AdventureRankMobAccess ?: return@repeat
             access.cresoraSetMobAdventureRank(spawnRank)
+            FieldMobPackService.markExplicit(hostile, wave.elite)
             AdventureRankService.applyMobScaling(hostile, spawnRank, scaling.healthScalar, scaling.defenseScalar, scaling.toughnessScalar)
             hostile.target = player
             if (wave.elite) {
@@ -346,7 +335,7 @@ object DomainService {
     }
 
     private fun cleanupSession(server: MinecraftServer, session: DomainSession) {
-        val world = server.overworld
+        val world = ArenaManager.getDomainWorld(server) ?: return
         for (mobUuid in session.activeMobUuids) {
             (world.getEntity(mobUuid) as? HostileEntity)?.discard()
             mobRuntime.remove(mobUuid)
@@ -354,7 +343,6 @@ object DomainService {
         session.activeMobUuids.clear()
         sessionsByPlayer.remove(session.playerUuid)
         sessionsById.remove(session.id)
-        sessionByArenaIndex.remove(session.arenaIndex)
     }
 
     private fun cleanupInactiveMobs(world: ServerWorld, session: DomainSession) {
@@ -446,35 +434,6 @@ object DomainService {
 
     private fun teleportPlayer(player: ServerPlayerEntity, world: ServerWorld, position: Vec3d, yaw: Float, pitch: Float) {
         player.teleport(world, position.x, position.y, position.z, setOf(), yaw, pitch, false)
-    }
-
-    private fun allocateArena(): DomainArenaSlot? {
-        return ARENA_SLOTS.firstOrNull { !sessionByArenaIndex.containsKey(it.index) }
-    }
-
-    private fun ensureArena(world: ServerWorld, center: BlockPos) {
-        val floorY = center.y
-        for (x in -ARENA_RADIUS..ARENA_RADIUS) {
-            for (z in -ARENA_RADIUS..ARENA_RADIUS) {
-                val floorPos = center.add(x, 0, z)
-                val isBorder = kotlin.math.abs(x) == ARENA_RADIUS || kotlin.math.abs(z) == ARENA_RADIUS
-                world.setBlockState(floorPos, if (isBorder) Blocks.POLISHED_DEEPSLATE.defaultState else Blocks.SMOOTH_STONE.defaultState)
-                for (y in 1..5) {
-                    val airPos = floorPos.up(y)
-                    if (isBorder && y <= 2) {
-                        world.setBlockState(airPos, Blocks.TINTED_GLASS.defaultState)
-                    } else {
-                        world.setBlockState(airPos, Blocks.AIR.defaultState)
-                    }
-                }
-            }
-        }
-        world.setBlockState(center, Blocks.SEA_LANTERN.defaultState)
-    }
-
-    private fun sessionArena(session: DomainSession): Vec3d {
-        val arena = ARENA_SLOTS.first { it.index == session.arenaIndex }
-        return Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5)
     }
 
     private fun randomOffset(random: net.minecraft.util.math.random.Random, salt: Int): Double {

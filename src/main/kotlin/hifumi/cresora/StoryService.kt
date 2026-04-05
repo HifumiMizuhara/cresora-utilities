@@ -21,11 +21,6 @@ data class StoryStartResult(
     val args: List<Any> = emptyList()
 )
 
-private data class StoryArenaSlot(
-    val index: Int,
-    val center: BlockPos
-)
-
 private data class StoryReturnPoint(
     val worldKey: RegistryKey<World>,
     val position: Vec3d,
@@ -50,7 +45,7 @@ private class StorySession(
     val id: UUID,
     val playerUuid: UUID,
     val chapterId: String,
-    val arenaIndex: Int,
+    val arenaCenter: BlockPos,
     val returnPoint: StoryReturnPoint
 ) {
     val activeMobUuids: MutableSet<UUID> = linkedSetOf()
@@ -71,22 +66,12 @@ private class StorySession(
 }
 
 object StoryService {
-    private const val ARENA_Y = 180
-    private const val ARENA_RADIUS = 7
-    private const val ARENA_FAIL_DISTANCE_SQUARED = 30.0 * 30.0
+    private const val ARENA_FAIL_DISTANCE_SQUARED = 32.0 * 32.0
     private const val COUNTDOWN_INTERVAL_TICKS = 20L
     private const val START_DELAY_TICKS = 20L
 
-    private val ARENA_SLOTS: List<StoryArenaSlot> = listOf(
-        StoryArenaSlot(0, BlockPos(0, ARENA_Y, 128)),
-        StoryArenaSlot(1, BlockPos(96, ARENA_Y, 128)),
-        StoryArenaSlot(2, BlockPos(192, ARENA_Y, 128)),
-        StoryArenaSlot(3, BlockPos(288, ARENA_Y, 128))
-    )
-
     private val sessionsByPlayer: MutableMap<UUID, StorySession> = linkedMapOf()
     private val sessionsById: MutableMap<UUID, StorySession> = linkedMapOf()
-    private val sessionByArenaIndex: MutableMap<Int, UUID> = linkedMapOf()
     private val mobRuntime: MutableMap<UUID, StoryRuntimeMob> = linkedMapOf()
 
     fun hasActiveSession(player: ServerPlayerEntity): Boolean = sessionsByPlayer.containsKey(player.uuid)
@@ -127,26 +112,27 @@ object StoryService {
         if (InventoryGate.freeMainSlots(player) < requiredFreeSlots) {
             return StoryStartResult(false, "commands.cresora.story.inventory_full", listOf(requiredFreeSlots))
         }
-        val arena = allocateArena() ?: return StoryStartResult(false, "commands.cresora.story.no_arena")
+
         val server = player.server ?: return StoryStartResult(false, "commands.cresora.story.invalid", listOf(chapterId))
-        val storyWorld = server.overworld
-        ensureArena(storyWorld, arena.center)
+        val storyWorld = ArenaManager.getDomainWorld(server) ?: return StoryStartResult(false, "screen.cresora.domain.no_world")
+        
+        val arenaCenter = ArenaManager.getArenaPosForPlayer(player.uuid)
+        ArenaManager.ensureArena(storyWorld, arenaCenter)
 
         val session = StorySession(
             id = UUID.randomUUID(),
             playerUuid = player.uuid,
             chapterId = chapter.id,
-            arenaIndex = arena.index,
+            arenaCenter = arenaCenter,
             returnPoint = StoryReturnPoint(player.world.registryKey, player.pos, player.yaw, player.pitch)
         )
         session.nextEventTick = storyWorld.time + START_DELAY_TICKS
         sessionsByPlayer[player.uuid] = session
         sessionsById[session.id] = session
-        sessionByArenaIndex[arena.index] = session.id
 
         grantStoryWeapons(player, session)
         player.health = player.maxHealth
-        teleportPlayer(player, storyWorld, Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5), 180.0f, 0.0f)
+        teleportPlayer(player, storyWorld, Vec3d(arenaCenter.x + 0.5, arenaCenter.y + 1.0, arenaCenter.z + 0.5), 180.0f, 0.0f)
         val chapterLabel = StoryTextRegistry.chapterLabel(StoryTextRegistry.resolvePlayerLocale(player), chapter)
         return StoryStartResult(true, "commands.cresora.story.started", listOf(chapterLabel))
     }
@@ -177,7 +163,8 @@ object StoryService {
         if (!session.dialogueAwaitingInput) {
             return
         }
-        val world = player.server?.overworld ?: return
+        val server = player.server ?: return
+        val world = ArenaManager.getDomainWorld(server) ?: return
         when (actionId) {
             StoryDialogueActionPayload.ACTION_CONTINUE -> {
                 session.dialogueIndex += 1
@@ -199,12 +186,13 @@ object StoryService {
             failSession(server, session, null, "commands.cresora.story.failed", restorePlayer = false)
             return
         }
-        if ((player.world as? ServerWorld)?.registryKey != World.OVERWORLD || player.squaredDistanceTo(sessionArena(session)) > ARENA_FAIL_DISTANCE_SQUARED) {
+        
+        val world = ArenaManager.getDomainWorld(server) ?: return
+        if (player.world.registryKey != ArenaManager.DOMAIN_WORLD_KEY || player.squaredDistanceTo(session.arenaCenter.toCenterPos()) > ARENA_FAIL_DISTANCE_SQUARED) {
             failSession(server, session, player, "commands.cresora.story.failed", restorePlayer = true)
             return
         }
 
-        val world = server.overworld
         cleanupInactiveMobs(world, session)
 
         when (session.phase) {
@@ -339,9 +327,9 @@ object StoryService {
             val entityType = Registries.ENTITY_TYPE.get(Identifier.of(spawn.entityTypeId))
             repeat(spawn.count) { offsetIndex ->
                 val spawnPos = BlockPos.ofFloored(
-                    sessionArena(session).x + randomOffset(world.random, index * 17 + offsetIndex),
-                    sessionArena(session).y + 1,
-                    sessionArena(session).z + randomOffset(world.random, index * 31 + offsetIndex + 7)
+                    session.arenaCenter.x + 0.5 + randomOffset(world.random, index * 17 + offsetIndex),
+                    session.arenaCenter.y + 1.0,
+                    session.arenaCenter.z + 0.5 + randomOffset(world.random, index * 31 + offsetIndex + 7)
                 )
                 val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
                 val access = hostile as? AdventureRankMobAccess ?: return@repeat
@@ -434,7 +422,7 @@ object StoryService {
     }
 
     private fun cleanupSession(server: MinecraftServer, session: StorySession, player: ServerPlayerEntity?) {
-        val world = server.overworld
+        val world = ArenaManager.getDomainWorld(server) ?: return
         for (mobUuid in session.activeMobUuids) {
             (world.getEntity(mobUuid) as? HostileEntity)?.discard()
             mobRuntime.remove(mobUuid)
@@ -443,7 +431,6 @@ object StoryService {
         removeStoryLoanWeapons(player, session.loanMarker())
         sessionsByPlayer.remove(session.playerUuid)
         sessionsById.remove(session.id)
-        sessionByArenaIndex.remove(session.arenaIndex)
     }
 
     private fun cleanupInactiveMobs(world: ServerWorld, session: StorySession) {
@@ -531,34 +518,6 @@ object StoryService {
 
     private fun teleportPlayer(player: ServerPlayerEntity, world: ServerWorld, position: Vec3d, yaw: Float, pitch: Float) {
         player.teleport(world, position.x, position.y, position.z, setOf(), yaw, pitch, false)
-    }
-
-    private fun allocateArena(): StoryArenaSlot? {
-        return ARENA_SLOTS.firstOrNull { !sessionByArenaIndex.containsKey(it.index) }
-    }
-
-    private fun ensureArena(world: ServerWorld, center: BlockPos) {
-        for (x in -ARENA_RADIUS..ARENA_RADIUS) {
-            for (z in -ARENA_RADIUS..ARENA_RADIUS) {
-                val floorPos = center.add(x, 0, z)
-                val isBorder = kotlin.math.abs(x) == ARENA_RADIUS || kotlin.math.abs(z) == ARENA_RADIUS
-                world.setBlockState(floorPos, if (isBorder) Blocks.DEEPSLATE_BRICKS.defaultState else Blocks.SMOOTH_STONE.defaultState)
-                for (y in 1..5) {
-                    val airPos = floorPos.up(y)
-                    if (isBorder && y <= 2) {
-                        world.setBlockState(airPos, Blocks.TINTED_GLASS.defaultState)
-                    } else {
-                        world.setBlockState(airPos, Blocks.AIR.defaultState)
-                    }
-                }
-            }
-        }
-        world.setBlockState(center, Blocks.SEA_LANTERN.defaultState)
-    }
-
-    private fun sessionArena(session: StorySession): Vec3d {
-        val arena = ARENA_SLOTS.first { it.index == session.arenaIndex }
-        return Vec3d(arena.center.x + 0.5, arena.center.y + 1.0, arena.center.z + 0.5)
     }
 
     private fun randomOffset(random: net.minecraft.util.math.random.Random, salt: Int): Double {

@@ -1,27 +1,44 @@
 package hifumi.cresora
 
 import net.minecraft.entity.ItemEntity
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 
 object WeaponDropService {
     fun onHostileKilled(player: ServerPlayerEntity, hostile: HostileEntity) {
+        emulateHostileKilled(player, hostile)
+    }
+
+    fun emulateHostileKilled(player: ServerPlayerEntity, hostile: HostileEntity) {
         val world = hostile.world as? ServerWorld ?: return
-        val mobLevel = AdventureRankService.mobLevel(hostile)
-        val family = HostileRewardFamilies.classify(hostile.type)
+        emulateDrops(world, hostile.type, AdventureRankService.mobLevel(hostile), hostile.x, hostile.y, hostile.z)
+    }
+
+    fun emulateDrops(
+        world: ServerWorld,
+        entityType: EntityType<*>,
+        mobLevel: Int,
+        x: Double,
+        y: Double,
+        z: Double
+    ) {
+        val family = HostileRewardFamilies.classify(entityType)
         for (definition in WeaponContentRegistry.weaponDefinitions()) {
-            maybeDropFragments(world, hostile, definition, family, mobLevel)
-            maybeDropWeapon(world, hostile, definition, family, mobLevel)
+            maybeDropFragments(world, definition, family, mobLevel, x, y, z)
+            maybeDropWeapon(world, definition, family, mobLevel, x, y, z)
         }
     }
 
     private fun maybeDropFragments(
-        world: net.minecraft.server.world.ServerWorld,
-        hostile: HostileEntity,
+        world: ServerWorld,
         definition: WeaponDefinition,
         family: HostileRewardFamily,
-        mobLevel: Int
+        mobLevel: Int,
+        x: Double,
+        y: Double,
+        z: Double
     ) {
         val fragmentDrop = definition.drops.fragmentDrop
         if (mobLevel < fragmentDrop.minMobLevel) {
@@ -43,15 +60,17 @@ object WeaponDropService {
             world.random.nextBetween(fragmentDrop.minCount, fragmentDrop.maxCount)
         } + if (mobLevel >= 70) fragmentDrop.bonusCountAtLevel70 else 0
         val fragmentItem = WeaponStackSupport.fragmentItem(definition.id) ?: return
-        spawnDrop(world, hostile, net.minecraft.item.ItemStack(fragmentItem, count))
+        spawnDrop(world, x, y, z, net.minecraft.item.ItemStack(fragmentItem, count))
     }
 
     private fun maybeDropWeapon(
-        world: net.minecraft.server.world.ServerWorld,
-        hostile: HostileEntity,
+        world: ServerWorld,
         definition: WeaponDefinition,
         family: HostileRewardFamily,
-        mobLevel: Int
+        mobLevel: Int,
+        x: Double,
+        y: Double,
+        z: Double
     ) {
         val familyMultiplier = when (family) {
             HostileRewardFamily.SURVIVOR -> 0.85
@@ -74,17 +93,19 @@ object WeaponDropService {
             val baseLevel = (mobLevel * definition.drops.directDropBaseLevelMultiplier).toInt()
                 .coerceIn(1, definition.maxBaseLevel)
             val stack = WeaponStackSupport.createWeaponStack(definition, tier.rarity, baseLevel, 1)
-            spawnDrop(world, hostile, stack)
+            spawnDrop(world, x, y, z, stack)
             return
         }
     }
 
     private fun spawnDrop(
-        world: net.minecraft.server.world.ServerWorld,
-        hostile: HostileEntity,
+        world: ServerWorld,
+        x: Double,
+        y: Double,
+        z: Double,
         stack: net.minecraft.item.ItemStack
     ) {
-        val entity = ItemEntity(world, hostile.x, hostile.y + 0.5, hostile.z, stack)
+        val entity = ItemEntity(world, x, y + 0.5, z, stack)
         world.spawnEntity(entity)
     }
 }

@@ -428,6 +428,46 @@ object WeaponContentRegistry {
                     drops = resonanceOnlyDrops()
                 ),
                 WeaponDefinition(
+                    id = "kyokusui_no_ryusho",
+                    baseItemId = "minecraft:diamond_sword",
+                    baseAttackDamage = 8.0,
+                    attackDamagePerLevel = 0.0,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 1,
+                    attackCurve = listOf(
+                        WeaponAttackCurvePoint(1, 8.0),
+                        WeaponAttackCurvePoint(5, 9.0),
+                        WeaponAttackCurvePoint(10, 10.5),
+                        WeaponAttackCurvePoint(30, 14.5),
+                        WeaponAttackCurvePoint(50, 20.0),
+                        WeaponAttackCurvePoint(60, 24.0)
+                    ),
+                    skill = WeaponSkillDefinition(
+                        effectId = "orchid_pavilion_echo",
+                        durationSeconds = 16,
+                        cooldownSeconds = 25,
+                        baseValue = 0.0,
+                        valuePerLevel = 0.0,
+                        radiusMeters = 5.0,
+                        tickIntervalSeconds = 2.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 0,
+                        baseFragmentCost = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "kyokusui_no_ryusho_fragment",
+                        fragmentBaseItemId = "minecraft:book",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FIVE_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
                     id = "requiem_toward_dawn",
                     baseItemId = "minecraft:iron_sword",
                     baseAttackDamage = 8.5,
@@ -487,6 +527,104 @@ object WeaponContentRegistry {
                     craft = WeaponCraftDefinition(
                         fragmentItemId = "gaoshan_liushui_fragment",
                         fragmentBaseItemId = "minecraft:lapis_lazuli",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FOUR_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "dark_lux",
+                    baseItemId = "minecraft:netherite_sword",
+                    baseAttackDamage = 8.5,
+                    attackDamagePerLevel = 0.20,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 10,
+                    damageType = CombatDamageType.PHYSICAL,
+                    skill = WeaponSkillDefinition(
+                        effectId = "dark_lux",
+                        durationSeconds = 30,
+                        cooldownSeconds = 30,
+                        baseValue = 0.0,
+                        valuePerLevel = 0.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 0,
+                        skillCscQuadraticCoefficient = 10_000,
+                        baseFragmentCost = 1,
+                        skillArtifactMinRarity = EquipmentRarity.FOUR_STAR,
+                        skillArtifactCountPerLevel = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "dark_lux_fragment",
+                        fragmentBaseItemId = "minecraft:echo_shard",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.FIVE_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "pastoral_flute_reverie",
+                    baseItemId = "minecraft:wooden_sword",
+                    baseAttackDamage = 7.0,
+                    attackDamagePerLevel = 0.18,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 60,
+                    maxSkillLevel = 10,
+                    damageType = CombatDamageType.PHYSICAL,
+                    skill = WeaponSkillDefinition(
+                        effectId = "sunlit_haste",
+                        durationSeconds = 50,
+                        cooldownSeconds = 50,
+                        baseValue = 40.0,
+                        valuePerLevel = 0.0,
+                        secondaryBaseValue = 60.0,
+                        secondaryValuePerLevel = 0.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 10_000,
+                        baseFragmentCost = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "pastoral_flute_reverie_fragment",
+                        fragmentBaseItemId = "minecraft:bamboo",
+                        fragmentsRequired = 8,
+                        craftedRarity = WeaponRarity.THREE_STAR,
+                        craftedBaseLevel = 1,
+                        craftedSkillLevel = 1
+                    ),
+                    drops = resonanceOnlyDrops()
+                ),
+                WeaponDefinition(
+                    id = "cadenza_allegro",
+                    baseItemId = "minecraft:wooden_sword",
+                    baseAttackDamage = 8.5,
+                    attackDamagePerLevel = 0.20,
+                    totalAttackSpeed = 1.6,
+                    maxBaseLevel = 80,
+                    maxSkillLevel = 1,
+                    skill = WeaponSkillDefinition(
+                        effectId = "baa_mimic",
+                        durationSeconds = 0,
+                        cooldownSeconds = 15,
+                        baseValue = 1.0,
+                        valuePerLevel = 0.0,
+                        radiusMeters = 10.0
+                    ),
+                    upgrades = WeaponUpgradeDefinition(
+                        baseCscQuadraticCoefficient = 100,
+                        skillCscLinearCoefficient = 0,
+                        baseFragmentCost = 1
+                    ),
+                    craft = WeaponCraftDefinition(
+                        fragmentItemId = "cadenza_allegro_fragment",
+                        fragmentBaseItemId = "minecraft:white_wool",
                         fragmentsRequired = 8,
                         craftedRarity = WeaponRarity.FOUR_STAR,
                         craftedBaseLevel = 1,

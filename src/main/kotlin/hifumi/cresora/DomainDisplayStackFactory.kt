@@ -58,7 +58,7 @@ object DomainDisplayStackFactory {
             return Text.translatable(EquipmentContentRegistry.requireSet(artifact.setId).translationKey())
         }
         profile.weaponFragmentReward?.let { weapon ->
-            return Text.translatable(WeaponContentRegistry.requireWeapon(weapon.weaponId).fragmentTranslationKey())
+            return Text.translatable(WeaponContentRegistry.requireWeapon(weapon.weaponId).craft.craftedRarity.fragmentTranslationKey())
         }
         return Text.translatable("screen.cresora.domain.reward.training")
     }

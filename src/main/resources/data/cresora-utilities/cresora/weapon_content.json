@@ -285,6 +285,79 @@
       }
     },
     {
+      "id": "kyokusui_no_ryusho",
+      "baseItemId": "minecraft:diamond_sword",
+      "baseAttackDamage": 8.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 1,
+      "critRateBonusPercent": 0.0,
+      "damageType": "physical",
+      "attackCurve": [
+        {
+          "level": 1,
+          "attackDamage": 8.0
+        },
+        {
+          "level": 5,
+          "attackDamage": 9.0
+        },
+        {
+          "level": 10,
+          "attackDamage": 10.5
+        },
+        {
+          "level": 30,
+          "attackDamage": 14.5
+        },
+        {
+          "level": 50,
+          "attackDamage": 20.0
+        },
+        {
+          "level": 60,
+          "attackDamage": 24.0
+        }
+      ],
+      "skill": {
+        "effectId": "orchid_pavilion_echo",
+        "durationSeconds": 16,
+        "cooldownSeconds": 25,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 5.0,
+        "tickIntervalSeconds": 2.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 0,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1,
+        "skillArtifactCountPerLevel": 0
+      },
+      "craft": {
+        "fragmentItemId": "kyokusui_no_ryusho_fragment",
+        "fragmentBaseItemId": "minecraft:book",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
       "id": "gaoshan_liushui",
       "baseItemId": "minecraft:iron_sword",
       "baseAttackDamage": 8.5,
@@ -315,6 +388,144 @@
       "craft": {
         "fragmentItemId": "gaoshan_liushui_fragment",
         "fragmentBaseItemId": "minecraft:lapis_lazuli",
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "dark_lux",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.20,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "dark_lux",
+        "durationSeconds": 30,
+        "cooldownSeconds": 30,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 0,
+        "skillCscQuadraticCoefficient": 10000,
+        "baseFragmentCost": 1,
+        "skillArtifactMinRarity": "4_star",
+        "skillArtifactCountPerLevel": 1
+      },
+      "craft": {
+        "fragmentItemId": "dark_lux_fragment",
+        "fragmentBaseItemId": "minecraft:echo_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "pastoral_flute_reverie",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 7.0,
+      "attackDamagePerLevel": 0.18,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "sunlit_haste",
+        "durationSeconds": 50,
+        "cooldownSeconds": 50,
+        "baseValue": 40.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0,
+        "secondaryBaseValue": 60.0,
+        "secondaryValuePerLevel": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1,
+        "skillArtifactCountPerLevel": 0
+      },
+      "craft": {
+        "fragmentItemId": "pastoral_flute_reverie_fragment",
+        "fragmentBaseItemId": "minecraft:bamboo",
+        "fragmentsRequired": 8,
+        "craftedRarity": "3_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "cadenza_allegro",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.2,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 80,
+      "maxSkillLevel": 1,
+      "critRateBonusPercent": 0.0,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "baa_mimic",
+        "durationSeconds": 0,
+        "cooldownSeconds": 15,
+        "baseValue": 1.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 10.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 0,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1,
+        "skillArtifactCountPerLevel": 0
+      },
+      "craft": {
+        "fragmentItemId": "cadenza_allegro_fragment",
+        "fragmentBaseItemId": "minecraft:white_wool",
         "fragmentsRequired": 8,
         "craftedRarity": "4_star",
         "craftedBaseLevel": 1,

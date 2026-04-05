@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "cresora-utilities:item/requiem_toward_dawn"
+    "layer0": "cresora-utilities:item/gaoshan_liushui"
   }
 }

@@ -98,7 +98,7 @@ object TreasureChestService {
         while (iterator.hasNext()) {
             val chest = iterator.next()
             val world = server.getWorld(chest.key.worldKey)
-            val shouldRemove = world == null || !isOurChestBlock(world.getBlockState(chest.key.pos).block)
+            val shouldRemove = world == null || (isChunkLoaded(world, chest.key.pos) && !isOurChestBlock(world.getBlockState(chest.key.pos).block))
             if (!shouldRemove) {
                 continue
             }
@@ -110,6 +110,9 @@ object TreasureChestService {
     private fun emitParticles(server: MinecraftServer) {
         for (chest in activeByKey.values) {
             val world = server.getWorld(chest.key.worldKey) ?: continue
+            if (!isChunkLoaded(world, chest.key.pos)) {
+                continue
+            }
             if (!isOurChestBlock(world.getBlockState(chest.key.pos).block)) {
                 continue
             }
@@ -132,6 +135,9 @@ object TreasureChestService {
             return
         }
         val playerWorld = player.world as ServerWorld
+        if (playerWorld.registryKey == ArenaManager.DOMAIN_WORLD_KEY) {
+            return
+        }
         val nextAllowed = nextSpawnTickByPlayer[player.uuid]
         if (nextAllowed == null) {
             nextSpawnTickByPlayer[player.uuid] = now + INITIAL_DELAY_TICKS
@@ -323,8 +329,7 @@ object TreasureChestService {
         activeByKey.clear()
         for (savedChest in state.chests) {
             val restored = restoreChest(savedChest) ?: continue
-            val world = server.getWorld(restored.key.worldKey) ?: continue
-            if (!isOurChestBlock(world.getBlockState(restored.key.pos).block)) {
+            if (server.getWorld(restored.key.worldKey) == null) {
                 continue
             }
             activeByKey[restored.key] = restored
@@ -374,5 +379,9 @@ object TreasureChestService {
             }
         )
         state.markDirty()
+    }
+
+    private fun isChunkLoaded(world: ServerWorld, pos: BlockPos): Boolean {
+        return world.isChunkLoaded(pos)
     }
 }

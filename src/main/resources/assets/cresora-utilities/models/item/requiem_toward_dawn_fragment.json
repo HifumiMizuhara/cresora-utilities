@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "cresora-utilities:item/requiem_toward_dawn_fragment"
+    "layer0": "cresora-utilities:item/weapon_fragment_4_star"
   }
 }
