@@ -1190,6 +1190,7 @@ object WeaponSkillService {
                 maxHealthAttr.baseValue = maxPlayerHp.toDouble()
                 sheep.health = maxPlayerHp
             }
+            AdventureRankService.refreshMobDisplay(sheep)
             target.discard()
         }
 

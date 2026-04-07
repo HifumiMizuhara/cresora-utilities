@@ -28,7 +28,7 @@ object CombatMobDisplayService {
 
     private val activeIndicators: MutableMap<Int, DamageIndicator> = LinkedHashMap()
 
-    fun updateMobStatus(entity: HostileEntity) {
+    fun updateMobStatus(entity: LivingEntity) {
         if (entity.isRemoved || !entity.isAlive) {
             entity.isCustomNameVisible = false
             return
@@ -41,16 +41,32 @@ object CombatMobDisplayService {
             return
         }
 
-        val rank = AdventureRankService.mobLevel(entity)
-        val classificationTag = FieldMobPackService.classificationTag(entity)
+        val isMimic = (entity as? net.minecraft.entity.passive.SheepEntity)?.let(BaaMimicService::isMimicSheep) ?: false
+        val rank = when {
+            isMimic -> BaaMimicService.originalRank(entity as net.minecraft.entity.passive.SheepEntity)
+            entity is HostileEntity -> AdventureRankService.mobLevel(entity)
+            else -> 1
+        }
+        val classificationTag = (entity as? HostileEntity)?.let { FieldMobPackService.classificationTag(it) } ?: Text.empty()
         val statusSuffix = getStatusSuffix(entity)
-        entity.customName = Text.translatable(
+        
+        val baseLabel = Text.translatable(
             "combat.cresora.mob_label",
             rank,
             entity.type.name,
             formatNumber(entity.health.toDouble().coerceAtLeast(0.0)),
             formatNumber(entity.maxHealth.toDouble().coerceAtLeast(1.0))
-        ).append(classificationTag).append(statusSuffix)
+        )
+
+        val finalLabel = if (isMimic) {
+            Text.empty()
+                .append(Text.translatable("combat.cresora.mimic_prefix").formatted(Formatting.RED, Formatting.BOLD))
+                .append(baseLabel)
+        } else {
+            baseLabel.append(classificationTag).append(statusSuffix)
+        }
+
+        entity.customName = finalLabel
     }
 
     private fun getStatusSuffix(entity: LivingEntity): Text {

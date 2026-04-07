@@ -60,7 +60,16 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     private int cresora$standardPulls = 0;
 
     @Unique
+    private int cresora$limitedFourStarPulls = 0;
+
+    @Unique
+    private int cresora$standardFourStarPulls = 0;
+
+    @Unique
     private int cresora$deepPityStreak = 0;
+
+    @Unique
+    private boolean cresora$limitedFiveStarGuaranteed = false;
 
     @Unique
     private boolean cresora$arpeggioReady = false;
@@ -92,7 +101,10 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         view.putInt(ResonanceService.INSTANCE.substituteChordKey(), this.cresora$substituteChord);
         view.putInt(ResonanceService.INSTANCE.limitedPityKey(), this.cresora$limitedPityPulls);
         view.putInt(ResonanceService.INSTANCE.standardPullsKey(), this.cresora$standardPulls);
+        view.putInt(ResonanceService.INSTANCE.limitedFourStarPullsKey(), this.cresora$limitedFourStarPulls);
+        view.putInt(ResonanceService.INSTANCE.standardFourStarPullsKey(), this.cresora$standardFourStarPulls);
         view.putInt(ResonanceService.INSTANCE.deepPityStreakKey(), this.cresora$deepPityStreak);
+        view.putInt(ResonanceService.INSTANCE.limitedFiveStarGuaranteedKey(), this.cresora$limitedFiveStarGuaranteed ? 1 : 0);
         view.putInt(ResonanceService.INSTANCE.arpeggioReadyKey(), this.cresora$arpeggioReady ? 1 : 0);
         view.putString(StoryProgressService.INSTANCE.playerStoryClearsKey(), this.cresora$storyClearsRaw);
         view.putString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), this.cresora$masqueradeCurrentSeasonId);
@@ -111,7 +123,10 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$substituteChord = view.getInt(ResonanceService.INSTANCE.substituteChordKey(), 0);
         this.cresora$limitedPityPulls = view.getInt(ResonanceService.INSTANCE.limitedPityKey(), 0);
         this.cresora$standardPulls = view.getInt(ResonanceService.INSTANCE.standardPullsKey(), 0);
+        this.cresora$limitedFourStarPulls = view.getInt(ResonanceService.INSTANCE.limitedFourStarPullsKey(), 0);
+        this.cresora$standardFourStarPulls = view.getInt(ResonanceService.INSTANCE.standardFourStarPullsKey(), 0);
         this.cresora$deepPityStreak = view.getInt(ResonanceService.INSTANCE.deepPityStreakKey(), 0);
+        this.cresora$limitedFiveStarGuaranteed = view.getInt(ResonanceService.INSTANCE.limitedFiveStarGuaranteedKey(), 0) != 0;
         this.cresora$arpeggioReady = view.getInt(ResonanceService.INSTANCE.arpeggioReadyKey(), 0) != 0;
         this.cresora$storyClearsRaw = view.getString(StoryProgressService.INSTANCE.playerStoryClearsKey(), "");
         this.cresora$masqueradeCurrentSeasonId = view.getString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), "");
@@ -242,6 +257,26 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     }
 
     @Override
+    public int cresoraGetLimitedFourStarPulls() {
+        return this.cresora$limitedFourStarPulls;
+    }
+
+    @Override
+    public void cresoraSetLimitedFourStarPulls(int value) {
+        this.cresora$limitedFourStarPulls = value;
+    }
+
+    @Override
+    public int cresoraGetStandardFourStarPulls() {
+        return this.cresora$standardFourStarPulls;
+    }
+
+    @Override
+    public void cresoraSetStandardFourStarPulls(int value) {
+        this.cresora$standardFourStarPulls = value;
+    }
+
+    @Override
     public int cresoraGetDeepPityStreak() {
         return this.cresora$deepPityStreak;
     }
@@ -249,6 +284,16 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetDeepPityStreak(int value) {
         this.cresora$deepPityStreak = value;
+    }
+
+    @Override
+    public boolean cresoraIsLimitedFiveStarGuaranteed() {
+        return this.cresora$limitedFiveStarGuaranteed;
+    }
+
+    @Override
+    public void cresoraSetLimitedFiveStarGuaranteed(boolean value) {
+        this.cresora$limitedFiveStarGuaranteed = value;
     }
 
     @Override

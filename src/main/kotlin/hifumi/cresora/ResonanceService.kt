@@ -9,7 +9,10 @@ object ResonanceService {
     private const val SUBSTITUTE_CHORD_KEY = "cresora_resonance_substitute_chord"
     private const val LIMITED_PITY_KEY = "cresora_resonance_limited_pity"
     private const val STANDARD_PULLS_KEY = "cresora_resonance_standard_pulls"
+    private const val LIMITED_FOUR_STAR_PULLS_KEY = "cresora_resonance_limited_four_star_pulls"
+    private const val STANDARD_FOUR_STAR_PULLS_KEY = "cresora_resonance_standard_four_star_pulls"
     private const val DEEP_PITY_STREAK_KEY = "cresora_resonance_deep_pity_streak"
+    private const val LIMITED_FIVE_STAR_GUARANTEED_KEY = "cresora_resonance_limited_five_star_guaranteed"
     private const val ARPEGGIO_READY_KEY = "cresora_resonance_arpeggio_ready"
 
     private const val LIMITED_SOFT_PITY_START = 100
@@ -19,7 +22,10 @@ object ResonanceService {
     data class Progress(
         val limitedPityPulls: Int,
         val standardPulls: Int,
+        val limitedFourStarPulls: Int,
+        val standardFourStarPulls: Int,
         val deepPityStreak: Int,
+        val limitedFiveStarGuaranteed: Boolean,
         val arpeggioReady: Boolean
     )
 
@@ -28,6 +34,7 @@ object ResonanceService {
         val pulledWeapon: ItemStack,
         val rarity: WeaponRarity,
         val wasLimitedFiveStar: Boolean,
+        val obtainedFeaturedFiveStar: Boolean,
         val progressAfter: Progress
     )
 
@@ -39,16 +46,25 @@ object ResonanceService {
 
     fun standardPullsKey(): String = STANDARD_PULLS_KEY
 
+    fun limitedFourStarPullsKey(): String = LIMITED_FOUR_STAR_PULLS_KEY
+
+    fun standardFourStarPullsKey(): String = STANDARD_FOUR_STAR_PULLS_KEY
+
     fun deepPityStreakKey(): String = DEEP_PITY_STREAK_KEY
+
+    fun limitedFiveStarGuaranteedKey(): String = LIMITED_FIVE_STAR_GUARANTEED_KEY
 
     fun arpeggioReadyKey(): String = ARPEGGIO_READY_KEY
 
     fun getProgress(player: ServerPlayerEntity): Progress {
-        val access = player as? ResonanceAccess ?: return Progress(0, 0, 0, false)
+        val access = player as? ResonanceAccess ?: return Progress(0, 0, 0, 0, 0, false, false)
         return Progress(
             limitedPityPulls = max(0, access.cresoraGetLimitedPityPulls()),
             standardPulls = max(0, access.cresoraGetStandardPulls()),
+            limitedFourStarPulls = max(0, access.cresoraGetLimitedFourStarPulls()),
+            standardFourStarPulls = max(0, access.cresoraGetStandardFourStarPulls()),
             deepPityStreak = max(0, access.cresoraGetDeepPityStreak()),
+            limitedFiveStarGuaranteed = access.cresoraIsLimitedFiveStarGuaranteed(),
             arpeggioReady = access.cresoraGetArpeggioReady()
         )
     }
@@ -113,7 +129,10 @@ object ResonanceService {
         newAccess.cresoraSetSubstituteChord(max(0, oldAccess.cresoraGetSubstituteChord()))
         newAccess.cresoraSetLimitedPityPulls(max(0, oldAccess.cresoraGetLimitedPityPulls()))
         newAccess.cresoraSetStandardPulls(max(0, oldAccess.cresoraGetStandardPulls()))
+        newAccess.cresoraSetLimitedFourStarPulls(max(0, oldAccess.cresoraGetLimitedFourStarPulls()))
+        newAccess.cresoraSetStandardFourStarPulls(max(0, oldAccess.cresoraGetStandardFourStarPulls()))
         newAccess.cresoraSetDeepPityStreak(max(0, oldAccess.cresoraGetDeepPityStreak()))
+        newAccess.cresoraSetLimitedFiveStarGuaranteed(oldAccess.cresoraIsLimitedFiveStarGuaranteed())
         newAccess.cresoraSetArpeggioReady(oldAccess.cresoraGetArpeggioReady())
     }
 
@@ -131,9 +150,20 @@ object ResonanceService {
         }
 
         val before = getProgress(player)
-        val rarity = rollRarity(player, banner, before)
+        var rarity = rollRarity(player, banner, before)
+        
+        val fourStarPulls = if (banner.type == ResonanceBannerType.LIMITED) before.limitedFourStarPulls else before.standardFourStarPulls
+        if (fourStarPulls >= 9 && (rarity == WeaponRarity.TWO_STAR || rarity == WeaponRarity.THREE_STAR)) {
+            rarity = WeaponRarity.FOUR_STAR
+        }
+
+        var obtainedFeatured = false
         val entry = when (rarity) {
-            WeaponRarity.FIVE_STAR -> chooseFiveStarEntry(player, banner)
+            WeaponRarity.FIVE_STAR -> {
+                val (selected, featured, _) = chooseFiveStarEntry(player, banner, before)
+                obtainedFeatured = featured
+                selected
+            }
             WeaponRarity.FOUR_STAR -> chooseEntry(player, banner.fourStarPool)
             WeaponRarity.THREE_STAR -> chooseEntry(player, banner.threeStarPool)
             WeaponRarity.TWO_STAR -> chooseEntry(player, banner.twoStarPool)
@@ -142,25 +172,49 @@ object ResonanceService {
         val pulledWeapon = WeaponStackSupport.createWeaponStack(definition, entry.rarity, 1, 1)
         player.giveItemStack(pulledWeapon.copy())
 
-        val updated = updateProgress(player, banner, rarity)
+        val updated = updateProgress(player, banner, rarity, obtainedFeatured)
         return PullResult(
             banner = banner,
             pulledWeapon = pulledWeapon,
             rarity = rarity,
             wasLimitedFiveStar = banner.type == ResonanceBannerType.LIMITED && rarity == WeaponRarity.FIVE_STAR,
+            obtainedFeaturedFiveStar = obtainedFeatured,
             progressAfter = updated
         )
     }
 
-    private fun chooseFiveStarEntry(player: ServerPlayerEntity, banner: ResonanceBannerDefinition): ResonanceWeaponEntry {
+    private fun chooseFiveStarEntry(
+        player: ServerPlayerEntity,
+        banner: ResonanceBannerDefinition,
+        progress: Progress
+    ): Triple<ResonanceWeaponEntry, Boolean, Boolean> {
         if (banner.type == ResonanceBannerType.LIMITED) {
-            val featured = banner.featuredFiveStarWeaponId
-            if (featured != null) {
-                return banner.fiveStarPool.firstOrNull { it.weaponId == featured }
-                    ?: ResonanceWeaponEntry(featured, WeaponRarity.FIVE_STAR, 1.0)
+            val featuredId = banner.featuredFiveStarWeaponId
+            if (featuredId != null) {
+                // 確定枠または 50% の抽選
+                val isGuaranteed = progress.limitedFiveStarGuaranteed
+                val wonFiftyFifty = player.random.nextDouble() < 0.5
+                
+                if (isGuaranteed || wonFiftyFifty) {
+                    val entry = banner.fiveStarPool.firstOrNull { it.weaponId == featuredId }
+                        ?: ResonanceWeaponEntry(featuredId, WeaponRarity.FIVE_STAR, 1.0)
+                    return Triple(entry, true, isGuaranteed)
+                } else {
+                    // すり抜け：恒常プールから選択（ただし、恒常バナーの★5プールを借りる、または限定バナーの★5プールから選ぶ）
+                    // 今の実装では限定バナーの fiveStarPool にも他のが入っている前提
+                    val otherPool = banner.fiveStarPool.filter { it.weaponId != featuredId }
+                    return if (otherPool.isNotEmpty()) {
+                        Triple(chooseEntry(player, otherPool), false, false)
+                    } else {
+                        // 恒常プールが空なら仕方なくピックアップ
+                        val entry = banner.fiveStarPool.firstOrNull { it.weaponId == featuredId }
+                            ?: ResonanceWeaponEntry(featuredId, WeaponRarity.FIVE_STAR, 1.0)
+                        Triple(entry, true, isGuaranteed)
+                    }
+                }
             }
         }
-        return chooseEntry(player, banner.fiveStarPool)
+        return Triple(chooseEntry(player, banner.fiveStarPool), false, false)
     }
 
     private fun chooseEntry(player: ServerPlayerEntity, entries: List<ResonanceWeaponEntry>): ResonanceWeaponEntry {
@@ -206,29 +260,56 @@ object ResonanceService {
     private fun limitedFiveStarChance(progress: Progress): Double {
         val nextPull = progress.limitedPityPulls + 1
         if (progress.arpeggioReady) {
-            return if (nextPull >= ARPEGGIO_GUARANTEE_PULL) 1.0 else 0.01
+            return if (nextPull >= ARPEGGIO_GUARANTEE_PULL) 1.0 else 0.003
         }
         if (nextPull >= LIMITED_HARD_PITY) {
             return 1.0
         }
         if (nextPull < LIMITED_SOFT_PITY_START) {
-            return 0.01
+            return 0.003
         }
         val spanProgress = (nextPull - LIMITED_SOFT_PITY_START).toDouble() / (LIMITED_HARD_PITY - LIMITED_SOFT_PITY_START).toDouble()
-        return 0.01 + spanProgress.coerceIn(0.0, 1.0) * 0.99
+        return 0.003 + spanProgress.coerceIn(0.0, 1.0) * 0.997
     }
 
-    private fun updateProgress(player: ServerPlayerEntity, banner: ResonanceBannerDefinition, rarity: WeaponRarity): Progress {
+    private fun updateProgress(
+        player: ServerPlayerEntity,
+        banner: ResonanceBannerDefinition,
+        rarity: WeaponRarity,
+        obtainedFeaturedFiveStar: Boolean = false
+    ): Progress {
         val access = player as? ResonanceAccess ?: return getProgress(player)
         val before = getProgress(player)
+        val isFourStarOrHigher = rarity == WeaponRarity.FOUR_STAR || rarity == WeaponRarity.FIVE_STAR
+
         return when (banner.type) {
             ResonanceBannerType.STANDARD -> {
                 access.cresoraSetStandardPulls(before.standardPulls + 1)
-                Progress(before.limitedPityPulls, before.standardPulls + 1, before.deepPityStreak, before.arpeggioReady)
+                val nextFourStarPulls = if (isFourStarOrHigher) 0 else before.standardFourStarPulls + 1
+                access.cresoraSetStandardFourStarPulls(nextFourStarPulls)
+                Progress(
+                    before.limitedPityPulls,
+                    before.standardPulls + 1,
+                    before.limitedFourStarPulls,
+                    nextFourStarPulls,
+                    before.deepPityStreak,
+                    before.limitedFiveStarGuaranteed,
+                    before.arpeggioReady
+                )
             }
 
             ResonanceBannerType.LIMITED -> {
+                val nextFourStarPulls = if (isFourStarOrHigher) 0 else before.limitedFourStarPulls + 1
+                access.cresoraSetLimitedFourStarPulls(nextFourStarPulls)
+
+                val newLimitedPity = if (rarity == WeaponRarity.FIVE_STAR) 0 else before.limitedPityPulls + 1
+                access.cresoraSetLimitedPityPulls(newLimitedPity)
+
+                var nextGuaranteed = before.limitedFiveStarGuaranteed
                 if (rarity == WeaponRarity.FIVE_STAR) {
+                    nextGuaranteed = !obtainedFeaturedFiveStar
+                    access.cresoraSetLimitedFiveStarGuaranteed(nextGuaranteed)
+                    
                     if (before.arpeggioReady) {
                         access.cresoraSetArpeggioReady(false)
                         access.cresoraSetDeepPityStreak(0)
@@ -237,13 +318,12 @@ object ResonanceService {
                         access.cresoraSetDeepPityStreak(newStreak)
                         access.cresoraSetArpeggioReady(newStreak >= 3)
                     }
-                    access.cresoraSetLimitedPityPulls(0)
-                } else {
-                    access.cresoraSetLimitedPityPulls(before.limitedPityPulls + 1)
                 }
                 Progress(
-                    limitedPityPulls = if (rarity == WeaponRarity.FIVE_STAR) 0 else before.limitedPityPulls + 1,
+                    limitedPityPulls = newLimitedPity,
                     standardPulls = before.standardPulls,
+                    limitedFourStarPulls = nextFourStarPulls,
+                    standardFourStarPulls = before.standardFourStarPulls,
                     deepPityStreak = if (rarity == WeaponRarity.FIVE_STAR) {
                         if (before.arpeggioReady) 0 else {
                             if (before.limitedPityPulls + 1 >= LIMITED_SOFT_PITY_START) before.deepPityStreak + 1 else 0
@@ -251,6 +331,7 @@ object ResonanceService {
                     } else {
                         before.deepPityStreak
                     },
+                    limitedFiveStarGuaranteed = nextGuaranteed,
                     arpeggioReady = if (rarity == WeaponRarity.FIVE_STAR) {
                         if (before.arpeggioReady) {
                             false

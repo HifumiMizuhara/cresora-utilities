@@ -113,7 +113,7 @@ class ResonanceScreenHandler(
         properties.set(PROPERTY_ARPEGGIO_READY, if (progress.arpeggioReady) 1 else 0)
 
         for (index in 0 until SLOT_COUNT) {
-            displayInventory.setStack(index, ItemStack.EMPTY)
+            displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
         displayInventory.setStack(
             LIMITED_SLOT,

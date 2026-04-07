@@ -98,13 +98,13 @@ object BaaMimicService {
             .forEach(sheep::removeCommandTag)
     }
 
-    private fun originalTypeId(sheep: SheepEntity): String? {
+    fun originalTypeId(sheep: SheepEntity): String? {
         return sheep.commandTags.firstOrNull { it.startsWith(ORIGINAL_LOOT_PREFIX) }
             ?.removePrefix(ORIGINAL_LOOT_PREFIX)
             ?.takeIf(String::isNotBlank)
     }
 
-    private fun originalRank(sheep: SheepEntity): Int {
+    fun originalRank(sheep: SheepEntity): Int {
         return sheep.commandTags.firstOrNull { it.startsWith(ORIGINAL_RANK_PREFIX) }
             ?.removePrefix(ORIGINAL_RANK_PREFIX)
             ?.toIntOrNull()

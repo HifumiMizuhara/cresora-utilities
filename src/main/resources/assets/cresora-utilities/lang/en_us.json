@@ -278,6 +278,7 @@
   "commands.cresora.resonance.add_feedback": "Added %s %s to %s. Total %s.",
   "commands.cresora.resonance.set_feedback": "Set %s for %s to %s.",
   "combat.cresora.mob_label": "Lv %s %s HP %s / %s",
+  "combat.cresora.mimic_prefix": "Fake ",
   "combat.cresora.mob_resistance_line": "Phys RES %s | Arc RES %s",
   "combat.cresora.damage_combo": "CRIT! x%s / DMG x%s",
   "combat.cresora.damage_reduced": "DMG taken x%s",

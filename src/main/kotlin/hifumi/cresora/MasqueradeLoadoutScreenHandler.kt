@@ -135,7 +135,7 @@ class MasqueradeLoadoutScreenHandler(
 
     private fun refreshEntries() {
         for (index in 0 until SLOT_COUNT) {
-            displayInventory.setStack(index, ItemStack.EMPTY)
+            displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
         for ((order, inventorySlot) in selectedInventorySlots.withIndex()) {
             val weapon = eligibleWeapons.firstOrNull { it.inventorySlot == inventorySlot } ?: continue

@@ -27,7 +27,7 @@ class DomainRewardScreenHandler(
         displayStacks: List<ItemStack>
     ) : this(syncId, playerInventory) {
         for (index in 0 until REWARD_SLOT_COUNT) {
-            rewardInventory.setStack(index, displayStacks.getOrNull(index)?.copy() ?: ItemStack.EMPTY)
+            rewardInventory.setStack(index, displayStacks.getOrNull(index)?.copy() ?: ArtifactDisplayStackFactory.fillerDisplay())
         }
     }
 

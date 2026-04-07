@@ -75,7 +75,7 @@ class StoryChapterSelectionScreenHandler(
             val groupId = chapterGroups.getOrNull(index)
             displayInventory.setStack(
                 index,
-                if (groupId == null) ItemStack.EMPTY else ArtifactDisplayStackFactory.storyChapterGroupDisplay(groupId, StoryContentRegistry.chaptersForGroup(groupId).size)
+                if (groupId == null) ArtifactDisplayStackFactory.fillerDisplay() else ArtifactDisplayStackFactory.storyChapterGroupDisplay(groupId, StoryContentRegistry.chaptersForGroup(groupId).size)
             )
         }
     }

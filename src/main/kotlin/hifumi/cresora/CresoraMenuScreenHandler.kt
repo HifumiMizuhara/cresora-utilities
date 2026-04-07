@@ -84,7 +84,7 @@ class CresoraMenuScreenHandler(
 
     private fun refreshEntries() {
         for (index in 0 until SLOT_COUNT) {
-            displayInventory.setStack(index, ItemStack.EMPTY)
+            displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
         displayInventory.setStack(STORY_SLOT, ArtifactDisplayStackFactory.cresoraMenuDisplay("story"))
         displayInventory.setStack(DOMAIN_SLOT, ArtifactDisplayStackFactory.cresoraMenuDisplay("domain"))

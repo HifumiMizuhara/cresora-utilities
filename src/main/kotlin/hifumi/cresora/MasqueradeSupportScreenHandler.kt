@@ -89,7 +89,7 @@ class MasqueradeSupportScreenHandler(
     private fun refreshEntries() {
         candidateIds = (playerInventory.player as? ServerPlayerEntity)?.let(MasqueradeService::supportCandidateIds) ?: emptyList()
         for (index in 0 until SLOT_COUNT) {
-            displayInventory.setStack(index, ItemStack.EMPTY)
+            displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
         for ((index, buffId) in candidateIds.withIndex()) {
             val definition = runCatching { MasqueradeContentRegistry.supportBuff(buffId) }.getOrNull() ?: continue

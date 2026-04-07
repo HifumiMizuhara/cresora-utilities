@@ -129,7 +129,7 @@ class WeaponSkillMaterialScreenHandler(
             val selectedOrder = artifact?.let { selectedInventorySlots.indexOf(it.inventorySlot) + 1 } ?: 0
             optionInventory.setStack(
                 index,
-                artifact?.let { ArtifactDisplayStackFactory.weaponSkillMaterialDisplay(it.stack, selectedOrder) } ?: ItemStack.EMPTY
+                artifact?.let { ArtifactDisplayStackFactory.weaponSkillMaterialDisplay(it.stack, selectedOrder) } ?: ArtifactDisplayStackFactory.fillerDisplay()
             )
         }
     }

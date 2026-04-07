@@ -179,7 +179,7 @@ class ArtifactShopScreenHandler(
     private fun refreshShopOffers() {
         for (index in 0 until SHOP_SLOT_COUNT) {
             val definition = shopDefinitions.getOrNull(index)
-            setInventoryStack(index, definition?.createDisplayStack() ?: ItemStack.EMPTY)
+            setInventoryStack(index, definition?.createDisplayStack() ?: ArtifactDisplayStackFactory.fillerDisplay())
         }
     }
 

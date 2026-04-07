@@ -4,7 +4,6 @@ import hifumi.cresora.CombatFeedbackService;
 import hifumi.cresora.CombatStatSupport;
 import hifumi.cresora.CombatDamageType;
 import hifumi.cresora.CombatDamageTypeSupport;
-import hifumi.cresora.CreditsService;
 import hifumi.cresora.EquipmentPlayerSupport;
 import hifumi.cresora.MasqueradeService;
 import hifumi.cresora.StatType;
@@ -15,31 +14,19 @@ import hifumi.cresora.WeaponSkillService;
 import hifumi.cresora.WeaponStackSupport;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin {
-    @Inject(method = "addExperience", at = @At("TAIL"))
-    private void cresora$awardExperienceCredits(int experience, CallbackInfo ci) {
-        if (experience <= 0) {
-            return;
-        }
-        if (!((Object) this instanceof ServerPlayerEntity serverPlayer)) {
-            return;
-        }
-        CreditsService.INSTANCE.addExperienceReward(serverPlayer, experience);
-    }
-
     @Inject(method = "canFoodHeal", at = @At("HEAD"), cancellable = true)
     private void cresora$disableVanillaNaturalRegen(CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(false);
@@ -58,7 +45,8 @@ public class PlayerEntityMixin {
         if (reduction <= 0.0) {
             return amount;
         }
-        if (player instanceof ServerPlayerEntity serverPlayer) {
+        if (player instanceof ServerPlayerEntity) {
+            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
             reduction = MasqueradeService.INSTANCE.clampPlayerDamageReduction(serverPlayer, reduction);
         }
         reduction = Math.min(0.95, Math.max(0.0, reduction));
@@ -74,9 +62,11 @@ public class PlayerEntityMixin {
         double weaponCritRateBonus = weaponDefinition != null && weaponData != null
             ? WeaponCombatSupport.INSTANCE.critRateBonusPercent(weaponDefinition)
             : 0.0;
-        double weaponCritDamageBonus = ((Object) this instanceof ServerPlayerEntity serverPlayer) && weaponDefinition != null
-            ? WeaponSkillService.INSTANCE.critDamageBonusPercent(serverPlayer, weaponDefinition.getId()) / 100.0
-            : 0.0;
+        double weaponCritDamageBonus = 0.0;
+        if ((Object) this instanceof ServerPlayerEntity && weaponDefinition != null) {
+            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) (Object) this;
+            weaponCritDamageBonus = WeaponSkillService.INSTANCE.critDamageBonusPercent(serverPlayer, weaponDefinition.getId()) / 100.0;
+        }
         double weaponAllDamageBonus = weaponDefinition != null && weaponData != null
             ? WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData) / 100.0
             : 0.0;
@@ -91,7 +81,8 @@ public class PlayerEntityMixin {
             if (player.getRandom().nextDouble() < critRate) {
                 double critMultiplier = 1.0 + Math.max(0.0, critDamage);
                 result *= critMultiplier;
-                if (player instanceof ServerPlayerEntity serverPlayer) {
+                if (player instanceof ServerPlayerEntity) {
+                    ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
                     CombatFeedbackService.INSTANCE.recordCrit(serverPlayer, critMultiplier);
                 }
                 player.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 0.8F, 1.0F);

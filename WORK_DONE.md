@@ -1,5 +1,18 @@
 # Completed Work
 
+## UI / Gacha / Core Fixes (2026-04-06)
+
+- Fixed the natural HP regeneration bug in `NaturalRegenService` where recovery would "bank" indefinitely at 19.x HP; implemented fractional recovery to top off health and added an accumulation cap of 1.1 points.
+- Fixed a bug where players would only recover to 20 HP upon respawning; added a `pendingFullHeal` flag in `EquipmentAttributeService` to ensure players reach their full calculated maximum health on the first tick after respawn.
+- Removed all acquisition methods for the "Wand Upgrader" (`tueshokaku`) from loot tables and material tags.
+- Revamped the Gacha (Resonance) system probabilities: `5-star: 0.3%`, `4-star: 8.0%`, `3-star: 15.0%`, `2-star: 76.7%`.
+- Implemented a 10-pull 4-star pity system and a 50/50 guarantee (pickup guarantee on next 5-star if previous was a spook).
+- Refactored `ArtifactChestScreenBase.kt` to use a modern, polished visual style:
+    - Integrated vanilla `generic_54.png` background using the 1.21.2+ `drawGuiTexture` API and `RenderPipelines.GUI`.
+    - Automated background slicing to match different slot counts (rows) without texture distortion.
+    - Added decorative gray stained-glass pane fillers to empty slots across all 12 custom screens.
+- Updated technical documentation in `cresora_document.md` to reflect the 1.21.2+ rendering API and gacha logic changes.
+
 ## Version And Build
 
 - Target version migrated to `Minecraft 1.21.7`
@@ -72,6 +85,9 @@
 - Added fixed CSC sell values for Echoes based on rarity and level, with in-screen sale preview and sale confirmation
 - Added new CSC income routes for completed advancements, friendly-mob kills, and positive experience gain
 - Routed advancement completion through a dedicated mixin hook so CSC reward is paid when an advancement actually completes, not merely when the UI is opened
+- Fixed unintended CSC growth by removing the old generic `PlayerEntity.addExperience` hook and moving experience-based CSC payout to a dedicated `ExperienceOrbEntity` pickup redirect, so CSC now increases only from actual XP orb collection instead of every code path that calls `addExperience`
+- Added high-value CSC audit logging in `CreditsService`, so any credit gain/spend of `10,000+` now records the player, delta, total, and originating call path in the server log for fast runtime diagnosis
+- Inflated shop-side CSC pricing to better match the current economy scale: vanilla resource packs now cost `20,000-120,000` CSC, `zankyo_kanata_alpha` now costs `50,000` CSC, and `zankyo_kanata_beta` now costs `2,000,000` CSC
 
 ## Expanded Hostile Reward Coverage
 
@@ -427,6 +443,11 @@
 - The first real `EquipmentData`-driven pendant implementation is now in place
 - GUI polishing is now focused on in-game readability and visual hierarchy
 - The project is ready to continue feature work from a dedicated `dev` branch
+- Fixed the natural HP regeneration bug in `NaturalRegenService` where recovery would "bank" indefinitely and fail to reach max HP when the missing health was less than 1.0; implemented fractional recovery to top off health and added an accumulation cap of 1.1 points to prevent "secret" background recovery at full HP
+- Removed all acquisition methods for the "Wand Upgrader" (杖昇格ツール / `tueshokaku`) by removing its loot table modification and clearing its item tag, while preserving the item definition for legacy compatibility
+- Fixed a bug where players would only recover up to the vanilla 20 HP upon respawning; added a pending heal flag in `EquipmentAttributeService` that ensures players are healed to their full calculated maximum health on the first tick after respawn attributes are applied
+- Revamped Resonance (Gacha) system to reduce "chicken race" scenarios: adjusted base weapon probabilities (`5-star: 0.3%`, `4-star: 8%`, `3-star: 15%`, `2-star: 76.7%`) and introduced a hard pity system for 4-stars (every 10th pull guarantees a 4-star or higher if not already hit)
+- Fixed a bug in the limited resonance banner where pulling a featured 5-star weapon would sometimes fail to reset the 5-star pity counter; refactored the progress update logic to explicitly set the counter to 0 before state recalculation
 - Added [Version_1.2.0_log.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/version_log/Version_1.2.0_log.md) as a multilingual version log entry under `version_log/`
 - Expanded [Version_1.2.0_log.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.1/version_log/Version_1.2.0_log.md) with a Literary Chinese (Simplified Script) section for release notes only
 - Client Mixin added to hide Vanilla player HP bar and render it as numeric text (HP: xxx / yyy) via InGameHudMixin.
@@ -435,4 +456,7 @@
 - Corrected the `BlockRotation` import path to `net.minecraft.util.BlockRotation` following a compilation failure after manual user changes
 - Automatically granted `op` status to `Player798` and verified connection stability
 - Confirmed the client connects successfully and receives the `op` feedback in the chat HUD
-- Verified that the server properly compiles the new ceiling logic into the fallback arena generation
+- Successfully executed the `/jikki-tesuto` (integrated server/client test) on `2026-04-06`
+- Confirmed the dedicated server starts, accepts player `Player515`, and automatically grants `op` status
+- Confirmed the client connects successfully and receives the `op` feedback in the chat HUD
+- Verified that the client transition from login to world render is stable on `Minecraft 1.21.7`

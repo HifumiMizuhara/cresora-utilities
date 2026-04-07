@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: リポジトリ現状追従版
+最終更新: 2026-04-05 (★5排出後カウントリセット不具合修正)
 
 ## 1. 結論
 
@@ -123,6 +123,10 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
   - `cresoraSetLimitedPityPulls(value)`
   - `cresoraGetStandardPulls()`
   - `cresoraSetStandardPulls(value)`
+  - `cresoraGetLimitedFourStarPulls()`
+  - `cresoraSetLimitedFourStarPulls(value)`
+  - `cresoraGetStandardFourStarPulls()`
+  - `cresoraSetStandardFourStarPulls(value)`
   - `cresoraGetDeepPityStreak()`
   - `cresoraSetDeepPityStreak(value)`
   - `cresoraGetArpeggioReady()`

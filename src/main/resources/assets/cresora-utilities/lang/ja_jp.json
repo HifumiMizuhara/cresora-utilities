@@ -278,6 +278,7 @@
   "commands.cresora.resonance.add_feedback": "%s を %s %s 付与しました。所持 %s。",
   "commands.cresora.resonance.set_feedback": "%s の %s を %s に設定しました。",
   "combat.cresora.mob_label": "Lv %s %s HP %s / %s",
+  "combat.cresora.mimic_prefix": "偽 ",
   "combat.cresora.mob_resistance_line": "物耐 %s | 術耐 %s",
   "combat.cresora.damage_combo": "会心! x%s / 与ダメ x%s",
   "combat.cresora.damage_reduced": "被ダメ x%s",

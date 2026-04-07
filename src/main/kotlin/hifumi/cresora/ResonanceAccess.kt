@@ -17,9 +17,21 @@ interface ResonanceAccess {
 
     fun cresoraSetStandardPulls(value: Int)
 
+    fun cresoraGetLimitedFourStarPulls(): Int
+
+    fun cresoraSetLimitedFourStarPulls(value: Int)
+
+    fun cresoraGetStandardFourStarPulls(): Int
+
+    fun cresoraSetStandardFourStarPulls(value: Int)
+
     fun cresoraGetDeepPityStreak(): Int
 
     fun cresoraSetDeepPityStreak(value: Int)
+
+    fun cresoraIsLimitedFiveStarGuaranteed(): Boolean
+
+    fun cresoraSetLimitedFiveStarGuaranteed(value: Boolean)
 
     fun cresoraGetArpeggioReady(): Boolean
 

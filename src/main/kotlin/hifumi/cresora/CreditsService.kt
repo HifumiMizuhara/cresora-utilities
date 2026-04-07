@@ -4,9 +4,12 @@ import net.minecraft.advancement.AdvancementEntry
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.server.network.ServerPlayerEntity
+import org.slf4j.LoggerFactory
 
 object CreditsService {
     private const val PLAYER_CREDITS_KEY = "cresora_credits"
+    private const val LARGE_CHANGE_LOG_THRESHOLD = 10_000
+    private val logger = LoggerFactory.getLogger("${CreSoraUtilities.MOD_ID}/credits")
 
     fun playerCreditsKey(): String = PLAYER_CREDITS_KEY
 
@@ -30,6 +33,7 @@ object CreditsService {
         val access = player as? CreditsAccess ?: return 0
         val updated = (getCredits(player).toLong() + amount.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         access.cresoraSetCredits(updated)
+        logLargeChange(player, amount, updated, "add")
         return updated
     }
 
@@ -44,6 +48,7 @@ object CreditsService {
             return false
         }
         access.cresoraSetCredits(current - normalizedAmount)
+        logLargeChange(player, normalizedAmount, current - normalizedAmount, "spend")
         return true
     }
 
@@ -78,5 +83,34 @@ object CreditsService {
 
     fun addExperienceReward(player: ServerPlayerEntity, amount: Int): Int {
         return addPickupReward(player, CreditsRewardSource.EXPERIENCE_GAIN, amount)
+    }
+
+    private fun logLargeChange(player: ServerPlayerEntity, amount: Int, totalAfter: Int, kind: String) {
+        if (amount < LARGE_CHANGE_LOG_THRESHOLD) {
+            return
+        }
+        logger.info(
+            "Large CSC {} detected: player='{}' delta={} totalAfter={} source={}",
+            kind,
+            player.gameProfile.name,
+            amount,
+            totalAfter,
+            detectCaller()
+        )
+    }
+
+    private fun detectCaller(): String {
+        val ignoredClasses = setOf(
+            CreditsService::class.java.name,
+            Thread::class.java.name
+        )
+        return Throwable().stackTrace
+            .firstOrNull { frame ->
+                frame.className !in ignoredClasses &&
+                    !frame.className.startsWith("java.lang.reflect.") &&
+                    !frame.className.startsWith("jdk.internal.reflect.")
+            }
+            ?.let { "${it.className}#${it.methodName}:${it.lineNumber}" }
+            ?: "unknown"
     }
 }

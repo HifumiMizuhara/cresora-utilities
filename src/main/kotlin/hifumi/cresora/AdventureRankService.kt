@@ -226,7 +226,7 @@ object AdventureRankService {
 
     fun mobLevel(entity: HostileEntity): Int = mobRank(entity)
 
-    fun refreshMobDisplay(entity: HostileEntity) {
+    fun refreshMobDisplay(entity: LivingEntity) {
         CombatMobDisplayService.updateMobStatus(entity)
     }
 

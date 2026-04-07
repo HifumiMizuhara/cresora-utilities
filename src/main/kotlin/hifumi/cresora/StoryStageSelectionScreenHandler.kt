@@ -92,7 +92,7 @@ class StoryStageSelectionScreenHandler(
         for (index in 0 until SLOT_COUNT) {
             displayInventory.setStack(
                 index,
-                chapters.getOrNull(index)?.let { ArtifactDisplayStackFactory.storyChapterEntryDisplay(it, serverPlayer) } ?: ItemStack.EMPTY
+                chapters.getOrNull(index)?.let { ArtifactDisplayStackFactory.storyChapterEntryDisplay(it, serverPlayer) } ?: ArtifactDisplayStackFactory.fillerDisplay()
             )
         }
     }

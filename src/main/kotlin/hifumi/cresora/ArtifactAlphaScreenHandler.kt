@@ -100,7 +100,7 @@ class ArtifactAlphaScreenHandler(
     private fun refreshOptions() {
         val candidates = currentCandidates()
         for (index in 0 until OPTION_SLOT_COUNT) {
-            optionInventory.setStack(index, candidates.getOrNull(index)?.let(ArtifactDisplayStackFactory::alphaCandidateDisplay) ?: ItemStack.EMPTY)
+            optionInventory.setStack(index, candidates.getOrNull(index)?.let(ArtifactDisplayStackFactory::alphaCandidateDisplay) ?: ArtifactDisplayStackFactory.fillerDisplay())
         }
     }
 

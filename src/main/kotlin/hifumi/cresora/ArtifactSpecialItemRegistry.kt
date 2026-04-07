@@ -131,14 +131,14 @@ object ArtifactSpecialItemRegistry {
                     kind = ArtifactSpecialItemKind.ALPHA,
                     translationKeyId = "item.cresora-utilities.zankyo_kanata_alpha",
                     baseItemId = "minecraft:echo_shard",
-                    shopPrice = 10_000
+                    shopPrice = 50_000
                 ),
                 ArtifactSpecialItemDefinition(
                     id = "zankyo_kanata_beta",
                     kind = ArtifactSpecialItemKind.BETA,
                     translationKeyId = "item.cresora-utilities.zankyo_kanata_beta",
                     baseItemId = "minecraft:nether_star",
-                    shopPrice = 500_000,
+                    shopPrice = 2_000_000,
                     mobDrop = ArtifactSpecialMobDrop(
                         rankMin = 45,
                         rankMax = 70,

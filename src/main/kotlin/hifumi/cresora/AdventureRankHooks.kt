@@ -40,6 +40,7 @@ object AdventureRankHooks {
             StoryProgressService.copyTo(oldPlayer, newPlayer)
             MasqueradeProgressService.copyTo(oldPlayer, newPlayer)
             MasqueradeService.restoreAfterRespawn(newPlayer)
+            EquipmentAttributeService.markForFullHeal(newPlayer)
         })
 
         ServerTickEvents.END_WORLD_TICK.register(ServerTickEvents.EndWorldTick { world ->

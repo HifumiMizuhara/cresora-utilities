@@ -82,7 +82,12 @@ object NaturalRegenService {
         val wholePoints = floor(accumulated).coerceAtMost(floor(missingHealth))
 
         if (wholePoints < 1.0) {
-            pendingHealByPlayer[player.uuid] = accumulated
+            if (accumulated >= missingHealth && missingHealth > 0) {
+                player.heal(missingHealth.toFloat())
+                pendingHealByPlayer.remove(player.uuid)
+            } else {
+                pendingHealByPlayer[player.uuid] = accumulated.coerceAtMost(1.1)
+            }
             return
         }
 
@@ -90,8 +95,8 @@ object NaturalRegenService {
         player.heal(wholePoints.toFloat())
         val applied = (player.health - before).toDouble().coerceAtLeast(0.0)
         val remainder = (accumulated - applied).coerceAtLeast(0.0)
-        if (remainder > 0.0001) {
-            pendingHealByPlayer[player.uuid] = remainder
+        if (remainder > 0.0001 && player.health < player.maxHealth - 0.001f) {
+            pendingHealByPlayer[player.uuid] = remainder.coerceAtMost(1.1)
         } else {
             pendingHealByPlayer.remove(player.uuid)
         }

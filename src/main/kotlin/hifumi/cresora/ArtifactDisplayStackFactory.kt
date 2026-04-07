@@ -10,6 +10,12 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 object ArtifactDisplayStackFactory {
+    fun fillerDisplay(): ItemStack {
+        return ItemStack(Items.GRAY_STAINED_GLASS_PANE).apply {
+            set(DataComponentTypes.CUSTOM_NAME, Text.empty())
+        }
+    }
+
     fun cresoraMenuDisplay(optionId: String): ItemStack {
         val item = when (optionId) {
             "story" -> Items.WRITABLE_BOOK

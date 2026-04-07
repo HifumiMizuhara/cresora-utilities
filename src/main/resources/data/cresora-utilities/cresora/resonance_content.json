@@ -9,10 +9,10 @@
       "cost": 325,
       "featuredFiveStarWeaponId": "lakeside_stride",
       "rates": {
-        "fiveStarChance": 0.01,
-        "fourStarChance": 0.0325,
-        "threeStarChance": 0.0799,
-        "twoStarChance": 0.8776
+        "fiveStarChance": 0.003,
+        "fourStarChance": 0.08,
+        "threeStarChance": 0.15,
+        "twoStarChance": 0.767
       },
       "fiveStarPool": [
         {
@@ -76,10 +76,10 @@
       "currencyItemId": "substitute_chord",
       "cost": 325,
       "rates": {
-        "fiveStarChance": 0.01,
-        "fourStarChance": 0.0325,
-        "threeStarChance": 0.0799,
-        "twoStarChance": 0.8776
+        "fiveStarChance": 0.003,
+        "fourStarChance": 0.08,
+        "threeStarChance": 0.15,
+        "twoStarChance": 0.767
       },
       "fiveStarPool": [
         {

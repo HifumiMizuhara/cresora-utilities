@@ -261,17 +261,6 @@ object CreSoraUtilities : ModInitializer {
 				lootDefinition.artifactLoot?.let { artifactLoot ->
 					createArtifactLootPool(artifactLoot)?.let(tableBuilder::pool)
 				}
-				lootDefinition.upgradeMaterialLoot?.let { upgradeToolLoot ->
-					tableBuilder.pool(
-						createUpgradeToolLootPool(
-							chance = upgradeToolLoot.chance,
-							levelProvider = UniformLootNumberProvider.create(
-								upgradeToolLoot.levelMin.toFloat(),
-								upgradeToolLoot.levelMax.toFloat()
-							)
-						)
-					)
-				}
 			}
 		}
 	}
@@ -303,19 +292,6 @@ object CreSoraUtilities : ModInitializer {
 			builder.with(ItemEntry.builder(item))
 		}
 		return builder.build()
-	}
-
-	private fun createUpgradeToolLootPool(
-		chance: Float,
-		levelProvider: LootNumberProvider
-	): LootPool {
-		return LootPool.builder()
-			.rolls(ConstantLootNumberProvider.create(1.0f))
-			.conditionally(RandomChanceLootCondition.builder(chance))
-			.with(ItemEntry.builder(TUESHOKAKU))
-			.apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 1.0f)))
-			.apply(SetLevelLootFunction(levelProvider))
-			.build()
 	}
 }
 

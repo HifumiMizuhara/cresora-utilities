@@ -143,14 +143,14 @@ object ShopContentRegistry {
     private fun defaultBundle(): ShopContentBundle {
         return ShopContentBundle(
             resourceOffers = listOf(
-                ShopResourceOfferDefinition("iron_ingot_pack", "minecraft:iron_ingot", 16, 2_400),
-                ShopResourceOfferDefinition("coal_pack", "minecraft:coal", 32, 2_600),
-                ShopResourceOfferDefinition("redstone_pack", "minecraft:redstone", 32, 3_200),
-                ShopResourceOfferDefinition("lapis_pack", "minecraft:lapis_lazuli", 32, 3_200),
-                ShopResourceOfferDefinition("gold_ingot_pack", "minecraft:gold_ingot", 16, 4_200),
-                ShopResourceOfferDefinition("quartz_pack", "minecraft:quartz", 24, 4_800),
-                ShopResourceOfferDefinition("emerald_pack", "minecraft:emerald", 8, 9_600),
-                ShopResourceOfferDefinition("diamond_pack", "minecraft:diamond", 4, 12_000)
+                ShopResourceOfferDefinition("iron_ingot_pack", "minecraft:iron_ingot", 16, 24_000),
+                ShopResourceOfferDefinition("coal_pack", "minecraft:coal", 32, 20_000),
+                ShopResourceOfferDefinition("redstone_pack", "minecraft:redstone", 32, 26_000),
+                ShopResourceOfferDefinition("lapis_pack", "minecraft:lapis_lazuli", 32, 26_000),
+                ShopResourceOfferDefinition("gold_ingot_pack", "minecraft:gold_ingot", 16, 34_000),
+                ShopResourceOfferDefinition("quartz_pack", "minecraft:quartz", 24, 38_000),
+                ShopResourceOfferDefinition("emerald_pack", "minecraft:emerald", 8, 72_000),
+                ShopResourceOfferDefinition("diamond_pack", "minecraft:diamond", 4, 120_000)
             )
         )
     }

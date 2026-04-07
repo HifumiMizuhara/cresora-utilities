@@ -95,7 +95,7 @@ class ResonanceResultScreenHandler(
 
     private fun refreshDisplay(result: ResonanceService.PullResult) {
         for (index in 0 until SLOT_COUNT) {
-            displayInventory.setStack(index, ItemStack.EMPTY)
+            displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
         displayInventory.setStack(RETURN_SLOT, ArtifactDisplayStackFactory.resonanceReturnButtonDisplay())
         displayInventory.setStack(RESULT_SLOT, ArtifactDisplayStackFactory.resonanceResultDisplay(result))

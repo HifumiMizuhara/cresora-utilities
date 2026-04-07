@@ -14,6 +14,7 @@ object EquipmentAttributeService {
     private val ARMOR_FLAT_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "equipment_armor_flat")
     private val ARMOR_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "equipment_armor_scalar")
     private val equippedFingerprints: MutableMap<UUID, String> = mutableMapOf()
+    private val pendingFullHeal: MutableSet<UUID> = mutableSetOf()
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -33,11 +34,17 @@ object EquipmentAttributeService {
                 handleEquipChanged(player)
                 EquipmentEffectHookService.onTick(player)
 
-                if (player.health > player.maxHealth) {
+                if (pendingFullHeal.remove(player.uuid)) {
+                    player.health = player.maxHealth
+                } else if (player.health > player.maxHealth) {
                     player.health = player.maxHealth
                 }
             }
         }
+    }
+
+    fun markForFullHeal(player: net.minecraft.server.network.ServerPlayerEntity) {
+        pendingFullHeal.add(player.uuid)
     }
 
     private fun handleEquipChanged(player: net.minecraft.server.network.ServerPlayerEntity) {

@@ -103,7 +103,7 @@ class DomainSelectionScreenHandler(
 
     private fun refreshEntries() {
         for (index in 0 until DOMAIN_SLOT_COUNT) {
-            domainInventory.setStack(index, domainDefinitions.getOrNull(index)?.let(DomainDisplayStackFactory::domainDisplay) ?: ItemStack.EMPTY)
+            domainInventory.setStack(index, domainDefinitions.getOrNull(index)?.let(DomainDisplayStackFactory::domainDisplay) ?: ArtifactDisplayStackFactory.fillerDisplay())
         }
     }
 
