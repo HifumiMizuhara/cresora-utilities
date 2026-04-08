@@ -1,8 +1,10 @@
 package hifumi.cresora.mixin;
 
+import hifumi.cresora.AdventureRankMobAccess;
 import hifumi.cresora.AdventureRankService;
 import hifumi.cresora.CombatDamageType;
 import hifumi.cresora.CombatDamageTypeSupport;
+import hifumi.cresora.CresoraDebuffService;
 import hifumi.cresora.EquipmentEffectHookService;
 import hifumi.cresora.MasqueradeService;
 import hifumi.cresora.MobCombatProfileRegistry;
@@ -93,6 +95,11 @@ public class LivingEntityMixin {
             EquipmentEffectHookService.INSTANCE.onDamageTaken(player, source, damageDone);
             if (player instanceof ServerPlayerEntity serverPlayer) {
                 AdventureRankService.INSTANCE.showPlayerDamageFeedback(serverPlayer, source, damageDone);
+                if (source.getAttacker() instanceof HostileEntity hostile && hostile instanceof AdventureRankMobAccess access) {
+                    if (access.cresoraIsEliteMob()) {
+                        CresoraDebuffService.INSTANCE.onEliteHit(serverPlayer, hostile);
+                    }
+                }
             }
             return;
         }

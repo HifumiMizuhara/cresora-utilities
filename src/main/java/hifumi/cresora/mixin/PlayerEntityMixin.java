@@ -4,6 +4,7 @@ import hifumi.cresora.CombatFeedbackService;
 import hifumi.cresora.CombatStatSupport;
 import hifumi.cresora.CombatDamageType;
 import hifumi.cresora.CombatDamageTypeSupport;
+import hifumi.cresora.CresoraDebuffService;
 import hifumi.cresora.EquipmentPlayerSupport;
 import hifumi.cresora.MasqueradeService;
 import hifumi.cresora.StatType;
@@ -39,6 +40,9 @@ public class PlayerEntityMixin {
         if (amount <= 0.0F) {
             return 0.0F;
         }
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            amount = (float) (amount * CresoraDebuffService.INSTANCE.getIncomingDamageMultiplier(serverPlayer));
+        }
         Map<StatType, Double> totals = EquipmentPlayerSupport.getAggregatedStats(player);
         CombatDamageType damageType = CombatDamageTypeSupport.damageSourceType(source);
         double reduction = CombatDamageTypeSupport.effectiveResistanceRatio(totals, damageType);
@@ -56,6 +60,10 @@ public class PlayerEntityMixin {
     @Inject(method = "getDamageAgainst", at = @At("RETURN"), cancellable = true)
     private void cresora$applyOffenseStats(CallbackInfoReturnable<Float> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
+        double debuffMultiplier = 1.0;
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            debuffMultiplier = CresoraDebuffService.INSTANCE.getAttackMultiplier(serverPlayer);
+        }
         Map<StatType, Double> totals = EquipmentPlayerSupport.getAggregatedStats(player);
         WeaponDefinition weaponDefinition = WeaponStackSupport.INSTANCE.getDefinition(player.getMainHandStack());
         WeaponData weaponData = WeaponStackSupport.INSTANCE.getWeaponData(player.getMainHandStack());
@@ -76,7 +84,7 @@ public class PlayerEntityMixin {
         double critDamage = CombatStatSupport.effectiveCritDamageRatio(totals) + weaponCritDamageBonus;
         double damageMultiplier = 1.0 + Math.max(0.0, allBonus);
 
-        double result = cir.getReturnValueF() * damageMultiplier;
+        double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier;
         if (critRate > 0.0) {
             if (player.getRandom().nextDouble() < critRate) {
                 double critMultiplier = 1.0 + Math.max(0.0, critDamage);

@@ -24,6 +24,7 @@ object AdventureRankService {
     private val MOB_HEALTH_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_health_scalar")
     private val MOB_ARMOR_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_armor_bonus")
     private val MOB_TOUGHNESS_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_toughness_bonus")
+    private val MOB_ELITE_SCALE_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_elite_scale")
 
     fun playerRankKey(): String = PLAYER_RANK_KEY
 
@@ -148,12 +149,14 @@ object AdventureRankService {
         val maxHealthInstance = entity.attributes.getCustomInstance(EntityAttributes.MAX_HEALTH) ?: return
         val armorInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR)
         val toughnessInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR_TOUGHNESS)
+        val scaleInstance = entity.attributes.getCustomInstance(EntityAttributes.SCALE)
         val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
         val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
         val baseMaxHealth = maxHealthInstance.baseValue.coerceAtLeast(1.0)
         val effectiveHealthScalar = healthScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteHealthScalar(entity)
         val effectiveDefenseScalar = defenseScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteDefenseScalar(entity)
         val effectiveToughnessScalar = toughnessScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteToughnessScalar(entity)
+
         val rawMultiplier = AdventureRankProfile.healthMultiplier(entity.type, normalizedRank) * effectiveHealthScalar
         val rawTargetHealth = baseMaxHealth * rawMultiplier
         val targetHealth = min(rawTargetHealth, AdventureRankProfile.MOB_HEALTH_CAP)
@@ -173,6 +176,18 @@ object AdventureRankService {
 
         armorInstance?.removeModifier(MOB_ARMOR_BONUS_ID)
         toughnessInstance?.removeModifier(MOB_TOUGHNESS_BONUS_ID)
+        scaleInstance?.removeModifier(MOB_ELITE_SCALE_ID)
+
+        val isElite = (entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false
+        if (isElite) {
+            scaleInstance?.addTemporaryModifier(
+                EntityAttributeModifier(
+                    MOB_ELITE_SCALE_ID,
+                    0.18,
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+            )
+        }
 
         val bonus = AdventureRankProfile.defenseBonus(entity.type, normalizedRank, overflowHealth)
         if (bonus.armorFlat > 0.0) {

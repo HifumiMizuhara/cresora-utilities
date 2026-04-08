@@ -172,6 +172,7 @@ object CreSoraUtilities : ModInitializer {
 		DomainHooks.init()
 		StoryHooks.init()
 		MasqueradeHooks.init()
+		CresoraDebuffHooks.init()
 		TreasureChestService.init()
 		EquipmentAttributeService.init()
 		WeaponAttributeService.init()

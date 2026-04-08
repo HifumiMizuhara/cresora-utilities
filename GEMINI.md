@@ -17,5 +17,6 @@ Maintenance rules:
 - Completed work goes into `WORK_DONE.md`
 - Incomplete or follow-up work goes into `TODO.md`
 - API, registry, or architectural changes go into `cresora_document.md`
+- ALWAYS run a build (e.g., `./gradlew classes`) and verify after completing implementation to ensure no compilation errors or regressions.
 - After large feature changes, update these three files before ending the task
 - Any future collaborator or agent should read `WORK_DONE.md`, `TODO.md`, and `cresora_document.md` first

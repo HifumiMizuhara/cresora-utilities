@@ -66,7 +66,7 @@ object NaturalRegenService {
         }
 
         val foodLevel = player.hungerManager.foodLevel.coerceIn(0, 20)
-        if (foodLevel <= 0) {
+        if (foodLevel <= 0 || !CresoraDebuffService.canHeal(player)) {
             pendingHealByPlayer.remove(player.uuid)
             return
         }

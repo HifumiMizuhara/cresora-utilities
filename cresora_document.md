@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-04-05 (★5排出後カウントリセット不具合修正)
+最終更新: 2026-04-06 (デバフシステムの実装・統合反映)
 
 ## 1. 結論
 
@@ -36,6 +36,7 @@
 - screen handler
 - loot function
 - event / tick hook
+- debuff systems
 - 装備・武器・特殊アイテム本体
 - loot table 改変
 
@@ -648,6 +649,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - mob rank 上限は `AdventureRankProgression` 側に依存
 - field mob は近傍プレイヤー rank を基準に `±5` の振れ幅で割当
 - HP は内部で cap と overflow 防御変換を使う
+- **エリートモブの視覚化**: `EntityAttributes.GENERIC_SCALE` を利用し、エリートモブのモデルサイズとヒットボックスを **18% 拡大** しています。
 
 ### 7.2 CreditsService
 
@@ -811,32 +813,40 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - Equipment 側は Attack / MaxHealth / Armor
 - Weapon 側は held weapon に応じた Attack / Speed / 一部 skill スカラー
 
-### 7.10 WeaponSkillService
+### 7.10 WeaponSkillService & WeaponSkillRegistry
 
 ファイル:
 
 - `WeaponSkillService.kt`
+- `skill/WeaponSkillHandler.kt`
+- `skill/WeaponSkillRegistry.kt`
+- `skill/*.kt` (各スキル実装)
 
-責務:
+設計思想:
 
-- 右クリックスキル発動
-- 武器ごとの CD 管理
-- bossbar CD 表示
-- シールド / 一時防御 / HoT / frost / dark / lux / orchid pavilion などの状態管理
+以前は `WeaponSkillService` に全てのロジックが集中していましたが、現在は **Strategy パターン** に基づき、各スキルが独立したクラスに分割されています。
 
-主 API:
+`WeaponSkillService` の責務:
 
-- `init()`
-- `tryActivate(player, stack)`
-- `absorbDamage(player, amount)`
-- `clearExpiredTemporaryGuard(player)`
-- `clearExpiredSnowMist(player)`
-- そのほか武器固有状態参照メソッド群
+- スキルの共通クールダウン管理 (BossBar 表示)
+  - **重要**: クールダウンは「残りティック数」で管理されるようになり、デバフ等による動的な速度変更に対応しています。
+- 汎用シールド (Shield) および一時ガード (Temporary Guard) のライフサイクル管理
+- `WeaponSkillRegistry` を介した各ハンドラへのイベント（Tick, Damage 等）のディスパッチ
 
-重要仕様:
+`WeaponSkillHandler` インターフェース:
 
-- `skill.effectId` ごとに分岐
-- 汎用化は進んでいるが、固有スキルはまだここが実装中枢
+各スキルクラスが実装する共通フックです。
+
+- `activate(...)`: 右クリック発動時の主処理
+- `onTick(server)` / `onPlayerTick(player)`: 継続効果の更新
+- `onDamageAbsorbed(...)`: 被ダメージ吸収時の特殊処理
+- `onDamageDealt(...)`: 攻撃命中時の追加効果（Dark/Lux 付与、追撃等）
+- `onDamageTaken(...)`: 被弾時の反撃・軽減処理
+
+`WeaponSkillRegistry`:
+
+- `effectId` (JSONの `skill.effectId` に対応) とハンドラを紐付けます。
+- 起動時に `init()` で全ての標準スキルを登録します。
 
 ### 7.11 DomainService
 
@@ -971,13 +981,37 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 責務:
 
 - rank 帯と combat 状態に基づく自然回復
+- `CresoraDebuffService.canHeal` による回復阻害の適用
 
 主 API:
 
 - `init()`
 - `markCombat(player)`
 
-### 7.17 CombatStatSupport
+### 7.17 CresoraDebuffService
+
+ファイル:
+
+- `CresoraDebuff.kt`
+- `CresoraDebuffRegistry.kt`
+- `CresoraDebuffService.kt`
+
+責務:
+
+- プレイヤーに対するデバフ（負の状態異常）の管理
+- エリートモブ攻撃時のデバフ付与判定（現在35%）
+- 攻撃力・被ダメージ・CT速度・回復可否への倍率適用
+
+実装済みデバフ:
+
+- **神経損傷 (NERVE_DAMAGE)**: 与ダメージ減少(0.85x)、被ダメージ増加(1.12x)
+- **移動不能 (ROOT)**: 移動速度を100%減少（その場から動けなくなる）
+- **煙幕 (SMOKE)**: 盲目 (Blindness) を付与
+- **燃焼 (BURN)**: 継続的な火炎ダメージ
+- **CT延長 (COOLDOWN_PENALTY)**: 武器スキルのクールダウン解消速度が50%に低下
+- **回復阻害 (HEAL_BLOCK)**: 自然回復を完全に停止
+
+### 7.18 CombatStatSupport
 
 ファイル:
 
@@ -1090,10 +1124,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ### 9.2 まだコード実装が必要な領域
 
-- 新しい `WeaponSkillDefinition.effectId` の固有挙動
-- 新しい動的 set effect hook の本体
-- 特殊な GUI 挙動
-- 新しい server tick ベース状態管理
+- **新しい `WeaponSkillDefinition.effectId`**: `WeaponSkillHandler` を実装した新しいクラスを作成し、`WeaponSkillRegistry` に登録する必要があります。
+- 新しい動的 set effect hook の本体: `EquipmentEffectHookService` へのロジック追加が必要です。
+- 特殊な GUI 挙動: 新しい Screen / ScreenHandler の作成が必要です。
 
 ### 9.3 追加時の基本手順
 
@@ -1107,7 +1140,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 1. `weapon_content.json` に `WeaponDefinition` を追加
 2. モデル・アイテム定義・翻訳を追加
-3. `skill.effectId` が既存で足りなければ `WeaponSkillService` を拡張
+3. `skill.effectId` が新規の場合、`WeaponSkillHandler` を実装する新しいクラスを作成し、`WeaponSkillRegistry` に登録します。
 4. 必要なら `ResonanceContentRegistry` や秘境報酬にも接続
 
 新しいストーリー:
@@ -1134,7 +1167,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 4. `ArtifactUiFlow.kt`
 5. `*ContentRegistry.kt`
 6. `EquipmentStackSupport.kt` / `WeaponStackSupport.kt`
-7. `AdventureRankService.kt` / `CreditsService.kt` / `ResonanceService.kt`
+7. `AdventureRankService.kt` / `CreditsService.kt` / `ResonanceService.kt` / `CresoraDebuffService.kt`
 8. `StoryService.kt` / `DomainService.kt` / `MasqueradeService.kt`
 9. `WeaponSkillService.kt`
 

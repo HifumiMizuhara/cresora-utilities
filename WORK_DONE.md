@@ -1,5 +1,20 @@
 # Completed Work
 
+## Enemy / Elite Refactor (2026-04-07)
+
+- Implemented a visual scaling system for elite monsters using the `EntityAttributes.GENERIC_SCALE` attribute (1.21.7 compatible), increasing their model and hitbox size by 18% for better visibility.
+- Built a custom debuff system (`CresoraDebuff`) that operates independently of vanilla StatusEffects, allowing for deeper integration with mod-specific combat mechanics.
+- Implemented six initial custom debuffs applied by elite monsters:
+    - **Nerve Damage**: Reduces attack power by 15% and increases incoming damage by 12%.
+    - **Root**: Completely stops movement by applying a -100% speed attribute modifier.
+    - **Smoke**: Periodically applies Blindness and provides a visual penalty.
+    - **Burn**: Deals periodic fire damage.
+    - **Cooldown Penalty**: Slows down weapon skill cooldown progression by 50%.
+    - **Heal Block**: Disables all forms of HP recovery (natural regen and weapon skills).
+- Refactored `WeaponSkillService` cooldown management to use a tick-based "remaining duration" model instead of a static "expire timestamp", enabling dynamic cooldown speed adjustments (penalties).
+- Integrated debuff effects into `NaturalRegenService` (healing check), `WeaponSkillService` (healing and cooldown checks), and `PlayerEntityMixin` (damage/defense multipliers).
+- Added localization for all debuffs and system messages in both English (`en_us.json`) and Japanese (`ja_jp.json`).
+
 ## UI / Gacha / Core Fixes (2026-04-06)
 
 - Fixed the natural HP regeneration bug in `NaturalRegenService` where recovery would "bank" indefinitely at 19.x HP; implemented fractional recovery to top off health and added an accumulation cap of 1.1 points.
@@ -12,6 +27,10 @@
     - Automated background slicing to match different slot counts (rows) without texture distortion.
     - Added decorative gray stained-glass pane fillers to empty slots across all 12 custom screens.
 - Updated technical documentation in `cresora_document.md` to reflect the 1.21.2+ rendering API and gacha logic changes.
+- Split the monolithic `WeaponSkillService.kt` into modular components using a Strategy pattern architecture:
+    - Extracted all individual weapon skills (`dark_lux`, `baa_mimic`, `orchid_pavilion_echo`, etc.) into dedicated classes in the `hifumi.cresora.skill` package.
+    - Introduced the `WeaponSkillHandler` interface and `WeaponSkillRegistry` to map and delegate skill logic.
+    - Moved skill-specific state classes (e.g., `SnowMistState`, `SunlitHasteState`, `BoyaState`) and private methods out of the central service to encapsulate them properly.
 
 ## Version And Build
 
