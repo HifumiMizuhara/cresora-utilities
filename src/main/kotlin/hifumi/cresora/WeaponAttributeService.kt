@@ -11,6 +11,8 @@ object WeaponAttributeService {
     private val SNOW_ATTACK_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_snow_attack_scalar")
     private val ORCHID_PAVILION_ATTACK_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_orchid_pavilion_attack_scalar")
     private val ORCHID_PAVILION_ARMOR_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_orchid_pavilion_armor_scalar")
+    private val DYNAMIC_ATTACK_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_dynamic_attack_scalar")
+    private val DYNAMIC_ARMOR_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "weapon_dynamic_armor_scalar")
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -18,6 +20,14 @@ object WeaponAttributeService {
                 val heldStack = player.mainHandStack
                 val definition = WeaponStackSupport.getDefinition(heldStack)
                 val data = WeaponStackSupport.getWeaponData(heldStack)
+                
+                var dynamicAttackScalar = 0.0
+                var dynamicArmorScalar = 0.0
+                for (handler in hifumi.cresora.skill.WeaponSkillRegistry.allHandlers()) {
+                    dynamicAttackScalar += handler.getAttackDamageScalar(player)
+                    dynamicArmorScalar += handler.getArmorScalar(player)
+                }
+
                 updateModifier(
                     player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE),
                     ATTACK_DAMAGE_ID,
@@ -43,9 +53,21 @@ object WeaponAttributeService {
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
                 updateModifier(
+                    player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE),
+                    DYNAMIC_ATTACK_SCALAR_ID,
+                    dynamicAttackScalar,
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+                updateModifier(
                     player.attributes.getCustomInstance(EntityAttributes.ARMOR),
                     ORCHID_PAVILION_ARMOR_SCALAR_ID,
                     WeaponSkillService.orchidPavilionArmorScalar(player),
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+                updateModifier(
+                    player.attributes.getCustomInstance(EntityAttributes.ARMOR),
+                    DYNAMIC_ARMOR_SCALAR_ID,
+                    dynamicArmorScalar,
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
             }

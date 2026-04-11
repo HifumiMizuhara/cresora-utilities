@@ -479,5 +479,9 @@
   "screen.cresora.masquerade.support.guard_five.desc": "On waves divisible by 5, nullify incoming enemy damage at 50%, CD 5s",
   "screen.cresora.story.reward": "Movement Rewards",
   "screen.cresora.story.reward_credits": "Reward CSC %s",
-  "screen.cresora.story.reward_currency": "%s x%s"
+  "screen.cresora.story.reward_currency": "%s x%s",
+  "item.cresora-utilities.crimson_flash": "Crimson Flash",
+  "item.cresora-utilities.crimson_flash.skill": "Blood Rush",
+  "item.cresora.weapon.skill.buff.rush.gained": "Bloodlust accelerating (Stack: %s)",
+  "item.cresora.weapon.skill.buff.rush.expired": "Bloodlust subsided"
 }

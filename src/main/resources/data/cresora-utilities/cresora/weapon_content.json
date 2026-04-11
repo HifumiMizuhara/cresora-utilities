@@ -589,6 +589,146 @@
         "directDropBaseLevelMultiplier": 0.0,
         "fiveStarChanceMultiplierAtLevel70": 1.0
       }
+    },
+    {
+      "id": "example_saber",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 10.0,
+      "attackDamagePerLevel": 0.5,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "example_heal",
+        "durationSeconds": 0,
+        "cooldownSeconds": 20,
+        "baseValue": 5.0,
+        "valuePerLevel": 1.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "three_star"
+      }
+    },
+    {
+      "id": "buff_test_saber",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 12.0,
+      "attackDamagePerLevel": 0.6,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "tactical_surge",
+        "durationSeconds": 0,
+        "cooldownSeconds": 15,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "four_star"
+      }
+    },
+    {
+      "id": "crimson_flash",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 12.0,
+      "attackDamagePerLevel": 0.8,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "blood_rush",
+        "durationSeconds": 0,
+        "cooldownSeconds": 25,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "five_star"
+      }
+    },
+    {
+      "id": "azure_blade",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 9.0,
+      "attackDamagePerLevel": 0.4,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "azure_flow",
+        "durationSeconds": 0,
+        "cooldownSeconds": 10,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "three_star"
+      }
+    },
+    {
+      "id": "stance_test",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 10.0,
+      "attackDamagePerLevel": 0.5,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "main_skill",
+        "durationSeconds": 0,
+        "cooldownSeconds": 10,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "five_star"
+      }
     }
   ]
 }

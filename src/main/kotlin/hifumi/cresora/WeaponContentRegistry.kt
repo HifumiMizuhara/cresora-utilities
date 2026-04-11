@@ -177,6 +177,22 @@ data class WeaponDefinition(
     fun translationKey(): String = "item.cresora-utilities.$id"
 
     fun fragmentTranslationKey(): String = "item.cresora-utilities.${craft.fragmentItemId}"
+
+    companion object {
+        val DUMMY = WeaponDefinition(
+            id = "dummy",
+            baseItemId = "minecraft:air",
+            baseAttackDamage = 0.0,
+            attackDamagePerLevel = 0.0,
+            totalAttackSpeed = 0.0,
+            maxBaseLevel = 1,
+            maxSkillLevel = 1,
+            skill = WeaponSkillDefinition("none", 0, 0, 0.0, 0.0),
+            upgrades = WeaponUpgradeDefinition(0, 0, 0, 0),
+            craft = WeaponCraftDefinition("dummy", "air", 0, WeaponRarity.TWO_STAR, 1, 1),
+            drops = WeaponDropDefinition(WeaponFragmentDropDefinition(0, 0.0, 0, 0, 0), emptyList(), 0.0, 0.0)
+        )
+    }
 }
 
 data class WeaponDefinitionRef(
@@ -200,6 +216,7 @@ data class WeaponContentBundle(
 
 object WeaponContentRegistry {
     private const val CONTENT_RESOURCE = "data/cresora-utilities/cresora/weapon_content.json"
+    private const val CWC_CONTENT_RESOURCE = "data/cresora-utilities/cresora/cwc_weapon_content.json"
 
     internal val WEAPON_DEFINITION_CODEC: Codec<WeaponDefinition> = RecordCodecBuilder.create { instance ->
         instance.group(
@@ -227,14 +244,24 @@ object WeaponContentRegistry {
     private var weapons: Map<String, WeaponDefinition> = emptyMap()
 
     fun init() {
+        weapons = emptyMap() // Reset before loading
         applyBundle(defaultBundle())
-        runCatching { loadBundledContent() }
+        runCatching { loadBundledContent(CONTENT_RESOURCE) }
             .onSuccess { bundle ->
                 applyBundle(bundle)
                 logger.info("Loaded weapon content from {}", CONTENT_RESOURCE)
             }
             .onFailure { throwable ->
                 logger.error("Failed to load weapon content from {}. Using built-in defaults.", CONTENT_RESOURCE, throwable)
+            }
+        
+        runCatching { loadBundledContent(CWC_CONTENT_RESOURCE) }
+            .onSuccess { bundle ->
+                applyBundle(bundle)
+                logger.info("Loaded CWC weapon content from {}", CWC_CONTENT_RESOURCE)
+            }
+            .onFailure {
+                // Ignore failure if CWC file doesn't exist yet
             }
     }
 
@@ -248,9 +275,9 @@ object WeaponContentRegistry {
         return weapons.values.firstOrNull { it.craft.fragmentItemId == fragmentItemId }
     }
 
-    private fun loadBundledContent(): WeaponContentBundle {
-        val stream = WeaponContentRegistry::class.java.classLoader.getResourceAsStream(CONTENT_RESOURCE)
-            ?: error("Missing resource: $CONTENT_RESOURCE")
+    private fun loadBundledContent(resourcePath: String): WeaponContentBundle {
+        val stream = WeaponContentRegistry::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: error("Missing resource: $resourcePath")
         InputStreamReader(stream).use { reader ->
             val json = JsonParser.parseReader(reader)
             return WeaponContentBundle.CODEC.parse(JsonOps.INSTANCE, json)
@@ -259,8 +286,9 @@ object WeaponContentRegistry {
     }
 
     private fun applyBundle(bundle: WeaponContentBundle) {
-        val weaponMap = bundle.weaponDefinitions.associateBy(WeaponDefinition::id)
-        require(weaponMap.size == bundle.weaponDefinitions.size) { "Duplicate weapon ids found in content bundle" }
+        val weaponMap = weapons.toMutableMap()
+        val newWeapons = bundle.weaponDefinitions.associateBy(WeaponDefinition::id)
+        require(newWeapons.size == bundle.weaponDefinitions.size) { "Duplicate weapon ids found in content bundle" }
         for (definition in bundle.weaponDefinitions) {
             require(definition.maxBaseLevel >= 1) { "Weapon '${definition.id}' maxBaseLevel must be >= 1" }
             require(definition.maxSkillLevel >= 1) { "Weapon '${definition.id}' maxSkillLevel must be >= 1" }
@@ -276,6 +304,7 @@ object WeaponContentRegistry {
                 }
             }
         }
+        weaponMap.putAll(newWeapons)
         weapons = weaponMap
     }
 

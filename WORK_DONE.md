@@ -1,5 +1,64 @@
 # Completed Work
 
+## Cresora Weapon Compiler (CWC) - Clean Build & Data Isolation (2026-04-11)
+
+- Refactored the CWC compiler to implement a "Generate From Zero" strategy, preventing orphaned code and data from causing bugs.
+- Moved all generated Kotlin skill handlers to a dedicated `hifumi.cresora.skill.generated` package.
+- Implemented automatic directory cleanup (`rm -rf`) of the `generated` package at the start of each compilation.
+- Isolated CWC-generated weapon data into a new standalone file: `cwc_weapon_content.json`.
+- Updated `WeaponContentRegistry` to support dynamic merging of multiple JSON resource files, allowing hand-written and compiled weapons to coexist seamlessly.
+- Verified that deleting or renaming `.cresora` files correctly removes their associated logic and data from the build.
+
+## Cresora Weapon Compiler (CWC) - Hotbar Override & Sub-Skill System (2026-04-11)
+
+- Implemented a "Stance/Multi-Skill" system that allows weapons to temporarily override the player's hotbar with sub-skills.
+- Created `HotbarOverrideService` to handle temporary inventory snapshot, protection, and restoration.
+- Added automatic restoration logic based on duration (ticks) and user actions.
+- Introduced `SubSkillItem` and the `SUB_SKILL_EFFECT_ID` Data Component to represent sub-skills as temporary hotbar items.
+- Extended the CWC DSL with the `sub_skill` block and keywords like `icon`.
+- Implemented `open_skill_menu(ids, duration)` and `close_skill_menu()` DSL actions.
+- Updated the compiler to generate independent `WeaponSkillHandler` classes for each sub-skill and register them automatically.
+- Verified the complete flow with a `Stance Test` script, confirming successful compilation and project-wide build stability.
+
+## Cresora Weapon Compiler (CWC) - Buff Translation Support (2026-04-11)
+
+- Added the `translation_key` field to the `buff` block in the CWC DSL.
+- Enhanced the compiler to support `buff_<id>_name` in the `translations` block, mapping it to either the custom `translation_key` or a default key.
+- Updated Kotlin code generation to use nested `Text.translatable` for buff messages, allowing the buff name to be passed as a dynamic parameter.
+- Verified that localized buff names and messages are correctly merged into `lang/*.json` files and used by the generated weapon logic.
+
+## Cresora Weapon Compiler (CWC) - Translation & Resource Linkage (2026-04-11)
+
+- Integrated language file management into the CWC compiler.
+- Added the `translations` block to the DSL, allowing developers to define localized strings (e.g., `ja_jp`, `en_us`) directly within the weapon script.
+- Automated the generation and linkage of standard translation keys:
+    - Weapon names: `item.cresora-utilities.<id>`
+    - Skill names: `item.cresora-utilities.<id>.skill`
+    - Buff messages: `item.cresora.weapon.skill.buff.<id>.<gained/expired>`
+- Implemented a JSON merging strategy in the compiler to update `assets/cresora-utilities/lang/*.json` files without overwriting existing manual entries.
+- Achieved "Full No-Code" weapon creation, where stats, logic, and localized UI text are all managed through a single `.cresora` file.
+
+## Cresora Weapon Compiler (CWC) - Buff & Stacking Extension (2026-04-11)
+
+- Extended the CWC DSL to support complex buff and stacking mechanics.
+- Added the `buff` block inside `skill` definitions, allowing for `max_stacks`, `duration`, and per-stack stat bonuses.
+- Implemented automatic generation of buff state data classes and player-specific state maps.
+- Added lifecycle management for buffs, including automatic expiry and removal during `onPlayerTick`.
+- Generalized the weapon stat calculation pipeline by adding dynamic scalar aggregation to `WeaponSkillHandler`, `WeaponAttributeService`, and `WeaponCombatSupport`.
+- Supported dynamic bonuses for Attack Damage, Armor, Crit Rate, and Crit Damage across all compiled weapon skills.
+- Implemented the `add_buff` DSL action, which automatically handles stack accumulation and duration refreshing.
+- Verified the extension with a `Buff Test Saber` definition, confirming correct Kotlin code generation and integration with the game's attribute system.
+
+## Cresora Weapon Compiler (CWC) (2026-04-11)
+
+- Implemented a custom Domain-Specific Language (DSL) with the `.cresora` extension for defining weapons and skill logic in a single file.
+- Built a custom Lexer and Recursive Descent Parser to translate `.cresora` scripts into an Abstract Syntax Tree (AST).
+- Developed a Code Generator using `KotlinPoet` to automatically emit `WeaponSkillHandler` implementations and a `CompiledWeaponSkillRegistry` for seamless integration.
+- Integrated a JSON Generator to automatically manage and update `weapon_content.json` based on DSL definitions, reducing manual data entry.
+- Integrated the compiler into the Gradle build process via a custom `generateWeapons` task, ensuring weapons are compiled automatically before the main Kotlin compilation.
+- Separated the compiler into its own `compiler` source set to prevent circular dependencies and maintain a clean project structure.
+- Verified the end-to-end flow with an `Example Saber` definition, successfully generating both logic and data components.
+
 ## Enemy / Elite Refactor (2026-04-07)
 
 - Implemented a visual scaling system for elite monsters using the `EntityAttributes.GENERIC_SCALE` attribute (1.21.7 compatible), increasing their model and hitbox size by 18% for better visibility.

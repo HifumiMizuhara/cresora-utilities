@@ -34,5 +34,7 @@ data class WeaponData(
                 Codec.INT.fieldOf("skillLevel").forGetter(WeaponData::skillLevel)
             ).apply(instance, ::WeaponData)
         }
+
+        val DUMMY = WeaponData("dummy", WeaponRarity.TWO_STAR, 1, 1)
     }
 }

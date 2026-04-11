@@ -67,14 +67,17 @@ public class PlayerEntityMixin {
         Map<StatType, Double> totals = EquipmentPlayerSupport.getAggregatedStats(player);
         WeaponDefinition weaponDefinition = WeaponStackSupport.INSTANCE.getDefinition(player.getMainHandStack());
         WeaponData weaponData = WeaponStackSupport.INSTANCE.getWeaponData(player.getMainHandStack());
-        double weaponCritRateBonus = weaponDefinition != null && weaponData != null
-            ? WeaponCombatSupport.INSTANCE.critRateBonusPercent(weaponDefinition)
-            : 0.0;
+        
+        double weaponCritRateBonus = 0.0;
         double weaponCritDamageBonus = 0.0;
-        if ((Object) this instanceof ServerPlayerEntity && weaponDefinition != null) {
-            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) (Object) this;
-            weaponCritDamageBonus = WeaponSkillService.INSTANCE.critDamageBonusPercent(serverPlayer, weaponDefinition.getId()) / 100.0;
+        
+        if (player instanceof ServerPlayerEntity serverPlayer && weaponDefinition != null) {
+            weaponCritRateBonus = WeaponCombatSupport.INSTANCE.totalCritRateBonusPercent(serverPlayer, weaponDefinition);
+            weaponCritDamageBonus = WeaponCombatSupport.INSTANCE.totalCritDamageBonusPercent(serverPlayer, weaponDefinition) / 100.0;
+        } else if (weaponDefinition != null) {
+            weaponCritRateBonus = WeaponCombatSupport.INSTANCE.critRateBonusPercent(weaponDefinition);
         }
+
         double weaponAllDamageBonus = weaponDefinition != null && weaponData != null
             ? WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData) / 100.0
             : 0.0;

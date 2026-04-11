@@ -1,6 +1,9 @@
 # TODO
 
 ## System Expansion & Refinement
+- Cresora Weapon Compiler (CWC) のアクションセットを拡張し、`player.heal()` 以外の Minecraft API 呼び出し（デバフ付与、AOE攻撃など）を DSL 命令としてラップする
+- `.cresora` ファイル内で複数の武器を定義できるようにパーサーをさらに洗練させる
+- DSL 内での簡易的な数式計算（レベル依存のステータス算出など）のサポート
 - 汎用装備システムを拡張し、将来の新しい装備カテゴリが同じ生成・成長バックエンドを再利用できるようにする
 - 新しいセット効果フック（equip change, attack dealt, damage taken, kill, tick）の本格的なハンドラを実装し、ステータス加算以外の動的なセットボーナスを可能にする
 - `equipment_content.json` の肥大化に備え、レジストリスキーマを維持したままリソースファイルを分割することを検討する

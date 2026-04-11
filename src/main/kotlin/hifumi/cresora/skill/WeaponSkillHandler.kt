@@ -31,4 +31,12 @@ interface WeaponSkillHandler {
     fun onDamageTaken(player: ServerPlayerEntity, amount: Float): Float {
         return amount
     }
+
+    fun getAttackDamageScalar(player: ServerPlayerEntity): Double = 0.0
+
+    fun getArmorScalar(player: ServerPlayerEntity): Double = 0.0
+
+    fun getCritRateBonus(player: ServerPlayerEntity): Double = 0.0
+
+    fun getCritDamageBonus(player: ServerPlayerEntity): Double = 0.0
 }

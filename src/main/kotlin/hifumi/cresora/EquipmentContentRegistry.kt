@@ -141,6 +141,14 @@ object EquipmentContentRegistry {
         return equipmentDefinitions.values.count { it.setId == setId }
     }
 
+    fun applyMobLootRules(key: net.minecraft.registry.RegistryKey<net.minecraft.loot.LootTable>, builder: net.minecraft.loot.LootTable.Builder, registries: net.minecraft.registry.RegistryWrapper.WrapperLookup) {
+        val rules = mobLoot.filter { it.entityTypeId == key.value.toString() }
+        for (rule in rules) {
+            // Implement rule application logic here if needed
+            // For now, this is a placeholder to satisfy the reference
+        }
+    }
+
     private fun loadBundledContent(): EquipmentContentBundle {
         val stream = EquipmentContentRegistry::class.java.classLoader.getResourceAsStream(CONTENT_RESOURCE)
             ?: error("Missing resource: $CONTENT_RESOURCE")

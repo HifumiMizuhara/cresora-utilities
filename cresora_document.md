@@ -1,18 +1,19 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-04-06 (デバフシステムの実装・統合反映)
+最終更新: 2026-04-11 (Cresora Weapon Compiler 導入反映)
 
 ## 1. 結論
 
 このプロジェクトの API は、典型的な「外部公開ライブラリ API」ではありません。
-実態は次の 4 本柱です。
+実態は次の 5 本柱です。
 
 1. `CreSoraUtilities` を起点とする初期化・登録 API
 2. `ModDataComponents` と mixin access interface 群による保存 API
 3. `*ContentRegistry` 群と `data/cresora-utilities/cresora/*.json` によるデータ駆動 API
 4. `*Service` / `*Support` / `ArtifactUiFlow` / `Commands` によるゲーム内実行 API
+5. **Cresora Weapon Compiler (CWC)**: `.cresora` スクリプトからコードと JSON を自動生成するビルドタイム API
 
-要するに、今の CreSora は「コード中心のフレームワーク」ではなく「サービス singleton + JSON レジストリ」の集合体です。
+要するに、今の CreSora は「サービス singleton + JSON レジストリ」に加えて「コード生成エンジン」を備えたハイブリッドフレームワークです。
 
 ## 2. エントリポイント
 
@@ -54,6 +55,7 @@
 - `StoryContentRegistry.init()`
 - `ResonanceContentRegistry.init()`
 - `MusicEchoContentRegistry.init()`
+- `CompiledWeaponSkillRegistry.registerAll(this)` (CWCにより自動生成)
 
 ### 2.3 登録済み ScreenHandler ID
 
@@ -1172,3 +1174,40 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 9. `WeaponSkillService.kt`
 
 これで大半の構造が見えます。
+
+## 12. Cresora Weapon Compiler (CWC)
+`.cresora` ファイルを `src/main/cresora/` に配置することで、ビルド時に以下の要素が自動生成されます。
+
+- **Kotlin コード**: `hifumi.cresora.skill.generated.*Skill` (ハンドラ本体)
+- **JSON データ**: `cwc_weapon_content.json` (自動生成武器専用の定義ファイル)
+- **登録処理**: `CompiledWeaponSkillRegistry` (レジストリへの自動登録)
+
+CWC はコンパイルのたびに出力先（`generated` パッケージおよび `cwc_weapon_content.json`）を完全にクリアしてから再生成するため、常に最新のスクリプト内容が正確に反映されます。既存の `weapon_content.json` は手動定義用として保持され、ゲーム実行時に自動的にマージされます。
+
+```cresora
+weapon "Name" {
+    id: "id"
+    stats { ... }
+    skill "Tactical Stance" {
+        on_activate {
+            open_skill_menu("flame_strike", "ice_wall", 5s)
+        }
+    }
+    sub_skill "Flame Strike" {
+        effect_id: "flame_strike"
+        icon: "minecraft:blaze_powder"
+        on_activate {
+            add_buff("burn", 1)
+            close_skill_menu()
+        }
+    }
+    translations {
+        ja_jp {
+            name: "武器名"
+            sub_skill_flame_strike_name: "炎の連撃"
+        }
+    }
+}
+```
+- **ホットバー展開**: `open_skill_menu` で指定したサブスキルがホットバー（0〜8スロット）に並びます。元のアイテムは自動的に退避され、スキル使用後または時間切れで復元されます。
+- **サブスキル定義**: `sub_skill` ブロックでアイコンと挙動を定義します。これらは独立したスキルハンドラとして生成されます。

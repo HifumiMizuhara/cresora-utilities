@@ -71,6 +71,7 @@ dependencies {
 	modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cardinal_components_version}"
 	modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cardinal_components_version}"
 	modImplementation "maven.modrinth:trinkets-canary:${project.trinkets_version}"
+	implementation "com.squareup:kotlinpoet:1.16.0"
 }
 
 processResources {
@@ -90,6 +91,28 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 		jvmTarget = 21
 	}
 }
+
+sourceSets {
+	compiler {
+		kotlin.srcDirs = ['src/compiler/kotlin']
+	}
+}
+
+dependencies {
+	compilerImplementation "com.squareup:kotlinpoet:1.16.0"
+	compilerImplementation "com.google.code.gson:gson:2.11.0"
+	compilerImplementation "org.jetbrains.kotlin:kotlin-stdlib"
+}
+
+task generateWeapons(type: JavaExec) {
+    group = "cresora"
+    mainClass = "hifumi.cresora.compiler.MainKt"
+    classpath = sourceSets.compiler.runtimeClasspath
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
+compileKotlin.dependsOn generateWeapons
 
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task

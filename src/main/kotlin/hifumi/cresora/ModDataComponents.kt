@@ -54,6 +54,15 @@ object ModDataComponents {
             .build()
     )
 
+    val SUB_SKILL_EFFECT_ID: ComponentType<String> = Registry.register(
+        Registries.DATA_COMPONENT_TYPE,
+        Identifier.of(CreSoraUtilities.MOD_ID, "sub_skill_effect_id"),
+        ComponentType.builder<String>()
+            .codec(Codec.STRING)
+            .packetCodec(PacketCodecs.STRING)
+            .build()
+    )
+
     // このメソッドをModの初期化時に呼ぶことで、クラスがロードされコンポーネントが登録される
     fun initialize() {}
 }
