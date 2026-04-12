@@ -1,6 +1,6 @@
 package hifumi.cresora.compiler
 
-class Parser(private val tokens: List<Token>) {
+class Parser(private val source: String, private val tokens: List<Token>) {
     private var current = 0
 
     fun parse(): List<WeaponDefNode> {
@@ -34,7 +34,8 @@ class Parser(private val tokens: List<Token>) {
                 }
                 "rarity" -> {
                     consume(TokenType.COLON, "Expect ':' after rarity")
-                    rarity = consume(TokenType.IDENTIFIER, "Expect rarity").lexeme
+                    val token = advance()
+                    rarity = if (token.type == TokenType.STRING) token.lexeme else token.lexeme
                 }
                 "base_item" -> {
                     consume(TokenType.COLON, "Expect ':' after base_item")
@@ -205,7 +206,12 @@ class Parser(private val tokens: List<Token>) {
             consume(TokenType.LEFT_BRACE, "Expect '{' for locale")
             val pairs = mutableMapOf<String, String>()
             while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-                val key = consume(TokenType.IDENTIFIER, "Expect key").lexeme
+                val token = advance()
+                val key = if (token.type == TokenType.IDENTIFIER || token.type == TokenType.STRING) {
+                    token.lexeme
+                } else {
+                    throw RuntimeException("Expect key at line ${token.line}")
+                }
                 consume(TokenType.COLON, "Expect ':'")
                 val value = consume(TokenType.STRING, "Expect string value").lexeme
                 pairs[key] = value
@@ -238,18 +244,69 @@ class Parser(private val tokens: List<Token>) {
                 }
                 consume(TokenType.RIGHT_PAREN, "Expect ')'")
                 
-                when (name) {
-                    "open_skill_menu" -> {
-                        if (args.size < 2) throw RuntimeException("open_skill_menu requires at least one sub-skill and a duration")
-                        val subSkillIds = args.dropLast(1).map { it.removeSurrounding("\"") }
-                        val duration = parseTimeFromValue(args.last())
-                        actions.add(OpenSkillMenuActionNode(subSkillIds, duration))
+                if (check(TokenType.LEFT_BRACE)) {
+                    consume(TokenType.LEFT_BRACE, "Expect '{'")
+                    val blockActions = mutableListOf<ActionNode>()
+                    // Basic block parsing - doesn't support nested blocks well for now but enough for these actions
+                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                        // For area_of_effect we might want specific sub-actions
+                        // For now let's just parse them as regular actions if we can recurse
+                        // Actually, let's just use CommandActionNode for internal actions too
+                        val subName = consume(TokenType.IDENTIFIER, "Expect action name").lexeme
+                        consume(TokenType.LEFT_PAREN, "Expect '('")
+                        val subArgs = mutableListOf<String>()
+                        while (!check(TokenType.RIGHT_PAREN)) {
+                            val subArgToken = advance()
+                            if (subArgToken.type == TokenType.STRING) subArgs.add("\"${subArgToken.lexeme}\"")
+                            else subArgs.add(subArgToken.lexeme)
+                            if (check(TokenType.COMMA)) advance()
+                        }
+                        consume(TokenType.RIGHT_PAREN, "Expect ')'")
+                        blockActions.add(CommandActionNode(subName, subArgs))
                     }
-                    "close_skill_menu" -> actions.add(CloseSkillMenuActionNode)
-                    else -> actions.add(CommandActionNode(name, args))
+                    consume(TokenType.RIGHT_BRACE, "Expect '}'")
+                    
+                    when (name) {
+                        "area_of_effect" -> {
+                            val radius = args.getOrNull(0)?.toDoubleOrNull() ?: 5.0
+                            // Simplified: convert to multiple CommandActionNodes or a dedicated AOE node
+                            // For now, let's just use ExpressionNode as a placeholder or implement AOE logic
+                            actions.add(CommandActionNode("area_of_effect", args + listOf(blockActions.joinToString(";") { "${it.let { if (it is CommandActionNode) it.commandName + "(" + it.arguments.joinToString(",") + ")" else "" }}" })))
+                        }
+                        else -> actions.add(CommandActionNode(name, args))
+                    }
+                } else {
+                    when (name) {
+                        "open_skill_menu" -> {
+                            if (args.size < 2) throw RuntimeException("open_skill_menu requires at least one sub-skill and a duration")
+                            val subSkillIds = args.dropLast(1).map { it.removeSurrounding("\"") }
+                            val duration = parseTimeFromValue(args.last())
+                            actions.add(OpenSkillMenuActionNode(subSkillIds, duration))
+                        }
+                        "close_skill_menu" -> actions.add(CloseSkillMenuActionNode)
+                        else -> actions.add(CommandActionNode(name, args))
+                    }
                 }
+            } else if (name == "execute" && check(TokenType.LEFT_BRACE)) {
+                val openBrace = consume(TokenType.LEFT_BRACE, "Expect '{'")
+                val blockStartPos = openBrace.endOffset
+                var lastPos = blockStartPos
+                
+                var braceCount = 1
+                while (braceCount > 0 && !isAtEnd()) {
+                    if (check(TokenType.LEFT_BRACE)) braceCount++
+                    else if (check(TokenType.RIGHT_BRACE)) braceCount--
+                    
+                    if (braceCount > 0) {
+                        lastPos = advance().endOffset
+                    }
+                }
+                
+                val closeBrace = consume(TokenType.RIGHT_BRACE, "Expect '}'")
+                val content = source.substring(blockStartPos, closeBrace.startOffset)
+                actions.add(ExecuteActionNode(content.trim()))
             } else {
-                // Expression or other logic
+                // Other simple actions?
             }
         }
         return SkillHandlerNode(eventName, actions)

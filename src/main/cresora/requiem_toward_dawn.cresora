@@ -1,0 +1,41 @@
+weapon "Requiem Toward Dawn" {
+    id: "requiem_toward_dawn"
+    rarity: "4_star"
+    base_item: "minecraft:iron_sword"
+    damage_type: arcane
+    stats {
+        base_damage: 8.5
+        damage_per_level: 0.2
+        speed: 1.6
+        max_all_damage_bonus: 10.0
+    }
+    skill "Flame Aura" {
+        effect_id: "flame_aura"
+        cooldown: 25s
+        duration: 10s
+        base_value: 3.0
+        value_per_level: 1.0
+        radius: 4.0
+        
+        on_activate {
+            start_cooldown()
+            apply_status_effect("minecraft:fire_resistance", 10s, 0)
+            area_of_effect(4.0) {
+                ignite(target, 5s)
+            }
+            send_message("item.cresora.weapon.skill.flame_aura_activated.generic", "gold")
+        }
+    }
+    translations {
+        en_us {
+            name: "Requiem Toward Dawn"
+            skill_name: "Flame Aura"
+            "item.cresora.weapon.skill.flame_aura_activated.generic": "Flame Aura Activated!"
+        }
+        ja_jp {
+            name: "暁へと向かうレクエイム"
+            skill_name: "フレイムオーラ"
+            "item.cresora.weapon.skill.flame_aura_activated.generic": "フレイムオーラ 起動！"
+        }
+    }
+}

@@ -7,13 +7,9 @@ object WeaponSkillRegistry {
 
     init {
         register("current_hp_true_damage", CurrentHpBurstSkill)
-        register("flame_aura", FlameAuraSkill)
         register("snow_frost", SnowFrostSkill)
         register("healing_aura", HealingAuraSkill)
-        register("heal", HealSkill)
         register("dark_lux", DarkLuxSkill)
-        register("sunlit_haste", SunlitHasteSkill)
-        register("baa_mimic", BaaMimicSkill)
         register("orchid_pavilion_echo", OrchidPavilionEchoSkill)
         
         // Compiled skills

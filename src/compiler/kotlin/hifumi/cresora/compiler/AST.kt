@@ -73,3 +73,7 @@ data class OpenSkillMenuActionNode(
 ) : ActionNode()
 
 object CloseSkillMenuActionNode : ActionNode()
+
+data class ExecuteActionNode(
+    val content: String
+) : ActionNode()

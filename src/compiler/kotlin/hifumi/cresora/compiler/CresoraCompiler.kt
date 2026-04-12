@@ -33,7 +33,7 @@ class CresoraCompiler(
             val source = file.readText()
             val lexer = Lexer(source)
             val tokens = lexer.scanTokens()
-            val parser = Parser(tokens)
+            val parser = Parser(source, tokens)
             val weapons = parser.parse()
             allWeapons.addAll(weapons)
         }
@@ -78,11 +78,16 @@ class CresoraCompiler(
                 .addModifiers(KModifier.OVERRIDE)
             addParamsForEvent(handler.eventName, funSpec)
             
-            handler.actions.forEach { emitAction(it, funSpec, skill, packageName, className) }
+            handler.actions.forEach { 
+                emitAction(it, funSpec, skill, packageName, className)
+                funSpec.addCode("\n")
+            }
             
             if (handler.eventName == "on_activate") {
                 funSpec.addCode("\n")
                 funSpec.addStatement("return %T.SUCCESS", ClassName("net.minecraft.util", "ActionResult"))
+            } else if (handler.eventName == "on_damage_absorbed" || handler.eventName == "on_damage_taken") {
+                funSpec.addStatement("return amount")
             }
             typeSpec.addFunction(funSpec.build())
         }
@@ -105,6 +110,8 @@ class CresoraCompiler(
             if (handler.eventName == "on_activate") {
                 funSpec.addCode("\n")
                 funSpec.addStatement("return %T.SUCCESS", ClassName("net.minecraft.util", "ActionResult"))
+            } else if (handler.eventName == "on_damage_absorbed" || handler.eventName == "on_damage_taken") {
+                funSpec.addStatement("return amount")
             }
             typeSpec.addFunction(funSpec.build())
         }
@@ -167,28 +174,83 @@ class CresoraCompiler(
     private fun emitAction(action: ActionNode, funSpec: FunSpec.Builder, skill: SkillNode?, packageName: String, className: String) {
         when (action) {
             is CommandActionNode -> {
-                if (action.commandName == "add_buff" && skill != null) {
-                    val buffId = action.arguments[0].removeSurrounding("\"")
-                    val amountStr = action.arguments.getOrNull(1) ?: "1"
-                    val buff = skill.buffs.find { it.id == buffId }
-                    if (buff != null) {
-                        val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
-                        val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
-                        val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
-                        funSpec.addCode("""
-                            |{
-                            |    val now = %T.currentWorldTime(player)
-                            |    val state = $mapName.getOrPut(player.uuid) { $stateClassName(0L, 0) }
-                            |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
-                            |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
-                            |    player.sendMessage(%T.translatable("item.cresora.weapon.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
-                            |}
-                        """.trimMargin(), ClassName("hifumi.cresora", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
-                    } else {
-                        funSpec.addStatement("// Buff $buffId not found")
+                when (action.commandName) {
+                    "add_buff" -> {
+                        if (skill != null) {
+                            val buffId = action.arguments[0].removeSurrounding("\"")
+                            val amountStr = action.arguments.getOrNull(1) ?: "1"
+                            val buff = skill.buffs.find { it.id == buffId }
+                            if (buff != null) {
+                                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
+                                val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
+                                val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
+                                funSpec.addCode("""
+                                    |{
+                                    |    val now = %T.currentWorldTime(player)
+                                    |    val state = $mapName.getOrPut(player.uuid) { $stateClassName(0L, 0) }
+                                    |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
+                                    |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
+                                    |    player.sendMessage(%T.translatable("item.cresora.weapon.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                                    |}
+                                """.trimMargin(), ClassName("hifumi.cresora", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                            } else {
+                                funSpec.addStatement("// Buff $buffId not found")
+                            }
+                        }
                     }
-                } else {
-                    funSpec.addStatement("// Action: ${action.commandName}(${action.arguments.joinToString()})")
+                    "heal" -> {
+                        val amount = action.arguments[0].let { if (it == "skill_value") "%T.healHp(definition, data)" else "$it.toFloat()" }
+                        funSpec.addStatement("player.heal($amount)", ClassName("hifumi.cresora", "WeaponCombatSupport"))
+                    }
+                    "grant_shield" -> {
+                        val amount = action.arguments[0].let { if (it == "skill_value") "%T.shieldHp(definition, data)" else "$it.toFloat()" }
+                        val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
+                        funSpec.addStatement("(player as %T).cresoraSetShieldHp($amount)", ClassName("hifumi.cresora", "WeaponSkillAccess"), ClassName("hifumi.cresora", "WeaponCombatSupport"))
+                        funSpec.addStatement("(player as %T).cresoraSetShieldExpireTick(%T.currentWorldTime(player) + $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillAccess"), ClassName("hifumi.cresora", "WeaponSkillService"))
+                    }
+                    "start_cooldown" -> {
+                        funSpec.addStatement("%T.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                    }
+                    "send_message" -> {
+                        val key = action.arguments[0].removeSurrounding("\"")
+                        val color = action.arguments.getOrNull(1)?.removeSurrounding("\"")?.uppercase() ?: "WHITE"
+                        funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.$color), true)", 
+                            ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
+                    }
+                    "apply_status_effect" -> {
+                        val effectId = action.arguments[0].removeSurrounding("\"")
+                        val duration = action.arguments[1].removeSuffix("s")
+                        val amplifier = action.arguments.getOrNull(2) ?: "0"
+                        funSpec.addStatement("player.addStatusEffect(%T(%T.STATUS_EFFECT.getEntry(%T.of(%S)).get(), $duration.toInt() * 20, $amplifier.toInt()))", 
+                            ClassName("net.minecraft.entity.effect", "StatusEffectInstance"),
+                            ClassName("net.minecraft.registry", "Registries"),
+                            ClassName("net.minecraft.util", "Identifier"),
+                            effectId)
+                    }
+                    "area_of_effect" -> {
+                        val radius = action.arguments[0]
+                        val subActionsStr = action.arguments.last()
+                        funSpec.addCode("""
+                            |player.world.getNonSpectatingEntities(%T::class.java, player.boundingBox.expand($radius.toDouble())).forEach { target ->
+                            |    if (target != player) {
+                            |        // Sub-actions for AOE
+                            |        ${subActionsStr.split(";").joinToString("\n        ") { sub ->
+                                        if (sub.startsWith("deal_true_damage")) {
+                                            val args = sub.substringAfter("(").substringBefore(")").split(",")
+                                            "target.damage(player.world.damageSources.magic(), ${args.getOrNull(1) ?: "0"}.toFloat())"
+                                        } else if (sub.startsWith("ignite")) {
+                                             val args = sub.substringAfter("(").substringBefore(")").split(",")
+                                            "target.setOnFireFor(${args.getOrNull(1)?.removeSuffix("s") ?: "5"}.toFloat())"
+                                        } else ""
+                                    }}
+                            |    }
+                            |}
+                        """.trimMargin(), ClassName("net.minecraft.entity", "LivingEntity"))
+                    }
+                    else -> {
+                        funSpec.addStatement("// Action: ${action.commandName}(${action.arguments.joinToString()})")
+                    }
                 }
             }
             is OpenSkillMenuActionNode -> {
@@ -197,6 +259,11 @@ class CresoraCompiler(
             }
             is CloseSkillMenuActionNode -> {
                 funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora", "HotbarOverrideService"))
+            }
+            is ExecuteActionNode -> {
+                funSpec.beginControlFlow("run execute@")
+                funSpec.addCode(action.content + "\n")
+                funSpec.endControlFlow()
             }
             is ExpressionNode -> {
                 funSpec.addStatement(action.content)
@@ -228,6 +295,7 @@ class CresoraCompiler(
         "on_player_tick" -> "onPlayerTick"
         "on_damage_dealt" -> "onDamageDealt"
         "on_damage_taken" -> "onDamageTaken"
+        "on_damage_absorbed" -> "onDamageAbsorbed"
         else -> dslName
     }
 
@@ -248,6 +316,19 @@ class CresoraCompiler(
             }
             "on_player_tick" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
+            }
+            "on_damage_absorbed" -> {
+                builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
+                builder.addParameter("amount", Float::class)
+                builder.returns(Float::class)
+            }
+            "on_damage_taken" -> {
+                builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
+                builder.addParameter("amount", Float::class)
+                builder.returns(Float::class)
+            }
+            "on_tick" -> {
+                builder.addParameter("server", ClassName("net.minecraft.server", "MinecraftServer"))
             }
         }
     }

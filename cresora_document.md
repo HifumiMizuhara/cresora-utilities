@@ -11,7 +11,7 @@
 2. `ModDataComponents` と mixin access interface 群による保存 API
 3. `*ContentRegistry` 群と `data/cresora-utilities/cresora/*.json` によるデータ駆動 API
 4. `*Service` / `*Support` / `ArtifactUiFlow` / `Commands` によるゲーム内実行 API
-5. **Cresora Weapon Compiler (CWC)**: `.cresora` スクリプトからコードと JSON を自動生成するビルドタイム API
+5. **Cresora Weapon Compiler (CWC)**: `.cresora` スクリプトからコードと JSON を自動生成するビルドタイム API。武器のマイグレーションおよびデータ整合性チェックを自動化し、型安全な武器定義を保証します。
 
 要するに、今の CreSora は「サービス singleton + JSON レジストリ」に加えて「コード生成エンジン」を備えたハイブリッドフレームワークです。
 
@@ -1126,7 +1126,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ### 9.2 まだコード実装が必要な領域
 
-- **新しい `WeaponSkillDefinition.effectId`**: `WeaponSkillHandler` を実装した新しいクラスを作成し、`WeaponSkillRegistry` に登録する必要があります。
+- **新しい `WeaponSkillDefinition.effectId`**: CWC (`.cresora`) を使用して新武器を定義するのが現在の標準です。手動での `WeaponSkillHandler` 実装は、CWC で表現不可能な特殊なシステム（複雑な状態異常同期など）に限定されます。
 - 新しい動的 set effect hook の本体: `EquipmentEffectHookService` へのロジック追加が必要です。
 - 特殊な GUI 挙動: 新しい Screen / ScreenHandler の作成が必要です。
 
@@ -1140,9 +1140,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 新しい武器:
 
-1. `weapon_content.json` に `WeaponDefinition` を追加
-2. モデル・アイテム定義・翻訳を追加
-3. `skill.effectId` が新規の場合、`WeaponSkillHandler` を実装する新しいクラスを作成し、`WeaponSkillRegistry` に登録します。
+1. `src/main/cresora/` に `*.cresora` ファイルを作成し、定義とスクリプトを記述
+2. モデル・アイテム定義（`assets`側）・翻訳を追加
+3. `./gradlew generateWeapons` を実行してコードと JSON を生成
 4. 必要なら `ResonanceContentRegistry` や秘境報酬にも接続
 
 新しいストーリー:
@@ -1183,6 +1183,11 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - **登録処理**: `CompiledWeaponSkillRegistry` (レジストリへの自動登録)
 
 CWC はコンパイルのたびに出力先（`generated` パッケージおよび `cwc_weapon_content.json`）を完全にクリアしてから再生成するため、常に最新のスクリプト内容が正確に反映されます。既存の `weapon_content.json` は手動定義用として保持され、ゲーム実行時に自動的にマージされます。
+
+#### CWC 2.0 強化点 (2026-04-12 反映)
+- **ソース抽出 (`execute` ブロック)**: トークン再結合ではなく、元のソースコードから直接オフセットを切り出す方式を採用。これにより `as?`, `?.`, `!!` や改行、コメントのフォーマットが 100% 維持されます。
+- **実行ラベル (`execute@run`)**: `execute` ブロックが `run execute@ { ... }` にラップされて生成されるため、スクリプト内で `return@execute` を使用した早期リターンが可能です。
+- **AOE 構文の修正**: `area_of_effect` 内での `ignite` 等のパラメータが 1.21.7 のレジストリ API に適合するように自動変換されます。
 
 ```cresora
 weapon "Name" {

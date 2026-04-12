@@ -1,3 +1,144 @@
 {
-  "weaponDefinitions": []
+  "weaponDefinitions": [
+    {
+      "id": "rondo_melody",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 7.0,
+      "attackDamagePerLevel": 0.18,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "shield",
+        "durationSeconds": 15,
+        "cooldownSeconds": 20,
+        "baseValue": 3.0,
+        "valuePerLevel": 0.5,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "2_star"
+      }
+    },
+    {
+      "id": "pastoral_flute_reverie",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 7.0,
+      "attackDamagePerLevel": 0.18,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "sunlit_haste",
+        "durationSeconds": 50,
+        "cooldownSeconds": 50,
+        "baseValue": 40.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "3_star"
+      }
+    },
+    {
+      "id": "cadenza_allegro",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.2,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 80,
+      "maxSkillLevel": 1,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "baa_mimic",
+        "durationSeconds": 0,
+        "cooldownSeconds": 15,
+        "baseValue": 1.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 10.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star"
+      }
+    },
+    {
+      "id": "masquerade_invitation",
+      "baseItemId": "minecraft:wooden_sword",
+      "baseAttackDamage": 7.0,
+      "attackDamagePerLevel": 0.18,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "heal",
+        "durationSeconds": 0,
+        "cooldownSeconds": 30,
+        "baseValue": 2.0,
+        "valuePerLevel": 0.5,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "2_star"
+      }
+    },
+    {
+      "id": "requiem_toward_dawn",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.2,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "arcane",
+      "skill": {
+        "effectId": "flame_aura",
+        "durationSeconds": 10,
+        "cooldownSeconds": 25,
+        "baseValue": 3.0,
+        "valuePerLevel": 1.0,
+        "radiusMeters": 4.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star"
+      }
+    }
+  ]
 }

@@ -1,0 +1,63 @@
+weapon "Cadenza Allegro" {
+    id: "cadenza_allegro"
+    rarity: "4_star"
+    base_item: "minecraft:wooden_sword"
+    damage_type: physical
+    stats {
+        base_damage: 8.5
+        damage_per_level: 0.2
+        speed: 1.6
+        max_base_level: 80
+        max_skill_level: 1
+    }
+    skill "Baa Mimic" {
+        effect_id: "baa_mimic"
+        cooldown: 15s
+        duration: 0s
+        base_value: 1.0
+        radius: 10.0
+        
+        on_activate {
+            start_cooldown()
+            execute {
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                val radius = definition.skill.radiusMeters;
+                val n = if (data.baseLevel >= 61) 3 else if (data.baseLevel >= 41) 2 else 1;
+                val maxPlayerHp = world.players.filter { it.squaredDistanceTo(player.x, player.y, player.z) < 100.0 }.maxOfOrNull { it.maxHealth } ?: 20.0f;
+
+                val targets = world.getOtherEntities(player, player.boundingBox.expand(radius)) { entity ->
+                    val hostile = entity as? net.minecraft.entity.mob.HostileEntity ?: return@getOtherEntities false;
+                    if (!hostile.isAlive) return@getOtherEntities false;
+                    val mobAccess = hostile as? hifumi.cresora.AdventureRankMobAccess;
+                    mobAccess?.cresoraIsEliteMob() != true
+                }.mapNotNull { it as? net.minecraft.entity.mob.HostileEntity }.sortedBy { it.squaredDistanceTo(player) }.take(n);
+
+                for (target in targets) {
+                    val sheep = net.minecraft.entity.EntityType.SHEEP.spawn(world, null, target.blockPos, net.minecraft.entity.SpawnReason.COMMAND, true, false) ?: continue;
+                    sheep!!.refreshPositionAndAngles(target.x, target.y, target.z, target.yaw, target.pitch);
+                    hifumi.cresora.BaaMimicService.markTransformedSheep(sheep!!, target);
+                    val maxHealthAttr = sheep!!.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.MAX_HEALTH);
+                    if (maxHealthAttr != null) {
+                        maxHealthAttr.baseValue = maxPlayerHp.toDouble();
+                        sheep!!.health = maxPlayerHp;
+                    }
+                    hifumi.cresora.AdventureRankService.refreshMobDisplay(sheep!!);
+                    target.discard();
+                }
+            }
+            send_message("item.cresora.weapon.skill.baa_mimic_activated.generic", "green")
+        }
+    }
+    translations {
+        en_us {
+            name: "Cadenza Allegro"
+            skill_name: "Baa Mimic"
+            "item.cresora.weapon.skill.baa_mimic_activated.generic": "Baa Mimic Activated!"
+        }
+        ja_jp {
+            name: "意気羊々たるカデンツァ"
+            skill_name: "ばあ・みみっく"
+            "item.cresora.weapon.skill.baa_mimic_activated.generic": "ばあ・みみっく 起動！"
+        }
+    }
+}

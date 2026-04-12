@@ -1,0 +1,35 @@
+weapon "Masquerade Invitation" {
+    id: "masquerade_invitation"
+    rarity: "2_star"
+    base_item: "minecraft:wooden_sword"
+    stats {
+        base_damage: 7.0
+        damage_per_level: 0.18
+        speed: 1.6
+    }
+    skill "Heal" {
+        effect_id: "heal"
+        cooldown: 30s
+        duration: 0s
+        base_value: 2.0
+        value_per_level: 0.5
+        
+        on_activate {
+            start_cooldown()
+            heal(skill_value)
+            send_message("item.cresora.weapon.skill.heal_activated.generic", "green")
+        }
+    }
+    translations {
+        en_us {
+            name: "Masquerade Invitation"
+            skill_name: "Invitation to Healing"
+            "item.cresora.weapon.skill.heal_activated.generic": "Healing Grace Activated!"
+        }
+        ja_jp {
+            name: "マスカレードへの誘い"
+            skill_name: "癒やしへの招待状"
+            "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 起動！"
+        }
+    }
+}

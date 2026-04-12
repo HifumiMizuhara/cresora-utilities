@@ -1,7 +1,6 @@
 package hifumi.cresora
 
 import hifumi.cresora.skill.WeaponSkillRegistry
-import hifumi.cresora.skill.ShieldSkill
 import hifumi.cresora.skill.DarkLuxSkill
 import hifumi.cresora.skill.OrchidPavilionEchoSkill
 import hifumi.cresora.skill.SnowFrostSkill
@@ -101,7 +100,7 @@ object WeaponSkillService {
             return ActionResult.SUCCESS
         }
         return WeaponSkillRegistry.getHandler(definition.skill.effectId)?.activate(player, definition, data, access)
-            ?: ShieldSkill.activate(player, definition, data, access)
+            ?: ActionResult.PASS
     }
 
     fun absorbDamage(player: ServerPlayerEntity, amount: Float): Float {

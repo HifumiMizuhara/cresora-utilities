@@ -3,12 +3,13 @@ package hifumi.cresora.compiler
 enum class TokenType {
     IDENTIFIER, NUMBER, STRING,
     LEFT_BRACE, RIGHT_BRACE, COLON, COMMA, LEFT_PAREN, RIGHT_PAREN,
+    DOT, OPERATOR,
     KEYWORD_WEAPON, KEYWORD_STATS, KEYWORD_SKILL, KEYWORD_BUFF, KEYWORD_TRANSLATIONS,
     KEYWORD_SUB_SKILL, KEYWORD_ICON,
     EOF
 }
 
-data class Token(val type: TokenType, val lexeme: String, val line: Int)
+data class Token(val type: TokenType, val lexeme: String, val line: Int, val startOffset: Int, val endOffset: Int)
 
 class Lexer(private val source: String) {
     private val tokens = mutableListOf<Token>()
@@ -31,7 +32,7 @@ class Lexer(private val source: String) {
             start = current
             scanToken()
         }
-        tokens.add(Token(TokenType.EOF, "", line))
+        tokens.add(Token(TokenType.EOF, "", line, current, current))
         return tokens
     }
 
@@ -40,10 +41,22 @@ class Lexer(private val source: String) {
         when (c) {
             '{' -> addToken(TokenType.LEFT_BRACE)
             '}' -> addToken(TokenType.RIGHT_BRACE)
-            ':' -> addToken(TokenType.COLON)
             ',' -> addToken(TokenType.COMMA)
             '(' -> addToken(TokenType.LEFT_PAREN)
             ')' -> addToken(TokenType.RIGHT_PAREN)
+            '.' -> addToken(TokenType.DOT)
+            ';' -> addToken(TokenType.OPERATOR)
+            '?' -> if (match(':')) addToken(TokenType.OPERATOR, "?:") else if (match('.')) addToken(TokenType.OPERATOR, "?.") else addToken(TokenType.OPERATOR)
+            '-' -> if (match('>')) addToken(TokenType.OPERATOR, "->") else addToken(TokenType.OPERATOR)
+            ':' -> if (match(':')) addToken(TokenType.OPERATOR, "::") else addToken(TokenType.COLON)
+            '!' -> if (match('=')) addToken(TokenType.OPERATOR, "!=") else if (match('!')) addToken(TokenType.OPERATOR, "!!") else addToken(TokenType.OPERATOR)
+            '@' -> addToken(TokenType.OPERATOR)
+            '<' -> if (match('=')) addToken(TokenType.OPERATOR, "<=") else addToken(TokenType.OPERATOR)
+            '>' -> if (match('=')) addToken(TokenType.OPERATOR, ">=") else addToken(TokenType.OPERATOR)
+            '=' -> if (match('=')) addToken(TokenType.OPERATOR, "==") else addToken(TokenType.OPERATOR)
+            '&' -> if (match('&')) addToken(TokenType.OPERATOR, "&&") else addToken(TokenType.OPERATOR)
+            '|' -> if (match('|')) addToken(TokenType.OPERATOR, "||") else addToken(TokenType.OPERATOR)
+            '+', '*', '/' -> addToken(TokenType.OPERATOR)
             ' ', '\r', '\t' -> {}
             '\n' -> line++
             '"' -> string()
@@ -52,9 +65,18 @@ class Lexer(private val source: String) {
                     number()
                 } else if (c.isLetter() || c == '_') {
                     identifier()
+                } else {
+                    addToken(TokenType.OPERATOR)
                 }
             }
         }
+    }
+
+    private fun match(expected: Char): Boolean {
+        if (isAtEnd()) return false
+        if (source[current] != expected) return false
+        current++
+        return true
     }
 
     private fun identifier() {
@@ -94,6 +116,6 @@ class Lexer(private val source: String) {
     }
 
     private fun addToken(type: TokenType, lexeme: String) {
-        tokens.add(Token(type, lexeme, line))
+        tokens.add(Token(type, lexeme, line, start, current))
     }
 }

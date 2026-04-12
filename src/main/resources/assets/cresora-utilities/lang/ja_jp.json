@@ -491,5 +491,15 @@
   "item.cresora-utilities.stance_test": "スタンス・テスト",
   "item.cresora-utilities.stance_test.skill": "構え変更",
   "item.cresora-utilities.sub_skill.sub_a": "サブA",
-  "item.cresora-utilities.sub_skill.sub_b": "サブB"
+  "item.cresora-utilities.sub_skill.sub_b": "サブB",
+  "item.cresora-utilities.rondo_melody.skill": "旋律の盾",
+  "item.cresora.weapon.skill.activated.generic": "旋律の盾 起動！",
+  "item.cresora-utilities.pastoral_flute_reverie.skill": "陽光の速足",
+  "item.cresora.weapon.skill.sunlit_haste_activated.generic": "陽光の速足 起動！",
+  "item.cresora-utilities.cadenza_allegro.skill": "ばあ・みみっく",
+  "item.cresora.weapon.skill.baa_mimic_activated.generic": "ばあ・みみっく 起動！",
+  "item.cresora-utilities.masquerade_invitation.skill": "癒やしへの招待状",
+  "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 起動！",
+  "item.cresora-utilities.requiem_toward_dawn.skill": "フレイムオーラ",
+  "item.cresora.weapon.skill.flame_aura_activated.generic": "フレイムオーラ 起動！"
 }

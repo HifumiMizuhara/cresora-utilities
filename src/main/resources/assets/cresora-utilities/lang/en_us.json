@@ -133,9 +133,9 @@
   "item.cresora-utilities.hinagata_glasses": "Hinagata Glasses",
   "item.cresora-utilities.hinagata_armor": "Hinagata Armor",
   "item.cresora-utilities.hinagata_boots": "Hinagata Boots",
-  "item.cresora-utilities.rondo_melody": "Melody of the Rondo",
+  "item.cresora-utilities.rondo_melody": "Rondo Melody",
   "item.cresora-utilities.rondo_melody_fragment": "Rondo Fragment",
-  "item.cresora-utilities.masquerade_invitation": "Invitation to the Masquerade",
+  "item.cresora-utilities.masquerade_invitation": "Masquerade Invitation",
   "item.cresora-utilities.masquerade_invitation_fragment": "Masquerade Fragment",
   "item.cresora-utilities.lakeside_stride": "Stride by the Lakeside",
   "item.cresora-utilities.lakeside_stride_fragment": "Lakeside Fragment",
@@ -483,5 +483,15 @@
   "item.cresora-utilities.crimson_flash": "Crimson Flash",
   "item.cresora-utilities.crimson_flash.skill": "Blood Rush",
   "item.cresora.weapon.skill.buff.rush.gained": "Bloodlust accelerating (Stack: %s)",
-  "item.cresora.weapon.skill.buff.rush.expired": "Bloodlust subsided"
+  "item.cresora.weapon.skill.buff.rush.expired": "Bloodlust subsided",
+  "item.cresora-utilities.rondo_melody.skill": "Melodic Shield",
+  "item.cresora.weapon.skill.activated.generic": "Melodic Shield Activated!",
+  "item.cresora-utilities.pastoral_flute_reverie.skill": "Sunlit Haste",
+  "item.cresora.weapon.skill.sunlit_haste_activated.generic": "Sunlit Haste Activated!",
+  "item.cresora-utilities.cadenza_allegro.skill": "Baa Mimic",
+  "item.cresora.weapon.skill.baa_mimic_activated.generic": "Baa Mimic Activated!",
+  "item.cresora-utilities.masquerade_invitation.skill": "Invitation to Healing",
+  "item.cresora.weapon.skill.heal_activated.generic": "Healing Grace Activated!",
+  "item.cresora-utilities.requiem_toward_dawn.skill": "Flame Aura",
+  "item.cresora.weapon.skill.flame_aura_activated.generic": "Flame Aura Activated!"
 }
