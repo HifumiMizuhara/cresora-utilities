@@ -1,6 +1,6 @@
 {
-  "parent": "item/handheld",
+  "parent": "minecraft:item/handheld",
   "textures": {
-    "layer0": "cresora-utilities:item/cadenza_allegro"
+    "layer0": "minecraft:item/wooden_sword"
   }
 }

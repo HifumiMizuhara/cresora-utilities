@@ -1,0 +1,105 @@
+weapon "Dark Lux" {
+    id: "dark_lux"
+    rarity: "5_star"
+    base_item: "minecraft:netherite_sword"
+    custom_model_data: 10102
+    damage_type: physical
+    stats {
+        base_damage: 8.5
+        damage_per_level: 0.2
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    skill "Event Horizon" {
+        effect_id: "dark_lux"
+        cooldown: 30s
+        duration: 30s
+
+        on_activate {
+            start_cooldown()
+            area_of_effect(5.0) {
+                apply_mark(target, "lux", 30s)
+            }
+            send_localized_message("item.cresora.weapon.skill.dark_lux_activated.generic", "DARK_PURPLE")
+        }
+
+        on_damage_dealt {
+            execute {
+                if (hifumi.cresora.WeaponStackSupport.getDefinition(player.mainHandStack)?.id != "dark_lux") return@execute;
+                if (isTrueDamage) return@execute;
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                if (hifumi.cresora.WeaponSkillService.hasMark(target, "entanglement")) return@execute;
+
+                hifumi.cresora.WeaponSkillService.applyMark(target, "dark", 200L); // 10s
+
+                // Interaction logic
+                if (hifumi.cresora.WeaponSkillService.hasMark(target, "lux") && hifumi.cresora.WeaponSkillService.hasMark(target, "dark")) {
+                    val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                    val roll = world.random.nextDouble();
+                    when {
+                        roll < 0.2 -> { // Annihilation
+                            player.sendMessage(net.minecraft.text.Text.translatable("message.cresora.weapon.dark_lux.annihilation").formatted(net.minecraft.util.Formatting.DARK_RED), true);
+                            hifumi.cresora.WeaponSkillService.removeMark(target, "dark");
+                            hifumi.cresora.WeaponSkillService.removeMark(target, "lux");
+                            val damage = target.health * 0.9f;
+                            target.damage(world, world.damageSources.magic(), damage);
+                            world.getOtherEntities(target, target.boundingBox.expand(5.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive }
+                                .take(3).forEach { (it as net.minecraft.entity.LivingEntity).damage(world, world.damageSources.magic(), it.maxHealth * 0.2f) };
+                        }
+                        roll < 0.4 -> { // Entanglement
+                            player.sendMessage(net.minecraft.text.Text.translatable("message.cresora.weapon.dark_lux.entanglement").formatted(net.minecraft.util.Formatting.GOLD), true);
+                            hifumi.cresora.WeaponSkillService.removeMark(target, "dark");
+                            hifumi.cresora.WeaponSkillService.removeMark(target, "lux");
+                            hifumi.cresora.WeaponSkillService.applyMark(target, "entanglement", 200L); // 10s
+                        }
+                        else -> { // Dark Collapse
+                            player.sendMessage(net.minecraft.text.Text.translatable("message.cresora.weapon.dark_lux.collapse").formatted(net.minecraft.util.Formatting.DARK_PURPLE), true);
+                            player.heal(player.maxHealth * 0.05f);
+                            val hpRatio = player.health / player.maxHealth;
+                            val reductionRatio = (1.0f - hpRatio).coerceIn(0.0f, 1.0f);
+                            val remainingTicks = hifumi.cresora.WeaponSkillService.getRemainingCooldownTicks(player, "dark_lux");
+                            if (remainingTicks > 0.0) {
+                                hifumi.cresora.WeaponSkillService.startCooldown(player, "dark_lux", (remainingTicks * (1.0f - reductionRatio)).toLong());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    translations {
+        en_us {
+            name: "Dark Lux"
+            skill_name: "Event Horizon"
+            "item.cresora.weapon.skill.dark_lux_activated.generic": "Event Horizon Activated!"
+            "message.cresora.weapon.dark_lux.annihilation": "Annihilation: Target's health reduced drastically, AOE damage dealt!"
+            "message.cresora.weapon.dark_lux.entanglement": "Entanglement: Target weakened!"
+            "message.cresora.weapon.dark_lux.collapse": "Dark Collapse: Recovered energy!"
+        }
+        ja_jp {
+            name: "白夜と極夜"
+            skill_name: "事象の地平線"
+            "item.cresora.weapon.skill.dark_lux_activated.generic": "事象の地平線 展開！"
+            "message.cresora.weapon.dark_lux.annihilation": "対消滅：対象のHPが激減し、周囲にダメージを与えた！"
+            "message.cresora.weapon.dark_lux.entanglement": "もつれ：対象を弱体化させた！"
+            "message.cresora.weapon.dark_lux.collapse": "ダーク崩壊：自身のエネルギーを回復した！"
+        }
+        zh_cn {
+            name: "暗与光"
+            skill_name: "事件视界"
+            "item.cresora.weapon.skill.dark_lux_activated.generic": "事件视界 已展开！"
+            "message.cresora.weapon.dark_lux.annihilation": "对消灭：目标生命值骤降，并对周围造成伤害！"
+            "message.cresora.weapon.dark_lux.entanglement": "纠缠：目标已虚弱！"
+            "message.cresora.weapon.dark_lux.collapse": "暗崩坏：自身能量已恢复！"
+        }
+        lzh {
+            name: "暗與光"
+            skill_name: "事象邊界"
+            "item.cresora.weapon.skill.dark_lux_activated.generic": "事象邊界 啓矣！"
+            "message.cresora.weapon.dark_lux.annihilation": "對消滅：彼氣驟失，波及四方！"
+            "message.cresora.weapon.dark_lux.entanglement": "糾纏：彼勢既弱！"
+            "message.cresora.weapon.dark_lux.collapse": "暗崩壞：吾力既復！"
+        }
+    }
+}

@@ -5,14 +5,8 @@ import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
 import hifumi.cresora.WeaponSkillService
 import hifumi.cresora.skill.WeaponSkillHandler
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
 
 public object RequiemTowardDawnSkill : WeaponSkillHandler {
   override fun activate(
@@ -24,18 +18,34 @@ public object RequiemTowardDawnSkill : WeaponSkillHandler {
     WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    player.addStatusEffect(StatusEffectInstance(Registries.STATUS_EFFECT.getEntry(Identifier.of("minecraft:fire_resistance")).get(),
-        10.toInt() * 20, 0.toInt()))
 
-    player.world.getNonSpectatingEntities(LivingEntity::class.java,
-        player.boundingBox.expand(4.0.toDouble())).forEach { target ->
-        if (target != player) {
-            // Sub-actions for AOE
-            target.setOnFireFor(5.toFloat())
-        }
+    ; run execute@ {
+      val radius = definition.skill.radiusMeters;
+                      val duration = definition.skill.durationSeconds * 20L;
+                     
+          player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.FIRE_RESISTANCE,
+          duration.toInt(), 0));
+
+                      val world = player.world as? net.minecraft.server.world.ServerWorld ?:
+          return@execute;
+                      val targets = world.getOtherEntities(player,
+          player.boundingBox.expand(radius)) { it is net.minecraft.entity.LivingEntity && it.isAlive
+          };
+                      for (target in targets) {
+                          target.setOnFireFor(5.0f);
+                      }
+
+                      player.sendMessage(
+                          net.minecraft.text.Text.translatable(
+                              "item.cresora.weapon.skill.flame_aura_activated",
+                              net.minecraft.text.Text.translatable(definition.translationKey()),
+                              targets.size,
+                              5,
+                              definition.skill.durationSeconds
+                          ).formatted(net.minecraft.util.Formatting.GOLD),
+                          true
+                      );
     }
-    player.sendMessage(Text.translatable("item.cresora.weapon.skill.flame_aura_activated.generic").formatted(Formatting.GOLD),
-        true)
 
 
     return ActionResult.SUCCESS

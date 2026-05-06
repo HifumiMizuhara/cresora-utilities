@@ -16,8 +16,11 @@ weapon "Masquerade Invitation" {
         
         on_activate {
             start_cooldown()
-            heal(skill_value)
-            send_message("item.cresora.weapon.skill.heal_activated.generic", "green")
+            execute {
+                val value = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data);
+                player.heal(value);
+                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.heal_activated", net.minecraft.text.Text.translatable(definition.translationKey()), hifumi.cresora.WeaponSkillService.formatNumber(value / 2.0)).formatted(net.minecraft.util.Formatting.GREEN), true);
+            }
         }
     }
     translations {
@@ -25,11 +28,25 @@ weapon "Masquerade Invitation" {
             name: "Masquerade Invitation"
             skill_name: "Invitation to Healing"
             "item.cresora.weapon.skill.heal_activated.generic": "Healing Grace Activated!"
+            "item.cresora.weapon.skill.heal_activated": "%s Activated! Restored %s hearts."
         }
         ja_jp {
             name: "マスカレードへの誘い"
             skill_name: "癒やしへの招待状"
             "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 起動！"
+            "item.cresora.weapon.skill.heal_activated": "%s を発動。%s ハート回復。"
+        }
+        zh_cn {
+            name: "通往假面舞会的邀约"
+            skill_name: "癒やしへの招待状"
+            "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 起動！"
+            "item.cresora.weapon.skill.heal_activated": "%s 已发动。恢复 %s 心。"
+        }
+        lzh {
+            name: "假面盛筵之邀"
+            skill_name: "癒やしへの招待状"
+            "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 啓矣！"
+            "item.cresora.weapon.skill.heal_activated": "%s 已發。療 %s 心。"
         }
     }
 }

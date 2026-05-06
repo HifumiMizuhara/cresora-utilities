@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "cresora-utilities:item/weapon_fragment_4_star"
+    "layer0": "minecraft:item/prismarine_shard"
   }
 }

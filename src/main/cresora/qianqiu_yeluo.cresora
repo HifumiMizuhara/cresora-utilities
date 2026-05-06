@@ -1,0 +1,283 @@
+weapon "Qianqiu, Yeluo" {
+    id: "qianqiu_yeluo"
+    rarity: "5_star"
+    base_item: "minecraft:diamond_sword"
+    custom_model_data: 10103
+    damage_type: arcane
+    stats {
+        base_damage: 9.0
+        damage_per_level: 0.1
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+        crit_rate_bonus: 5.0
+    }
+
+    skill "Qianqiu Yeluo" {
+        effect_id: "qianqiu_yeluo"
+        cooldown: 0s
+
+        buff "passive_state" {
+            max_stacks: 1
+            duration: 40s
+        }
+
+        buff "qiucan_stack" {
+            max_stacks: 40
+            duration: 300s
+        }
+
+        buff "jingtian_state" {
+            max_stacks: 1
+            duration: 40s
+        }
+
+        buff "zansou_mode" {
+            max_stacks: 1
+            duration: 50s
+        }
+
+        buff "yoraku_manchisho_active" {
+            max_stacks: 1
+            duration: 60s
+        }
+
+        // 技能③による累積強化
+        buff "yoraku_power" {
+            max_stacks: 100
+            duration: 60s
+            stats {
+                attack_percent_per_stack: 2.5
+                crit_dmg_per_stack: 1.5
+            }
+        }
+
+        on_activate {
+            add_buff("qiucan_stack", 1)
+            open_skill_menu("danrai", "zansou", "yoraku_manchisho", 3s)
+        }
+
+        on_damage_taken {
+            execute {
+                var finalAmount = amount
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "passive_state")) {
+                    finalAmount *= 0.40f
+                }
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "yoraku_manchisho_active")) {
+                    if (finalAmount >= player.health) {
+                        finalAmount = (player.health - 1.0f).coerceAtLeast(0.0f)
+                    }
+                }
+                return@execute finalAmount
+            }
+        }
+
+        on_player_tick {
+            execute {
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player)
+                val passive = passiveStateStates.get(player.uuid)
+                if (passive != null) {
+                    if (!hifumi.cresora.WeaponSkillService.hasStatus(player, "zansou_mode")) {
+                        if (now % 40L == 0L && player.health / player.maxHealth > 0.30f) {
+                            val damage = player.maxHealth * 0.02f
+                            player.damage(player.world, (player.world as? net.minecraft.server.world.ServerWorld)?.damageSources?.magic() ?: player.damageSources.magic(), damage)
+                        }
+                    }
+                    if (passive.expireTick - now <= 1L) {
+                        player.heal(player.maxHealth * 0.30f)
+                        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.passive_healed").formatted(net.minecraft.util.Formatting.GREEN), true)
+                    }
+                }
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "yoraku_manchisho_active")) {
+                    val state = qiucanStackStates.get(player.uuid)
+                    if (state == null || state.stacks <= 0) {
+                        yorakuManchishoActiveStates.remove(player.uuid)
+                        yorakuPowerStates.remove(player.uuid)
+                        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_ended").formatted(net.minecraft.util.Formatting.GRAY), true)
+                    }
+                }
+            }
+        }
+
+        on_damage_dealt {
+            execute {
+                if (isTrueDamage) return@execute
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute
+
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "passive_state")) {
+                    val missingHp = (player.maxHealth - player.health).coerceAtLeast(0.0f)
+                    val boost = (missingHp / 2.0f * 0.01f).coerceAtMost(0.20f)
+                    if (boost > 0) {
+                        target.damage(world, world.damageSources.magic(), amount * boost)
+                    }
+                }
+
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "jingtian_state")) {
+                    val zansouBoost = if (hifumi.cresora.WeaponSkillService.hasStatus(player, "zansou_mode")) 1.5f else 1.0f
+                    target.damage(world, world.damageSources.magic(), (amount * 0.15f) * zansouBoost)
+                    if (world.random.nextDouble() < 0.30) {
+                        hifumi.cresora.WeaponSkillService.applyMark(target, "root", 120L)
+                        target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 120, 255, false, false, true))
+                    }
+                }
+
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "zansou_mode")) {
+                    hifumi.cresora.WeaponSkillService.applyMark(target, "lux", 200L)
+                }
+
+                if (hifumi.cresora.WeaponSkillService.hasStatus(player, "yoraku_manchisho_active")) {
+                    val aoeRange = 4.5
+                    val baseDamage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat()
+                    world.getEntitiesByClass(net.minecraft.entity.LivingEntity::class.java, player.boundingBox.expand(aoeRange)) { it.isAlive && it != player }
+                        .forEach { entity ->
+                             entity.damage(world, world.damageSources.magic(), baseDamage * 1.5f)
+                        }
+
+                    val state = qiucanStackStates.get(player.uuid)
+                    if (state != null && state.stacks >= 4) {
+                        state.stacks -= 4
+                        player.heal(player.maxHealth * 0.04f)
+                        val powerState = yorakuPowerStates.getOrPut(player.uuid) { YorakuPowerState(0L, 0) }
+                        powerState.expireTick = world.time + 300L
+                        powerState.stacks = (powerState.stacks + 4).coerceAtMost(100)
+                        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_hit", state.stacks, powerState.stacks).formatted(net.minecraft.util.Formatting.GOLD), true)
+                    }
+                }
+            }
+        }
+    }
+
+    sub_skill "Danrai" {
+        effect_id: "danrai"
+        icon: "minecraft:lightning_rod"
+        on_activate {
+            start_cooldown(34s)
+            add_buff("passive_state", 1)
+            add_buff("jingtian_state", 1)
+            close_skill_menu()
+            send_localized_message("item.cresora.weapon.qianqiu_yeluo.danrai_activated", "YELLOW")
+        }
+    }
+
+    sub_skill "Zansou" {
+        effect_id: "zansou"
+        icon: "minecraft:blue_ice"
+        on_activate {
+            execute {
+                val cost = player.maxHealth * 0.20f;
+                player.damage(player.world, player.damageSources.magic(), cost);
+            }
+            start_cooldown(30s)
+            add_buff("passive_state", 1)
+            add_buff("zansou_mode", 1)
+            execute {
+                val jt = jingtianStateStates.get(player.uuid);
+                if (jt != null) {
+                    jt.expireTick = hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
+                }
+            }
+            close_skill_menu()
+            send_localized_message("item.cresora.weapon.qianqiu_yeluo.zansou_activated", "AQUA")
+        }
+    }
+
+    sub_skill "Yoraku Manchisho" {
+        effect_id: "yoraku_manchisho"
+        icon: "minecraft:map"
+        on_activate {
+            execute {
+                val state = qiucanStackStates.get(player.uuid);
+                if (state == null || state.stacks < 20) {
+                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.insufficient_stacks").formatted(net.minecraft.util.Formatting.RED), true);
+                    return@execute;
+                }
+
+                val buffState = yorakuManchishoActiveStates.getOrPut(player.uuid) {
+                    YorakuManchishoActiveState(0L, 0)
+                }
+                buffState.expireTick = hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 60 * 20L;
+                buffState.stacks = 1;
+
+                hifumi.cresora.HotbarOverrideService.restoreHotbar(player);
+            }
+            send_localized_message("item.cresora.weapon.qianqiu_yeluo.yoraku_activated", "GOLD")
+        }
+    }
+
+    translations {
+        en_us {
+            name: "Qianqiu, Yeluo"
+            skill_name: "Rougan Sword Styles"
+            fragment_name: "Fragment of Qianqiu"
+            sub_skill_danrai_name: "First Style: Danrai"
+            sub_skill_zansou_name: "Second Style: Zansou"
+            sub_skill_yoraku_manchisho_name: "Third Style: Yoraku Manchisho"
+            "item.cresora.weapon.qianqiu_yeluo.danrai_activated": "First Style: Danrai - Jingtian State active!"
+            "item.cresora.weapon.qianqiu_yeluo.zansou_activated": "Second Style: Zansou - Frost Severance active!"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_activated": "Third Style: Yoraku Manchisho - Autumn Ending!"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_hit": "Autumn Leaves: %s stacks | Bonus: %s stacks"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_ended": "Autumn has passed."
+            "item.cresora.weapon.qianqiu_yeluo.passive_healed": "Skill ended - Life restored."
+            "item.cresora.weapon.qianqiu_yeluo.insufficient_stacks": "Insufficient Qiucan stacks (Need 20)."
+        }
+        ja_jp {
+            name: "千秋、叶落"
+            skill_name: "琅玕剣法"
+            fragment_name: "千秋の欠片"
+            sub_skill_danrai_name: "第一式：断雷"
+            sub_skill_zansou_name: "第二式：斬霜"
+            sub_skill_yoraku_manchisho_name: "第三式：叶落満地傷"
+            "item.cresora.weapon.qianqiu_yeluo.danrai_activated": "第一式：断雷 — 浄天状態展開！"
+            "item.cresora.weapon.qianqiu_yeluo.zansou_activated": "第二式：斬霜 — 霜削状態展開！"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_activated": "第三式：叶落満地傷 — 秋の終焉！"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_hit": "秋葉：残り %s 層 | 強化：累積 %s 層"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_ended": "秋は過ぎ去った。"
+            "item.cresora.weapon.qianqiu_yeluo.passive_healed": "技能終了：生命が回復した。"
+            "item.cresora.weapon.qianqiu_yeluo.insufficient_stacks": "「秋残」スタックが足りません（必要：20層）"
+            buff_passive_state_name: "受動状態"
+            buff_qiucan_stack_name: "秋残"
+            buff_jingtian_state_name: "浄天"
+            buff_zansou_mode_name: "斬霜"
+            buff_yoraku_power_name: "叶落"
+            "item.cresora.weapon.skill.buff.passive_state.gained": "効果獲得: %s"
+            "item.cresora.weapon.skill.buff.jingtian_state.gained": "第一式「断雷」: %s 展開 (%s 層)"
+        }
+        zh_cn {
+            name: "千秋、叶落"
+            skill_name: "琅玕剑法"
+            fragment_name: "千秋碎片"
+            sub_skill_danrai_name: "第一式：断雷"
+            sub_skill_zansou_name: "第二式：斩霜"
+            sub_skill_yoraku_manchisho_name: "第三式：叶落满地伤"
+            "item.cresora.weapon.qianqiu_yeluo.danrai_activated": "第一式：断雷 — 浄天状态已开启！"
+            "item.cresora.weapon.qianqiu_yeluo.zansou_activated": "第二式：斩霜 — 霜削状态已开启！"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_activated": "第三式：叶落满地伤 — 秋之终焉！"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_hit": "秋叶：剩余 %s 层 | 强化：累计 %s 层"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_ended": "秋已逝。"
+            "item.cresora.weapon.qianqiu_yeluo.passive_healed": "技能结束：生命已恢复。"
+            "item.cresora.weapon.qianqiu_yeluo.insufficient_stacks": "「秋残」层数不足（需要20层）"
+            buff_passive_state_name: "被动状态"
+            buff_qiucan_stack_name: "秋残"
+            buff_jingtian_state_name: "浄天"
+            buff_zansou_mode_name: "斩霜"
+            buff_yoraku_power_name: "叶落"
+            "item.cresora.weapon.skill.buff.passive_state.gained": "获得効果: %s"
+            "item.cresora.weapon.skill.buff.jingtian_state.gained": "第一式「断雷」: %s 开启 (%s 层)"
+        }
+        lzh {
+            name: "千秋，葉落"
+            skill_name: "琅玕劍法"
+            fragment_name: "千秋之片"
+            sub_skill_danrai_name: "第一式：斷雷"
+            sub_skill_zansou_name: "第二式：斬霜"
+            sub_skill_yoraku_manchisho_name: "第三式：葉落滿地傷"
+            "item.cresora.weapon.qianqiu_yeluo.danrai_activated": "第一式：斷雷 — 淨天啟矣！"
+            "item.cresora.weapon.qianqiu_yeluo.zansou_activated": "第二式：斬霜 — 霜削啟矣！"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_activated": "第三式：葉落滿地傷 — 秋終焉！"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_hit": "秋葉：餘 %s 重 | 益：累 %s 重"
+            "item.cresora.weapon.qianqiu_yeluo.yoraku_ended": "秋既終。"
+            "item.cresora.weapon.qianqiu_yeluo.passive_healed": "技竟，氣既復。"
+            "item.cresora.weapon.qianqiu_yeluo.insufficient_stacks": "「秋殘」不足（需二十重）"
+        }
+    }
+}

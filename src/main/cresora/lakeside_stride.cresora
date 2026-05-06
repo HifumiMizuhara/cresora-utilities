@@ -1,0 +1,78 @@
+weapon "Stride by the Lakeside" {
+    id: "lakeside_stride"
+    rarity: "5_star"
+    base_item: "minecraft:diamond_sword"
+    damage_type: physical
+    stats {
+        base_damage: 7.0
+        damage_per_level: 0.0
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+        crit_rate_bonus: 10.0
+    }
+    skill "Lakeside Stride" {
+        effect_id: "current_hp_true_damage"
+        cooldown: 50s
+        duration: 0s
+        base_value: 0.0
+        value_per_level: 5.0
+        radius: 5.0
+
+        on_activate {
+            start_cooldown()
+            execute {
+                val radius = definition.skill.radiusMeters.coerceAtLeast(0.0);
+                val ratio = hifumi.cresora.WeaponCombatSupport.currentHpTrueDamageRatio(definition, data);
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                val targets = world.getOtherEntities(player, player.boundingBox.expand(radius)) { entity ->
+                    entity is net.minecraft.entity.mob.HostileEntity && entity.isAlive
+                }.mapNotNull { it as? net.minecraft.entity.mob.HostileEntity };
+
+                var hitCount = 0;
+                var totalDamage = 0.0;
+                for (target in targets) {
+                    if (!hifumi.cresora.StoryService.allowsTrueDamage(target)) continue;
+                    val damage = (target.health.toDouble() * ratio).coerceAtLeast(0.0);
+                    if (damage <= 0.0) continue;
+                    target.health = (target.health.toDouble() - damage).coerceAtLeast(0.001).toFloat();
+                    hifumi.cresora.AdventureRankService.showMobTrueDamage(target, player, damage.toFloat());
+                    hifumi.cresora.AdventureRankService.refreshMobDisplay(target);
+                    hitCount++;
+                    totalDamage += damage;
+                }
+                player.sendMessage(
+                    net.minecraft.text.Text.translatable(
+                        "item.cresora.weapon.skill.current_hp_true_damage_activated",
+                        net.minecraft.text.Text.translatable(definition.translationKey()),
+                        hitCount,
+                        hifumi.cresora.WeaponSkillService.formatNumber(totalDamage / 2.0)
+                    ).formatted(net.minecraft.util.Formatting.AQUA),
+                    true
+                );
+            }
+        }
+    }
+    translations {
+        en_us {
+            name: "Stride by the Lakeside"
+            skill_name: "Lakeside Stride"
+            "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s Activated! Dealt %s hearts total true damage to %s targets."
+        }
+        ja_jp {
+            name: "湖畔を歩む"
+            skill_name: "湖畔の歩み"
+            "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s を発動。%s体に合計 %s ハートぶんの確定ダメージ。"
+        }
+        zh_cn {
+            name: "行于湖畔"
+            skill_name: "湖畔徐行"
+            "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s 已发动。共对 %s 个目标造成 %s 颗心的固定伤害。"
+        }
+        lzh {
+            name: "行乎湖畔"
+            skill_name: "湖畔徐行"
+            "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s 已發。凡 %s 敵，共受定傷 %s 心。"
+        }
+    }
+}

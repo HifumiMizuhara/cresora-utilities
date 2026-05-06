@@ -1,0 +1,262 @@
+weapon "Tanboku Chokuu" {
+    id: "tanboku_chokuu"
+    rarity: "5_star"
+    base_item: "minecraft:diamond_sword"
+    custom_model_data: 10101
+    damage_type: physical
+    stats {
+        base_damage: 9.0
+        damage_per_level: 0.0
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+
+    // メインスキル：メニュー展開
+    skill "Rougan Kenpo" {
+        effect_id: "rougan_kenpo"
+        cooldown: 3s
+
+        buff "zanso_active" {
+            max_stacks: 1
+            duration: 15s
+        }
+        buff "munen_seq" {
+            max_stacks: 8
+            duration: 5s
+        }
+
+        on_activate {
+            execute {
+                hifumi.cresora.WeaponSkillService.addTao(player, 1);
+                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained", hifumi.cresora.WeaponSkillService.getTao(player)).formatted(net.minecraft.util.Formatting.GOLD), true);
+            }
+            open_skill_menu("danro", "zanso", "bokuchu_munen", 3s)
+        }
+
+        on_damage_dealt {
+            execute {
+                val stacks = hifumi.cresora.WeaponSkillService.getSoulBreakStacks(target);
+                if (stacks > 0 && !isTrueDamage) {
+                    val boost = amount * (stacks * 0.04f);
+                    target.damage(player.world, player.world.damageSources.magic(), boost);
+                    if (player.world.time % 20L == 0L) {
+                         player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break", stacks, stacks * 5, stacks * 4).formatted(net.minecraft.util.Formatting.GRAY), true);
+                    }
+                }
+            }
+        }
+    }
+
+    // 第一式：断露
+    sub_skill "Danro" {
+        effect_id: "danro"
+        icon: "minecraft:iron_sword"
+
+        on_activate {
+            execute {
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                val dir = player.rotationVecClient.multiply(1.0, 0.0, 1.0).normalize();
+
+                val hitBox = player.boundingBox.stretch(dir.multiply(5.0)).expand(1.0);
+                world.getOtherEntities(player, hitBox) { it is net.minecraft.entity.LivingEntity && it.isAlive }
+                    .forEach { entity ->
+                        val target = entity as net.minecraft.entity.LivingEntity;
+                        val damage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                        target.damage(world, world.damageSources.playerAttack(player), damage);
+                        hifumi.cresora.WeaponSkillService.applySoulBreak(target, 1, 200L);
+                        world.spawnParticles(net.minecraft.particle.ParticleTypes.CRIT, target.x, target.y + 1, target.z, 5, 0.2, 0.2, 0.2, 0.1);
+                    }
+
+                hifumi.cresora.WeaponSkillService.addTao(player, 1);
+                hifumi.cresora.WeaponSkillService.startCooldown(player, "tanboku_chokuu", 60L);
+            }
+            send_localized_message("item.cresora.weapon.tanboku_chokuu.danro_activated", "WHITE")
+            close_skill_menu()
+        }
+    }
+
+    // 第二式：斬霜
+    sub_skill "Zanso" {
+        effect_id: "zanso"
+        icon: "minecraft:iron_axe"
+
+        on_activate {
+            execute {
+                if (!hifumi.cresora.WeaponSkillService.consumeTao(player, 3)) {
+                    zansoActiveStates.remove(player.uuid);
+                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_insufficient", 3).formatted(net.minecraft.util.Formatting.RED), true);
+                    return@execute;
+                }
+
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val state = zansoActiveStates.getOrPut(player.uuid) { ZansoActiveState(0L, 0) };
+                state.expireTick = now + 15 * 20L;
+                state.stacks = 1;
+                hifumi.cresora.WeaponSkillService.startCooldown(player, "tanboku_chokuu", 300L);
+                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_activated").formatted(net.minecraft.util.Formatting.AQUA), true);
+                close_skill_menu()
+            }
+        }
+
+        on_player_tick {
+            execute {
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val state = zansoActiveStates.get(player.uuid);
+                if (state != null && now < state.expireTick) {
+                    if (now % 30L == 0L) {
+                        val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                        world.getOtherEntities(player, player.boundingBox.expand(3.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive }
+                            .forEach { entity ->
+                                val target = entity as net.minecraft.entity.LivingEntity;
+                                val baseDamage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                                target.damage(world, world.damageSources.playerAttack(player), baseDamage * 0.5f);
+                                target.damage(world, world.damageSources.magic(), baseDamage * 0.5f);
+
+                                if (target.health / target.maxHealth < 0.10f && !((target as? hifumi.cresora.AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false)) {
+                                    target.kill(world);
+                                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_instakill").formatted(net.minecraft.util.Formatting.DARK_RED), true);
+                                }
+                                world.spawnParticles(net.minecraft.particle.ParticleTypes.SNOWFLAKE, target.x, target.y + 1, target.z, 3, 0.1, 0.1, 0.1, 0.05);
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    // 第三式：墨中無念
+    sub_skill "Bokuchu Munen" {
+        effect_id: "bokuchu_munen"
+        icon: "minecraft:netherite_sword"
+
+        on_activate {
+            execute {
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                if (!hifumi.cresora.WeaponSkillService.consumeTao(player, 7)) {
+                    munenSeqStates.remove(player.uuid);
+                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_insufficient", 7).formatted(net.minecraft.util.Formatting.RED), true);
+                    return@execute;
+                }
+
+                hifumi.cresora.WeaponSkillService.grantInvulnerability(player, 60L);
+                val target = world.getOtherEntities(player, player.boundingBox.expand(10.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive }
+                    .filterIsInstance<net.minecraft.entity.LivingEntity>()
+                    .maxByOrNull { it.health } ?: run {
+                        hifumi.cresora.WeaponSkillService.addTao(player, 7);
+                        munenSeqStates.remove(player.uuid);
+                    return@execute;
+                };
+
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val state = munenSeqStates.getOrPut(player.uuid) { MunenSeqState(0L, 0) };
+                state.expireTick = now + 5 * 20L;
+                state.stacks = 0;
+                hifumi.cresora.WeaponSkillService.applyMark(target, "munen_target_" + player.uuid, 100L);
+                hifumi.cresora.WeaponSkillService.startCooldown(player, "tanboku_chokuu", 600L);
+                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_activated").formatted(net.minecraft.util.Formatting.DARK_PURPLE), true);
+                close_skill_menu()
+            }
+        }
+
+        on_player_tick {
+            execute {
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val state = munenSeqStates.get(player.uuid);
+                if (state != null && now < state.expireTick) {
+                    if (now % 6L == 0L) {
+                        val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                        val markId = "munen_target_" + player.uuid;
+                        val target = world.getOtherEntities(null, player.boundingBox.expand(16.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive && hifumi.cresora.WeaponSkillService.hasMark(it, markId) }
+                            .firstOrNull() as? net.minecraft.entity.LivingEntity;
+
+                        if (target == null) {
+                            munenSeqStates.remove(player.uuid);
+                            return@execute;
+                        }
+
+                        val hit = state.stacks;
+                        if (hit <= 6) {
+                            val damage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                            target.damage(world, world.damageSources.playerAttack(player), damage);
+                            state.stacks += 1;
+                            world.spawnParticles(net.minecraft.particle.ParticleTypes.SWEEP_ATTACK, target.x, target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
+                        } else if (hit == 7) {
+                            val trueDamage = target.maxHealth * 0.15f;
+                            target.health = (target.health - trueDamage).coerceAtLeast(0.001f);
+                            hifumi.cresora.AdventureRankService.showMobTrueDamage(target, player, trueDamage);
+                            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_final", hifumi.cresora.WeaponSkillService.formatNumber(trueDamage.toDouble() / 2.0)).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
+
+                            munenSeqStates.remove(player.uuid);
+                            hifumi.cresora.WeaponSkillService.removeMark(target, markId);
+                            world.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION, target.x, target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    translations {
+        en_us {
+            name: "Tanboku Chokuu"
+            skill_name: "Rougan Sword Styles"
+            sub_skill_danro_name: "First Style: Danro"
+            sub_skill_zanso_name: "Second Style: Zanso"
+            sub_skill_bokuchu_munen_name: "Third Style: Munen"
+            "item.cresora.weapon.tanboku_chokuu.tao_gained": "Tao +1 (Total %s)"
+            "item.cresora.weapon.tanboku_chokuu.tao_insufficient": "Insufficient Tao (Need %s)"
+            "item.cresora.weapon.tanboku_chokuu.soul_break": "Soul Break %s | PHYS RES -%s%% | DEF -%s%%"
+            "item.cresora.weapon.tanboku_chokuu.danro_activated": "First Style: Danro — Sword Qi released!"
+            "item.cresora.weapon.tanboku_chokuu.zanso_activated": "Second Style: Zanso — Frost Field active!"
+            "item.cresora.weapon.tanboku_chokuu.zanso_instakill": "Frost cut — Instakill!"
+            "item.cresora.weapon.tanboku_chokuu.munen_activated": "Third Style: Munen — Seven celestial cuts!"
+            "item.cresora.weapon.tanboku_chokuu.munen_final": "Final Cut! True Damage: %s hearts"
+        }
+        ja_jp {
+            name: "淡墨長空"
+            skill_name: "琅玕剣法"
+            sub_skill_danro_name: "第一式：断露"
+            sub_skill_zanso_name: "第二式：斬霜"
+            sub_skill_bokuchu_munen_name: "第三式：墨中無念"
+            "item.cresora.weapon.tanboku_chokuu.tao_gained": "道を獲得：現在 %s層"
+            "item.cresora.weapon.tanboku_chokuu.tao_insufficient": "道が足りません（必要：%s層）"
+            "item.cresora.weapon.tanboku_chokuu.soul_break": "破魂 %s層 | 物理耐性 -%s%% | 防御力 -%s%%"
+            "item.cresora.weapon.tanboku_chokuu.danro_activated": "第一式：断露 — 二条の剣気が迸る！"
+            "item.cresora.weapon.tanboku_chokuu.zanso_activated": "第二式：斬霜 — 周囲に霜の領域を展開！"
+            "item.cresora.weapon.tanboku_chokuu.zanso_instakill": "霜刃に絶えたり（即死）"
+            "item.cresora.weapon.tanboku_chokuu.munen_activated": "第三式：墨中無念 — 無念の七連撃！"
+            "item.cresora.weapon.tanboku_chokuu.munen_final": "終撃！確定ダメージ：%s ハート"
+        }
+        zh_cn {
+            name: "淡墨长空"
+            skill_name: "琅玕剑法"
+            sub_skill_danro_name: "第一式：断露"
+            sub_skill_zanso_name: "第二式：斩霜"
+            sub_skill_bokuchu_munen_name: "第三式：墨中无念"
+            "item.cresora.weapon.tanboku_chokuu.tao_gained": "获得「道」：当前 %s 层"
+            "item.cresora.weapon.tanboku_chokuu.tao_insufficient": "「道」不足（需要 %s 层）"
+            "item.cresora.weapon.tanboku_chokuu.soul_break": "破魂 %s 层 | 物理抗性 -%s%% | 防御力 -%s%%"
+            "item.cresora.weapon.tanboku_chokuu.danro_activated": "第一式：断露 — 剑气迸发！"
+            "item.cresora.weapon.tanboku_chokuu.zanso_activated": "第二式：斩霜 — 展开霜之领域！"
+            "item.cresora.weapon.tanboku_chokuu.zanso_instakill": "霜刃绝命（即死）"
+            "item.cresora.weapon.tanboku_chokuu.munen_activated": "第三式：墨中无念 — 无念七连击！"
+            "item.cresora.weapon.tanboku_chokuu.munen_final": "终击！真实伤害：%s 心"
+        }
+        lzh {
+            name: "淡墨長空"
+            skill_name: "琅玕劍法"
+            sub_skill_danro_name: "第一式：斷露"
+            sub_skill_zanso_name: "第二式：斬霜"
+            sub_skill_bokuchu_munen_name: "第三式：墨中無念"
+            "item.cresora.weapon.tanboku_chokuu.tao_gained": "得「道」：今 %s 重"
+            "item.cresora.weapon.tanboku_chokuu.tao_insufficient": "「道」不足（需 %s 重）"
+            "item.cresora.weapon.tanboku_chokuu.soul_break": "破魂 %s 重 | 禦形 -%s%% | 禦 -%s%%"
+            "item.cresora.weapon.tanboku_chokuu.danro_activated": "第一式：斷露 — 劍氣既發！"
+            "item.cresora.weapon.tanboku_chokuu.zanso_activated": "第二式：斬霜 — 霜之界既啟！"
+            "item.cresora.weapon.tanboku_chokuu.zanso_instakill": "霜刃絶命（即死）"
+            "item.cresora.weapon.tanboku_chokuu.munen_activated": "第三式：墨中無念 — 無念七連擊！"
+            "item.cresora.weapon.tanboku_chokuu.munen_final": "終擊！定傷：%s 心"
+        }
+    }
+}

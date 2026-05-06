@@ -1,0 +1,55 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:component",
+    "component": "cresora-utilities:sub_skill_effect_id",
+    "cases": [
+      {
+        "when": "danrai",
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:lightning_rod"
+        }
+      },
+      {
+        "when": "zansou",
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:blue_ice"
+        }
+      },
+      {
+        "when": "yoraku_manchisho",
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/map"
+        }
+      },
+      {
+        "when": "danro",
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_sword"
+        }
+      },
+      {
+        "when": "zanso",
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_axe"
+        }
+      },
+      {
+        "when": "bokuchu_munen",
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/netherite_sword"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/barrier"
+    }
+  }
+}

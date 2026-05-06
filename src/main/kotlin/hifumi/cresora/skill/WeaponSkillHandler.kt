@@ -18,17 +18,17 @@ interface WeaponSkillHandler {
         return ActionResult.PASS
     }
 
-    fun onTick(server: MinecraftServer) {}
+    fun onTick(server: MinecraftServer, definition: WeaponDefinition, data: WeaponData) {}
 
-    fun onPlayerTick(player: ServerPlayerEntity) {}
+    fun onPlayerTick(player: ServerPlayerEntity, definition: WeaponDefinition, data: WeaponData) {}
 
-    fun onDamageAbsorbed(player: ServerPlayerEntity, amount: Float): Float {
+    fun onDamageAbsorbed(player: ServerPlayerEntity, amount: Float, definition: WeaponDefinition, data: WeaponData): Float {
         return amount
     }
 
-    fun onDamageDealt(player: ServerPlayerEntity, target: LivingEntity, amount: Float, isTrueDamage: Boolean) {}
+    fun onDamageDealt(player: ServerPlayerEntity, target: LivingEntity, amount: Float, isTrueDamage: Boolean, definition: WeaponDefinition, data: WeaponData) {}
 
-    fun onDamageTaken(player: ServerPlayerEntity, amount: Float): Float {
+    fun onDamageTaken(player: ServerPlayerEntity, amount: Float, definition: WeaponDefinition, data: WeaponData): Float {
         return amount
     }
 
@@ -39,4 +39,6 @@ interface WeaponSkillHandler {
     fun getCritRateBonus(player: ServerPlayerEntity): Double = 0.0
 
     fun getCritDamageBonus(player: ServerPlayerEntity): Double = 0.0
+
+    fun getRegenStageBonus(player: ServerPlayerEntity): Int = 0
 }

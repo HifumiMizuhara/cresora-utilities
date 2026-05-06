@@ -11,7 +11,14 @@ data class WeaponDefNode(
     val stats: StatsNode,
     val skill: SkillNode?,
     val translations: Map<String, Map<String, String>> = emptyMap(),
-    val subSkills: List<SubSkillNode> = emptyList()
+    val subSkills: List<SubSkillNode> = emptyList(),
+    val customModelData: Int? = null,
+    val texture: String? = null
+) : ASTNode()
+
+data class DictionaryDefNode(
+    val id: String,
+    val translations: Map<String, Map<String, String>>
 ) : ASTNode()
 
 data class SubSkillNode(
@@ -56,10 +63,21 @@ data class SkillHandlerNode(
     val actions: List<ActionNode>
 ) : ASTNode()
 
+data class AreaOfEffectActionNode(
+    val radius: Double,
+    val actions: List<ActionNode>
+) : ActionNode()
+
 sealed class ActionNode : ASTNode()
 
 data class CommandActionNode(
     val commandName: String,
+    val arguments: List<String>
+) : ActionNode()
+
+data class SendLocalizedMessageActionNode(
+    val key: String,
+    val color: String,
     val arguments: List<String>
 ) : ActionNode()
 

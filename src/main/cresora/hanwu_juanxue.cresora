@@ -1,0 +1,107 @@
+weapon "Cold Mist, Coiling Snow" {
+    id: "hanwu_juanxue"
+    rarity: "5_star"
+    base_item: "minecraft:diamond_sword"
+    damage_type: arcane
+    stats {
+        base_damage: 8.0
+        damage_per_level: 0.0
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    skill "Snow Frost" {
+        effect_id: "snow_frost"
+        cooldown: 25s
+        duration: 10s
+        base_value: 1.0
+        value_per_level: 0.3
+
+        buff "snow_mist" {
+            max_stacks: 5
+            duration: 10s
+            stats {
+                crit_dmg_per_stack: 10.0
+            }
+        }
+
+        on_activate {
+            start_cooldown()
+            add_buff("snow_mist", 1)
+            send_message("item.cresora.weapon.skill.snow_frost_activated.generic", "aqua")
+        }
+
+        on_damage_dealt {
+            execute {
+                // If the player has snow_mist buff, we increment it and apply frost mark to target
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val state = snowMistStates.get(player.uuid);
+                if (state != null && now < state.expireTick) {
+                    if (state.stacks < 5) {
+                        state.stacks += 1;
+                        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.snow_mist_stack", state.stacks, state.stacks * 10.0).formatted(net.minecraft.util.Formatting.AQUA), true);
+                    }
+                    // Apply frost mark to target (using the new generic mark system)
+                    hifumi.cresora.WeaponSkillService.applyMark(target, "frost", 200L);
+                    target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 200, 1, false, true, true));
+                }
+            }
+        }
+        on_tick {
+            execute {
+                server.worlds.forEach { world ->
+                    world.iterateEntities().forEach { entity ->
+                        if (entity is net.minecraft.entity.LivingEntity && hifumi.cresora.WeaponSkillService.hasMark(entity, "frost")) {
+                            val now = world.time;
+                            // Simple frost damage slowness and freeze
+                            entity.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 40, 1, false, true, true));
+                            if (now % 20L == 0L) {
+                                 entity.damage(world, world.damageSources.freeze(), 2.0f);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    translations {
+        en_us {
+            name: "Cold Mist, Coiling Snow"
+            skill_name: "Snow Frost"
+            "item.cresora.weapon.skill.snow_frost_activated.generic": "Snow Frost Activated!"
+            "item.cresora.weapon.skill.snow_mist_stack": "Snow Mist %s | CRIT DMG +%s%%"
+            "item.cresora.weapon.skill.snow_mist_expired": "Snow Mist faded."
+            "item.cresora.weapon.passive.hanwu_juanxue": "Inherent: Hits during skill grant Snow Mist. +10% CRIT DMG per stack, max 5 stacks."
+            "item.cresora.weapon.special.hanwu_juanxue": "Snowy Property: +50% ATK in snowy biomes."
+        }
+        ja_jp {
+            name: "寒霧、雪巻きて"
+            skill_name: "雪氷の舞"
+            "item.cresora.weapon.skill.snow_frost_activated.generic": "雪氷の舞 起動！"
+            "item.cresora.weapon.skill.snow_mist_stack": "残雪 %s層 | 会心ダメージ +%s%%"
+            "item.cresora.weapon.skill.snow_mist_expired": "残雪は消えました。"
+            "item.cresora.weapon.passive.hanwu_juanxue": "固有: スキル中に攻撃命中で残雪を獲得。1層ごとに会心ダメージ +10%、最大5層。"
+            "item.cresora.weapon.special.hanwu_juanxue": "雪地特性: 雪地環境では攻撃力 +50%。"
+        }
+        zh_cn {
+            name: "寒雾卷雪"
+            skill_name: "雪影霜华"
+            "item.cresora.weapon.skill.snow_frost_activated.generic": "雪影霜华 已启动！"
+            "item.cresora.weapon.skill.snow_mist_stack": "残雪 %s 层 | 暴击伤害 +%s%%"
+            "item.cresora.weapon.skill.snow_mist_expired": "残雪已消散。"
+            "item.cresora.weapon.passive.hanwu_juanxue": "固有: 技能期间每次攻击命中都会获得一层残雪。每层暴击伤害 +10%，最多5层。"
+            "item.cresora.weapon.special.hanwu_juanxue": "雪地特性: 在雪地环境中攻击力 +50%。"
+        }
+        lzh {
+            name: "寒霧卷雪"
+            skill_name: "雪影霜華"
+            "item.cresora.weapon.skill.snow_frost_activated.generic": "雪影霜華 啓矣！"
+            "item.cresora.weapon.skill.snow_mist_stack": "殘雪 %s 層 | 會傷 +%s%%"
+            "item.cresora.weapon.skill.snow_mist_expired": "殘雪散矣。"
+            "item.cresora.weapon.passive.hanwu_juanxue": "固有: 技行之時，每擊得殘雪一層。每層會傷 +10%，至五層而止。"
+            "item.cresora.weapon.special.hanwu_juanxue": "雪地之性: 處雪境則攻 +50%。"
+        }
+    }
+}

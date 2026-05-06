@@ -1,6 +1,6 @@
 {
-  "parent": "item/handheld",
+  "parent": "minecraft:item/handheld",
   "textures": {
-    "layer0": "cresora-utilities:item/lakeside_stride"
+    "layer0": "minecraft:item/diamond_sword"
   }
 }

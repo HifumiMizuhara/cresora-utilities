@@ -1,0 +1,91 @@
+weapon "High Mountains, Flowing Water" {
+    id: "gaoshan_liushui"
+    rarity: "4_star"
+    base_item: "minecraft:iron_sword"
+    damage_type: physical
+    stats {
+        base_damage: 8.5
+        damage_per_level: 0.2
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    skill "Healing Aura" {
+        effect_id: "healing_aura"
+        cooldown: 20s
+        duration: 8s
+        base_value: 2.0
+        value_per_level: 0.5
+        radius: 5.0
+
+        // Periodic metadata passed via JSON if needed, but let's handle via execute
+
+        on_activate {
+            start_cooldown()
+            execute {
+                val immediateHealHp = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data);
+                val pulseHealHp = hifumi.cresora.WeaponCombatSupport.secondarySkillValueHp(definition, data).coerceAtLeast(0.0f);
+                val expireTick = hifumi.cresora.WeaponSkillService.currentWorldTime(player) + definition.skill.durationSeconds * 20L;
+
+                // Heal self and allies
+                val count = hifumi.cresora.WeaponSkillService.healNearbyAllies(player, definition.skill.radiusMeters, immediateHealHp);
+                val results = hifumi.cresora.WeaponSkillService.restoreHealthOrGuard(player, immediateHealHp, expireTick); // For feedback display
+
+                player.sendMessage(
+                    net.minecraft.text.Text.translatable(
+                        "item.cresora.weapon.skill.healing_aura_activated",
+                        net.minecraft.text.Text.translatable(definition.translationKey()),
+                        hifumi.cresora.WeaponSkillService.formatNumber(results.first / 2.0),
+                        hifumi.cresora.WeaponSkillService.formatNumber(results.second / 2.0),
+                        count,
+                        hifumi.cresora.WeaponSkillService.formatNumber(pulseHealHp / 2.0),
+                        definition.skill.durationSeconds
+                    ).formatted(net.minecraft.util.Formatting.GREEN),
+                    true
+                );
+            }
+        }
+
+        on_player_tick {
+            execute {
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                // Use cooldown as a proxy for active state
+                if (hifumi.cresora.WeaponSkillService.isCoolingDown(player, "gaoshan_liushui")) {
+                     val remaining = hifumi.cresora.WeaponSkillService.getRemainingCooldownTicks(player, "gaoshan_liushui");
+                     val activeTicks = (20L * 20L - remaining).toLong();
+                     // Periodic healing and knockback
+                     if (activeTicks > 0 && activeTicks <= 8 * 20 && activeTicks % 40 == 0L) {
+                         val pulseHealHp = hifumi.cresora.WeaponCombatSupport.secondarySkillValueHp(definition, data).coerceAtLeast(0.0f);
+                         hifumi.cresora.WeaponSkillService.restoreHealthOrGuard(player, pulseHealHp, now + 200L);
+                         // Knockback
+                         val radius = definition.skill.radiusMeters;
+                         player.world.getOtherEntities(player, player.boundingBox.expand(radius)) { it is net.minecraft.entity.mob.HostileEntity && it.isAlive }
+                             .forEach { (it as net.minecraft.entity.mob.HostileEntity).takeKnockback(1.15, player.x - it.x, player.z - it.z) }
+                     }
+                }
+            }
+        }
+    }
+    translations {
+        en_us {
+            name: "High Mountains, Flowing Water"
+            skill_name: "Mountaintop Harmony"
+            "item.cresora.weapon.skill.healing_aura_activated": "%s Activated! Ziqi restored %s hp, excess %s hp converted to temp guard. Boya applied to %s allies, restoring %s hp every 2s for %s sec."
+        }
+        ja_jp {
+            name: "高山流水"
+            skill_name: "絶頂の波調"
+            "item.cresora.weapon.skill.healing_aura_activated": "%s を発動。子期で %s ハート回復し、余剰 %s ハートは一時防御へ変換。%s体に伯牙を付与し、2秒ごとに %s ハート回復します。持続 %s 秒。"
+        }
+        zh_cn {
+            name: "高山流水"
+            skill_name: "高山流水"
+            "item.cresora.weapon.skill.healing_aura_activated": "%s 已发动。子期恢复 %s 心，溢出 %s 心转化为临时防御；并为 %s 个友方附加伯牙，每2秒恢复 %s 心。持续 %s 秒。"
+        }
+        lzh {
+            name: "高山流水"
+            skill_name: "高山流水"
+            "item.cresora.weapon.skill.healing_aura_activated": "%s 已發。子期療 %s 心，溢 %s 心化為暫禦；又施伯牙於 %s 友，每二秒療 %s 心，歷 %s 秒。"
+        }
+    }
+}

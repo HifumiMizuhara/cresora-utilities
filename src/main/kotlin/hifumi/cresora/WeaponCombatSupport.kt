@@ -37,21 +37,11 @@ object WeaponCombatSupport {
     fun critRateBonusPercent(definition: WeaponDefinition): Double = definition.critRateBonusPercent
 
     fun totalCritRateBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition): Double {
-        var bonus = critRateBonusPercent(definition)
-        for (handler in hifumi.cresora.skill.WeaponSkillRegistry.allHandlers()) {
-            bonus += handler.getCritRateBonus(player)
-        }
-        return bonus
+        return critRateBonusPercent(definition) + WeaponSkillService.critRateBonusPercent(player, definition.id)
     }
 
     fun totalCritDamageBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition): Double {
-        var bonus = 0.0
-        // Legacy check for specific weapons if needed, or just use the new dynamic system
-        bonus += WeaponSkillService.critDamageBonusPercent(player, definition.id)
-        for (handler in hifumi.cresora.skill.WeaponSkillRegistry.allHandlers()) {
-            bonus += handler.getCritDamageBonus(player)
-        }
-        return bonus
+        return WeaponSkillService.critDamageBonusPercent(player, definition.id)
     }
 
     fun allDamageBonusPercent(definition: WeaponDefinition, data: WeaponData): Double {

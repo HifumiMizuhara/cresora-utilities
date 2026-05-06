@@ -1,6 +1,96 @@
 {
   "weaponDefinitions": [
     {
+      "id": "qianqiu_yeluo",
+      "baseItemId": "minecraft:diamond_sword",
+      "baseAttackDamage": 9.0,
+      "attackDamagePerLevel": 0.1,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "arcane",
+      "custom_model_data": 10103,
+      "skill": {
+        "effectId": "qianqiu_yeluo",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "qianqiu_yeluo_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "dark_lux",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.2,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "custom_model_data": 10102,
+      "skill": {
+        "effectId": "dark_lux",
+        "durationSeconds": 30,
+        "cooldownSeconds": 30,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "dark_lux_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
       "id": "rondo_melody",
       "baseItemId": "minecraft:wooden_sword",
       "baseAttackDamage": 7.0,
@@ -24,8 +114,68 @@
         "baseFragmentCost": 1
       },
       "craft": {
+        "fragmentItemId": "rondo_melody_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
         "fragmentsRequired": 8,
-        "craftedRarity": "2_star"
+        "craftedRarity": "2_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "kyokusui_no_ryusho",
+      "baseItemId": "minecraft:diamond_sword",
+      "baseAttackDamage": 8.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 1,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "orchid_pavilion_echo",
+        "durationSeconds": 16,
+        "cooldownSeconds": 25,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 5.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "kyokusui_no_ryusho_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
       }
     },
     {
@@ -52,8 +202,288 @@
         "baseFragmentCost": 1
       },
       "craft": {
+        "fragmentItemId": "pastoral_flute_reverie_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
         "fragmentsRequired": 8,
-        "craftedRarity": "3_star"
+        "craftedRarity": "3_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "dummy_four_star_b",
+      "baseItemId": "minecraft:golden_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.2,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 1,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "dummy_four_star_b_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "example_saber",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 10.0,
+      "attackDamagePerLevel": 0.5,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "example_saber_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "3_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "buff_test_saber",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 12.0,
+      "attackDamagePerLevel": 0.6,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "buff_test_saber_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "crimson_flash",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 12.0,
+      "attackDamagePerLevel": 0.8,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "crimson_flash_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "azure_blade",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 9.0,
+      "attackDamagePerLevel": 0.4,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "azure_blade_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "3_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "stance_test",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 10.0,
+      "attackDamagePerLevel": 0.5,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "stance_test_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
       }
     },
     {
@@ -80,8 +510,24 @@
         "baseFragmentCost": 1
       },
       "craft": {
+        "fragmentItemId": "cadenza_allegro_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
         "fragmentsRequired": 8,
-        "craftedRarity": "4_star"
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
       }
     },
     {
@@ -108,8 +554,113 @@
         "baseFragmentCost": 1
       },
       "craft": {
+        "fragmentItemId": "masquerade_invitation_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
         "fragmentsRequired": 8,
-        "craftedRarity": "2_star"
+        "craftedRarity": "2_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "gaoshan_liushui",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 8.5,
+      "attackDamagePerLevel": 0.2,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "healing_aura",
+        "durationSeconds": 8,
+        "cooldownSeconds": 20,
+        "baseValue": 2.0,
+        "valuePerLevel": 0.5,
+        "radiusMeters": 5.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "gaoshan_liushui_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "tanboku_chokuu",
+      "baseItemId": "minecraft:diamond_sword",
+      "baseAttackDamage": 9.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "custom_model_data": 10101,
+      "skill": {
+        "effectId": "rougan_kenpo",
+        "durationSeconds": 0,
+        "cooldownSeconds": 3,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "tanboku_chokuu_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
       }
     },
     {
@@ -136,8 +687,112 @@
         "baseFragmentCost": 1
       },
       "craft": {
+        "fragmentItemId": "requiem_toward_dawn_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
         "fragmentsRequired": 8,
-        "craftedRarity": "4_star"
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "hanwu_juanxue",
+      "baseItemId": "minecraft:diamond_sword",
+      "baseAttackDamage": 8.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "arcane",
+      "skill": {
+        "effectId": "snow_frost",
+        "durationSeconds": 10,
+        "cooldownSeconds": 25,
+        "baseValue": 1.0,
+        "valuePerLevel": 0.3,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "hanwu_juanxue_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "lakeside_stride",
+      "baseItemId": "minecraft:diamond_sword",
+      "baseAttackDamage": 7.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "current_hp_true_damage",
+        "durationSeconds": 0,
+        "cooldownSeconds": 50,
+        "baseValue": 0.0,
+        "valuePerLevel": 5.0,
+        "radiusMeters": 5.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "lakeside_stride_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
       }
     }
   ]

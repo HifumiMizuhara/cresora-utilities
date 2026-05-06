@@ -1,9 +1,6 @@
 package hifumi.cresora
 
 import hifumi.cresora.skill.WeaponSkillRegistry
-import hifumi.cresora.skill.DarkLuxSkill
-import hifumi.cresora.skill.OrchidPavilionEchoSkill
-import hifumi.cresora.skill.SnowFrostSkill
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.block.Blocks
 import net.minecraft.entity.LivingEntity
@@ -55,20 +52,118 @@ object WeaponSkillService {
     private val cooldownsByPlayer: MutableMap<UUID, MutableMap<String, Double>> = mutableMapOf()
     private val temporaryGuardHpByPlayer: MutableMap<UUID, Float> = mutableMapOf()
     private val temporaryGuardExpireTickByPlayer: MutableMap<UUID, Long> = mutableMapOf()
+    private val targetMarks: MutableMap<UUID, MutableMap<String, Long>> = mutableMapOf()
+    private val invulnerabilityTicks: MutableMap<UUID, Long> = mutableMapOf()
+
+    // soul Break (破魂) stacks and expiry
+    private val soulBreakStacks: MutableMap<UUID, Int> = mutableMapOf()
+    private val soulBreakExpireTick: MutableMap<UUID, Long> = mutableMapOf()
+
+    // Tao (道) stacks for Tanmoku Chokuu (does not expire)
+    private val taoStacks: MutableMap<UUID, Int> = mutableMapOf()
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
+            val now = server.overworld.time
             val onlinePlayers = server.playerManager.playerList
             pruneOfflineState(onlinePlayers.mapTo(linkedSetOf(), ServerPlayerEntity::getUuid))
-            WeaponSkillRegistry.allHandlers().forEach { it.onTick(server) }
+
+            // Global Ticks (No specific data, but definition might be useful)
+            WeaponSkillRegistry.allHandlers().forEach { (id, handler) ->
+                val def = WeaponSkillRegistry.getDefinition(id)
+                if (def != null) handler.onTick(server, def, WeaponData.DUMMY.copy(weaponId = def.id, rarity = def.craft.craftedRarity))
+            }
+
             for (player in onlinePlayers) {
-                WeaponSkillRegistry.allHandlers().forEach { it.onPlayerTick(player) }
+                val stack = player.mainHandStack
+                val def = WeaponStackSupport.getDefinition(stack)
+                if (def != null) {
+                    val data = WeaponStackSupport.ensureWeaponData(stack)
+                    WeaponSkillRegistry.getHandler(def.skill.effectId)?.onPlayerTick(player, def, data)
+                    for (subSkillEffectId in WeaponSkillRegistry.subSkillEffectIds(def.skill.effectId)) {
+                        WeaponSkillRegistry.getHandler(subSkillEffectId)?.onPlayerTick(player, def, data)
+                    }
+                }
+
                 tickCooldowns(player)
                 clearExpiredTemporaryGuard(player)
                 clearExpiredShield(player)
                 updateCooldownFeedback(player)
             }
+            pruneTargetStates(now)
         }
+    }
+
+    private fun pruneTargetStates(now: Long) {
+        val markIterator = targetMarks.entries.iterator()
+        while (markIterator.hasNext()) {
+            val entry = markIterator.next()
+            val marks = entry.value
+            marks.entries.removeIf { it.value <= now }
+            if (marks.isEmpty()) markIterator.remove()
+        }
+        invulnerabilityTicks.entries.removeIf { it.value <= now }
+
+        val soulBreakIterator = soulBreakStacks.entries.iterator()
+        while (soulBreakIterator.hasNext()) {
+            val entry = soulBreakIterator.next()
+            val expire = soulBreakExpireTick[entry.key] ?: 0L
+            if (now >= expire) {
+                soulBreakIterator.remove()
+                soulBreakExpireTick.remove(entry.key)
+            }
+        }
+    }
+
+    fun applyMark(target: LivingEntity, markId: String, durationTicks: Long) {
+        val now = target.world.time
+        targetMarks.getOrPut(target.uuid) { mutableMapOf() }[markId] = now + durationTicks
+    }
+
+    fun hasMark(target: LivingEntity, markId: String): Boolean {
+        val expire = targetMarks[target.uuid]?.get(markId) ?: return false
+        return target.world.time < expire
+    }
+
+    fun removeMark(target: LivingEntity, markId: String) {
+        targetMarks[target.uuid]?.remove(markId)
+    }
+
+    fun applySoulBreak(target: LivingEntity, stacks: Int = 1, durationTicks: Long) {
+        val current = soulBreakStacks[target.uuid] ?: 0
+        soulBreakStacks[target.uuid] = (current + stacks).coerceAtMost(8)
+        val now = target.world.time
+        soulBreakExpireTick[target.uuid] = now + durationTicks
+    }
+
+    fun getSoulBreakStacks(target: LivingEntity): Int {
+        return if (target.world.time < (soulBreakExpireTick[target.uuid] ?: 0L)) soulBreakStacks[target.uuid] ?: 0 else 0
+    }
+
+    fun addTao(player: ServerPlayerEntity, amount: Int) {
+        val current = taoStacks[player.uuid] ?: 0
+        taoStacks[player.uuid] = (current + amount).coerceAtMost(99)
+    }
+
+    fun getTao(player: ServerPlayerEntity): Int {
+        return taoStacks[player.uuid] ?: 0
+    }
+
+    fun consumeTao(player: ServerPlayerEntity, amount: Int): Boolean {
+        val current = taoStacks[player.uuid] ?: 0
+        if (current < amount) return false
+        taoStacks[player.uuid] = current - amount
+        return true
+    }
+
+    fun grantInvulnerability(target: LivingEntity, durationTicks: Long) {
+        val now = target.world.time
+        invulnerabilityTicks[target.uuid] = maxOf(invulnerabilityTicks[target.uuid] ?: 0L, now + durationTicks)
+    }
+
+    fun isInvulnerable(target: LivingEntity): Boolean {
+        val expire = invulnerabilityTicks[target.uuid] ?: return false
+        return target.world.time < expire
     }
 
     private fun tickCooldowns(player: ServerPlayerEntity) {
@@ -106,10 +201,19 @@ object WeaponSkillService {
     fun absorbDamage(player: ServerPlayerEntity, amount: Float): Float {
         clearExpiredTemporaryGuard(player)
         clearExpiredShield(player)
-        
+
         var remainingAmount = amount
-        for (handler in WeaponSkillRegistry.allHandlers()) {
-            remainingAmount = handler.onDamageAbsorbed(player, remainingAmount)
+        val stack = player.mainHandStack
+        val heldDef = WeaponStackSupport.getDefinition(stack)
+        val heldData = heldDef?.let { WeaponStackSupport.getWeaponData(stack) }
+
+        for ((id, handler) in WeaponSkillRegistry.allHandlers()) {
+            val def = if (heldDef?.skill?.effectId == id) heldDef else WeaponSkillRegistry.getDefinition(id)
+            val data = if (heldDef?.skill?.effectId == id && heldData != null) heldData else (def?.let { WeaponData(it.id, it.craft.craftedRarity, 1, 1) } ?: WeaponData.DUMMY)
+
+            if (def != null) {
+                remainingAmount = handler.onDamageAbsorbed(player, remainingAmount, def, data)
+            }
             if (remainingAmount <= 0.0f) return 0.0f
         }
 
@@ -157,52 +261,70 @@ object WeaponSkillService {
 
     fun critDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
         var bonus = 0.0
-        if (weaponId == HANWU_JUANXUE_ID) {
-            bonus += SnowFrostSkill.critDamageBonusPercent(player)
-        }
-        bonus += OrchidPavilionEchoSkill.critDamageBonusPercent(player)
+        WeaponSkillRegistry.allHandlers().values.forEach { bonus += it.getCritDamageBonus(player) }
         return bonus
     }
 
-    fun snowEnvironmentAttackScalar(player: ServerPlayerEntity, weaponId: String?): Double {
-        if (weaponId != HANWU_JUANXUE_ID) {
-            return 0.0
-        }
-        return if (isSnowEnvironment(player)) HANWU_SNOW_ATTACK_SCALAR else 0.0
+    fun critRateBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
+        var bonus = 0.0
+        WeaponSkillRegistry.allHandlers().values.forEach { bonus += it.getCritRateBonus(player) }
+        return bonus
     }
 
-    fun orchidPavilionAttackScalar(player: ServerPlayerEntity): Double {
-        return OrchidPavilionEchoSkill.orchidPavilionAttackScalar(player)
+    fun attackDamageScalar(player: ServerPlayerEntity): Double {
+        var scalar = 0.0
+        WeaponSkillRegistry.allHandlers().values.forEach { scalar += it.getAttackDamageScalar(player) }
+        return scalar
     }
 
-    fun orchidPavilionArmorScalar(player: ServerPlayerEntity): Double {
-        return OrchidPavilionEchoSkill.orchidPavilionArmorScalar(player)
-    }
-
-    fun orchidPavilionRegenStageBonus(player: ServerPlayerEntity): Int {
-        return OrchidPavilionEchoSkill.orchidPavilionRegenStageBonus(player)
+    fun armorScalar(player: ServerPlayerEntity): Double {
+        var scalar = 0.0
+        WeaponSkillRegistry.allHandlers().values.forEach { scalar += it.getArmorScalar(player) }
+        return scalar
     }
 
     fun onAttackDealt(player: ServerPlayerEntity, target: LivingEntity, damage: Double) {
-        if (damage <= 0.0) {
-            return
+        if (damage <= 0.0) return
+
+        val stack = player.mainHandStack
+        val heldDef = WeaponStackSupport.getDefinition(stack)
+        val heldData = heldDef?.let { WeaponStackSupport.getWeaponData(stack) }
+
+        for ((id, handler) in WeaponSkillRegistry.allHandlers()) {
+            val def = if (heldDef?.skill?.effectId == id) heldDef else WeaponSkillRegistry.getDefinition(id)
+            val data = if (heldDef?.skill?.effectId == id && heldData != null) heldData else (def?.let { WeaponData(it.id, it.craft.craftedRarity, 1, 1) } ?: WeaponData.DUMMY)
+            if (def != null) {
+                handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
+            }
         }
-        WeaponSkillRegistry.allHandlers().forEach { it.onDamageDealt(player, target, damage.toFloat(), false) }
+    }
+
+    fun regenStageBonus(player: ServerPlayerEntity): Int {
+        var bonus = 0
+        WeaponSkillRegistry.allHandlers().values.forEach { bonus += it.getRegenStageBonus(player) }
+        return bonus
     }
 
     @JvmStatic
     fun getPhysicalResistanceOffset(target: LivingEntity): Double {
-        return DarkLuxSkill.getPhysicalResistanceOffset(target)
+        var offset = 0.0
+        if (hasMark(target, "entanglement")) offset += ENTANGLEMENT_RESISTANCE_REDUCTION
+        if (hasMark(target, "dark")) offset += DARK_LUX_RESISTANCE_REDUCTION
+        val soulBreak = getSoulBreakStacks(target)
+        offset += soulBreak * 0.05 // 5% per stack
+        return offset
     }
 
     @JvmStatic
     fun getArcaneResistanceOffset(target: LivingEntity): Double {
-        return DarkLuxSkill.getArcaneResistanceOffset(target)
+        if (hasMark(target, "entanglement")) return ENTANGLEMENT_RESISTANCE_REDUCTION
+        if (hasMark(target, "lux")) return DARK_LUX_RESISTANCE_REDUCTION
+        return 0.0
     }
 
     @JvmStatic
     fun hasStatus(target: LivingEntity, status: String): Boolean {
-        return DarkLuxSkill.hasStatus(target, status)
+        return hasMark(target, status)
     }
 
     fun isSnowEnvironment(player: ServerPlayerEntity): Boolean {
@@ -261,6 +383,13 @@ object WeaponSkillService {
         access.cresoraSetShieldHp(0.0f)
         access.cresoraSetShieldExpireTick(0L)
         access.cresoraSetShieldWeaponId(null)
+    }
+
+    fun grantShield(player: ServerPlayerEntity, amountHp: Float, durationTicks: Long, weaponId: String? = null) {
+        val access = player as? WeaponSkillAccess ?: return
+        access.cresoraSetShieldHp(amountHp)
+        access.cresoraSetShieldExpireTick(currentWorldTime(player) + durationTicks)
+        access.cresoraSetShieldWeaponId(weaponId)
     }
 
     fun getRemainingCooldownTicks(player: ServerPlayerEntity, weaponId: String): Double {

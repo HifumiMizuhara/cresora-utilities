@@ -172,7 +172,8 @@ data class WeaponDefinition(
     val skill: WeaponSkillDefinition,
     val upgrades: WeaponUpgradeDefinition,
     val craft: WeaponCraftDefinition,
-    val drops: WeaponDropDefinition
+    val drops: WeaponDropDefinition,
+    val customModelData: Int? = null
 ) {
     fun translationKey(): String = "item.cresora-utilities.$id"
 
@@ -190,7 +191,8 @@ data class WeaponDefinition(
             skill = WeaponSkillDefinition("none", 0, 0, 0.0, 0.0),
             upgrades = WeaponUpgradeDefinition(0, 0, 0, 0),
             craft = WeaponCraftDefinition("dummy", "air", 0, WeaponRarity.TWO_STAR, 1, 1),
-            drops = WeaponDropDefinition(WeaponFragmentDropDefinition(0, 0.0, 0, 0, 0), emptyList(), 0.0, 0.0)
+            drops = WeaponDropDefinition(WeaponFragmentDropDefinition(0, 0.0, 0, 0, 0), emptyList(), 0.0, 0.0),
+            customModelData = null
         )
     }
 }
@@ -234,8 +236,11 @@ object WeaponContentRegistry {
             WeaponSkillDefinition.CODEC.fieldOf("skill").forGetter(WeaponDefinition::skill),
             WeaponUpgradeDefinition.CODEC.fieldOf("upgrades").forGetter(WeaponDefinition::upgrades),
             WeaponCraftDefinition.CODEC.fieldOf("craft").forGetter(WeaponDefinition::craft),
-            WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops)
-        ).apply(instance, ::WeaponDefinition)
+            WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops),
+            Codec.INT.optionalFieldOf("custom_model_data").forGetter { java.util.Optional.ofNullable(it.customModelData) }
+        ).apply(instance) { id, baseItemId, baseAtk, atkPerLv, speed, maxBase, maxSkill, crit, allDmg, dmgType, curve, skill, upgrades, craft, drops, modelData ->
+            WeaponDefinition(id, baseItemId, baseAtk, atkPerLv, speed, maxBase, maxSkill, crit, allDmg, dmgType, curve, skill, upgrades, craft, drops, modelData.orElse(null))
+        }
     }
 
     private val logger = LoggerFactory.getLogger("${CreSoraUtilities.MOD_ID}/weapon-content")
@@ -260,8 +265,9 @@ object WeaponContentRegistry {
                 applyBundle(bundle)
                 logger.info("Loaded CWC weapon content from {}", CWC_CONTENT_RESOURCE)
             }
-            .onFailure {
-                // Ignore failure if CWC file doesn't exist yet
+            .onFailure { throwable ->
+                // Still log as warning/info if it's just missing, but actual parse errors should be visible
+                logger.warn("Failed to load CWC weapon content from {}. If you haven't compiled .cresora files yet, this is expected.", CWC_CONTENT_RESOURCE, throwable)
             }
     }
 

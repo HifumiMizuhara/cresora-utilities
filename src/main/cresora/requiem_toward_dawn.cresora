@@ -16,14 +16,31 @@ weapon "Requiem Toward Dawn" {
         base_value: 3.0
         value_per_level: 1.0
         radius: 4.0
-        
+
         on_activate {
             start_cooldown()
-            apply_status_effect("minecraft:fire_resistance", 10s, 0)
-            area_of_effect(4.0) {
-                ignite(target, 5s)
+            execute {
+                val radius = definition.skill.radiusMeters;
+                val duration = definition.skill.durationSeconds * 20L;
+                player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.FIRE_RESISTANCE, duration.toInt(), 0));
+
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                val targets = world.getOtherEntities(player, player.boundingBox.expand(radius)) { it is net.minecraft.entity.LivingEntity && it.isAlive };
+                for (target in targets) {
+                    target.setOnFireFor(5.0f);
+                }
+
+                player.sendMessage(
+                    net.minecraft.text.Text.translatable(
+                        "item.cresora.weapon.skill.flame_aura_activated",
+                        net.minecraft.text.Text.translatable(definition.translationKey()),
+                        targets.size,
+                        5,
+                        definition.skill.durationSeconds
+                    ).formatted(net.minecraft.util.Formatting.GOLD),
+                    true
+                );
             }
-            send_message("item.cresora.weapon.skill.flame_aura_activated.generic", "gold")
         }
     }
     translations {
@@ -31,11 +48,25 @@ weapon "Requiem Toward Dawn" {
             name: "Requiem Toward Dawn"
             skill_name: "Flame Aura"
             "item.cresora.weapon.skill.flame_aura_activated.generic": "Flame Aura Activated!"
+            "item.cresora.weapon.skill.flame_aura_activated": "%s Activated! Ignited %s targets for %s sec, gained fire resistance for %s sec."
         }
         ja_jp {
             name: "暁へと向かうレクエイム"
             skill_name: "フレイムオーラ"
             "item.cresora.weapon.skill.flame_aura_activated.generic": "フレイムオーラ 起動！"
+            "item.cresora.weapon.skill.flame_aura_activated": "%s を発動。%s体に %s 秒の火焔を付与し、自身は %s 秒の火焔耐性を獲得。"
+        }
+        zh_cn {
+            name: "朝向拂晓的安魂曲"
+            skill_name: "火焰"
+            "item.cresora.weapon.skill.flame_aura_activated.generic": "火焰 已启动！"
+            "item.cresora.weapon.skill.flame_aura_activated": "%s 已发动。为 %s 个生物附加 %s 秒火焰，并使自身获得 %s 秒火焰抗性。"
+        }
+        lzh {
+            name: "向曉之安魂曲"
+            skill_name: "火焰"
+            "item.cresora.weapon.skill.flame_aura_activated.generic": "火焰 啓矣！"
+            "item.cresora.weapon.skill.flame_aura_activated": "%s 已發。灼 %s 物 %s 秒，自得禦焰 %s 秒。"
         }
     }
 }

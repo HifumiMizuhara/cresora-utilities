@@ -32,6 +32,7 @@ weapon "Cadenza Allegro" {
                     mobAccess?.cresoraIsEliteMob() != true
                 }.mapNotNull { it as? net.minecraft.entity.mob.HostileEntity }.sortedBy { it.squaredDistanceTo(player) }.take(n);
 
+                var transformedCount = 0;
                 for (target in targets) {
                     val sheep = net.minecraft.entity.EntityType.SHEEP.spawn(world, null, target.blockPos, net.minecraft.entity.SpawnReason.COMMAND, true, false) ?: continue;
                     sheep!!.refreshPositionAndAngles(target.x, target.y, target.z, target.yaw, target.pitch);
@@ -43,9 +44,14 @@ weapon "Cadenza Allegro" {
                     }
                     hifumi.cresora.AdventureRankService.refreshMobDisplay(sheep!!);
                     target.discard();
+                    transformedCount++;
+                }
+                if (transformedCount > 0) {
+                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.baa_mimic_activated", net.minecraft.text.Text.translatable(definition.translationKey()), transformedCount).formatted(net.minecraft.util.Formatting.GREEN), true);
+                } else {
+                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.baa_mimic_activated.generic").formatted(net.minecraft.util.Formatting.GRAY), true);
                 }
             }
-            send_message("item.cresora.weapon.skill.baa_mimic_activated.generic", "green")
         }
     }
     translations {
@@ -53,11 +59,29 @@ weapon "Cadenza Allegro" {
             name: "Cadenza Allegro"
             skill_name: "Baa Mimic"
             "item.cresora.weapon.skill.baa_mimic_activated.generic": "Baa Mimic Activated!"
+            "item.cresora.weapon.skill.baa_mimic_activated": "%s Activated! Transformed %d enemies into sheep!"
+            "item.cresora.weapon.passive.cadenza_allegro": "Fluffy Blessing: While held, wool drops are doubled."
         }
         ja_jp {
             name: "意気羊々たるカデンツァ"
             skill_name: "ばあ・みみっく"
             "item.cresora.weapon.skill.baa_mimic_activated.generic": "ばあ・みみっく 起動！"
+            "item.cresora.weapon.skill.baa_mimic_activated": "%s を発動！周囲の敵 %d 体を羊に変身させた！"
+            "item.cresora.weapon.passive.cadenza_allegro": "もふもふの恩恵: 所持中、羊毛のドロップ量が2倍になる。"
+        }
+        zh_cn {
+            name: "得意羊羊狂想曲"
+            skill_name: "咩咩·拟态"
+            "item.cresora.weapon.skill.baa_mimic_activated.generic": "咩咩·拟态 已启动！"
+            "item.cresora.weapon.skill.baa_mimic_activated": "已发动 %s！将周围 %d 个敌人变身成了羊！"
+            "item.cresora.weapon.passive.cadenza_allegro": "绵绵之惠: 只要背包中有这把武器，击杀普通羊或剪羊毛时，羊毛掉落量翻倍。"
+        }
+        lzh {
+            name: "得意羊羊狂想曲"
+            skill_name: "咩咩擬態"
+            "item.cresora.weapon.skill.baa_mimic_activated.generic": "咩咩擬態 啓矣！"
+            "item.cresora.weapon.skill.baa_mimic_activated": "既施 %s！化周遭 %d 寇為羊矣！"
+            "item.cresora.weapon.passive.cadenza_allegro": "綿恩: 兵在囊中，殺常羊或翦毛之時，其毛倍出。"
         }
     }
 }

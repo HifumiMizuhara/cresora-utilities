@@ -6,9 +6,7 @@ import hifumi.cresora.WeaponSkillAccess
 import hifumi.cresora.WeaponSkillService
 import hifumi.cresora.skill.WeaponSkillHandler
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
 
 public object CadenzaAllegroSkill : WeaponSkillHandler {
   override fun activate(
@@ -20,7 +18,8 @@ public object CadenzaAllegroSkill : WeaponSkillHandler {
     WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    run execute@ {
+
+    ; run execute@ {
       val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
                       val radius = definition.skill.radiusMeters;
                       val n = if (data.baseLevel >= 61) 3 else if (data.baseLevel >= 41) 2 else 1;
@@ -37,6 +36,7 @@ public object CadenzaAllegroSkill : WeaponSkillHandler {
                       }.mapNotNull { it as? net.minecraft.entity.mob.HostileEntity }.sortedBy {
           it.squaredDistanceTo(player) }.take(n);
 
+                      var transformedCount = 0;
                       for (target in targets) {
                           val sheep = net.minecraft.entity.EntityType.SHEEP.spawn(world, null,
           target.blockPos, net.minecraft.entity.SpawnReason.COMMAND, true, false) ?: continue;
@@ -51,11 +51,19 @@ public object CadenzaAllegroSkill : WeaponSkillHandler {
                           }
                           hifumi.cresora.AdventureRankService.refreshMobDisplay(sheep!!);
                           target.discard();
+                          transformedCount++;
+                      }
+                      if (transformedCount > 0) {
+                         
+          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.baa_mimic_activated",
+          net.minecraft.text.Text.translatable(definition.translationKey()),
+          transformedCount).formatted(net.minecraft.util.Formatting.GREEN), true);
+                      } else {
+                         
+          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.baa_mimic_activated.generic").formatted(net.minecraft.util.Formatting.GRAY),
+          true);
                       }
     }
-
-    player.sendMessage(Text.translatable("item.cresora.weapon.skill.baa_mimic_activated.generic").formatted(Formatting.GREEN),
-        true)
 
 
     return ActionResult.SUCCESS

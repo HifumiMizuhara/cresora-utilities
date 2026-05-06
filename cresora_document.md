@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-04-11 (Cresora Weapon Compiler 導入反映)
+最終更新: 2026-05-06 (Cresora Weapon Compiler の parser / hotbar 安定化反映)
 
 ## 1. 結論
 
@@ -11,7 +11,9 @@
 2. `ModDataComponents` と mixin access interface 群による保存 API
 3. `*ContentRegistry` 群と `data/cresora-utilities/cresora/*.json` によるデータ駆動 API
 4. `*Service` / `*Support` / `ArtifactUiFlow` / `Commands` によるゲーム内実行 API
-5. **Cresora Weapon Compiler (CWC)**: `.cresora` スクリプトからコードと JSON を自動生成するビルドタイム API。武器のマイグレーションおよびデータ整合性チェックを自動化し、型安全な武器定義を保証します。
+5. **Cresora Weapon Compiler (CWC)**: `.cresora` スクリプトからコードと JSON を自動生成するビルドタイム API。武器のマイグレーションおよびデータ整合性チェックを自動化し、型安全な武器定義を保証します。また、アイテムモデル（`minecraft:item/handheld` 等を親とする）および基本翻訳キーの自動生成も行います。
+   - `area_of_effect` は専用 AST ノードとして扱われ、文字列再構成ではなく構造化出力に変換されます。
+   - `.cresora` の lexer は `//` と `/* ... */` の両方をコメントとして扱います。
 
 要するに、今の CreSora は「サービス singleton + JSON レジストリ」に加えて「コード生成エンジン」を備えたハイブリッドフレームワークです。
 
@@ -56,6 +58,7 @@
 - `ResonanceContentRegistry.init()`
 - `MusicEchoContentRegistry.init()`
 - `CompiledWeaponSkillRegistry.registerAll(this)` (CWCにより自動生成)
+- `HotbarOverrideService` がサブスキル用ホットバーのセッション管理と復帰を担当します。
 
 ### 2.3 登録済み ScreenHandler ID
 
@@ -298,6 +301,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `maxAllDamageBonusPercent`
 - `damageType`
 - `attackCurve`
+- `customModelData` (Optional)
 - `skill`
 - `upgrades`
 - `craft`
@@ -583,7 +587,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `legacyFragmentItem(definitionId)`
 - `getWeaponData(stack)`
 - `ensureWeaponData(stack)`
-- `syncWeaponData(stack, data)`
+- `syncWeaponData(stack, data)`: `WEAPON_DATA` を同期し、`customModelData` が定義されている場合は `CUSTOM_MODEL_DATA` コンポーネントを適用します。
 - `defaultWeaponData(definition)`
 - `createWeaponStack(definition, rarity, baseLevel, skillLevel)`
 - `countFragments(player, definition)`
@@ -833,6 +837,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - スキルの共通クールダウン管理 (BossBar 表示)
   - **重要**: クールダウンは「残りティック数」で管理されるようになり、デバフ等による動的な速度変更に対応しています。
 - 汎用シールド (Shield) および一時ガード (Temporary Guard) のライフサイクル管理
+  - `grantShield(player, amount, duration, weaponId)`: スクリプトから安全にシールドを付与するための標準インターフェース。
+- `applySoulBreak(target, stacks, durationTicks)`: 破魂（Soul Break）スタックを付与。物理耐性と防御力を減少させます。
+- `getSoulBreakStacks(target)`: 現在の破魂スタック数を取得。
 - `WeaponSkillRegistry` を介した各ハンドラへのイベント（Tick, Damage 等）のディスパッチ
 
 `WeaponSkillHandler` インターフェース:
@@ -848,7 +855,14 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 `WeaponSkillRegistry`:
 
 - `effectId` (JSONの `skill.effectId` に対応) とハンドラを紐付けます。
-- 起動時に `init()` で全ての標準スキルを登録します。
+- `CompiledWeaponSkillRegistry` (CWC 生成) により、DSL 定義されたスキルが自動的に登録されます。
+- CWC 生成の `registerSubSkill(parentEffectId, subSkillEffectId)` により、メインスキルとサブスキルの親子関係も登録します。`WeaponSkillService` は装備中武器のメインスキルに加え、その配下のサブスキル `onPlayerTick` も毎 tick 呼びます。
+- スキル ID から `WeaponDefinition` を逆引きする `getDefinition(id)` ユーティリティにより、文脈に応じたデータ処理が可能です。
+
+`HotbarOverrideService`:
+
+- `open_skill_menu(...)` 実行時に元ホットバー、親武器 ID、発動時点の `WeaponData`、許可されたサブスキル ID を保持します。
+- `SubSkillItem` は保持された親武器文脈を使ってサブスキルを発動します。これにより、サブスキル内の攻撃力・レベル・レアリティ計算は `WeaponDefinition.DUMMY` ではなく実際の武器データを参照します。
 
 ### 7.11 DomainService
 
@@ -1188,6 +1202,9 @@ CWC はコンパイルのたびに出力先（`generated` パッケージおよ�
 - **ソース抽出 (`execute` ブロック)**: トークン再結合ではなく、元のソースコードから直接オフセットを切り出す方式を採用。これにより `as?`, `?.`, `!!` や改行、コメントのフォーマットが 100% 維持されます。
 - **実行ラベル (`execute@run`)**: `execute` ブロックが `run execute@ { ... }` にラップされて生成されるため、スクリプト内で `return@execute` を使用した早期リターンが可能です。
 - **AOE 構文の修正**: `area_of_effect` 内での `ignite` 等のパラメータが 1.21.7 のレジストリ API に適合するように自動変換されます。
+- **翻訳ブロック (`translations`)**: スクリプト内に `en_us`, `ja_jp`, `zh_cn`, `lzh` の各キーと値を直接記述可能。ビルド時に `lang/*.json` へ自動的にマージされるため、外部ファイルの編集が不要になりました。
+- **動的メッセージ出力**: `execute` ブロック内で `Text.translatable` を用いて、スタック数や回復量などを動的に埋め込んだメッセージ演出を簡単に実装できるようになりました。
+- **サブスキル文脈登録**: 生成 registry はサブスキルを単体 handler として登録するだけでなく、親スキルとの対応も登録します。これにより、サブスキル発動後の継続効果 (`on_player_tick`) が親武器を装備している間に正しく更新されます。
 
 ```cresora
 weapon "Name" {

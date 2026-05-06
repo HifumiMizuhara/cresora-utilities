@@ -3,12 +3,18 @@ package hifumi.cresora.compiler
 class Parser(private val source: String, private val tokens: List<Token>) {
     private var current = 0
 
-    fun parse(): List<WeaponDefNode> {
-        val weapons = mutableListOf<WeaponDefNode>()
+    fun parse(): List<ASTNode> {
+        val nodes = mutableListOf<ASTNode>()
         while (!isAtEnd()) {
-            weapons.add(weapon())
+            if (check(TokenType.KEYWORD_WEAPON)) {
+                nodes.add(weapon())
+            } else if (check(TokenType.KEYWORD_DICTIONARY)) {
+                nodes.add(dictionary())
+            } else {
+                advance() // Skip unknown top-level tokens
+            }
         }
-        return weapons
+        return nodes
     }
 
     private fun weapon(): WeaponDefNode {
@@ -24,6 +30,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var skill: SkillNode? = null
         var translations = mutableMapOf<String, Map<String, String>>()
         val subSkills = mutableListOf<SubSkillNode>()
+        var customModelData: Int? = null
+        var texture: String? = null
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             val token = advance()
@@ -67,11 +75,46 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     translations = translations()
                     consume(TokenType.RIGHT_BRACE, "Expect '}' after translations")
                 }
+                "custom_model_data" -> {
+                    consume(TokenType.COLON, "Expect ':' after custom_model_data")
+                    customModelData = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
+                }
+                "texture" -> {
+                    consume(TokenType.COLON, "Expect ':' after texture")
+                    texture = if (check(TokenType.STRING)) advance().lexeme else consume(TokenType.IDENTIFIER, "Expect string or identifier").lexeme
+                }
+                else -> throw RuntimeException("Unknown weapon field '${token.lexeme}' at line ${token.line}")
             }
         }
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' after weapon body")
-        return WeaponDefNode(name, id, rarity, baseItem, damageType, stats!!, skill, translations, subSkills)
+        val resolvedStats = stats ?: throw RuntimeException("Weapon '$name' is missing required stats block")
+        if (id.isBlank()) throw RuntimeException("Weapon '$name' is missing required id")
+        if (rarity.isBlank()) throw RuntimeException("Weapon '$name' is missing required rarity")
+        if (baseItem.isBlank()) throw RuntimeException("Weapon '$name' is missing required base_item")
+        return WeaponDefNode(name, id, rarity, baseItem, damageType, resolvedStats, skill, translations, subSkills, customModelData, texture)
+    }
+
+    private fun dictionary(): DictionaryDefNode {
+        consume(TokenType.KEYWORD_DICTIONARY, "Expect 'dictionary'")
+        val id = consume(TokenType.IDENTIFIER, "Expect dictionary id").lexeme
+        consume(TokenType.LEFT_BRACE, "Expect '{' before dictionary body")
+
+        var translations = mutableMapOf<String, Map<String, String>>()
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            when (token.lexeme) {
+                "translations" -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for translations")
+                    translations = translations()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after translations")
+                }
+            }
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after dictionary body")
+        return DictionaryDefNode(id, translations)
     }
 
     private fun stats(): StatsNode {
@@ -94,6 +137,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 "max_skill_level" -> maxSkillLevel = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
                 "crit_rate_bonus" -> critRateBonusPercent = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                 "max_all_damage_bonus" -> maxAllDamageBonusPercent = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
+                else -> throw RuntimeException("Unknown stats field '$field'")
             }
         }
         return StatsNode(baseAttackDamage, attackDamagePerLevel, totalAttackSpeed, maxBaseLevel, maxSkillLevel, critRateBonusPercent, maxAllDamageBonusPercent)
@@ -269,9 +313,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     when (name) {
                         "area_of_effect" -> {
                             val radius = args.getOrNull(0)?.toDoubleOrNull() ?: 5.0
-                            // Simplified: convert to multiple CommandActionNodes or a dedicated AOE node
-                            // For now, let's just use ExpressionNode as a placeholder or implement AOE logic
-                            actions.add(CommandActionNode("area_of_effect", args + listOf(blockActions.joinToString(";") { "${it.let { if (it is CommandActionNode) it.commandName + "(" + it.arguments.joinToString(",") + ")" else "" }}" })))
+                            actions.add(AreaOfEffectActionNode(radius, blockActions))
                         }
                         else -> actions.add(CommandActionNode(name, args))
                     }
@@ -284,6 +326,13 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                             actions.add(OpenSkillMenuActionNode(subSkillIds, duration))
                         }
                         "close_skill_menu" -> actions.add(CloseSkillMenuActionNode)
+                        "send_localized_message" -> {
+                             if (args.size < 2) throw RuntimeException("send_localized_message requires at least a key and a color")
+                             val key = args[0].removeSurrounding("\"")
+                             val color = args[1].removeSurrounding("\"")
+                             val callArgs = args.drop(2)
+                             actions.add(SendLocalizedMessageActionNode(key, color, callArgs))
+                        }
                         else -> actions.add(CommandActionNode(name, args))
                     }
                 }
@@ -306,8 +355,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 val content = source.substring(blockStartPos, closeBrace.startOffset)
                 actions.add(ExecuteActionNode(content.trim()))
             } else {
-                // Other simple actions?
-            }
+                    throw RuntimeException("Unexpected token '$name' in handler '$eventName'")
+                }
         }
         return SkillHandlerNode(eventName, actions)
     }
@@ -331,7 +380,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
 
     private fun consume(type: TokenType, message: String): Token {
         if (check(type)) return advance()
-        throw RuntimeException("$message at line ${peek().line}")
+        val token = peek()
+        throw RuntimeException("$message at line ${token.line} (expected $type, got ${token.type} '${token.lexeme}')")
     }
 
     private fun check(type: TokenType) = if (isAtEnd()) false else peek().type == type

@@ -5,7 +5,7 @@ enum class TokenType {
     LEFT_BRACE, RIGHT_BRACE, COLON, COMMA, LEFT_PAREN, RIGHT_PAREN,
     DOT, OPERATOR,
     KEYWORD_WEAPON, KEYWORD_STATS, KEYWORD_SKILL, KEYWORD_BUFF, KEYWORD_TRANSLATIONS,
-    KEYWORD_SUB_SKILL, KEYWORD_ICON,
+    KEYWORD_SUB_SKILL, KEYWORD_ICON, KEYWORD_DICTIONARY, KEYWORD_TEXTURE,
     EOF
 }
 
@@ -24,7 +24,9 @@ class Lexer(private val source: String) {
         "buff" to TokenType.KEYWORD_BUFF,
         "translations" to TokenType.KEYWORD_TRANSLATIONS,
         "sub_skill" to TokenType.KEYWORD_SUB_SKILL,
-        "icon" to TokenType.KEYWORD_ICON
+        "icon" to TokenType.KEYWORD_ICON,
+        "dictionary" to TokenType.KEYWORD_DICTIONARY,
+        "texture" to TokenType.KEYWORD_TEXTURE
     )
 
     fun scanTokens(): List<Token> {
@@ -56,7 +58,14 @@ class Lexer(private val source: String) {
             '=' -> if (match('=')) addToken(TokenType.OPERATOR, "==") else addToken(TokenType.OPERATOR)
             '&' -> if (match('&')) addToken(TokenType.OPERATOR, "&&") else addToken(TokenType.OPERATOR)
             '|' -> if (match('|')) addToken(TokenType.OPERATOR, "||") else addToken(TokenType.OPERATOR)
-            '+', '*', '/' -> addToken(TokenType.OPERATOR)
+            '/' -> {
+                when {
+                    match('/') -> while (peek() != '\n' && !isAtEnd()) advance()
+                    match('*') -> scanBlockComment()
+                    else -> addToken(TokenType.OPERATOR)
+                }
+            }
+            '+' , '*' -> addToken(TokenType.OPERATOR)
             ' ', '\r', '\t' -> {}
             '\n' -> line++
             '"' -> string()
@@ -104,6 +113,18 @@ class Lexer(private val source: String) {
         advance() // The closing "
         val value = source.substring(start + 1, current - 1)
         addToken(TokenType.STRING, value)
+    }
+
+    private fun scanBlockComment() {
+        while (!isAtEnd()) {
+            if (peek() == '*' && peekNext() == '/') {
+                advance()
+                advance()
+                return
+            }
+            if (peek() == '\n') line++
+            advance()
+        }
     }
 
     private fun isAtEnd() = current >= source.length

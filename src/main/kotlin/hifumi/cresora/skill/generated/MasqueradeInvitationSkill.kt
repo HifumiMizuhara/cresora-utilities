@@ -1,15 +1,12 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.WeaponCombatSupport
 import hifumi.cresora.WeaponData
 import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
 import hifumi.cresora.WeaponSkillService
 import hifumi.cresora.skill.WeaponSkillHandler
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
 
 public object MasqueradeInvitationSkill : WeaponSkillHandler {
   override fun activate(
@@ -21,10 +18,16 @@ public object MasqueradeInvitationSkill : WeaponSkillHandler {
     WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    player.heal(WeaponCombatSupport.healHp(definition, data))
 
-    player.sendMessage(Text.translatable("item.cresora.weapon.skill.heal_activated.generic").formatted(Formatting.GREEN),
-        true)
+    ; run execute@ {
+      val value = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data);
+                      player.heal(value);
+                     
+          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.heal_activated",
+          net.minecraft.text.Text.translatable(definition.translationKey()),
+          hifumi.cresora.WeaponSkillService.formatNumber(value /
+          2.0)).formatted(net.minecraft.util.Formatting.GREEN), true);
+    }
 
 
     return ActionResult.SUCCESS

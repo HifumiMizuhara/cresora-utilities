@@ -1,0 +1,126 @@
+weapon "Dummy 4 Star B" {
+    id: "dummy_four_star_b"
+    rarity: "4_star"
+    base_item: "minecraft:golden_sword"
+    damage_type: physical
+    stats {
+        base_damage: 8.5
+        damage_per_level: 0.2
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 1
+    }
+    translations {
+        en_us { name: "Dummy 4 Star B" }
+        ja_jp { name: "試製四星・乙" }
+        zh_cn { name: "试制四星·乙" }
+        lzh { name: "試製四星乙" }
+    }
+}
+
+weapon "Example Saber" {
+    id: "example_saber"
+    rarity: "3_star"
+    base_item: "minecraft:iron_sword"
+    damage_type: physical
+    stats {
+        base_damage: 10.0
+        damage_per_level: 0.5
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us { name: "Example Saber" }
+        ja_jp { name: "例のサーベル" }
+        zh_cn { name: "示例披掛" }
+        lzh { name: "示例披掛" }
+    }
+}
+
+weapon "Buff Test Saber" {
+    id: "buff_test_saber"
+    rarity: "4_star"
+    base_item: "minecraft:iron_sword"
+    damage_type: physical
+    stats {
+        base_damage: 12.0
+        damage_per_level: 0.6
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us { name: "Buff Test Saber" }
+        ja_jp { name: "バフテスト用サーベル" }
+        zh_cn { name: "增益测试披掛" }
+        lzh { name: "增益测试披掛" }
+    }
+}
+
+weapon "Crimson Flash" {
+    id: "crimson_flash"
+    rarity: "5_star"
+    base_item: "minecraft:netherite_sword"
+    damage_type: physical
+    stats {
+        base_damage: 12.0
+        damage_per_level: 0.8
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us {
+            name: "Crimson Flash"
+            skill_name: "Bloodthirst"
+        }
+        ja_jp {
+            name: "紅蓮の閃光"
+            skill_name: "食欲"
+        }
+        zh_cn {
+            name: "紅蓮の閃光"
+            skill_name: "食欲"
+        }
+        lzh { name: "紅蓮之閃" }
+    }
+}
+
+weapon "Azure Blade" {
+    id: "azure_blade"
+    rarity: "3_star"
+    base_item: "minecraft:iron_sword"
+    damage_type: physical
+    stats {
+        base_damage: 9.0
+        damage_per_level: 0.4
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us { name: "Azure Blade" }
+        ja_jp { name: "蒼の刃" }
+        zh_cn { name: "蒼之刃" }
+        lzh { name: "蒼之刃" }
+    }
+}
+
+weapon "Stance Test" {
+    id: "stance_test"
+    rarity: "5_star"
+    base_item: "minecraft:netherite_sword"
+    damage_type: physical
+    stats {
+        base_damage: 10.0
+        damage_per_level: 0.5
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us { name: "Stance Test" }
+        ja_jp { name: "スタンス・テスト" }
+    }
+}
