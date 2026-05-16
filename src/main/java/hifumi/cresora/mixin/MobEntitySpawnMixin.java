@@ -1,6 +1,7 @@
 package hifumi.cresora.mixin;
 
 import hifumi.cresora.FieldMobPackService;
+import hifumi.cresora.BloodMoonService;
 import net.minecraft.entity.EntityData;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.HostileEntity;
@@ -30,5 +31,6 @@ public abstract class MobEntitySpawnMixin {
             return;
         }
         FieldMobPackService.INSTANCE.initializeOnSpawn(hostile, serverWorld, spawnReason);
+        BloodMoonService.INSTANCE.maybeDuplicateNaturalSpawn(hostile, serverWorld, spawnReason);
     }
 }

@@ -4,6 +4,14 @@ import com.google.gson.JsonParser
 import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
 import com.mojang.serialization.codecs.RecordCodecBuilder
+import net.minecraft.item.Item
+import net.minecraft.loot.LootPool
+import net.minecraft.loot.entry.ItemEntry
+import net.minecraft.loot.function.SetCountLootFunction
+import net.minecraft.loot.provider.number.UniformLootNumberProvider
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.util.Identifier
 import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 
@@ -141,11 +149,48 @@ object EquipmentContentRegistry {
         return equipmentDefinitions.values.count { it.setId == setId }
     }
 
-    fun applyMobLootRules(key: net.minecraft.registry.RegistryKey<net.minecraft.loot.LootTable>, builder: net.minecraft.loot.LootTable.Builder, registries: net.minecraft.registry.RegistryWrapper.WrapperLookup) {
-        val rules = mobLoot.filter { it.entityTypeId == key.value.toString() }
+    fun applyMobLootRules(key: RegistryKey<net.minecraft.loot.LootTable>, builder: net.minecraft.loot.LootTable.Builder, registries: net.minecraft.registry.RegistryWrapper.WrapperLookup) {
+        val entityTypeId = entityTypeIdForLootTable(key) ?: return
+        val rules = mobLoot.filter { it.entityTypeId == entityTypeId }
         for (rule in rules) {
-            // Implement rule application logic here if needed
-            // For now, this is a placeholder to satisfy the reference
+            rule.artifactLoot?.let { artifact ->
+                val candidateItems = artifactItems(artifact)
+                if (candidateItems.isNotEmpty()) {
+                    val poolBuilder = LootPool.builder()
+                        .conditionally(net.minecraft.loot.condition.RandomChanceLootCondition.builder(artifact.chance))
+                    for (item in candidateItems) {
+                        poolBuilder.with(
+                            ItemEntry.builder(item).apply(
+                                SetLevelLootFunction.builder(
+                                    UniformLootNumberProvider.create(
+                                        artifact.levelMin.toFloat(),
+                                        artifact.levelMax.toFloat()
+                                    ),
+                                    artifact.forcedRarity,
+                                    artifact.dropProfileId
+                                )
+                            )
+                        )
+                    }
+                    builder.pool(poolBuilder)
+                }
+            }
+
+            rule.upgradeMaterialLoot?.let { material ->
+                val poolBuilder = LootPool.builder()
+                    .conditionally(net.minecraft.loot.condition.RandomChanceLootCondition.builder(material.chance))
+                    .with(
+                        ItemEntry.builder(CreSoraUtilities.TUESHOKAKU).apply(
+                            SetCountLootFunction.builder(
+                                UniformLootNumberProvider.create(
+                                    material.levelMin.toFloat(),
+                                    material.levelMax.toFloat()
+                                )
+                            )
+                        )
+                    )
+                builder.pool(poolBuilder)
+            }
         }
     }
 
@@ -174,6 +219,13 @@ object EquipmentContentRegistry {
             require(slotMap.containsKey(definition.slotTypeId)) { "Unknown slot '${definition.slotTypeId}' referenced by equipment '${definition.id}'" }
             require(setMap.containsKey(definition.setId)) { "Unknown set '${definition.setId}' referenced by equipment '${definition.id}'" }
         }
+        for (set in setMap.values) {
+            for (bonus in set.allBonuses()) {
+                require(bonus.effectHooks.isEmpty()) {
+                    "Equipment set '${set.id}' defines unsupported effectHooks. Reject unsupported hooks until runtime implementation exists."
+                }
+            }
+        }
         for (loot in bundle.mobLoot) {
             loot.artifactLoot?.let { artifact ->
                 require(dropProfileMap.containsKey(artifact.dropProfileId)) {
@@ -192,6 +244,28 @@ object EquipmentContentRegistry {
         equipmentDefinitions = definitionMap
         dropProfiles = dropProfileMap
         mobLoot = bundle.mobLoot
+    }
+
+    private fun artifactItems(rule: EquipmentArtifactLootRule): List<Item> {
+        val ids = if (rule.equipmentIds.isEmpty()) {
+            equipmentDefinitions.values.map(EquipmentDefinition::id)
+        } else {
+            rule.equipmentIds
+        }
+        return ids.mapNotNull { definitionId ->
+            EquipmentStackSupport.itemForDefinitionId(definitionId)
+        }
+    }
+
+    private fun entityTypeIdForLootTable(key: RegistryKey<net.minecraft.loot.LootTable>): String? {
+        if (key.registry != RegistryKeys.LOOT_TABLE) {
+            return null
+        }
+        val value = key.value
+        if (!value.path.startsWith("entities/")) {
+            return null
+        }
+        return Identifier.of(value.namespace, value.path.removePrefix("entities/")).toString()
     }
 
     private fun defaultBundle(): EquipmentContentBundle {

@@ -11,7 +11,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
             } else if (check(TokenType.KEYWORD_DICTIONARY)) {
                 nodes.add(dictionary())
             } else {
-                advance() // Skip unknown top-level tokens
+                val token = peek()
+                throw RuntimeException("Unexpected top-level token '${token.lexeme}' at line ${token.line}")
             }
         }
         return nodes
@@ -110,6 +111,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     translations = translations()
                     consume(TokenType.RIGHT_BRACE, "Expect '}' after translations")
                 }
+                else -> throw RuntimeException("Unknown dictionary field '${token.lexeme}' at line ${token.line}")
             }
         }
 
@@ -173,6 +175,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     "base_value" -> baseValue = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                     "value_per_level" -> valuePerLevel = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                     "radius" -> radius = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
+                    else -> throw RuntimeException("Unknown skill field '${token.lexeme}' at line ${token.line}")
                 }
             }
         }
@@ -200,6 +203,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                         consume(TokenType.LEFT_BRACE, "Expect '{' for handler")
                         handlers.add(handler(field))
                         consume(TokenType.RIGHT_BRACE, "Expect '}' after handler")
+                    } else {
+                        throw RuntimeException("Unknown sub_skill field '$field'")
                     }
                 }
             }
@@ -238,6 +243,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     }
                     consume(TokenType.RIGHT_BRACE, "Expect '}' after stats")
                 }
+                else -> throw RuntimeException("Unknown buff field '$field'")
             }
         }
         return BuffNode(id, translationKey, maxStacks, duration, stats)
@@ -315,7 +321,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                             val radius = args.getOrNull(0)?.toDoubleOrNull() ?: 5.0
                             actions.add(AreaOfEffectActionNode(radius, blockActions))
                         }
-                        else -> actions.add(CommandActionNode(name, args))
+                        else -> throw RuntimeException("Unsupported block action '$name' in handler '$eventName'")
                     }
                 } else {
                     when (name) {

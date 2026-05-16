@@ -487,6 +487,94 @@
       }
     },
     {
+      "id": "lossless_crown",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 11.0,
+      "attackDamagePerLevel": 0.7,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "lossless_crown_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
+      "id": "blood_tear",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 8.8,
+      "attackDamagePerLevel": 0.45,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "damageType": "physical",
+      "skill": {
+        "effectId": "none",
+        "durationSeconds": 0,
+        "cooldownSeconds": 0,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "blood_tear_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "4_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
       "id": "cadenza_allegro",
       "baseItemId": "minecraft:wooden_sword",
       "baseAttackDamage": 8.5,

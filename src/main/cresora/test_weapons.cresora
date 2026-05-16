@@ -124,3 +124,43 @@ weapon "Stance Test" {
         ja_jp { name: "スタンス・テスト" }
     }
 }
+
+weapon "Lossless Crown" {
+    id: "lossless_crown"
+    rarity: "5_star"
+    base_item: "minecraft:netherite_sword"
+    damage_type: physical
+    stats {
+        base_damage: 11.0
+        damage_per_level: 0.7
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us { name: "Lossless Crown" }
+        ja_jp { name: "失色の冠" }
+        zh_cn { name: "失色之冠" }
+        lzh { name: "失色之冠" }
+    }
+}
+
+weapon "Blood Tear" {
+    id: "blood_tear"
+    rarity: "4_star"
+    base_item: "minecraft:iron_sword"
+    damage_type: physical
+    stats {
+        base_damage: 8.8
+        damage_per_level: 0.45
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    translations {
+        en_us { name: "Blood Tear" }
+        ja_jp { name: "血の涙" }
+        zh_cn { name: "血之泪" }
+        lzh { name: "血之淚" }
+    }
+}

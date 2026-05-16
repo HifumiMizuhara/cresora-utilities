@@ -107,6 +107,10 @@ object TreasureChestService {
         }
     }
 
+    fun clearTransientState(player: ServerPlayerEntity) {
+        nextSpawnTickByPlayer.remove(player.uuid)
+    }
+
     private fun emitParticles(server: MinecraftServer) {
         for (chest in activeByKey.values) {
             val world = server.getWorld(chest.key.worldKey) ?: continue
@@ -382,6 +386,6 @@ object TreasureChestService {
     }
 
     private fun isChunkLoaded(world: ServerWorld, pos: BlockPos): Boolean {
-        return world.isChunkLoaded(pos)
+        return world.chunkManager.isChunkLoaded(pos.x shr 4, pos.z shr 4)
     }
 }

@@ -1,6 +1,7 @@
 package hifumi.cresora
 
 import hifumi.cresora.skill.WeaponSkillRegistry
+import hifumi.cresora.skill.WeaponSkillHandler
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.block.Blocks
 import net.minecraft.entity.LivingEntity
@@ -68,10 +69,11 @@ object WeaponSkillService {
             val onlinePlayers = server.playerManager.playerList
             pruneOfflineState(onlinePlayers.mapTo(linkedSetOf(), ServerPlayerEntity::getUuid))
 
-            // Global Ticks (No specific data, but definition might be useful)
             WeaponSkillRegistry.allHandlers().forEach { (id, handler) ->
                 val def = WeaponSkillRegistry.getDefinition(id)
-                if (def != null) handler.onTick(server, def, WeaponData.DUMMY.copy(weaponId = def.id, rarity = def.craft.craftedRarity))
+                if (def != null) {
+                    handler.onTick(server, def, WeaponData.DUMMY.copy(weaponId = def.id, rarity = def.craft.craftedRarity))
+                }
             }
 
             for (player in onlinePlayers) {
@@ -79,9 +81,8 @@ object WeaponSkillService {
                 val def = WeaponStackSupport.getDefinition(stack)
                 if (def != null) {
                     val data = WeaponStackSupport.ensureWeaponData(stack)
-                    WeaponSkillRegistry.getHandler(def.skill.effectId)?.onPlayerTick(player, def, data)
-                    for (subSkillEffectId in WeaponSkillRegistry.subSkillEffectIds(def.skill.effectId)) {
-                        WeaponSkillRegistry.getHandler(subSkillEffectId)?.onPlayerTick(player, def, data)
+                    runWeaponHandlers(def.skill.effectId, def, data) { handler, definition, weaponData ->
+                        handler.onPlayerTick(player, definition, weaponData)
                     }
                 }
 
@@ -204,18 +205,13 @@ object WeaponSkillService {
 
         var remainingAmount = amount
         val stack = player.mainHandStack
-        val heldDef = WeaponStackSupport.getDefinition(stack)
-        val heldData = heldDef?.let { WeaponStackSupport.getWeaponData(stack) }
+        val heldDef = WeaponStackSupport.getDefinition(stack) ?: return remainingAmount
+        val heldData = WeaponStackSupport.getWeaponData(stack) ?: WeaponStackSupport.ensureWeaponData(stack)
 
-        for ((id, handler) in WeaponSkillRegistry.allHandlers()) {
-            val def = if (heldDef?.skill?.effectId == id) heldDef else WeaponSkillRegistry.getDefinition(id)
-            val data = if (heldDef?.skill?.effectId == id && heldData != null) heldData else (def?.let { WeaponData(it.id, it.craft.craftedRarity, 1, 1) } ?: WeaponData.DUMMY)
-
-            if (def != null) {
-                remainingAmount = handler.onDamageAbsorbed(player, remainingAmount, def, data)
-            }
-            if (remainingAmount <= 0.0f) return 0.0f
+        runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
+            remainingAmount = handler.onDamageAbsorbed(player, remainingAmount, def, data)
         }
+        if (remainingAmount <= 0.0f) return 0.0f
 
         val remainingGuard = temporaryGuardHpByPlayer[player.uuid] ?: 0.0f
         if (remainingGuard > 0.0f) {
@@ -259,50 +255,53 @@ object WeaponSkillService {
         return remainingAmount - remainingShield
     }
 
+    // When weaponId is present, scope to that weapon. Otherwise scope to the held main-hand weapon.
     fun critDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
-        var bonus = 0.0
-        WeaponSkillRegistry.allHandlers().values.forEach { bonus += it.getCritDamageBonus(player) }
-        return bonus
+        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: WeaponStackSupport.getDefinition(player.mainHandStack)
+        return definition?.let {
+            runWeaponBonus(it.skill.effectId, it) { handler, _ -> handler.getCritDamageBonus(player) }
+        } ?: 0.0
     }
 
+    // When weaponId is present, scope to that weapon. Otherwise scope to the held main-hand weapon.
     fun critRateBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
-        var bonus = 0.0
-        WeaponSkillRegistry.allHandlers().values.forEach { bonus += it.getCritRateBonus(player) }
-        return bonus
+        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: WeaponStackSupport.getDefinition(player.mainHandStack)
+        return definition?.let {
+            runWeaponBonus(it.skill.effectId, it) { handler, _ -> handler.getCritRateBonus(player) }
+        } ?: 0.0
     }
 
+    // Held-weapon scoped dynamic attack modifier. This does not aggregate passive bonuses from unequipped weapons.
     fun attackDamageScalar(player: ServerPlayerEntity): Double {
-        var scalar = 0.0
-        WeaponSkillRegistry.allHandlers().values.forEach { scalar += it.getAttackDamageScalar(player) }
-        return scalar
+        val definition = WeaponStackSupport.getDefinition(player.mainHandStack) ?: return 0.0
+        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getAttackDamageScalar(player) }
     }
 
+    // Held-weapon scoped dynamic armor modifier. This does not aggregate passive bonuses from unequipped weapons.
     fun armorScalar(player: ServerPlayerEntity): Double {
-        var scalar = 0.0
-        WeaponSkillRegistry.allHandlers().values.forEach { scalar += it.getArmorScalar(player) }
-        return scalar
+        val definition = WeaponStackSupport.getDefinition(player.mainHandStack) ?: return 0.0
+        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getArmorScalar(player) }
     }
 
     fun onAttackDealt(player: ServerPlayerEntity, target: LivingEntity, damage: Double) {
         if (damage <= 0.0) return
 
         val stack = player.mainHandStack
-        val heldDef = WeaponStackSupport.getDefinition(stack)
-        val heldData = heldDef?.let { WeaponStackSupport.getWeaponData(stack) }
-
-        for ((id, handler) in WeaponSkillRegistry.allHandlers()) {
-            val def = if (heldDef?.skill?.effectId == id) heldDef else WeaponSkillRegistry.getDefinition(id)
-            val data = if (heldDef?.skill?.effectId == id && heldData != null) heldData else (def?.let { WeaponData(it.id, it.craft.craftedRarity, 1, 1) } ?: WeaponData.DUMMY)
-            if (def != null) {
-                handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
-            }
+        val heldDef = WeaponStackSupport.getDefinition(stack) ?: return
+        val heldData = WeaponStackSupport.getWeaponData(stack) ?: WeaponStackSupport.ensureWeaponData(stack)
+        runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
+            handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
         }
     }
 
+    // Held-weapon scoped regen stage bonus.
     fun regenStageBonus(player: ServerPlayerEntity): Int {
-        var bonus = 0
-        WeaponSkillRegistry.allHandlers().values.forEach { bonus += it.getRegenStageBonus(player) }
-        return bonus
+        val definition = WeaponStackSupport.getDefinition(player.mainHandStack) ?: return 0
+        var total = 0
+        runWeaponHandlers(definition.skill.effectId, definition, WeaponData.DUMMY) { handler, _ , _ ->
+            total += handler.getRegenStageBonus(player)
+        }
+        return total
     }
 
     @JvmStatic
@@ -534,6 +533,18 @@ object WeaponSkillService {
         return false
     }
 
+    fun clearTransientState(player: ServerPlayerEntity) {
+        cooldownsByPlayer.remove(player.uuid)
+        clearTemporaryGuard(player)
+        clearShield(player)
+        removeCooldownBars(player)
+        soulBreakStacks.remove(player.uuid)
+        soulBreakExpireTick.remove(player.uuid)
+        taoStacks.remove(player.uuid)
+        targetMarks.remove(player.uuid)
+        invulnerabilityTicks.remove(player.uuid)
+    }
+
     private fun pruneOfflineState(onlinePlayerIds: Set<UUID>) {
         val offlinePlayers = cooldownBars.keys.filterNot(onlinePlayerIds::contains)
         for (playerId in offlinePlayers) {
@@ -544,5 +555,29 @@ object WeaponSkillService {
         cooldownsByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardHpByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardExpireTickByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
+    }
+
+    private inline fun runWeaponHandlers(
+        effectId: String,
+        definition: WeaponDefinition,
+        data: WeaponData,
+        block: (WeaponSkillHandler, WeaponDefinition, WeaponData) -> Unit
+    ) {
+        WeaponSkillRegistry.getHandler(effectId)?.let { block(it, definition, data) }
+        for (subSkillEffectId in WeaponSkillRegistry.subSkillEffectIds(effectId)) {
+            WeaponSkillRegistry.getHandler(subSkillEffectId)?.let { block(it, definition, data) }
+        }
+    }
+
+    private inline fun runWeaponBonus(
+        effectId: String,
+        definition: WeaponDefinition,
+        block: (WeaponSkillHandler, WeaponDefinition) -> Double
+    ): Double {
+        var total = 0.0
+        runWeaponHandlers(effectId, definition, WeaponData.DUMMY) { handler, def, _ ->
+            total += block(handler, def)
+        }
+        return total
     }
 }

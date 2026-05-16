@@ -170,8 +170,39 @@ object ResonanceContentRegistry {
             require(banner.fourStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a four-star pool" }
             require(banner.threeStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a three-star pool" }
             require(banner.twoStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a two-star pool" }
+            require(banner.rates.fiveStarChance + banner.rates.fourStarChance + banner.rates.threeStarChance + banner.rates.twoStarChance <= 1.000001) {
+                "Resonance banner '${banner.id}' has rates summing above 1.0"
+            }
+            validatePool(banner, "fiveStarPool", banner.fiveStarPool, WeaponRarity.FIVE_STAR)
+            validatePool(banner, "fourStarPool", banner.fourStarPool, WeaponRarity.FOUR_STAR)
+            validatePool(banner, "threeStarPool", banner.threeStarPool, WeaponRarity.THREE_STAR)
+            validatePool(banner, "twoStarPool", banner.twoStarPool, WeaponRarity.TWO_STAR)
+            if (banner.type == ResonanceBannerType.LIMITED && banner.featuredFiveStarWeaponId != null) {
+                require(banner.fiveStarPool.any { it.weaponId == banner.featuredFiveStarWeaponId }) {
+                    "Resonance banner '${banner.id}' references featured five-star '${banner.featuredFiveStarWeaponId}' outside its five-star pool"
+                }
+            }
         }
         banners = bannerMap
+    }
+
+    private fun validatePool(
+        banner: ResonanceBannerDefinition,
+        poolName: String,
+        entries: List<ResonanceWeaponEntry>,
+        expectedRarity: WeaponRarity
+    ) {
+        require(entries.isNotEmpty()) { "Resonance banner '${banner.id}' needs a non-empty $poolName" }
+        require(entries.any { it.weight > 0.0 }) { "Resonance banner '${banner.id}' has no positive-weight entries in $poolName" }
+        for (entry in entries) {
+            require(entry.rarity == expectedRarity) {
+                "Resonance banner '${banner.id}' has entry '${entry.weaponId}' with rarity '${entry.rarity.id}' inside $poolName"
+            }
+            require(entry.weight >= 0.0) {
+                "Resonance banner '${banner.id}' has negative weight for '${entry.weaponId}' in $poolName"
+            }
+            WeaponContentRegistry.requireWeapon(entry.weaponId)
+        }
     }
 
     private fun defaultBundle(): ResonanceContentBundle {

@@ -86,8 +86,9 @@ public class PlayerEntityMixin {
         double critRate = Math.min(1.0, CombatStatSupport.effectiveCritRateRatio(totals) + weaponCritRateBonus / 100.0);
         double critDamage = CombatStatSupport.effectiveCritDamageRatio(totals) + weaponCritDamageBonus;
         double damageMultiplier = 1.0 + Math.max(0.0, allBonus);
+        double bloodMoonMultiplier = hifumi.cresora.BloodMoonService.INSTANCE.playerDamageMultiplier(player);
 
-        double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier;
+        double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier * bloodMoonMultiplier;
         if (critRate > 0.0) {
             if (player.getRandom().nextDouble() < critRate) {
                 double critMultiplier = 1.0 + Math.max(0.0, critDamage);

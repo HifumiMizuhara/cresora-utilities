@@ -6,7 +6,8 @@ enum class ArtifactSpecialItemKind(
     val id: String
 ) {
     ALPHA("alpha"),
-    BETA("beta");
+    BETA("beta"),
+    NOTE("note");
 
     companion object {
         private val BY_ID = entries.associateBy(ArtifactSpecialItemKind::id)

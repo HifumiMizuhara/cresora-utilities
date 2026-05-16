@@ -215,6 +215,10 @@ object MasqueradeService {
         endSession(server, session, player, EndReason.DISCONNECT)
     }
 
+    fun clearTransientState(player: ServerPlayerEntity) {
+        pendingRespawnSnapshots.remove(player.uuid)
+    }
+
     fun restoreAfterRespawn(newPlayer: ServerPlayerEntity) {
         val snapshot = pendingRespawnSnapshots.remove(newPlayer.uuid) ?: return
         restoreSnapshot(newPlayer, snapshot)
@@ -455,6 +459,9 @@ object MasqueradeService {
             EndReason.DEATH -> {
                 cleanupRunItems(server.overworld, player?.pos ?: session.arenaCenter.toCenterPos(), session.loanMarker())
                 pendingRespawnSnapshots[session.playerUuid] = session.inventorySnapshot
+            }
+            EndReason.DISCONNECT -> {
+                pendingRespawnSnapshots.remove(session.playerUuid)
             }
             else -> if (player != null && player.isAlive) {
                 restoreSnapshot(player, session.inventorySnapshot)

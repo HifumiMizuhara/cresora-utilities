@@ -1,5 +1,76 @@
 # WORK_DONE
 
+## Blood Moon Retry + Bed Swap Fix (2026-05-16)
+
+- Fixed the special-bed swap so the Blood War bed is force-updated as a paired structure instead of replacing the two halves independently.
+- This prevents the battle bed from self-destructing the moment the Blood War starts.
+- Added an always-on floating HP label above the Blood War bed so its durability reads like a live combat target.
+- Tightened Blood War night locking so the overworld is held in night only while an active Blood War session exists.
+- This lets the day index advance after victory or failure, which restores normal "next night can challenge again" behavior.
+- Verified build: `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` (success).
+
+## Blood Moon Bed Defense Pass (2026-05-16)
+
+- Reworked `BloodMoonService` so the Blood War bed becomes a dedicated objective instead of dead scenery.
+- Blood War now converts the chosen bed into a special red bed for the duration of the battle, restores it on non-failure exits, and destroys it on defeat.
+- Blood War mobs now path toward the bed, attack it on cadence, and consume bed durability from attack count plus mob rank.
+- Added bed durability guard rails:
+  - At 75% / 50% / 25%, the bed hardens and becomes invulnerable until the current wave ends.
+  - The invulnerability is removed when the next wave starts.
+  - If durability reaches 0%, the Blood War fails immediately.
+- Players still cannot break or attack the battle bed.
+- Active Blood War now locks the overworld in night; dawn is rewound until the battle ends.
+- Blood War rewards now include adventure-rank XP equal to 50% of the player's current-rank XP cap.
+- Added localized battle-bed guard/failure messages in `en_us`, `zh_cn`, `ja_jp`, and `lzh`.
+- Verified build: `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` (success).
+
+## Blood Moon Battle Debug Sweep (2026-05-16)
+
+- Fixed a major player-state corruption bug in `BloodMoonService`:
+  - Blood War bed capture now stores each participant's original respawn point.
+  - The battle-only respawn override is restored on victory, abort, debug stop, reconnect, and death-respawn handoff.
+- Tightened battle protection to the actual battle bed instead of freezing block breaking across the entire 50-block arena.
+- Stopped late passersby from being auto-enlisted into an in-progress Blood War, which also closes the free-reward and unwanted-respawn-override loophole.
+- Added abandoned-session cleanup:
+  - If every participant is offline, the active Blood War now tears down cleanly.
+  - `DO_MOB_GRIEFING`, tracked mobs, and saved respawn overrides are all restored instead of leaving the night soft-locked.
+- Hardened reward chest runtime tracking to use world + position keys so same-coordinate blocks in other dimensions cannot collide with Blood War rewards.
+- Verified build: `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` (success).
+
+## Blood Moon Stabilization Sweep (2026-05-10)
+
+- Removed duplicate blood-moon night rollback from `MoonPhaseService`; time-slow is now single-sourced in `BloodMoonService` and only active during night window.
+- Unified blood-moon stop flow:
+  - `BloodMoonService.stopAndClearNight(server)` added as canonical teardown path.
+  - `/cresora moon clear_special` now routes through blood-moon teardown when needed.
+  - `/cresora moon set_special <non-blood>` is blocked while blood war is active.
+- Fixed wave reliability:
+  - Wave spawn now counts successful spawns.
+  - Zero-spawn wave no longer advances wave counters; it retries after short delay with warning.
+  - Added per-mob spawn retries to reduce terrain collision failures.
+- Battle protection expanded:
+  - Added `PlayerBlockBreakEvents.BEFORE` guard.
+  - Reused protected feedback for blocked interactions.
+  - Kept TNT ignite interception through bed-zone interaction checks.
+- Rest countdown UI switched to pure seconds for the real-time 30s rest rule.
+- Reward chest robustness improved:
+  - Added persistent chest ownership/seed state (`BloodMoonRewardChestState.kt`) so ownership and reward reconstruction survive reload/restart.
+  - Added fallback direct reward grant when chest placement slots are insufficient.
+- Added new localization keys (`wave_spawn_retry`, `reward_fallback`, `blocked_during_blood_war`) and updated rest wording in `en_us/zh_cn/ja_jp/lzh`.
+- Verified build: `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` (success).
+
+## Moon Altar + Drop Loop (2026-05-10)
+
+- Added `moon_brick` item and global hostile drop: 2%.
+- Added `moon_altar` interactive block and crafting recipe (8 moon bricks in a ring).
+- Added altar interaction flow:
+  - Right-click altar with `blood_note` consumes 1 note (except creative).
+  - Schedules the **next night** as guaranteed blood moon via `MoonPhaseService.scheduleBloodMoonForNextNight`.
+- Extended moon persistent state with `forcedBloodMoonDay` so altar scheduling survives restart and is consumed when that night resolves.
+- Enabled `blood_note` hostile drop at fixed 0.5% by updating artifact special-item drop config.
+- Added block/item resources and localization for `moon_brick`, `moon_altar`, and altar feedback messages.
+- Verified build: `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` (success).
+
 ## Weapon Migration to CWC (Cresora Weapon Compiler) - Phase 1
 
 Completed the migration of 5 hardcoded weapon implementations to CWC DSL.
@@ -178,12 +249,67 @@ Fixed critical runtime issues in the `tanboku_chokuu` sub-skill flow.
 ### Fixes
 - Preserved the parent weapon definition and `WeaponData` during hotbar override so sub-skills no longer execute with `WeaponDefinition.DUMMY` / `WeaponData.DUMMY`.
 - Added CWC-generated parent-to-sub-skill registration so sub-skill `onPlayerTick` handlers continue ticking while the parent weapon is held.
+
+## Moon Phase Cycle and Night Scaling
+
+Implemented the server-side moon cycle system.
+
+### Highlights
+- Added an 11-day moon phase loop with the ordered phases `朔、既朔、上弦、逾弦、几望、望、既望、退望、下弦、残月、晦`.
+- Added nightly 18:00 announcements in the format `夜晚降临,今晚是...`.
+- Added mutually exclusive special moon rolls for Blood Moon, Solar Eclipse, Lunar Eclipse, Death Moon, and `？？`.
+- Wired moon-based mob HP, damage, and displayed level scaling into the existing hostile mob pipeline.
+- Added admin-facing moon inspection and calibration commands.
+
+### Verification
+- Build verification has not yet been run after this change set.
 - Reworked `tanboku_chokuu.cresora` so Zanso and Bokuchu Munen only apply state, show activation messages, and close the skill menu after their Tao checks succeed.
 - Fixed the Tao gain message to show the actual current Tao value instead of a literal Kotlin expression string.
 
 ### Verification
 - `GRADLE_USER_HOME=.gradle-user ./gradlew generateWeapons --console=plain`
 - `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`
+
+## Blood Moon Special Phase
+
+Implemented the first detailed special moon phase.
+
+### Highlights
+- Blood Moon now guarantees at least one occurrence per 11-day moon cycle.
+- Blood Moon nights slow night-time progression by 50%, block bed sleeping through bed interaction capture, increase natural hostile spawn pressure by duplicating eligible natural spawns at 20%, and apply global hostile HP/damage bonuses through existing adventure-rank scaling.
+- Added `BloodMoonService` with bed-triggered `血色战争` sessions: confirmation interaction, 50-block participant capture, locked bed protection, no mob griefing during the session, 20 waves, 30 in-game minute rest windows, and final-wave elite withers.
+- Added participant stacking buffs for the challenge: +10% outgoing damage and +20% max HP per cleared wave.
+- Added one reward chest per participant with 100k CSC, one 5-star artifact set, `blood_note`, and placeholder weapon reward rolls for `lossless_crown` and `blood_tear`.
+- Added `blood_note` as an artifact special item kind `note`, plus placeholder weapon definitions in CWC test content.
+- Added Blood Moon translations for `zh_cn`, `en_us`, `ja_jp`, and `lzh`.
+
+### Verification
+- `./gradlew classes --console=plain`
+
+## Blood Moon Battle Timing Fixes
+
+Fixed two live gameplay regressions in `血色战争`.
+
+### Highlights
+- Added explicit active-wave tracking so a newly opened Blood Moon battle no longer auto-clears the first wave before any mob has spawned.
+- Changed Blood Moon rest windows to count against `timeOfDay` progression instead of raw server ticks, so the 30-minute interval now follows in-game time exactly.
+
+## Blood Moon Debug Stop Command
+
+Added a direct escape hatch for live testing.
+
+### Highlights
+- Added `/cresora moon stop_blood_moon` to clear the current blood moon special state without wiping other special moon types.
+- The command also stops any active `血色战争`, clears pending bed confirmations, unlocks the bed, restores `DO_MOB_GRIEFING`, and refreshes loaded hostile scaling.
+- Added localized feedback for the new debug command in `zh_cn`, `en_us`, `ja_jp`, and `lzh`.
+
+## Blood Moon Visibility and Rest Pass
+
+Adjusted live combat readability and pacing for `血色战争`.
+
+### Highlights
+- Blood Moon battle mobs now spawn with the glowing effect so wave enemies are easy to track at night.
+- Rest windows between waves now use real-time `30s` instead of in-game time, and the action-bar countdown follows the same real-time clock.
 
 ## CWC Parser and Hotbar Stability Pass
 
@@ -198,3 +324,35 @@ Hardened the Cresora Weapon Compiler and sub-skill hotbar flow against silent br
 
 ### Verification
 - `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`
+
+## Runtime Fragility Hardening
+
+Hardened non-CWC runtime state so it stops leaking across disconnects and weapon swaps.
+
+### Fixes
+- Restricted weapon skill dispatch to the currently held weapon and its registered sub-skills instead of scanning every handler on every tick or hit.
+- Added explicit disconnect cleanup for weapon-state, debuff-state, equipment-state, combat-feedback state, hotbar override sessions, and Masquerade respawn snapshots.
+- Removed dead `Join.kt` scaffolding and normalized the Masquerade disconnect path so it no longer tries to restore a leaving player.
+
+### Verification
+- `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`
+
+## Specification Gap Hardening
+
+Closed several “defined but not actually supported” seams across equipment, loot, resonance, treasure chests, and the CWC parser.
+
+### Fixes
+- Rejected unsupported `effectHooks` during equipment content loading and made runtime dispatch fail loudly instead of logging and continuing.
+- Implemented equipment `mobLoot` table injection for artifact drops and upgrade material drops.
+- Added disconnect cleanup for treasure chest spawn scheduling while keeping persisted chest entities intact.
+- Strengthened resonance banner validation so empty or malformed rarity pools fail at content load time instead of collapsing inside pulls.
+- Tightened the CWC parser to reject unknown top-level tokens, unknown `sub_skill` fields, unknown skill/buff fields, and unsupported block actions.
+- Declared `tueshokaku` as an adventure-rank upgrade material so upgrade-material loot rules now resolve to a concrete item.
+
+### Verification
+- `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`
+
+## Contributor Guide Refresh (2026-05-16)
+
+- Recreated `AGENTS.md` as a repository-specific contributor guide.
+- Documented the actual source layout, Gradle workflow, naming patterns, manual verification flow, and required maintenance files (`WORK_DONE.md`, `TODO.md`, `cresora_document.md`).

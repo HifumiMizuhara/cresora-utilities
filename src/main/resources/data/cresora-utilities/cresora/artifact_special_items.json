@@ -20,6 +20,19 @@
         "rankMax": 70,
         "maxChance": 0.1
       }
+    },
+    {
+      "id": "blood_note",
+      "kind": "note",
+      "translationKey": "item.cresora-utilities.blood_note",
+      "baseItemId": "minecraft:amethyst_shard",
+      "shopPrice": 0,
+      "shopVisible": false,
+      "mobDrop": {
+        "rankMin": 1,
+        "rankMax": 1,
+        "maxChance": 0.005
+      }
     }
   ]
 }

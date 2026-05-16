@@ -219,11 +219,9 @@ object ResonanceService {
 
     private fun chooseEntry(player: ServerPlayerEntity, entries: List<ResonanceWeaponEntry>): ResonanceWeaponEntry {
         val totalWeight = entries.sumOf { it.weight.coerceAtLeast(0.0) }.coerceAtLeast(0.0)
-        if (entries.isEmpty()) {
-            error("Cannot choose from an empty resonance pool")
-        }
+        val fallback = entries.first()
         if (totalWeight <= 0.0) {
-            return entries.first()
+            return fallback
         }
         var roll = player.random.nextDouble() * totalWeight
         for (entry in entries) {
@@ -232,7 +230,7 @@ object ResonanceService {
                 return entry
             }
         }
-        return entries.last()
+        return entries.lastOrNull() ?: fallback
     }
 
     private fun rollRarity(player: ServerPlayerEntity, banner: ResonanceBannerDefinition, progress: Progress): WeaponRarity {
