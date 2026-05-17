@@ -1,0 +1,71 @@
+weapon "Pastoral Flute Reverie" {
+    id: "pastoral_flute_reverie"
+    rarity: "3_star"
+    base_item: "minecraft:wooden_sword"
+    damage_type: physical
+    stats {
+        base_damage: 7.0
+        damage_per_level: 0.18
+        speed: 1.6
+    }
+    skill "Sunlit Haste" {
+        effect_id: "sunlit_haste"
+        cooldown: 50s
+        duration: 50s
+        base_value: 40.0
+
+        on_activate {
+            start_cooldown()
+            execute {
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val expireTick = now + definition.skill.durationSeconds.coerceAtLeast(1) * 20L;
+                val normalPercent = hifumi.cresora.WeaponCombatSupport.skillValuePercent(definition, data).coerceAtLeast(0.0);
+                val sunlightPercent = hifumi.cresora.WeaponCombatSupport.secondarySkillValuePercent(definition, data).coerceAtLeast(normalPercent);
+
+                /* We'll use a simple status effect for now as a placeholder for the complex state */
+                val isSunlit = !player.world.isRaining && player.world.isDay && player.world.isSkyVisible(player.blockPos.up());
+                val amplifier = if (isSunlit) sunlightPercent else normalPercent;
+                val ampInt = (amplifier / 20.0).toInt().coerceAtMost(5);
+
+                player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SPEED, 50 * 20, ampInt));
+
+                player.sendMessage(
+                    net.minecraft.text.Text.translatable(
+                        "item.cresora.weapon.skill.sunlit_haste_activated",
+                        net.minecraft.text.Text.translatable(definition.translationKey()),
+                        definition.skill.durationSeconds,
+                        hifumi.cresora.WeaponSkillService.formatNumber(normalPercent),
+                        hifumi.cresora.WeaponSkillService.formatNumber(sunlightPercent)
+                    ).formatted(net.minecraft.util.Formatting.YELLOW),
+                    true
+                );
+            }
+        }
+    }
+    translations {
+        en_us {
+            name: "Pastoral Flute Reverie"
+            skill_name: "Sunlit Haste"
+            "item.cresora.weapon.skill.sunlit_haste_activated.generic": "Sunlit Haste Activated!"
+            "item.cresora.weapon.skill.sunlit_haste_activated": "%s Activated! For %s sec, speed +%s%%. In sunlight, +%s%%."
+        }
+        ja_jp {
+            name: "牧笛の追想"
+            skill_name: "陽光の速足"
+            "item.cresora.weapon.skill.sunlit_haste_activated.generic": "陽光の速足 起動！"
+            "item.cresora.weapon.skill.sunlit_haste_activated": "%s を発動。%s秒間、移動速度 +%s%%。日光下では +%s%%。"
+        }
+        zh_cn {
+            name: "牧笛追想"
+            skill_name: "光原追想"
+            "item.cresora.weapon.skill.sunlit_haste_activated.generic": "光原追想 已启动！"
+            "item.cresora.weapon.skill.sunlit_haste_activated": "%s 已发动。持续 %s 秒，移动速度 +%s%%；日光下提升至 +%s%%。"
+        }
+        lzh {
+            name: "牧笛追想"
+            skill_name: "晴光追想"
+            "item.cresora.weapon.skill.sunlit_haste_activated.generic": "晴光追想 啓矣！"
+            "item.cresora.weapon.skill.sunlit_haste_activated": "%s 已發。歷 %s 秒，行速 +%s%%；日中則至 +%s%%。"
+        }
+    }
+}

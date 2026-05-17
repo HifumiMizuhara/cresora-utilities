@@ -172,11 +172,29 @@ data class WeaponDefinition(
     val skill: WeaponSkillDefinition,
     val upgrades: WeaponUpgradeDefinition,
     val craft: WeaponCraftDefinition,
-    val drops: WeaponDropDefinition
+    val drops: WeaponDropDefinition,
+    val customModelData: Int? = null
 ) {
     fun translationKey(): String = "item.cresora-utilities.$id"
 
     fun fragmentTranslationKey(): String = "item.cresora-utilities.${craft.fragmentItemId}"
+
+    companion object {
+        val DUMMY = WeaponDefinition(
+            id = "dummy",
+            baseItemId = "minecraft:air",
+            baseAttackDamage = 0.0,
+            attackDamagePerLevel = 0.0,
+            totalAttackSpeed = 0.0,
+            maxBaseLevel = 1,
+            maxSkillLevel = 1,
+            skill = WeaponSkillDefinition("none", 0, 0, 0.0, 0.0),
+            upgrades = WeaponUpgradeDefinition(0, 0, 0, 0),
+            craft = WeaponCraftDefinition("dummy", "air", 0, WeaponRarity.TWO_STAR, 1, 1),
+            drops = WeaponDropDefinition(WeaponFragmentDropDefinition(0, 0.0, 0, 0, 0), emptyList(), 0.0, 0.0),
+            customModelData = null
+        )
+    }
 }
 
 data class WeaponDefinitionRef(
@@ -200,6 +218,7 @@ data class WeaponContentBundle(
 
 object WeaponContentRegistry {
     private const val CONTENT_RESOURCE = "data/cresora-utilities/cresora/weapon_content.json"
+    private const val CWC_CONTENT_RESOURCE = "data/cresora-utilities/cresora/cwc_weapon_content.json"
 
     internal val WEAPON_DEFINITION_CODEC: Codec<WeaponDefinition> = RecordCodecBuilder.create { instance ->
         instance.group(
@@ -217,8 +236,11 @@ object WeaponContentRegistry {
             WeaponSkillDefinition.CODEC.fieldOf("skill").forGetter(WeaponDefinition::skill),
             WeaponUpgradeDefinition.CODEC.fieldOf("upgrades").forGetter(WeaponDefinition::upgrades),
             WeaponCraftDefinition.CODEC.fieldOf("craft").forGetter(WeaponDefinition::craft),
-            WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops)
-        ).apply(instance, ::WeaponDefinition)
+            WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops),
+            Codec.INT.optionalFieldOf("custom_model_data").forGetter { java.util.Optional.ofNullable(it.customModelData) }
+        ).apply(instance) { id, baseItemId, baseAtk, atkPerLv, speed, maxBase, maxSkill, crit, allDmg, dmgType, curve, skill, upgrades, craft, drops, modelData ->
+            WeaponDefinition(id, baseItemId, baseAtk, atkPerLv, speed, maxBase, maxSkill, crit, allDmg, dmgType, curve, skill, upgrades, craft, drops, modelData.orElse(null))
+        }
     }
 
     private val logger = LoggerFactory.getLogger("${CreSoraUtilities.MOD_ID}/weapon-content")
@@ -227,14 +249,25 @@ object WeaponContentRegistry {
     private var weapons: Map<String, WeaponDefinition> = emptyMap()
 
     fun init() {
+        weapons = emptyMap() // Reset before loading
         applyBundle(defaultBundle())
-        runCatching { loadBundledContent() }
+        runCatching { loadBundledContent(CONTENT_RESOURCE) }
             .onSuccess { bundle ->
                 applyBundle(bundle)
                 logger.info("Loaded weapon content from {}", CONTENT_RESOURCE)
             }
             .onFailure { throwable ->
                 logger.error("Failed to load weapon content from {}. Using built-in defaults.", CONTENT_RESOURCE, throwable)
+            }
+        
+        runCatching { loadBundledContent(CWC_CONTENT_RESOURCE) }
+            .onSuccess { bundle ->
+                applyBundle(bundle)
+                logger.info("Loaded CWC weapon content from {}", CWC_CONTENT_RESOURCE)
+            }
+            .onFailure { throwable ->
+                // Still log as warning/info if it's just missing, but actual parse errors should be visible
+                logger.warn("Failed to load CWC weapon content from {}. If you haven't compiled .cresora files yet, this is expected.", CWC_CONTENT_RESOURCE, throwable)
             }
     }
 
@@ -248,9 +281,9 @@ object WeaponContentRegistry {
         return weapons.values.firstOrNull { it.craft.fragmentItemId == fragmentItemId }
     }
 
-    private fun loadBundledContent(): WeaponContentBundle {
-        val stream = WeaponContentRegistry::class.java.classLoader.getResourceAsStream(CONTENT_RESOURCE)
-            ?: error("Missing resource: $CONTENT_RESOURCE")
+    private fun loadBundledContent(resourcePath: String): WeaponContentBundle {
+        val stream = WeaponContentRegistry::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: error("Missing resource: $resourcePath")
         InputStreamReader(stream).use { reader ->
             val json = JsonParser.parseReader(reader)
             return WeaponContentBundle.CODEC.parse(JsonOps.INSTANCE, json)
@@ -259,8 +292,9 @@ object WeaponContentRegistry {
     }
 
     private fun applyBundle(bundle: WeaponContentBundle) {
-        val weaponMap = bundle.weaponDefinitions.associateBy(WeaponDefinition::id)
-        require(weaponMap.size == bundle.weaponDefinitions.size) { "Duplicate weapon ids found in content bundle" }
+        val weaponMap = weapons.toMutableMap()
+        val newWeapons = bundle.weaponDefinitions.associateBy(WeaponDefinition::id)
+        require(newWeapons.size == bundle.weaponDefinitions.size) { "Duplicate weapon ids found in content bundle" }
         for (definition in bundle.weaponDefinitions) {
             require(definition.maxBaseLevel >= 1) { "Weapon '${definition.id}' maxBaseLevel must be >= 1" }
             require(definition.maxSkillLevel >= 1) { "Weapon '${definition.id}' maxSkillLevel must be >= 1" }
@@ -276,6 +310,7 @@ object WeaponContentRegistry {
                 }
             }
         }
+        weaponMap.putAll(newWeapons)
         weapons = weaponMap
     }
 

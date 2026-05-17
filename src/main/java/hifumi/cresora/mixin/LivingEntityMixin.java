@@ -65,6 +65,7 @@ public class LivingEntityMixin {
         }
         PlayerEntity player = (PlayerEntity) (Object) this;
         if (player instanceof ServerPlayerEntity serverPlayer) {
+            amount = WeaponSkillService.INSTANCE.onDamageTaken(serverPlayer, amount);
             amount = WeaponSkillService.INSTANCE.absorbDamage(serverPlayer, amount);
         }
         return amount;

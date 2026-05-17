@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MMM",
+    "M M",
+    "MMM"
+  ],
+  "key": {
+    "M": {
+      "item": "cresora-utilities:moon_brick"
+    }
+  },
+  "result": {
+    "item": "cresora-utilities:moon_altar",
+    "count": 1
+  }
+}

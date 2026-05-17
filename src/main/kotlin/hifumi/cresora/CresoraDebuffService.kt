@@ -100,4 +100,8 @@ object CresoraDebuffService {
         val durationSeconds = world.random.nextBetween(5, 12)
         addDebuff(player, debuff, durationSeconds * 20)
     }
+
+    fun clearTransientState(player: ServerPlayerEntity) {
+        activeDebuffs.remove(player.uuid)
+    }
 }

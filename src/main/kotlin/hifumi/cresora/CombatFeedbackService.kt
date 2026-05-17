@@ -27,4 +27,8 @@ object CombatFeedbackService {
             null
         }
     }
+
+    fun clearTransientState(player: ServerPlayerEntity) {
+        pendingCrits.remove(player.uuid)
+    }
 }

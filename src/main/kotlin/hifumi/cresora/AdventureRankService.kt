@@ -150,10 +150,12 @@ object AdventureRankService {
         val armorInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR)
         val toughnessInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR_TOUGHNESS)
         val scaleInstance = entity.attributes.getCustomInstance(EntityAttributes.SCALE)
+        val world = entity.world as? ServerWorld
+        val moonScalar = world?.server?.let { MoonPhaseService.healthScalar(it) } ?: 1.0
         val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
         val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
         val baseMaxHealth = maxHealthInstance.baseValue.coerceAtLeast(1.0)
-        val effectiveHealthScalar = healthScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteHealthScalar(entity)
+        val effectiveHealthScalar = healthScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteHealthScalar(entity) * moonScalar
         val effectiveDefenseScalar = defenseScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteDefenseScalar(entity)
         val effectiveToughnessScalar = toughnessScalar.coerceAtLeast(0.1) * FieldMobPackService.eliteToughnessScalar(entity)
 
@@ -225,13 +227,18 @@ object AdventureRankService {
         val storedRank = access.cresoraGetMobAdventureRank()
         val domainMultiplier = DomainService.damageMultiplier(attacker)
         val masqueradeMultiplier = MasqueradeService.damageMultiplier(attacker)
+        val bloodMoonMultiplier = BloodMoonService.damageMultiplier(attacker)
+        val world = hostile.world as? ServerWorld ?: return 1.0
+        val moonMultiplier = MoonPhaseService.damageMultiplier(world.server ?: return 1.0)
         if (storedRank <= 0) {
-            return domainMultiplier * masqueradeMultiplier
+            return domainMultiplier * masqueradeMultiplier * bloodMoonMultiplier * moonMultiplier
         }
         return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) *
             FieldMobPackService.eliteDamageScalar(hostile) *
             domainMultiplier *
-            masqueradeMultiplier
+            masqueradeMultiplier *
+            bloodMoonMultiplier *
+            moonMultiplier
     }
 
     fun mobRank(entity: HostileEntity): Int {
@@ -239,7 +246,11 @@ object AdventureRankService {
         return AdventureRankProgression.sanitizeRank(access.cresoraGetMobAdventureRank())
     }
 
-    fun mobLevel(entity: HostileEntity): Int = mobRank(entity)
+    fun mobLevel(entity: HostileEntity): Int {
+        val world = entity.world as? ServerWorld ?: return mobRank(entity)
+        val server = world.server ?: return mobRank(entity)
+        return mobRank(entity) + MoonPhaseService.levelBonus(server)
+    }
 
     fun refreshMobDisplay(entity: LivingEntity) {
         CombatMobDisplayService.updateMobStatus(entity)

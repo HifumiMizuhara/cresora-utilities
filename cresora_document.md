@@ -1,18 +1,50 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-04-06 (デバフシステムの実装・統合反映)
+最終更新: 2026-05-10 (Blood Moon stabilization sweep 反映)
 
 ## 1. 結論
 
 このプロジェクトの API は、典型的な「外部公開ライブラリ API」ではありません。
-実態は次の 4 本柱です。
+実態は次の 5 本柱です。
 
 1. `CreSoraUtilities` を起点とする初期化・登録 API
 2. `ModDataComponents` と mixin access interface 群による保存 API
 3. `*ContentRegistry` 群と `data/cresora-utilities/cresora/*.json` によるデータ駆動 API
 4. `*Service` / `*Support` / `ArtifactUiFlow` / `Commands` によるゲーム内実行 API
+5. **Cresora Weapon Compiler (CWC)**: `.cresora` スクリプトからコードと JSON を自動生成するビルドタイム API。武器のマイグレーションおよびデータ整合性チェックを自動化し、型安全な武器定義を保証します。また、アイテムモデル（`minecraft:item/handheld` 等を親とする）および基本翻訳キーの自動生成も行います。
+   - `area_of_effect` は専用 AST ノードとして扱われ、文字列再構成ではなく構造化出力に変換されます。
+   - `.cresora` の lexer は `//` と `/* ... */` の両方をコメントとして扱います。
 
-要するに、今の CreSora は「コード中心のフレームワーク」ではなく「サービス singleton + JSON レジストリ」の集合体です。
+要するに、今の CreSora は「サービス singleton + JSON レジストリ」に加えて「コード生成エンジン」を備えたハイブリッドフレームワークです。
+
+## Blood Moon API 更新 (2026-05-10)
+
+- `BloodMoonService`
+  - `stopAndClearNight(server): Boolean` を追加。血月停止の単一収束口（戦役終了、pending 破棄、mob griefing 復帰）として利用。
+  - `hasActiveBattle(): Boolean` を追加。コマンド側の状態分裂防止に使用。
+  - 波次生成は「成功生成数ベース」に変更。`0` 体生成時は波を進めず短遅延リトライ。
+  - 参加者保護は `AttackBlockCallback` に加え `PlayerBlockBreakEvents.BEFORE` を使用。
+  - 報酬箱は `BloodMoonRewardChestStateService` を通じて owner/reward-seed を永続化し、再ログインや再起動後でも識別・復元可能。
+- `MoonPhaseService`
+  - 血月夜間減速の実行箇所を `BloodMoonService` に一本化（重複 `timeOfDay -= 1` を除去）。
+  - `timeScaleMultiplier` / `specialDamageMultiplier` / `specialHealthScalar` は非血月特殊月相向けの予約フックとして維持。
+- `Commands`
+  - `/cresora moon clear_special` は必要時に血月停止フローへ委譲。
+  - `/cresora moon set_special <non-blood>` は血色戦争中に拒否。
+
+## Moon Altar API 更新 (2026-05-10)
+
+- `MoonAltarService` を追加。
+  - `UseBlockCallback` で `moon_altar` 右クリックを処理。
+  - `blood_note` 投入時に `MoonPhaseService.scheduleBloodMoonForNextNight(server)` を呼び、次夜を血月予約。
+  - `tryDropMoonBrick(player, hostile)` で hostile 撃破時 2% ドロップを処理。
+- `MoonPhaseService`
+  - 永続状態に `forcedBloodMoonDay` を追加。
+  - その日付の夜判定では通常抽選より優先して血月を適用し、解決後にフラグを消費。
+- コンテンツ追加:
+  - `cresora-utilities:moon_brick` (item)
+  - `cresora-utilities:moon_altar` (block + block item)
+  - `data/cresora-utilities/recipes/moon_altar.json`
 
 ## 2. エントリポイント
 
@@ -54,6 +86,8 @@
 - `StoryContentRegistry.init()`
 - `ResonanceContentRegistry.init()`
 - `MusicEchoContentRegistry.init()`
+- `CompiledWeaponSkillRegistry.registerAll(this)` (CWCにより自動生成)
+- `HotbarOverrideService` がサブスキル用ホットバーのセッション管理と復帰を担当します。
 
 ### 2.3 登録済み ScreenHandler ID
 
@@ -268,9 +302,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 注意:
 
-- `effectHooks` は schema と dispatch まではある
-- ただし動的効果本体はまだ本格実装されていない
-- `EquipmentEffectHookService` は未実装フックをログに出すだけ
+- `effectHooks` は schema 上は存在しますが、未対応 hook は content load で reject されます。
+- つまり現在の正式仕様は「`stats` は使える、`effectHooks` はまだ使えない」です。
+- `mobLoot` は組み込み loot table へ注入され、artifact drop と upgrade material drop の両方を構成します。
 
 ### 5.2 WeaponContentRegistry
 
@@ -296,6 +330,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `maxAllDamageBonusPercent`
 - `damageType`
 - `attackCurve`
+- `customModelData` (Optional)
 - `skill`
 - `upgrades`
 - `craft`
@@ -376,6 +411,11 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `banners()`
 - `banner(id)`
 - `limitedBanners()`
+
+注意:
+
+- 各 rarity pool は content load 時に検証されます。
+- 空 pool、負の weight、pool と rarity の不一致、限定 banner の不正な featured 参照は reject されます。
 
 ### 5.6 StoryContentRegistry
 
@@ -581,7 +621,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `legacyFragmentItem(definitionId)`
 - `getWeaponData(stack)`
 - `ensureWeaponData(stack)`
-- `syncWeaponData(stack, data)`
+- `syncWeaponData(stack, data)`: `WEAPON_DATA` を同期し、`customModelData` が定義されている場合は `CUSTOM_MODEL_DATA` コンポーネントを適用します。
 - `defaultWeaponData(definition)`
 - `createWeaponStack(definition, rarity, baseLevel, skillLevel)`
 - `countFragments(player, definition)`
@@ -644,12 +684,102 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `showMobTrueDamage(...)`
 - `showPlayerDamageFeedback(...)`
 
+### 7.1.1 MoonPhaseService
+
+ファイル:
+
+- `MoonPhaseService.kt`
+
+責務:
+
+- 11日周期の通常月相管理
+- 18:00 の夜開始判定と当夜通知
+- 特殊月相の抽選・永続化
+- 月相由来の mob 追加補正
+
+主 API:
+
+- `currentNight(server)`
+- `moonLayer(server)`
+- `damageMultiplier(server)`
+- `healthScalar(server)`
+- `levelBonus(server)`
+- `summaryLine(server)`
+- `setPhaseOffset(server, targetPhase)`
+- `clearSpecialMoon(server)`
+- `clearBloodMoon(server)`
+- `refreshLoadedHostiles(server)`
+
+重要仕様:
+
+- 通常月相は `朔 -> 既朔 -> 上弦 -> 逾弦 -> 几望 -> 望 -> 既望 -> 退望 -> 下弦 -> 残月 -> 晦` の 11 日周期
+- 特殊月相は互斥抽選で、命中時はその夜の通常増強を無効化
+- `血月` は 11 日周期内で最低 1 回発生するよう保底される
+- 当夜メッセージは `夜晚降临,今晚是...` 形式で送信
+- `血月` の詳細効果は `BloodMoonService` が実装済み。他の特殊月相は接続口のみ公開
+- `/cresora moon set` は中文表示名ではなく英文 id を受け取る。使用可能 id: `new_moon`, `crescent_one`, `first_quarter`, `waxing_gibbous`, `near_full`, `full`, `full_after`, `wane_after`, `last_quarter`, `waning_crescent`, `old_moon`
+- `/cresora moon set_special` は特殊月相を当夜に強制設定する。使用可能 id: `blood_moon`, `solar_eclipse`, `lunar_eclipse`, `death_moon`, `unknown`
+- `/cresora moon stop_blood_moon` は当夜の血月だけを解除し、他の特殊月相記録は巻き込まない
+
 重要仕様:
 
 - mob rank 上限は `AdventureRankProgression` 側に依存
 - field mob は近傍プレイヤー rank を基準に `±5` の振れ幅で割当
 - HP は内部で cap と overflow 防御変換を使う
 - **エリートモブの視覚化**: `EntityAttributes.GENERIC_SCALE` を利用し、エリートモブのモデルサイズとヒットボックスを **18% 拡大** しています。
+
+### 7.1.2 BloodMoonService
+
+ファイル:
+
+- `BloodMoonService.kt`
+- `BloodMoonHooks.kt`
+
+責務:
+
+- `血月` 夜の特殊ルールを管理する
+- 血月中の bed interaction を捕捉し、二度押し確認で `血色战争` を開始する
+- challenge 中の参加者、wave、休息時間、報酬 chest、mob griefing 抑制を管理する
+- 参加者の wave clear buff を player damage / max HP pipeline へ提供する
+- 血月中の自然敵対 mob spawn pressure を `MobEntitySpawnMixin` 経由で増やす
+
+主 API:
+
+- `init()`
+- `clearTransientState(player)`
+- `debugStop(server)`
+- `playerDamageMultiplier(player)`
+- `playerHealthMultiplier(player)`
+- `damageMultiplier(attacker)`
+- `maybeDuplicateNaturalSpawn(hostile, world, spawnReason)`
+
+重要仕様:
+
+- 血月夜は時間進行を 50% に落とす
+- 血月中は bed interaction が通常睡眠ではなく challenge confirmation / join に使われる
+- 通常の血月補正は hostile HP +20%、hostile damage +10%、自然 hostile spawn pressure +20%
+- `血色战争` は開始時点で bed 周辺 50 block の player を参加者として確定し、参加者の途中離脱は bed 周辺へ戻す
+- `血色战争` 開始時、選ばれた bed は special red bed に置き換わり、勝利・中断時に元の状態へ復元する。bed が破壊された敗北時のみ消失する
+- wave は 20 回。各 wave 後、最終 wave 以外は 30 秒の現実時間休息を置く
+- wave clear 判定は「その wave が実際に spawn 済みであること」を条件にし、開始直後の空状態を clear とみなさない
+- 休息時間と休息 action bar countdown は `world.time` 基準で進む
+- 各 wave clear 後、参加者に +10% damage / +20% max HP の累積 buff を与える
+- battle 中、active wave hostile は可能な限り bed へ進軍し、bed 接触時に mob rank ベースの耐久 damage を与える
+- battle bed の頭上には durability を示す floating HP label を常時表示し、無敵中は guarded 表示へ切り替える
+- bed durability は 100% 開始。75 / 50 / 25% を割る瞬間、その wave の残り時間だけ無敵化し、次 wave 開始で無敵が解ける
+- bed durability が 0% になると `血色战争` は即時敗北する
+- player は battle bed を attack / break できない
+- active `血色战争` が続く限り、overworld は dawn へ進まず夜へ巻き戻される
+- 最終 wave は追加で elite `minecraft:wither` を 2 体生成する
+- battle で spawn した hostile には探索しやすいよう `GLOWING` を付与する
+- challenge 中は `DO_MOB_GRIEFING` を一時的に false にし、終了後に復元する
+- challenge 中に一時上書きした participant の respawn point は終了時・中断時・respawn 後に元へ戻す
+- active battle 中の block protection は battle bed とその近傍 TNT 着火阻止に限定する
+- 参加者が全員 offline になった active battle は自動中断し、mob / gamerule / respawn override を掃除する
+- `debugStop(server)` は active battle、pending confirmation、bed lock を解除し、active wave mob を despawn する
+- 勝利後、参加者 1 人につき 1 個の chest を bed 近くに生成する。owner 以外は報酬を回収できない
+- 報酬は 100k CSC、5-star artifact set、`blood_note`、20% `lossless_crown`、50% `blood_tear`、および現在 rank の必要 XP 上限 50% 分の adventure XP
+- reward chest ownership / reward seed は persistent state へ保存し、server restart 後も復元できる
 
 ### 7.2 CreditsService
 
@@ -831,7 +961,12 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - スキルの共通クールダウン管理 (BossBar 表示)
   - **重要**: クールダウンは「残りティック数」で管理されるようになり、デバフ等による動的な速度変更に対応しています。
 - 汎用シールド (Shield) および一時ガード (Temporary Guard) のライフサイクル管理
+  - `grantShield(player, amount, duration, weaponId)`: スクリプトから安全にシールドを付与するための標準インターフェース。
+- `applySoulBreak(target, stacks, durationTicks)`: 破魂（Soul Break）スタックを付与。物理耐性と防御力を減少させます。
+- `getSoulBreakStacks(target)`: 現在の破魂スタック数を取得。
 - `WeaponSkillRegistry` を介した各ハンドラへのイベント（Tick, Damage 等）のディスパッチ
+  - いまは「装備中の武器 + そのサブスキル」だけを走査します。全登録ハンドラを毎 tick 回す設計はやめました。
+- `clearTransientState(player)`: 切断時に武器由来の一時状態を掃除します。
 
 `WeaponSkillHandler` インターフェース:
 
@@ -846,7 +981,14 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 `WeaponSkillRegistry`:
 
 - `effectId` (JSONの `skill.effectId` に対応) とハンドラを紐付けます。
-- 起動時に `init()` で全ての標準スキルを登録します。
+- `CompiledWeaponSkillRegistry` (CWC 生成) により、DSL 定義されたスキルが自動的に登録されます。
+- CWC 生成の `registerSubSkill(parentEffectId, subSkillEffectId)` により、メインスキルとサブスキルの親子関係も登録します。`WeaponSkillService` は装備中武器のメインスキルに加え、その配下のサブスキル `onTick` / `onPlayerTick` も毎 tick 呼びます。
+- スキル ID から `WeaponDefinition` を逆引きする `getDefinition(id)` ユーティリティにより、文脈に応じたデータ処理が可能です。
+
+`HotbarOverrideService`:
+
+- `open_skill_menu(...)` 実行時に元ホットバー、親武器 ID、発動時点の `WeaponData`、許可されたサブスキル ID を保持します。
+- `SubSkillItem` は保持された親武器文脈を使ってサブスキルを発動します。これにより、サブスキル内の攻撃力・レベル・レアリティ計算は `WeaponDefinition.DUMMY` ではなく実際の武器データを参照します。
 
 ### 7.11 DomainService
 
@@ -947,6 +1089,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `onPlayerDeath(player)`
 - `onPlayerDisconnect(player)`
 - `restoreAfterRespawn(newPlayer)`
+- `clearTransientState(player)`: pending respawn snapshot を切断時に消します。
 - `damageMultiplier(attacker)`
 - `damageTakenMultiplier(target)`
 - `adjustIncomingDamage(player, source, amount)`
@@ -966,6 +1109,11 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 主 API:
 
 - `init()`
+
+注記:
+
+- 宝箱本体は persistent state で残ります。
+- 一方でプレイヤーごとの再出現スケジュールは transient state なので、切断時に破棄されます。
 
 注記:
 
@@ -1001,6 +1149,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - プレイヤーに対するデバフ（負の状態異常）の管理
 - エリートモブ攻撃時のデバフ付与判定（現在35%）
 - 攻撃力・被ダメージ・CT速度・回復可否への倍率適用
+- `clearTransientState(player)` による切断時のデバフ破棄
 
 実装済みデバフ:
 
@@ -1071,6 +1220,11 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 - `/about`
 - `/cresora`
+  - `moon`
+    - `set <phase_id>`
+    - `set_special <special_id>`
+    - `clear_special`
+    - `stop_blood_moon`
 - `/cresora_stats`
 - `/cresora_rank`
   - `set`
@@ -1124,7 +1278,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ### 9.2 まだコード実装が必要な領域
 
-- **新しい `WeaponSkillDefinition.effectId`**: `WeaponSkillHandler` を実装した新しいクラスを作成し、`WeaponSkillRegistry` に登録する必要があります。
+- **新しい `WeaponSkillDefinition.effectId`**: CWC (`.cresora`) を使用して新武器を定義するのが現在の標準です。手動での `WeaponSkillHandler` 実装は、CWC で表現不可能な特殊なシステム（複雑な状態異常同期など）に限定されます。
 - 新しい動的 set effect hook の本体: `EquipmentEffectHookService` へのロジック追加が必要です。
 - 特殊な GUI 挙動: 新しい Screen / ScreenHandler の作成が必要です。
 
@@ -1138,9 +1292,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 新しい武器:
 
-1. `weapon_content.json` に `WeaponDefinition` を追加
-2. モデル・アイテム定義・翻訳を追加
-3. `skill.effectId` が新規の場合、`WeaponSkillHandler` を実装する新しいクラスを作成し、`WeaponSkillRegistry` に登録します。
+1. `src/main/cresora/` に `*.cresora` ファイルを作成し、定義とスクリプトを記述
+2. モデル・アイテム定義（`assets`側）・翻訳を追加
+3. `./gradlew generateWeapons` を実行してコードと JSON を生成
 4. 必要なら `ResonanceContentRegistry` や秘境報酬にも接続
 
 新しいストーリー:
@@ -1172,3 +1326,49 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 9. `WeaponSkillService.kt`
 
 これで大半の構造が見えます。
+
+## 12. Cresora Weapon Compiler (CWC)
+`.cresora` ファイルを `src/main/cresora/` に配置することで、ビルド時に以下の要素が自動生成されます。
+
+- **Kotlin コード**: `hifumi.cresora.skill.generated.*Skill` (ハンドラ本体)
+- **JSON データ**: `cwc_weapon_content.json` (自動生成武器専用の定義ファイル)
+- **登録処理**: `CompiledWeaponSkillRegistry` (レジストリへの自動登録)
+
+CWC はコンパイルのたびに出力先（`generated` パッケージおよび `cwc_weapon_content.json`）を完全にクリアしてから再生成するため、常に最新のスクリプト内容が正確に反映されます。既存の `weapon_content.json` は手動定義用として保持され、ゲーム実行時に自動的にマージされます。
+
+#### CWC 2.0 強化点 (2026-04-12 反映)
+- **ソース抽出 (`execute` ブロック)**: トークン再結合ではなく、元のソースコードから直接オフセットを切り出す方式を採用。これにより `as?`, `?.`, `!!` や改行、コメントのフォーマットが 100% 維持されます。
+- **実行ラベル (`execute@run`)**: `execute` ブロックが `run execute@ { ... }` にラップされて生成されるため、スクリプト内で `return@execute` を使用した早期リターンが可能です。
+- **AOE 構文の修正**: `area_of_effect` 内での `ignite` 等のパラメータが 1.21.7 のレジストリ API に適合するように自動変換されます。
+- **翻訳ブロック (`translations`)**: スクリプト内に `en_us`, `ja_jp`, `zh_cn`, `lzh` の各キーと値を直接記述可能。ビルド時に `lang/*.json` へ自動的にマージされるため、外部ファイルの編集が不要になりました。
+- **動的メッセージ出力**: `execute` ブロック内で `Text.translatable` を用いて、スタック数や回復量などを動的に埋め込んだメッセージ演出を簡単に実装できるようになりました。
+- **サブスキル文脈登録**: 生成 registry はサブスキルを単体 handler として登録するだけでなく、親スキルとの対応も登録します。これにより、サブスキル発動後の継続効果 (`on_player_tick`) が親武器を装備している間に正しく更新されます。
+
+```cresora
+weapon "Name" {
+    id: "id"
+    stats { ... }
+    skill "Tactical Stance" {
+        on_activate {
+            open_skill_menu("flame_strike", "ice_wall", 5s)
+        }
+    }
+    sub_skill "Flame Strike" {
+        effect_id: "flame_strike"
+        icon: "minecraft:blaze_powder"
+        on_activate {
+            add_buff("burn", 1)
+            close_skill_menu()
+        }
+    }
+    translations {
+        ja_jp {
+            name: "武器名"
+            sub_skill_flame_strike_name: "炎の連撃"
+        }
+    }
+}
+```
+- **ホットバー展開**: `open_skill_menu` で指定したサブスキルがホットバー（0〜8スロット）に並びます。元のアイテムは自動的に退避され、スキル使用後または時間切れで復元されます。
+- **サブスキル定義**: `sub_skill` ブロックでアイコンと挙動を定義します。これらは独立したスキルハンドラとして生成されます。
+- **入力拒否**: unknown top-level token、unknown `sub_skill` field、unknown skill/buff field、未対応 block action は parse error になります。黙って読み飛ばす仕様ではありません。

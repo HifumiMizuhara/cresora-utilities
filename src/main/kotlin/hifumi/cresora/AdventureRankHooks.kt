@@ -18,6 +18,7 @@ object AdventureRankHooks {
                     CreditsService.addHostileKillReward(killer, entity)
                     WeaponDropService.onHostileKilled(killer, entity)
                     ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
+                    MoonAltarService.tryDropMoonBrick(killer, entity)
                     EquipmentEffectHookService.onKill(killer, entity)
                 }
                 is MobEntity -> {

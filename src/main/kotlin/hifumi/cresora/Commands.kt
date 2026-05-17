@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
 import com.mojang.brigadier.arguments.StringArgumentType.getString
 import com.mojang.brigadier.arguments.StringArgumentType.word
+import com.mojang.brigadier.suggestion.SuggestionProvider
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.entity.attribute.EntityAttributes
@@ -16,6 +17,15 @@ import net.minecraft.text.Text
 import java.util.Locale
 
 object Commands {
+    private val MOON_PHASE_SUGGESTIONS = SuggestionProvider<ServerCommandSource> { _, builder ->
+        MoonPhase.entries.forEach { builder.suggest(it.id) }
+        builder.buildFuture()
+    }
+    private val SPECIAL_MOON_SUGGESTIONS = SuggestionProvider<ServerCommandSource> { _, builder ->
+        SpecialMoonPhase.entries.forEach { builder.suggest(it.id) }
+        builder.buildFuture()
+    }
+
     fun init() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
@@ -33,6 +43,86 @@ object Commands {
                         ArtifactUiFlow.openMenu(context.source.playerOrThrow)
                         1
                     }
+                    .then(
+                        literal("moon")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .executes { context ->
+                                showMoon(context.source)
+                                1
+                            }
+                            .then(
+                                literal("set")
+                                    .then(
+                                        argument("phase", word())
+                                            .suggests(MOON_PHASE_SUGGESTIONS)
+                                            .executes { context ->
+                                                val server = context.source.server
+                                                val phaseName = getString(context, "phase")
+                                                val phase = MoonPhase.fromId(phaseName)
+                                                if (phase == null) {
+                                                    context.source.sendFeedback({ Text.translatable("commands.cresora.moon.invalid", phaseName, MoonPhase.IDS) }, false)
+                                                    return@executes 0
+                                                }
+                                                MoonPhaseService.setPhaseOffset(server, phase)
+                                                context.source.sendFeedback({ Text.translatable("commands.cresora.moon.set", Text.literal(phase.id), Text.literal(phase.displayName)) }, true)
+                                                1
+                                            }
+                                    )
+                            )
+                            .then(
+                                literal("clear_special")
+                                    .executes { context ->
+                                        val server = context.source.server
+                                        val changed = BloodMoonService.stopAndClearNight(server).also {
+                                            if (!it) {
+                                                MoonPhaseService.clearSpecialMoon(server)
+                                            }
+                                        }
+                                        MoonPhaseService.refreshLoadedHostiles(server)
+                                        context.source.sendFeedback({ Text.translatable("commands.cresora.moon.cleared_special") }, true)
+                                        if (changed) 1 else 0
+                                    }
+                            )
+                            .then(
+                                literal("stop_blood_moon")
+                                    .executes { context ->
+                                        val server = context.source.server
+                                        val moonChanged = MoonPhaseService.clearBloodMoon(server)
+                                        val battleChanged = BloodMoonService.debugStop(server)
+                                        MoonPhaseService.refreshLoadedHostiles(server)
+                                        val feedbackKey = if (moonChanged || battleChanged) {
+                                            "commands.cresora.moon.stopped_blood_moon"
+                                        } else {
+                                            "commands.cresora.moon.no_blood_moon"
+                                        }
+                                        context.source.sendFeedback({ Text.translatable(feedbackKey) }, true)
+                                        1
+                                    }
+                            )
+                            .then(
+                                literal("set_special")
+                                    .then(
+                                        argument("special", word())
+                                            .suggests(SPECIAL_MOON_SUGGESTIONS)
+                                            .executes { context ->
+                                                val server = context.source.server
+                                                val specialName = getString(context, "special")
+                                                val special = SpecialMoonPhase.fromId(specialName)
+                                                if (special == null) {
+                                                    context.source.sendFeedback({ Text.translatable("commands.cresora.moon.invalid_special", specialName, SpecialMoonPhase.IDS) }, false)
+                                                    return@executes 0
+                                                }
+                                                if (BloodMoonService.hasActiveBattle() && special != SpecialMoonPhase.BLOOD_MOON) {
+                                                    context.source.sendError(Text.translatable("commands.cresora.moon.blocked_during_blood_war"))
+                                                    return@executes 0
+                                                }
+                                                MoonPhaseService.setSpecialMoon(server, special)
+                                                context.source.sendFeedback({ Text.translatable("commands.cresora.moon.set_special", Text.literal(special.id), Text.literal(special.displayName)) }, true)
+                                                1
+                                            }
+                                    )
+                            )
+                    )
             )
 
             dispatcher.register(
@@ -418,6 +508,11 @@ object Commands {
     private fun showResonanceCurrency(source: ServerCommandSource, player: ServerPlayerEntity) {
         source.sendFeedback({ Text.translatable("commands.cresora.resonance.header") }, false)
         source.sendFeedback({ buildResonanceCurrencyLine(player) }, false)
+    }
+
+    private fun showMoon(source: ServerCommandSource) {
+        source.sendFeedback({ Text.translatable("commands.cresora.moon.header") }, false)
+        source.sendFeedback({ MoonPhaseService.summaryLine(source.server) }, false)
     }
 
     private fun buildCreditsTargetLine(player: ServerPlayerEntity): Text {

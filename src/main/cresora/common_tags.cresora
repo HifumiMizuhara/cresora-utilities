@@ -1,0 +1,52 @@
+dictionary common_tags {
+    translations {
+        en_us {
+            "tag.item.cresora-utilities.adventure_rank_upgrade_materials": "AR Upgrade Materials"
+            "tag.item.cresora-utilities.adventure_rank_artifacts": "AR Echoes"
+
+            "tag.item.trinkets.feet.shoes": "Shoes"
+            "tag.item.trinkets.head.hat": "Hats"
+            "tag.item.trinkets.head.face": "Face Decor"
+            "tag.item.trinkets.chest.back": "Back"
+            "tag.item.trinkets.chest.necklace": "Necklaces"
+            "tag.item.trinkets.all": "All Trinkets"
+            "message.cresora.hotbar_overridden": "Skill loadout open! Select a sub skill using hotbar keys."
+        }
+        ja_jp {
+            "tag.item.cresora-utilities.adventure_rank_upgrade_materials": "冒険ランク強化素材"
+            "tag.item.cresora-utilities.adventure_rank_artifacts": "冒険ランク残響"
+
+            "tag.item.trinkets.feet.shoes": "靴"
+            "tag.item.trinkets.head.hat": "帽子"
+            "tag.item.trinkets.head.face": "顔飾り"
+            "tag.item.trinkets.chest.back": "背負い物"
+            "tag.item.trinkets.chest.necklace": "首飾り"
+            "tag.item.trinkets.all": "全装飾品"
+            "message.cresora.hotbar_overridden": "スキル解除！ホットバーキーでサブスキルを選択してください。"
+        }
+        zh_cn {
+            "tag.item.cresora-utilities.adventure_rank_upgrade_materials": "冒险等级強化材料"
+            "tag.item.cresora-utilities.adventure_rank_artifacts": "冒险等级残响"
+
+            "tag.item.trinkets.feet.shoes": "鞋子"
+            "tag.item.trinkets.head.hat": "帽子"
+            "tag.item.trinkets.head.face": "面饰"
+            "tag.item.trinkets.chest.back": "背饰"
+            "tag.item.trinkets.chest.necklace": "项链"
+            "tag.item.trinkets.all": "所有饰品"
+            "message.cresora.hotbar_overridden": "技能就绪！请使用快捷栏按键选择子技能。"
+        }
+        lzh {
+            "tag.item.cresora-utilities.adventure_rank_upgrade_materials": "冒險等第強化之材"
+            "tag.item.cresora-utilities.adventure_rank_artifacts": "冒險等第殘響"
+
+            "tag.item.trinkets.feet.shoes": "履"
+            "tag.item.trinkets.head.hat": "冠"
+            "tag.item.trinkets.head.face": "鏡"
+            "tag.item.trinkets.chest.back": "背"
+            "tag.item.trinkets.chest.necklace": "瓔珞"
+            "tag.item.trinkets.all": "諸飾"
+            "message.cresora.hotbar_overridden": "武技既備，選其一而用之。"
+        }
+    }
+}

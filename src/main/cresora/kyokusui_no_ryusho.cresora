@@ -1,0 +1,163 @@
+weapon "Kyokusui no Ryusho" {
+    id: "kyokusui_no_ryusho"
+    rarity: "5_star"
+    base_item: "minecraft:diamond_sword"
+    damage_type: physical
+    stats {
+        base_damage: 8.0
+        damage_per_level: 0.0
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 1
+    }
+    skill "Orchid Pavilion Echo" {
+        effect_id: "orchid_pavilion_echo"
+        cooldown: 25s
+        duration: 16s
+        radius: 5.0
+
+        buff "raise_a_cup" {
+            max_stacks: 20
+            duration: 16s
+            stats {
+                attack_percent_per_stack: 0.10
+                crit_dmg_per_stack: 15.0
+            }
+        }
+        buff "recite_poetry" {
+            max_stacks: 20
+            duration: 16s
+            stats {
+                armor_per_stack: 0.20
+            }
+        }
+        buff "zhi_pierce" {
+            max_stacks: 20
+            duration: 16s
+        }
+
+        // Helper session buff to track active state
+        buff "pavilion_active" {
+            max_stacks: 1
+            duration: 16s
+        }
+
+        on_activate {
+            start_cooldown()
+            add_buff("pavilion_active", 1)
+            send_message("item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic", "light_purple")
+        }
+
+        on_player_tick {
+            execute {
+                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val state = pavilionActiveStates.get(player.uuid);
+                if (state != null && now < state.expireTick) {
+                    // Pulse every 2 seconds (40 ticks)
+                    if (now % 40L == 0L) {
+                        val world = player.world;
+                        val roll = world.random.nextInt(4);
+                        when (roll) {
+                            0 -> { // Raise a Cup
+                                // Add raise_a_cup and zhi_pierce
+                                val rState = raiseACupStates.getOrPut(player.uuid) { RaiseACupState(0L, 0) };
+                                rState.expireTick = now + 16 * 20L;
+                                rState.stacks = (rState.stacks + 1).coerceAtMost(20);
+
+                                val zState = zhiPierceStates.getOrPut(player.uuid) { ZhiPierceState(0L, 0) };
+                                zState.expireTick = now + 16 * 20L;
+                                zState.stacks = (zState.stacks + 1).coerceAtMost(20);
+
+                                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup", rState.stacks, hifumi.cresora.WeaponSkillService.formatNumber(rState.stacks * 10.0), hifumi.cresora.WeaponSkillService.formatNumber(rState.stacks * 15.0), zState.stacks, hifumi.cresora.WeaponSkillService.formatNumber(zState.stacks * 1.0)).formatted(net.minecraft.util.Formatting.RED), true);
+                            }
+                            1 -> { // Recite Poetry
+                                val pState = recitePoetryStates.getOrPut(player.uuid) { RecitePoetryState(0L, 0) };
+                                pState.expireTick = now + 16 * 20L;
+                                pState.stacks = (pState.stacks + 1).coerceAtMost(20);
+                                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry", pState.stacks, hifumi.cresora.WeaponSkillService.formatNumber(pState.stacks * 20.0), pState.stacks * 2).formatted(net.minecraft.util.Formatting.BLUE), true);
+                            }
+                            2 -> { // Place a Stone (Shield)
+                                val amount = 7.0f;
+                                val duration = 16L;
+                                (player as hifumi.cresora.WeaponSkillAccess).cresoraSetShieldHp((player as hifumi.cresora.WeaponSkillAccess).cresoraGetShieldHp() + amount);
+                                (player as hifumi.cresora.WeaponSkillAccess).cresoraSetShieldExpireTick(now + duration * 20L);
+                                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone", 1, hifumi.cresora.WeaponSkillService.formatNumber(amount / 2.0)).formatted(net.minecraft.util.Formatting.AQUA), true);
+                            }
+                            3 -> { // Ink Brush (Invulnerability + Heal)
+                                hifumi.cresora.WeaponSkillService.grantInvulnerability(player, 40L); // 2s
+                                hifumi.cresora.WeaponSkillService.healNearbyAllies(player, 5.0, 8.0f);
+                                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush", 1, hifumi.cresora.WeaponSkillService.formatNumber(4.0), hifumi.cresora.WeaponSkillService.formatNumber(2.0)).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        on_damage_absorbed {
+            execute {
+                if (hifumi.cresora.WeaponSkillService.isInvulnerable(player)) {
+                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable").formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
+                    return@execute 0.0f;
+                }
+            }
+        }
+
+        on_damage_dealt {
+            execute {
+                val zState = zhiPierceStates.get(player.uuid);
+                if (zState != null && zState.stacks > 0) {
+                    val damage = zState.stacks * 2.0f;
+                    if (target is net.minecraft.entity.mob.HostileEntity) {
+                        target.health = (target.health - damage).coerceAtLeast(0.001f);
+                        hifumi.cresora.AdventureRankService.showMobTrueDamage(target, player, damage);
+                        hifumi.cresora.AdventureRankService.refreshMobDisplay(target);
+                    }
+                }
+            }
+        }
+    }
+
+    translations {
+        en_us {
+            name: "Kyokusui no Ryusho"
+            skill_name: "Orchid Pavilion Echo"
+            "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "Orchid Pavilion Echo Activated!"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "Raise a Cup %s | ATK +%s%% | CRIT DMG +%s%% | [Zhi] %s | Pierce %s hearts"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "Recite Poetry %s | DEF +%s%% | Regen Stage +%s"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone": "Place a Stone %s | Shield %s hearts"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush": "Ink Brush | Restored %s hearts for %s allies | Invulnerable %s sec"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable": "Invulnerability from Ink Brush blocked damage!"
+        }
+        ja_jp {
+            name: "曲水流觞"
+            skill_name: "蘭亭の反響"
+            "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "蘭亭の反響 起動！"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "献杯 %s層 | 攻撃力 +%s%% | 会心ダメージ +%s%% | [之] %s層 | 貫通 %sハート"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "詠歌 %s層 | 防御力 +%s%% | 自然回復段階 +%s"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone": "着手 %s層 | 石盾 %sハート"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush": "揮毫 | %s体を %sハート回復 | 無敵 %s秒"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable": "揮毫の無敵がダメージを無効化した。"
+        }
+        zh_cn {
+            name: "曲水流觞"
+            skill_name: "兰亭回声"
+            "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "兰亭回声 已启动！"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "献杯 %s层 | 攻击力 +%s%% | 暴击伤害 +%s%% | [之] %s层 | 贯穿 %s心"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "咏歌 %s层 | 防御力 +%s%% | 自然回复阶段 +%s"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone": "着手 %s层 | 石盾 %s心"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush": "挥毫 | 为 %s 名友方恢复 %s心 | 无敌 %s秒"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable": "挥毫的无敌抵消了本次伤害。"
+        }
+        lzh {
+            name: "曲水流觴"
+            skill_name: "蘭亭迴聲"
+            "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "蘭亭迴聲 啓矣！"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "獻杯 %s重 | 攻 +%s%% | 會傷 +%s%% | [之] %s重 | 穿傷 %s心"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "詠歌 %s重 | 防 +%s%% | 自癒階 +%s"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone": "著手 %s重 | 石盾 %s心"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush": "揮毫 | 療 %s 友 %s心 | 無敵 %s秒"
+            "item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable": "揮毫之無敵禦此傷矣。"
+        }
+    }
+}

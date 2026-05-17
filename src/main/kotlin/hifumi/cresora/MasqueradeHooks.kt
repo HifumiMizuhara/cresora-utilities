@@ -2,7 +2,6 @@ package hifumi.cresora
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.server.network.ServerPlayerEntity
 
 object MasqueradeHooks {
@@ -14,10 +13,6 @@ object MasqueradeHooks {
         ServerLivingEntityEvents.AFTER_DEATH.register(ServerLivingEntityEvents.AfterDeath { entity, _ ->
             val player = entity as? ServerPlayerEntity ?: return@AfterDeath
             MasqueradeService.onPlayerDeath(player)
-        })
-
-        ServerPlayConnectionEvents.DISCONNECT.register(ServerPlayConnectionEvents.Disconnect { handler, _ ->
-            MasqueradeService.onPlayerDisconnect(handler.player)
         })
     }
 }

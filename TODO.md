@@ -1,36 +1,23 @@
 # TODO
 
-## System Expansion & Refinement
-- 汎用装備システムを拡張し、将来の新しい装備カテゴリが同じ生成・成長バックエンドを再利用できるようにする
-- 新しいセット効果フック（equip change, attack dealt, damage taken, kill, tick）の本格的なハンドラを実装し、ステータス加算以外の動的なセットボーナスを可能にする
-- `equipment_content.json` の肥大化に備え、レジストリスキーマを維持したままリソースファイルを分割することを検討する
-- 武器のベースレベルアップグレードについて、一律フラグメント1個のコストを維持するか、より複雑な式に移行するかを再検討する
-- 星3/4/5のバランスが定義された後、高レアリティ武器専用のアップグレード式を追加する
 
-## Balancing & Decision Making
-- レアリティごとの出現率、ステータスのロール範囲、および生贄強化のペイオフバランスを再調整する
-- CSC報酬係数を実機プレイ後に再評価し、低ランクと高ランクの収入ペースを最適化する
-- マスカレードのウェーブテーブル（現在の30ウェーブ）は機能的な足場に過ぎないため、実戦テストに基づき本質的なバランス調整を行う
-- マルチプレイ時におけるモブランクの割り当てルール（最短距離のプレイヤー参照）を長期的な仕様とするか、設定可能にするか決定する
-- CSC報酬値をコード定数からJSONコンテンツデータに移動するか検討する
-- 武器フラグメントの入手時にCSCや冒険ランクXPも付与するか検討する
-- ドメインのモブに通常のフィールドドロップを維持させるか、経済制御のためにクリア報酬のみに切り替えるか検討する
-- ドメイン選択画面で、スロット名だけでなく詳細な情報を表示するようにUIを洗練させるか検討する
-- 限定レゾナンスの星5プールをピックアップ確定のみにするか、恒常星5を含めるか検討する（武器の種類が増えた段階で）
-- 「楽曲の残響 (Music Echo)」を全モブ共通のグローバル設定とするか、敵対/受動/ボスなどのカテゴリに分割するか検討する
-- `cadenza_allegro` の実機確認を行い、変身羊の元モブ通常ドロップ・Cresora追加ドロップ・エリート除外が各 hostile family で期待どおり揃っているか検証する
-- `kyokusui_no_ryusho` の実機確認を行い、`詠歌` の自然回復段階上昇、`着手` の石盾耐久、`揮毫` の無敵重複、`之` の貫通ダメージが戦闘中に期待どおり噛み合うか検証する
-- 共通化後の武器欠片について、旧欠片在庫と新共通欠片が混在した状態で base 強化・分解・秘境報酬表示が期待どおり動くか実機確認する
-- `/jikki-tesuto` による実機起動フローの安定性を継続的に確認する (2026-04-05, 2026-04-06 成功)
-- CSC の経験値連動について、今は「XPオーブ実回収時のみ」へ絞ったため、炉・コマンド・特殊報酬など非オーブ系まで再対応するかは仕様として再設計する
-- 高額CSC変動の監査ログを見ながら、実機で「30000増加」の再現条件を確定し、マスカレード正規報酬なのか二重加算なのかを切り分ける
-- ショップ価格インフレ後に、実機で「資源購入の重さ」と「売却価格との相場差」が妥当か再評価する
+## CWC & System Polish
+- [ ] Improve `execute` block Kotlin syntax highlighting support in IDEs (low priority).
 
-## Assets & GUI
-- `requiem_toward_dawn` およびそのフラグメントの最終アートが完成次第、一時的なPNGを差し替える
-- 装備アップグレードの詳細表示をGUIパネルからマウスオーバーのツールチップへ集約する作業を継続する
-- 視認性向上のため、テキストノイズを減らし、レイアウトと階層構造による直感的なGUIデザインを追求する
-- 新規追加アイテムのテクスチャ差し替え時は `models/item` だけでなく `assets/cresora-utilities/items/*.json` の存在も合わせて確認する
+## Compiler Improvements
+- [ ] Add automatic `import` detection or simplified import DSL to avoid long qualified names in `execute` blocks.
+- [ ] Replace remaining raw `execute` string passthroughs with typed AST nodes for safer code generation.
+- [ ] Add parser tests for malformed `.cresora` files and `area_of_effect` blocks.
 
-## Documentation
-- `cresora_document.md` を今後の weapon / story / registry 変更に追従させ、JSON スキーマ差分とコード側の責務分離を崩さない
+## Runtime Hardening Follow-up
+- [ ] Add regression tests for weapon-skill scope so non-held weapon handlers cannot bleed into unrelated attribute calculations.
+- [ ] Add disconnect/reconnect coverage for debuffs, Masquerade respawn, and transient combat state.
+- [ ] Add regression coverage for equipment mob loot injection and treasure chest reconnect scheduling.
+- [ ] Add invalid-content tests for unsupported equipment `effectHooks` and malformed resonance pools.
+
+## New Content
+- [ ] Define detailed effects for special moon phases: Solar Eclipse, Lunar Eclipse, Death Moon, and Unknown.
+- [ ] Replace Blood Moon placeholder rewards with final implementations for `血色音符`, `失色之冠`, and `血之泪`.
+- [ ] Add dedicated visual texture assets for `moon_brick` and `moon_altar` (currently uses vanilla placeholder textures/models).
+- [ ] Add persistence for in-progress Blood Moon battles if sessions need to survive server restart. (Reward chest ownership/seed persistence is now implemented.)
+- [ ] Add dedicated regression or machine-test coverage for Blood Moon wave spawning, bed protection, reward chest ownership, and natural-spawn pressure.

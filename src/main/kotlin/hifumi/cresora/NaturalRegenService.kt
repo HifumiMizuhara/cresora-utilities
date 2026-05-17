@@ -73,7 +73,7 @@ object NaturalRegenService {
 
         val rank = AdventureRankService.getRank(player)
         val baseBandIndex = regenBands.indexOfFirst { it.matches(rank) }.let { if (it >= 0) it else regenBands.lastIndex }
-        val boostedBandIndex = (baseBandIndex + WeaponSkillService.orchidPavilionRegenStageBonus(player)).coerceIn(0, regenBands.lastIndex)
+        val boostedBandIndex = (baseBandIndex + WeaponSkillService.regenStageBonus(player)).coerceIn(0, regenBands.lastIndex)
         val band = regenBands[boostedBandIndex]
         val hungerScalar = foodLevel / 20.0
         val ratePerTick = if (isInCombat(player, tick)) band.combatHpPerTick() else band.nonCombatHpPerTick()

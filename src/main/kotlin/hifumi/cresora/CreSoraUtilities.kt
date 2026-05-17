@@ -7,7 +7,11 @@ import dev.emi.trinkets.api.TrinketsApi
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.fabricmc.loader.api.FabricLoader
+import net.minecraft.block.AbstractBlock
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.loot.LootPool
@@ -44,6 +48,9 @@ object CreSoraUtilities : ModInitializer {
 	private val logger = LoggerFactory.getLogger(MOD_ID)
 	private val TUESHOKAKU_ID: Identifier = Identifier.of(MOD_ID, "tueshokaku")
 	private val VERSION_VERIFIER_ID: Identifier = Identifier.of("${MOD_ID}$version", "versionverifier")
+	val SUB_SKILL_DUMMY_ID: Identifier = Identifier.of(MOD_ID, "sub_skill_dummy")
+	private val MOON_BRICK_ID: Identifier = Identifier.of(MOD_ID, "moon_brick")
+	private val MOON_ALTAR_ID: Identifier = Identifier.of(MOD_ID, "moon_altar")
 
 	private val EQUIPMENT_ITEMS: MutableMap<String, ArtifactEquipmentItem> = linkedMapOf()
 	private val WEAPON_ITEMS: MutableMap<String, CresoraWeaponItem> = linkedMapOf()
@@ -52,6 +59,10 @@ object CreSoraUtilities : ModInitializer {
 	private val ARTIFACT_SPECIAL_ITEMS: MutableMap<String, ArtifactSpecialItem> = linkedMapOf()
 	val TUESHOKAKU: Item = tueshokaku(itemSettings(TUESHOKAKU_ID))
 	val VERIFY: Item = Item(itemSettings(VERSION_VERIFIER_ID))
+	val SUB_SKILL_DUMMY: Item = SubSkillItem(itemSettings(SUB_SKILL_DUMMY_ID).maxCount(1))
+	val MOON_BRICK_ITEM: Item = Item(itemSettings(MOON_BRICK_ID))
+	val MOON_ALTAR_BLOCK: Block = Block(blockSettings(MOON_ALTAR_ID, Blocks.CHISELED_STONE_BRICKS))
+	val MOON_ALTAR_BLOCK_ITEM: Item = BlockItem(MOON_ALTAR_BLOCK, itemSettings(MOON_ALTAR_ID))
 
 	lateinit var UPGRADE_SCREEN_HANDLER: ScreenHandlerType<UpgradeScreenHandler>
 	lateinit var WEAPON_UPGRADE_SCREEN_HANDLER: ScreenHandlerType<WeaponUpgradeScreenHandler>
@@ -169,23 +180,33 @@ object CreSoraUtilities : ModInitializer {
 		Join.init()
 		Commands.init()
 		AdventureRankHooks.init()
+		MoonPhaseHooks.init()
+		BloodMoonHooks.init()
+		MoonAltarService.init()
 		DomainHooks.init()
 		StoryHooks.init()
 		MasqueradeHooks.init()
 		CresoraDebuffHooks.init()
+		HotbarOverrideHooks.init()
+		PlayerLifecycleHooks.init()
 		TreasureChestService.init()
 		EquipmentAttributeService.init()
 		WeaponAttributeService.init()
 		WeaponSkillService.init()
 		NaturalRegenService.init()
+		HotbarOverrideService.init()
 		registerEquipmentItems()
 		registerWeaponRarityFragmentItems()
 		registerWeaponItems()
 		registerArtifactSpecialItems()
 		modifyLootTables()
 
+		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
 		Registry.register(Registries.ITEM, TUESHOKAKU_ID, TUESHOKAKU)
 		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
+		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
+		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
+		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
 
 		logger.info("CreSora Utilities initialized!")
 	}
@@ -204,6 +225,10 @@ object CreSoraUtilities : ModInitializer {
 
 	private fun itemSettings(id: Identifier): Item.Settings {
 		return Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, id))
+	}
+
+	private fun blockSettings(id: Identifier, baseBlock: Block): AbstractBlock.Settings {
+		return AbstractBlock.Settings.copy(baseBlock).registryKey(RegistryKey.of(RegistryKeys.BLOCK, id))
 	}
 
 	private fun registerEquipmentItems() {
@@ -249,50 +274,11 @@ object CreSoraUtilities : ModInitializer {
 	}
 
 	private fun modifyLootTables() {
-		LootTableEvents.MODIFY.register { key, tableBuilder, source, _ ->
-			if (!source.isBuiltin) {
-				return@register
-			}
-
-			for (lootDefinition in EquipmentContentRegistry.mobLootRules()) {
-				val entityType = Registries.ENTITY_TYPE.get(Identifier.of(lootDefinition.entityTypeId))
-				if (entityType.getLootTableKey().orElse(null) != key) {
-					continue
-				}
-				lootDefinition.artifactLoot?.let { artifactLoot ->
-					createArtifactLootPool(artifactLoot)?.let(tableBuilder::pool)
-				}
+		LootTableEvents.MODIFY.register { key, builder, source, registries ->
+			if (source.isBuiltin) {
+				EquipmentContentRegistry.applyMobLootRules(key, builder, registries)
 			}
 		}
-	}
-
-	private fun createArtifactLootPool(
-		rule: EquipmentArtifactLootRule
-	): LootPool? {
-		val equipmentItems = if (rule.equipmentIds.isEmpty()) {
-			EquipmentStackSupport.allEquipmentItems()
-		} else {
-			rule.equipmentIds.mapNotNull(EquipmentStackSupport::itemForDefinitionId)
-		}
-		if (equipmentItems.isEmpty()) {
-			return null
-		}
-
-		val builder = LootPool.builder()
-			.rolls(ConstantLootNumberProvider.create(1.0f))
-			.conditionally(RandomChanceLootCondition.builder(rule.chance))
-			.apply(SetCountLootFunction.builder(UniformLootNumberProvider.create(1.0f, 1.0f)))
-			.apply(
-				SetLevelLootFunction(
-					levelProvider = UniformLootNumberProvider.create(rule.levelMin.toFloat(), rule.levelMax.toFloat()),
-					forcedRarity = rule.forcedRarity,
-					dropProfileId = rule.dropProfileId
-				)
-			)
-		for (item in equipmentItems) {
-			builder.with(ItemEntry.builder(item))
-		}
-		return builder.build()
 	}
 }
 
@@ -351,6 +337,16 @@ class SetLevelLootFunction(
 	}
 
 	companion object {
+		fun builder(
+			levelProvider: LootNumberProvider,
+			forcedRarity: EquipmentRarity? = null,
+			dropProfileId: String? = null
+		): LootFunction.Builder {
+			return LootFunction.Builder {
+				SetLevelLootFunction(levelProvider, forcedRarity, dropProfileId)
+			}
+		}
+
 		val CODEC: MapCodec<SetLevelLootFunction> = RecordCodecBuilder.mapCodec { instance ->
 			instance.group(
 				LootNumberProviderTypes.CODEC.fieldOf("level_provider").forGetter(SetLevelLootFunction::levelProvider),

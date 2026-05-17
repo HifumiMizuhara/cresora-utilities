@@ -2,6 +2,8 @@ package hifumi.cresora
 
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.CustomModelDataComponent
 
 object WeaponStackSupport {
     private val weaponsByItem: MutableMap<Item, WeaponDefinitionRef> = linkedMapOf()
@@ -65,6 +67,11 @@ object WeaponStackSupport {
         val definition = getDefinition(stack) ?: return data.normalized()
         val normalized = data.normalized(definition)
         stack.set(ModDataComponents.WEAPON_DATA, normalized)
+
+        definition.customModelData?.let {
+            stack.set(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelDataComponent(listOf(it.toFloat()), emptyList(), emptyList(), emptyList()))
+        }
+
         return normalized
     }
 

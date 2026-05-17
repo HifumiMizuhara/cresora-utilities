@@ -144,6 +144,19 @@ object ArtifactSpecialItemRegistry {
                         rankMax = 70,
                         maxChance = 0.10
                     )
+                ),
+                ArtifactSpecialItemDefinition(
+                    id = "blood_note",
+                    kind = ArtifactSpecialItemKind.NOTE,
+                    translationKeyId = "item.cresora-utilities.blood_note",
+                    baseItemId = "minecraft:amethyst_shard",
+                    shopPrice = 0,
+                    shopVisible = false,
+                    mobDrop = ArtifactSpecialMobDrop(
+                        rankMin = 1,
+                        rankMax = 1,
+                        maxChance = 0.005
+                    )
                 )
             )
         )

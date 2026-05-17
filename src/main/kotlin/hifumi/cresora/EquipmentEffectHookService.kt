@@ -4,11 +4,8 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
-import org.slf4j.LoggerFactory
 
 object EquipmentEffectHookService {
-    private val logger = LoggerFactory.getLogger("${CreSoraUtilities.MOD_ID}/equipment-effects")
-    private val warnedEffectIds: MutableSet<String> = mutableSetOf()
 
     fun onEquipChanged(player: ServerPlayerEntity) {
         dispatch(player, EquipmentEffectTrigger.EQUIP_CHANGED)
@@ -42,13 +39,10 @@ object EquipmentEffectHookService {
                 if (hook.trigger != trigger) {
                     continue
                 }
-                if (warnedEffectIds.add(hook.effectId)) {
-                    logger.info(
-                        "Equipment effect hook '{}' is registered for trigger '{}' but has no implementation yet.",
-                        hook.effectId,
-                        hook.trigger.id
-                    )
-                }
+                throw IllegalStateException(
+                    "Unsupported equipment effect hook '${hook.effectId}' was loaded for trigger '${hook.trigger.id}'. " +
+                        "Reject unsupported hooks during content load instead of ignoring them at runtime."
+                )
             }
         }
     }

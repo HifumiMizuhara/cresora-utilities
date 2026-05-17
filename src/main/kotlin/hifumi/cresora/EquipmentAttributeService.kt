@@ -24,11 +24,17 @@ object EquipmentAttributeService {
                 val armorInstance = player.attributes.getCustomInstance(EntityAttributes.ARMOR)
                 val totals = EquipmentPlayerSupport.getAggregatedStats(player)
                 val bonuses = EquipmentStatCalculator.calculateAttributeBonuses(totals)
+                val bloodMoonHealthScalar = BloodMoonService.playerHealthMultiplier(player)
 
                 updateModifier(attackInstance, ATTACK_FLAT_ID, bonuses.attackFlat, EntityAttributeModifier.Operation.ADD_VALUE)
                 updateModifier(attackInstance, ATTACK_SCALAR_ID, bonuses.attackScalar, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
                 updateModifier(healthInstance, HEALTH_FLAT_ID, bonuses.healthFlat, EntityAttributeModifier.Operation.ADD_VALUE)
-                updateModifier(healthInstance, HEALTH_SCALAR_ID, bonuses.healthScalar, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+                updateModifier(
+                    healthInstance,
+                    HEALTH_SCALAR_ID,
+                    (1.0 + bonuses.healthScalar) * bloodMoonHealthScalar - 1.0,
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
                 updateModifier(armorInstance, ARMOR_FLAT_ID, bonuses.armorFlat, EntityAttributeModifier.Operation.ADD_VALUE)
                 updateModifier(armorInstance, ARMOR_SCALAR_ID, bonuses.armorScalar, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
                 handleEquipChanged(player)
@@ -45,6 +51,11 @@ object EquipmentAttributeService {
 
     fun markForFullHeal(player: net.minecraft.server.network.ServerPlayerEntity) {
         pendingFullHeal.add(player.uuid)
+    }
+
+    fun clearTransientState(player: net.minecraft.server.network.ServerPlayerEntity) {
+        equippedFingerprints.remove(player.uuid)
+        pendingFullHeal.remove(player.uuid)
     }
 
     private fun handleEquipChanged(player: net.minecraft.server.network.ServerPlayerEntity) {
