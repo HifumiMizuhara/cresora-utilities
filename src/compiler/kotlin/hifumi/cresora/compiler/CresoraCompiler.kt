@@ -93,7 +93,7 @@ class CresoraCompiler(
 
             for (handler in handlers) {
                 handler.actions.forEach {
-                    emitAction(it, funSpec, skill, packageName, className)
+                    emitAction(it, funSpec, skill, packageName, className, eventName)
                     funSpec.addCode("\n")
                 }
             }
@@ -101,7 +101,9 @@ class CresoraCompiler(
             if (eventName == "on_activate") {
                 funSpec.addCode("\n")
                 funSpec.addStatement("return %T.SUCCESS", ClassName("net.minecraft.util", "ActionResult"))
-            } else if (eventName == "on_damage_absorbed" || eventName == "on_damage_taken") {
+            } else if ((eventName == "on_damage_absorbed" || eventName == "on_damage_taken") &&
+                handlers.none { handler -> handler.actions.any { it is ExecuteActionNode } }
+            ) {
                 funSpec.addStatement("return amount")
             }
         }
@@ -127,14 +129,16 @@ class CresoraCompiler(
             }
 
             handler.actions.forEach {
-                emitAction(it, funSpec, weapon.skill, packageName, mainSkillClassName)
+                emitAction(it, funSpec, weapon.skill, packageName, mainSkillClassName, handler.eventName)
                 funSpec.addCode("\n")
             }
 
             if (handler.eventName == "on_activate") {
                 funSpec.addCode("\n")
                 funSpec.addStatement("return %T.SUCCESS", ClassName("net.minecraft.util", "ActionResult"))
-            } else if (handler.eventName == "on_damage_absorbed" || handler.eventName == "on_damage_taken") {
+            } else if ((handler.eventName == "on_damage_absorbed" || handler.eventName == "on_damage_taken") &&
+                handler.actions.none { it is ExecuteActionNode }
+            ) {
                 funSpec.addStatement("return amount")
             }
         }
@@ -201,7 +205,14 @@ class CresoraCompiler(
         generateScalarOverride(typeSpec, skill, "getCritDamageBonus", "crit_dmg_per_stack", packageName, className)
     }
 
-    private fun emitAction(action: ActionNode, funSpec: FunSpec.Builder, skill: SkillNode?, packageName: String, className: String) {
+    private fun emitAction(
+        action: ActionNode,
+        funSpec: FunSpec.Builder,
+        skill: SkillNode?,
+        packageName: String,
+        className: String,
+        eventName: String
+    ) {
         when (action) {
             is CommandActionNode -> {
                 when (action.commandName) {
@@ -332,9 +343,9 @@ class CresoraCompiler(
                 )
                 action.actions.forEach { nested ->
                     when (nested) {
-                        is CommandActionNode -> emitAction(nested, funSpec, skill, packageName, className)
-                        is SendLocalizedMessageActionNode -> emitAction(nested, funSpec, skill, packageName, className)
-                        is ExecuteActionNode -> emitAction(nested, funSpec, skill, packageName, className)
+                        is CommandActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName)
+                        is SendLocalizedMessageActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName)
+                        is ExecuteActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName)
                         else -> funSpec.addStatement("// Unsupported nested AOE action: ${nested::class.simpleName}")
                     }
                 }
@@ -363,9 +374,16 @@ class CresoraCompiler(
                 }
 
                 funSpec.addCode("\n; ")
-                funSpec.beginControlFlow("run execute@")
-                funSpec.addCode("%L\n", content)
-                funSpec.endControlFlow()
+                if (eventName == "on_damage_absorbed" || eventName == "on_damage_taken") {
+                    funSpec.addCode("return run execute@ {\n")
+                    funSpec.addCode("%L\n", content)
+                    funSpec.addCode("amount\n")
+                    funSpec.addCode("}\n")
+                } else {
+                    funSpec.beginControlFlow("run execute@")
+                    funSpec.addCode("%L\n", content)
+                    funSpec.endControlFlow()
+                }
             }
             is ExpressionNode -> {
                 funSpec.addStatement(action.content)

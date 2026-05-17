@@ -73,17 +73,16 @@ object HotbarOverrideService {
     }
 
     fun restoreHotbar(player: ServerPlayerEntity) {
-        val session = sessions.remove(player.uuid) ?: return
-
-        for (i in 0 until 9) {
-            player.inventory.setStack(i, session.originalHotbar[i])
-        }
-        player.inventory.selectedSlot = session.originalSelectedSlot.coerceIn(0, 8)
-
-        player.sendMessage(Text.translatable("message.cresora.hotbar_restored").formatted(Formatting.GRAY), true)
+        restoreSession(player, sendMessage = true)
     }
 
     fun isOverridden(player: ServerPlayerEntity): Boolean = sessions.containsKey(player.uuid)
+
+    fun activeWeaponContext(player: ServerPlayerEntity): Pair<WeaponDefinition, WeaponData>? {
+        val session = sessions[player.uuid] ?: return null
+        val definition = runCatching { WeaponContentRegistry.requireWeapon(session.weaponId) }.getOrNull() ?: return null
+        return definition to session.weaponData.normalized(definition)
+    }
 
     fun activateSubSkill(player: ServerPlayerEntity, effectId: String, access: WeaponSkillAccess): net.minecraft.util.ActionResult {
         val session = sessions[player.uuid] ?: return net.minecraft.util.ActionResult.FAIL
@@ -98,7 +97,7 @@ object HotbarOverrideService {
     }
 
     fun clearSession(player: ServerPlayerEntity) {
-        sessions.remove(player.uuid)
+        restoreSession(player, sendMessage = false)
     }
 
     private fun createSubSkillStack(effectId: String): ItemStack {
@@ -123,5 +122,19 @@ object HotbarOverrideService {
 
     private fun pruneOfflineSessions(onlinePlayerIds: Set<UUID>) {
         sessions.keys.removeIf { it !in onlinePlayerIds }
+    }
+
+    private fun restoreSession(player: ServerPlayerEntity, sendMessage: Boolean): Boolean {
+        val session = sessions.remove(player.uuid) ?: return false
+
+        for (i in 0 until 9) {
+            player.inventory.setStack(i, session.originalHotbar[i])
+        }
+        player.inventory.selectedSlot = session.originalSelectedSlot.coerceIn(0, 8)
+
+        if (sendMessage) {
+            player.sendMessage(Text.translatable("message.cresora.hotbar_restored").formatted(Formatting.GRAY), true)
+        }
+        return true
     }
 }

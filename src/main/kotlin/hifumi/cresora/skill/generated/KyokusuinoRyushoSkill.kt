@@ -194,16 +194,16 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
     `data`: WeaponData,
   ): Float {
 
-    ; run execute@ {
-      if (hifumi.cresora.WeaponSkillService.isInvulnerable(player)) {
-                         
-          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable").formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
-          true);
-                          return@execute 0.0f;
-                      }
+    ; return run execute@ {
+    if (hifumi.cresora.WeaponSkillService.isInvulnerable(player)) {
+                       
+        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable").formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
+        true);
+                        return@execute 0.0f;
+                    }
+    amount
     }
 
-    return amount
   }
 
   override fun onDamageDealt(

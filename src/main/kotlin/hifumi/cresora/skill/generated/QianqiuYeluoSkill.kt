@@ -166,21 +166,21 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
     `data`: WeaponData,
   ): Float {
 
-    ; run execute@ {
-      var finalAmount = amount
-                      if (hifumi.cresora.WeaponSkillService.hasStatus(player, "passive_state")) {
-                          finalAmount *= 0.40f
-                      }
-                      if (hifumi.cresora.WeaponSkillService.hasStatus(player,
-          "yoraku_manchisho_active")) {
-                          if (finalAmount >= player.health) {
-                              finalAmount = (player.health - 1.0f).coerceAtLeast(0.0f)
-                          }
-                      }
-                      return@execute finalAmount
+    ; return run execute@ {
+    var finalAmount = amount
+                    if (hifumi.cresora.WeaponSkillService.hasStatus(player, "passive_state")) {
+                        finalAmount *= 0.40f
+                    }
+                    if (hifumi.cresora.WeaponSkillService.hasStatus(player,
+        "yoraku_manchisho_active")) {
+                        if (finalAmount >= player.health) {
+                            finalAmount = (player.health - 1.0f).coerceAtLeast(0.0f)
+                        }
+                    }
+                    return@execute finalAmount
+    amount
     }
 
-    return amount
   }
 
   override fun onDamageDealt(

@@ -14,9 +14,10 @@ object WeaponAttributeService {
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
             for (player in server.playerManager.playerList) {
+                val activeContext = HotbarOverrideService.activeWeaponContext(player)
                 val heldStack = player.mainHandStack
-                val definition = WeaponStackSupport.getDefinition(heldStack)
-                val data = WeaponStackSupport.getWeaponData(heldStack)
+                val definition = activeContext?.first ?: WeaponStackSupport.getDefinition(heldStack)
+                val data = activeContext?.second ?: WeaponStackSupport.getWeaponData(heldStack)
 
 
                 updateModifier(

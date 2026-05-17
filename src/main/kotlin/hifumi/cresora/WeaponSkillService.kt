@@ -77,10 +77,9 @@ object WeaponSkillService {
             }
 
             for (player in onlinePlayers) {
-                val stack = player.mainHandStack
-                val def = WeaponStackSupport.getDefinition(stack)
-                if (def != null) {
-                    val data = WeaponStackSupport.ensureWeaponData(stack)
+                val activeContext = activeWeaponContext(player)
+                if (activeContext != null) {
+                    val (def, data) = activeContext
                     runWeaponHandlers(def.skill.effectId, def, data) { handler, definition, weaponData ->
                         handler.onPlayerTick(player, definition, weaponData)
                     }
@@ -204,9 +203,8 @@ object WeaponSkillService {
         clearExpiredShield(player)
 
         var remainingAmount = amount
-        val stack = player.mainHandStack
-        val heldDef = WeaponStackSupport.getDefinition(stack) ?: return remainingAmount
-        val heldData = WeaponStackSupport.getWeaponData(stack) ?: WeaponStackSupport.ensureWeaponData(stack)
+        val activeContext = activeWeaponContext(player) ?: return remainingAmount
+        val (heldDef, heldData) = activeContext
 
         runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
             remainingAmount = handler.onDamageAbsorbed(player, remainingAmount, def, data)
@@ -255,9 +253,19 @@ object WeaponSkillService {
         return remainingAmount - remainingShield
     }
 
+    fun onDamageTaken(player: ServerPlayerEntity, amount: Float): Float {
+        val activeContext = activeWeaponContext(player) ?: return amount
+        var modifiedAmount = amount
+        val (definition, data) = activeContext
+        runWeaponHandlers(definition.skill.effectId, definition, data) { handler, def, weaponData ->
+            modifiedAmount = handler.onDamageTaken(player, modifiedAmount, def, weaponData)
+        }
+        return modifiedAmount
+    }
+
     // When weaponId is present, scope to that weapon. Otherwise scope to the held main-hand weapon.
     fun critDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
-        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: WeaponStackSupport.getDefinition(player.mainHandStack)
+        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: activeWeaponContext(player)?.first
         return definition?.let {
             runWeaponBonus(it.skill.effectId, it) { handler, _ -> handler.getCritDamageBonus(player) }
         } ?: 0.0
@@ -265,7 +273,7 @@ object WeaponSkillService {
 
     // When weaponId is present, scope to that weapon. Otherwise scope to the held main-hand weapon.
     fun critRateBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
-        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: WeaponStackSupport.getDefinition(player.mainHandStack)
+        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: activeWeaponContext(player)?.first
         return definition?.let {
             runWeaponBonus(it.skill.effectId, it) { handler, _ -> handler.getCritRateBonus(player) }
         } ?: 0.0
@@ -273,22 +281,21 @@ object WeaponSkillService {
 
     // Held-weapon scoped dynamic attack modifier. This does not aggregate passive bonuses from unequipped weapons.
     fun attackDamageScalar(player: ServerPlayerEntity): Double {
-        val definition = WeaponStackSupport.getDefinition(player.mainHandStack) ?: return 0.0
+        val definition = activeWeaponContext(player)?.first ?: return 0.0
         return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getAttackDamageScalar(player) }
     }
 
     // Held-weapon scoped dynamic armor modifier. This does not aggregate passive bonuses from unequipped weapons.
     fun armorScalar(player: ServerPlayerEntity): Double {
-        val definition = WeaponStackSupport.getDefinition(player.mainHandStack) ?: return 0.0
+        val definition = activeWeaponContext(player)?.first ?: return 0.0
         return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getArmorScalar(player) }
     }
 
     fun onAttackDealt(player: ServerPlayerEntity, target: LivingEntity, damage: Double) {
         if (damage <= 0.0) return
 
-        val stack = player.mainHandStack
-        val heldDef = WeaponStackSupport.getDefinition(stack) ?: return
-        val heldData = WeaponStackSupport.getWeaponData(stack) ?: WeaponStackSupport.ensureWeaponData(stack)
+        val activeContext = activeWeaponContext(player) ?: return
+        val (heldDef, heldData) = activeContext
         runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
             handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
         }
@@ -296,7 +303,7 @@ object WeaponSkillService {
 
     // Held-weapon scoped regen stage bonus.
     fun regenStageBonus(player: ServerPlayerEntity): Int {
-        val definition = WeaponStackSupport.getDefinition(player.mainHandStack) ?: return 0
+        val definition = activeWeaponContext(player)?.first ?: return 0
         var total = 0
         runWeaponHandlers(definition.skill.effectId, definition, WeaponData.DUMMY) { handler, _ , _ ->
             total += handler.getRegenStageBonus(player)
@@ -579,5 +586,13 @@ object WeaponSkillService {
             total += block(handler, def)
         }
         return total
+    }
+
+    private fun activeWeaponContext(player: ServerPlayerEntity): Pair<WeaponDefinition, WeaponData>? {
+        HotbarOverrideService.activeWeaponContext(player)?.let { return it }
+        val stack = player.mainHandStack
+        val definition = WeaponStackSupport.getDefinition(stack) ?: return null
+        val data = WeaponStackSupport.getWeaponData(stack) ?: WeaponStackSupport.ensureWeaponData(stack)
+        return definition to data
     }
 }
