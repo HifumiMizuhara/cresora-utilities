@@ -1,5 +1,11 @@
 package hifumi.cresora.skill.generated
 
+import hifumi.cresora.AdventureRankMobAccess
+import hifumi.cresora.AdventureRankService
+import hifumi.cresora.CreditsService
+import hifumi.cresora.CresoraDebuffService
+import hifumi.cresora.HotbarOverrideService
+import hifumi.cresora.WeaponCombatSupport
 import hifumi.cresora.WeaponData
 import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
@@ -8,10 +14,16 @@ import hifumi.cresora.skill.WeaponSkillHandler
 import kotlin.Boolean
 import kotlin.Float
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 public object DarkLuxSkill : WeaponSkillHandler {
   override fun activate(

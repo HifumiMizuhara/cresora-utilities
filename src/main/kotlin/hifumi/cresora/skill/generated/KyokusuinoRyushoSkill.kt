@@ -1,5 +1,11 @@
 package hifumi.cresora.skill.generated
 
+import hifumi.cresora.AdventureRankMobAccess
+import hifumi.cresora.AdventureRankService
+import hifumi.cresora.CreditsService
+import hifumi.cresora.CresoraDebuffService
+import hifumi.cresora.HotbarOverrideService
+import hifumi.cresora.WeaponCombatSupport
 import hifumi.cresora.WeaponData
 import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
@@ -12,11 +18,18 @@ import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.MutableMap
+import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 public object KyokusuinoRyushoSkill : WeaponSkillHandler {
   public val raiseACupStates: MutableMap<UUID, KyokusuinoRyushoSkill.RaiseACupState> =
@@ -30,6 +43,20 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
 
   public val pavilionActiveStates: MutableMap<UUID, KyokusuinoRyushoSkill.PavilionActiveState> =
       mutableMapOf()
+
+  override fun clearTransientState(playerId: UUID) {
+    raiseACupStates.remove(playerId)
+    recitePoetryStates.remove(playerId)
+    zhiPierceStates.remove(playerId)
+    pavilionActiveStates.remove(playerId)
+  }
+
+  override fun pruneTransientState(activePlayerIds: Set<UUID>) {
+    raiseACupStates.keys.removeIf { !activePlayerIds.contains(it) }
+    recitePoetryStates.keys.removeIf { !activePlayerIds.contains(it) }
+    zhiPierceStates.keys.removeIf { !activePlayerIds.contains(it) }
+    pavilionActiveStates.keys.removeIf { !activePlayerIds.contains(it) }
+  }
 
   override fun getAttackDamageScalar(player: ServerPlayerEntity): Double {
     var total = 0.0

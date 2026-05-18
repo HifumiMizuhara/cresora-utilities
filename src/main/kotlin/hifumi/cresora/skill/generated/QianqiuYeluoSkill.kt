@@ -1,6 +1,11 @@
 package hifumi.cresora.skill.generated
 
+import hifumi.cresora.AdventureRankMobAccess
+import hifumi.cresora.AdventureRankService
+import hifumi.cresora.CreditsService
+import hifumi.cresora.CresoraDebuffService
 import hifumi.cresora.HotbarOverrideService
+import hifumi.cresora.WeaponCombatSupport
 import hifumi.cresora.WeaponData
 import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
@@ -13,10 +18,18 @@ import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.MutableMap
+import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 public object QianqiuYeluoSkill : WeaponSkillHandler {
   public val passiveStateStates: MutableMap<UUID, QianqiuYeluoSkill.PassiveStateState> =
@@ -35,6 +48,24 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
 
   public val yorakuPowerStates: MutableMap<UUID, QianqiuYeluoSkill.YorakuPowerState> =
       mutableMapOf()
+
+  override fun clearTransientState(playerId: UUID) {
+    passiveStateStates.remove(playerId)
+    qiucanStackStates.remove(playerId)
+    jingtianStateStates.remove(playerId)
+    zansouModeStates.remove(playerId)
+    yorakuManchishoActiveStates.remove(playerId)
+    yorakuPowerStates.remove(playerId)
+  }
+
+  override fun pruneTransientState(activePlayerIds: Set<UUID>) {
+    passiveStateStates.keys.removeIf { !activePlayerIds.contains(it) }
+    qiucanStackStates.keys.removeIf { !activePlayerIds.contains(it) }
+    jingtianStateStates.keys.removeIf { !activePlayerIds.contains(it) }
+    zansouModeStates.keys.removeIf { !activePlayerIds.contains(it) }
+    yorakuManchishoActiveStates.keys.removeIf { !activePlayerIds.contains(it) }
+    yorakuPowerStates.keys.removeIf { !activePlayerIds.contains(it) }
+  }
 
   override fun getAttackDamageScalar(player: ServerPlayerEntity): Double {
     var total = 0.0

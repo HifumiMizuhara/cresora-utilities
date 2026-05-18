@@ -55,6 +55,7 @@ object WeaponSkillService {
     private val temporaryGuardExpireTickByPlayer: MutableMap<UUID, Long> = mutableMapOf()
     private val targetMarks: MutableMap<UUID, MutableMap<String, Long>> = mutableMapOf()
     private val invulnerabilityTicks: MutableMap<UUID, Long> = mutableMapOf()
+    private val lastHeldWeaponIdByPlayer: MutableMap<UUID, String> = mutableMapOf()
 
     // soul Break (破魂) stacks and expiry
     private val soulBreakStacks: MutableMap<UUID, Int> = mutableMapOf()
@@ -67,9 +68,11 @@ object WeaponSkillService {
         ServerTickEvents.END_SERVER_TICK.register { server ->
             val now = server.overworld.time
             val onlinePlayers = server.playerManager.playerList
-            pruneOfflineState(onlinePlayers.mapTo(linkedSetOf(), ServerPlayerEntity::getUuid))
+            val onlinePlayerIds = onlinePlayers.mapTo(linkedSetOf(), ServerPlayerEntity::getUuid)
+            pruneOfflineState(onlinePlayerIds)
 
             WeaponSkillRegistry.allHandlers().forEach { (id, handler) ->
+                handler.pruneTransientState(onlinePlayerIds)
                 val def = WeaponSkillRegistry.getDefinition(id)
                 if (def != null) {
                     handler.onTick(server, def, WeaponData.DUMMY.copy(weaponId = def.id, rarity = def.craft.craftedRarity))
@@ -78,6 +81,34 @@ object WeaponSkillService {
 
             for (player in onlinePlayers) {
                 val activeContext = activeWeaponContext(player)
+                val currentWeaponId = activeContext?.first?.id ?: ""
+                val lastWeaponId = lastHeldWeaponIdByPlayer[player.uuid] ?: ""
+                if (currentWeaponId != lastWeaponId) {
+                    // Clear transient skill state of the swapped-out weapon
+                    if (lastWeaponId.isNotEmpty()) {
+                        val oldDef = runCatching { WeaponContentRegistry.requireWeapon(lastWeaponId) }.getOrNull()
+                        if (oldDef != null) {
+                            WeaponSkillRegistry.getHandler(oldDef.skill.effectId)?.clearTransientState(player.uuid)
+                            for (subSkillId in WeaponSkillRegistry.subSkillEffectIds(oldDef.skill.effectId)) {
+                                WeaponSkillRegistry.getHandler(subSkillId)?.clearTransientState(player.uuid)
+                            }
+                        }
+                        // Reset service-level transient stats associated with the swapped-out weapon
+                        if (lastWeaponId == "tanboku_chokuu") {
+                            taoStacks.remove(player.uuid)
+                        }
+                        val access = player as? WeaponSkillAccess
+                        if (access != null && access.cresoraGetShieldWeaponId() == lastWeaponId) {
+                            clearShield(player)
+                        }
+                    }
+                    if (currentWeaponId.isNotEmpty()) {
+                        lastHeldWeaponIdByPlayer[player.uuid] = currentWeaponId
+                    } else {
+                        lastHeldWeaponIdByPlayer.remove(player.uuid)
+                    }
+                }
+
                 if (activeContext != null) {
                     val (def, data) = activeContext
                     runWeaponHandlers(def.skill.effectId, def, data) { handler, definition, weaponData ->
@@ -264,19 +295,25 @@ object WeaponSkillService {
     }
 
     // When weaponId is present, scope to that weapon. Otherwise scope to the held main-hand weapon.
+    // Enhanced active weapon checks ensure inactive weapon stats do not blend.
     fun critDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
-        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: activeWeaponContext(player)?.first
-        return definition?.let {
-            runWeaponBonus(it.skill.effectId, it) { handler, _ -> handler.getCritDamageBonus(player) }
-        } ?: 0.0
+        val activeContext = activeWeaponContext(player) ?: return 0.0
+        if (weaponId != null && activeContext.first.id != weaponId) {
+            return 0.0
+        }
+        val definition = activeContext.first
+        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getCritDamageBonus(player) }
     }
 
     // When weaponId is present, scope to that weapon. Otherwise scope to the held main-hand weapon.
+    // Enhanced active weapon checks ensure inactive weapon stats do not blend.
     fun critRateBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
-        val definition = weaponId?.let(WeaponContentRegistry::requireWeapon) ?: activeWeaponContext(player)?.first
-        return definition?.let {
-            runWeaponBonus(it.skill.effectId, it) { handler, _ -> handler.getCritRateBonus(player) }
-        } ?: 0.0
+        val activeContext = activeWeaponContext(player) ?: return 0.0
+        if (weaponId != null && activeContext.first.id != weaponId) {
+            return 0.0
+        }
+        val definition = activeContext.first
+        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getCritRateBonus(player) }
     }
 
     // Held-weapon scoped dynamic attack modifier. This does not aggregate passive bonuses from unequipped weapons.
@@ -393,9 +430,10 @@ object WeaponSkillService {
 
     fun grantShield(player: ServerPlayerEntity, amountHp: Float, durationTicks: Long, weaponId: String? = null) {
         val access = player as? WeaponSkillAccess ?: return
+        val resolvedWeaponId = weaponId ?: activeWeaponContext(player)?.first?.id
         access.cresoraSetShieldHp(amountHp)
         access.cresoraSetShieldExpireTick(currentWorldTime(player) + durationTicks)
-        access.cresoraSetShieldWeaponId(weaponId)
+        access.cresoraSetShieldWeaponId(resolvedWeaponId)
     }
 
     fun getRemainingCooldownTicks(player: ServerPlayerEntity, weaponId: String): Double {
@@ -550,6 +588,10 @@ object WeaponSkillService {
         taoStacks.remove(player.uuid)
         targetMarks.remove(player.uuid)
         invulnerabilityTicks.remove(player.uuid)
+        lastHeldWeaponIdByPlayer.remove(player.uuid)
+        WeaponSkillRegistry.allHandlers().values.forEach { handler ->
+            handler.clearTransientState(player.uuid)
+        }
     }
 
     private fun pruneOfflineState(onlinePlayerIds: Set<UUID>) {
@@ -562,6 +604,7 @@ object WeaponSkillService {
         cooldownsByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardHpByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardExpireTickByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
+        lastHeldWeaponIdByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
     }
 
     private inline fun runWeaponHandlers(

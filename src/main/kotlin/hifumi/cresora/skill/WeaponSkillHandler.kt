@@ -7,6 +7,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.ActionResult
+import java.util.UUID
 
 interface WeaponSkillHandler {
     fun activate(
@@ -41,4 +42,8 @@ interface WeaponSkillHandler {
     fun getCritDamageBonus(player: ServerPlayerEntity): Double = 0.0
 
     fun getRegenStageBonus(player: ServerPlayerEntity): Int = 0
+
+    fun clearTransientState(playerId: UUID) {}
+
+    fun pruneTransientState(activePlayerIds: Set<UUID>) {}
 }

@@ -1,5 +1,11 @@
 package hifumi.cresora.skill.generated
 
+import hifumi.cresora.AdventureRankMobAccess
+import hifumi.cresora.AdventureRankService
+import hifumi.cresora.CreditsService
+import hifumi.cresora.CresoraDebuffService
+import hifumi.cresora.HotbarOverrideService
+import hifumi.cresora.WeaponCombatSupport
 import hifumi.cresora.WeaponData
 import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
@@ -12,16 +18,31 @@ import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.MutableMap
+import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
   public val snowMistStates: MutableMap<UUID, ColdMistCoilingSnowSkill.SnowMistState> =
       mutableMapOf()
+
+  override fun clearTransientState(playerId: UUID) {
+    snowMistStates.remove(playerId)
+  }
+
+  override fun pruneTransientState(activePlayerIds: Set<UUID>) {
+    snowMistStates.keys.removeIf { !activePlayerIds.contains(it) }
+  }
 
   override fun getCritDamageBonus(player: ServerPlayerEntity): Double {
     var total = 0.0

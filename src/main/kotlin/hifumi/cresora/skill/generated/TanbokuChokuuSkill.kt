@@ -1,6 +1,11 @@
 package hifumi.cresora.skill.generated
 
+import hifumi.cresora.AdventureRankMobAccess
+import hifumi.cresora.AdventureRankService
+import hifumi.cresora.CreditsService
+import hifumi.cresora.CresoraDebuffService
 import hifumi.cresora.HotbarOverrideService
+import hifumi.cresora.WeaponCombatSupport
 import hifumi.cresora.WeaponData
 import hifumi.cresora.WeaponDefinition
 import hifumi.cresora.WeaponSkillAccess
@@ -12,16 +17,34 @@ import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.MutableMap
+import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 public object TanbokuChokuuSkill : WeaponSkillHandler {
   public val zansoActiveStates: MutableMap<UUID, TanbokuChokuuSkill.ZansoActiveState> =
       mutableMapOf()
 
   public val munenSeqStates: MutableMap<UUID, TanbokuChokuuSkill.MunenSeqState> = mutableMapOf()
+
+  override fun clearTransientState(playerId: UUID) {
+    zansoActiveStates.remove(playerId)
+    munenSeqStates.remove(playerId)
+  }
+
+  override fun pruneTransientState(activePlayerIds: Set<UUID>) {
+    zansoActiveStates.keys.removeIf { !activePlayerIds.contains(it) }
+    munenSeqStates.keys.removeIf { !activePlayerIds.contains(it) }
+  }
 
   override fun onPlayerTick(
     player: ServerPlayerEntity,
@@ -55,11 +78,10 @@ public object TanbokuChokuuSkill : WeaponSkillHandler {
   ): ActionResult {
 
     ; run execute@ {
-      hifumi.cresora.WeaponSkillService.addTao(player, 1);
+      WeaponSkillService.addTao(player, 1);
                      
-          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained",
-          hifumi.cresora.WeaponSkillService.getTao(player)).formatted(net.minecraft.util.Formatting.GOLD),
-          true);
+          player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained",
+          WeaponSkillService.getTao(player)).formatted(Formatting.GOLD), true);
     }
 
     HotbarOverrideService.overrideHotbar(player, definition.id, listOf("danro", "zanso",
@@ -79,14 +101,14 @@ public object TanbokuChokuuSkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      val stacks = hifumi.cresora.WeaponSkillService.getSoulBreakStacks(target);
+      val stacks = WeaponSkillService.getSoulBreakStacks(target);
                       if (stacks > 0 && !isTrueDamage) {
                           val boost = amount * (stacks * 0.04f);
                           target.damage(player.world, player.world.damageSources.magic(), boost);
                           if (player.world.time % 20L == 0L) {
                               
-          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break",
-          stacks, stacks * 5, stacks * 4).formatted(net.minecraft.util.Formatting.GRAY), true);
+          player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break",
+          stacks, stacks * 5, stacks * 4).formatted(Formatting.GRAY), true);
                           }
                       }
     }

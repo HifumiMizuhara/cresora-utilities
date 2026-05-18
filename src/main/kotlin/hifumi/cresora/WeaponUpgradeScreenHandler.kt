@@ -15,7 +15,8 @@ import net.minecraft.util.Identifier
 
 class WeaponUpgradeScreenHandler(
     syncId: Int,
-    private val playerInventory: PlayerInventory
+    private val playerInventory: PlayerInventory,
+    private val initialWeapon: ItemStack = ItemStack.EMPTY
 ) : ScreenHandler(CreSoraUtilities.WEAPON_UPGRADE_SCREEN_HANDLER, syncId) {
     companion object {
         const val BUTTON_BASE_UPGRADE = 0
@@ -47,8 +48,13 @@ class WeaponUpgradeScreenHandler(
         })
         addProperties(properties)
         addPlayerSlots(playerInventory)
+        if (!initialWeapon.isEmpty) {
+            slots[WEAPON_SLOT].stack = initialWeapon
+        }
         if (!playerInventory.player.world.isClient) {
-            tryMoveSelectedWeapon()
+            if (initialWeapon.isEmpty) {
+                tryMoveSelectedWeapon()
+            }
         }
         refreshProperties()
     }
@@ -223,10 +229,18 @@ class WeaponUpgradeScreenHandler(
             return WeaponUpgradeLogic.AttemptResult(false, Text.translatable(preview.messageKey ?: "screen.cresora.weapon_upgrade.need_weapon"))
         }
         if (preview.artifactCost > 0) {
-            ArtifactUiFlow.openWeaponSkillMaterialSelection(serverPlayer, stack)
+            val carriedWeapon = takeWeaponStack()
+            if (carriedWeapon.isEmpty) {
+                return WeaponUpgradeLogic.AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.need_weapon"))
+            }
+            ArtifactUiFlow.openWeaponSkillMaterialSelection(serverPlayer, carriedWeapon)
             return WeaponUpgradeLogic.AttemptResult(true, Text.translatable("screen.cresora.weapon_upgrade.open_material_selection"))
         }
         return WeaponUpgradeLogic.attemptUpgrade(player, stack, WeaponUpgradeLogic.UpgradeType.SKILL)
+    }
+
+    private fun takeWeaponStack(): ItemStack {
+        return weaponInventory.removeStack(WEAPON_SLOT)
     }
 
     private fun tryMoveSelectedWeapon() {

@@ -1,6 +1,40 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-10 (Blood Moon stabilization sweep 反映)
+最終更新: 2026-05-18 (CWC Default Imports & Active Slot Weapon Skill Isolation 反映)
+
+## CWC Default Imports & Active Slot Weapon Skill Isolation (2026-05-18)
+
+- **CWC 自動インポート機能の組み込み**:
+  - Cresora Weapon Compiler (`CresoraCompiler.kt`) が KotlinPoet を用いて生成するスキルクラスに、Minecraft / クレソラ関連の常用クラス（`Text`, `LivingEntity`, `ServerWorld`, `ParticleTypes`, `WeaponSkillService`, `AdventureRankService` など）を自動的にインポートする仕組みを追加。
+  - DSL（`.cresora`）ファイル内の `execute` ブロックにおいて、完全修飾名（例: `hifumi.cresora.WeaponSkillService`）を記述する代わりに `WeaponSkillService` のようなシンプルなクラス名での呼び出しが可能になり、コードの可読性を大幅に向上。
+  - 淡墨長空（`tanboku_chokuu.cresora`）などの主要な DSL ファイルをこのクリーンな記述形式にマイグレート。
+
+- **アクティブスロットの武器スキル孤立化・属性リーク防止 (Active Slot Tracking)**:
+  - `WeaponSkillService.kt` を拡張し、武器の属性ボーナス（例: クリティカル率/ダメージボーナス）を取得する際に、対象の武器が「現在メインハンドに持っている武器（または `HotbarOverrideService` で一時的に指定された武器）」と一致していることを厳密に検証するチェックを導入。インベントリの非アクティブスロットに置かれた武器からの属性リーク（ブレンド）を遮断。
+  - プレイヤーごとのアクティブ手持ち武器を記録する `lastHeldWeaponIdByPlayer` トラッカーを導入。
+  - 武器切り替え時の状態クレンジングの自動化：プレイヤーが手持ち武器を切り替えた（または武器を外した）瞬間を検知し、以前持っていた武器の一時的な戦闘バフ（例: 淡墨長空の「道」や「無念」バッファ、斬霜の霜領域）を破棄するため、古い武器スキルハンドラー의 `clearTransientState(player.uuid)` を自動的に起動。
+  - **P2バグ修正 - サービス固有ステートのリセット**: 淡墨長空（`tanboku_chokuu`）など、生成ハンドラ外の `WeaponSkillService` 上に直接定義されているプレイヤー状態（`taoStacks`）について、武器切り替えの検知タイミングで明示的にクレンジング（`.remove(player.uuid)`）を行う処理を追加。
+  - **P2バグ修正 - シールドの自動バインディング**: `grantShield(player, amount, duration, weaponId)` において、`weaponId` が未指定（`null`）の場合に、現在アクティブに持っている武器のIDを自動的に割り当てるように改善。これにより、任意の武器スキルから付与されたシールドの帰属判定が完璧になり、武器切り替えの際に確実に古いシールドがクレンジングされるよう設計を堅牢化。
+  - プレイヤーの切断（オフライン化）や、明示的な状態クリアの際にも、このトラッカー情報を安全に削除。
+
+## Transient State Cleanup & Weapon Upgrade UI API 更新 (2026-05-18)
+
+- **WeaponSkillHandler / CWC 生成スキルの一時状態クリーンアップ**:
+  - [WeaponSkillHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/skill/WeaponSkillHandler.kt) インターフェースに `clearTransientState(playerId: UUID)` と `pruneTransientState(activePlayerIds: Set<UUID>)` の2つのデフォルト空メソッドを追加。
+  - CWC (Cresora Weapon Compiler) のコードジェネレータ ([CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt)) を拡張し、コンパイル時に生成される各武器スキルクラスに上記メソッドのオーバーライド実装を自動生成。スキルごとに定義された `buffs` の一時状態マップ（例: `munenSeqStates` などの一時マップ）から、指定されたプレイヤーID、または非アクティブになったオフラインプレイヤーのデータを安全に削除・刈り込みできるように改善。
+  - [WeaponSkillService](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponSkillService.kt) のティックループ (`ServerTickEvents.END_SERVER_TICK`) 内で、オンラインプレイヤーのID一覧を引数として全ハンドラーの `pruneTransientState` を毎ティック呼び出し、メモリリークとステートの不整合を防止。
+  - プレイヤーの切断時やステートリセット時 (`WeaponSkillService.clearTransientState`) に、全ハンドラーの `clearTransientState` を呼び出して戦闘ステートを即時クリーンアップ。
+
+- **武器強化 (Weapon Upgrade) および素材選択 (Material Selection) UI のアイテム保持・ロスト防止**:
+  - [ArtifactUiFlow.openWeaponUpgrade(player, weaponStack: ItemStack)](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/ArtifactUiFlow.kt)
+    - 武器強化画面を開く際に、対象となる武器スタック `weaponStack` を引数として渡せるように拡張。
+  - [WeaponUpgradeScreenHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponUpgradeScreenHandler.kt)
+    - コンスタラクタで `initialWeapon: ItemStack` を受け取り、指定されている場合は強化スロットに自動で配置する機能を追加。
+    - 素材選択画面に遷移する際、スロットの武器スタックを安全に取り出して `ArtifactUiFlow.openWeaponSkillMaterialSelection(player, carriedWeapon)` を呼ぶように修正。
+  - [WeaponSkillMaterialScreenHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponSkillMaterialScreenHandler.kt)
+    - スキル強化に必要なアーティファクト素材の選択画面を管理するハンドラー。
+    - 画面が閉じられた際 (`onClosed(player)`)、スキル強化が未完了でかつ対象武器スタック `weaponStack` が保持されている場合、プレイヤーのインベントリに武器を自動返却 (`playerInventory.offerOrDrop(weaponStack)`) する安全機構を導入。
+    - 素材選択が完了して元の強化画面に戻る際、`ArtifactUiFlow.openWeaponUpgrade(serverPlayer, weaponStack)` を呼び出すと同時に、自身の `weaponStack` 参照をクリア (`weaponStack = ItemStack.EMPTY`) することで、多重返却や武器ロストのバグを完全に排除。
 
 ## 1. 結論
 

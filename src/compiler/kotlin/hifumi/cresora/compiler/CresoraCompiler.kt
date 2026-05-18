@@ -110,7 +110,11 @@ class CresoraCompiler(
 
         funSpecs.values.forEach { typeSpec.addFunction(it.build()) }
 
-        FileSpec.builder(packageName, className).addType(typeSpec.build()).build().writeTo(outputDir)
+        FileSpec.builder(packageName, className)
+            .addDefaultImports()
+            .addType(typeSpec.build())
+            .build()
+            .writeTo(outputDir)
     }
 
     private fun generateSubSkillClass(weapon: WeaponDefNode, subSkill: SubSkillNode, packageName: String) {
@@ -145,7 +149,11 @@ class CresoraCompiler(
 
         funSpecs.values.forEach { typeSpec.addFunction(it.build()) }
 
-        FileSpec.builder(packageName, className).addType(typeSpec.build()).build().writeTo(outputDir)
+        FileSpec.builder(packageName, className)
+            .addDefaultImports()
+            .addType(typeSpec.build())
+            .build()
+            .writeTo(outputDir)
     }
 
     private fun setupSkillCommon(typeSpec: TypeSpec.Builder, skill: SkillNode, packageName: String, className: String, funSpecs: MutableMap<String, FunSpec.Builder>) {
@@ -196,6 +204,27 @@ class CresoraCompiler(
                 onPlayerTickFun.endControlFlow()
                 onPlayerTickFun.addCode("; \n")
             }
+
+            val clearTransientStateFun = FunSpec.builder("clearTransientState")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("playerId", ClassName("java.util", "UUID"))
+            for (buff in skill.buffs) {
+                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
+                clearTransientStateFun.addStatement("$mapName.remove(playerId)")
+            }
+            typeSpec.addFunction(clearTransientStateFun.build())
+
+            val pruneTransientStateFun = FunSpec.builder("pruneTransientState")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter(
+                    "activePlayerIds",
+                    ClassName("kotlin.collections", "Set").parameterizedBy(ClassName("java.util", "UUID"))
+                )
+            for (buff in skill.buffs) {
+                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
+                pruneTransientStateFun.addStatement("$mapName.keys.removeIf { !activePlayerIds.contains(it) }")
+            }
+            typeSpec.addFunction(pruneTransientStateFun.build())
         }
 
         // 3. Scalar overrides
@@ -728,5 +757,30 @@ class CresoraCompiler(
 
         subSkillRoot.add("model", subSkillModel)
         subSkillDummyFile.writeText(gson.toJson(subSkillRoot))
+    }
+
+    private fun FileSpec.Builder.addDefaultImports(): FileSpec.Builder {
+        return this
+            .addImport("net.minecraft.text", "Text")
+            .addImport("net.minecraft.util", "Identifier")
+            .addImport("net.minecraft.util", "Formatting")
+            .addImport("net.minecraft.util", "ActionResult")
+            .addImport("net.minecraft.server.world", "ServerWorld")
+            .addImport("net.minecraft.server.network", "ServerPlayerEntity")
+            .addImport("net.minecraft.entity", "LivingEntity")
+            .addImport("net.minecraft.entity.effect", "StatusEffectInstance")
+            .addImport("net.minecraft.entity.effect", "StatusEffects")
+            .addImport("net.minecraft.registry", "Registries")
+            .addImport("net.minecraft.particle", "ParticleTypes")
+            .addImport("hifumi.cresora", "WeaponSkillService")
+            .addImport("hifumi.cresora", "CresoraDebuffService")
+            .addImport("hifumi.cresora", "CreditsService")
+            .addImport("hifumi.cresora", "HotbarOverrideService")
+            .addImport("hifumi.cresora", "WeaponCombatSupport")
+            .addImport("hifumi.cresora", "WeaponSkillAccess")
+            .addImport("hifumi.cresora", "WeaponDefinition")
+            .addImport("hifumi.cresora", "WeaponData")
+            .addImport("hifumi.cresora", "AdventureRankMobAccess")
+            .addImport("hifumi.cresora", "AdventureRankService")
     }
 }

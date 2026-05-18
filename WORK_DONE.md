@@ -1,5 +1,34 @@
 # WORK_DONE
 
+## CWC Default Imports & Active Slot Weapon Skill Isolation (2026-05-18)
+
+- **CWC default imports generation**:
+  - Enhanced the Cresora Weapon Compiler ([CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt)) to automatically inject common imports (such as `Text`, `LivingEntity`, `ServerWorld`, `ParticleTypes`, `WeaponSkillService`, `AdventureRankService`, and others) into generated Kotlin skill singletons.
+  - Simplified package naming in DSL files; fully-qualified names are no longer required in `execute` blocks.
+  - Migrated and simplified [tanboku_chokuu.cresora](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/cresora/tanboku_chokuu.cresora) to use these clean, translatable names.
+- **Active Slot Weapon Skill Isolation & Swapping Hardening (Anti-Stat/Buff/Shield Leakage)**:
+  - Hardened [WeaponSkillService](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponSkillService.kt) to keep weapon-specific bonuses (like crit damage and crit rate) isolated to the active main-hand weapon, preventing inactive slot weapons from bleeding stats.
+  - Introduced player-specific held weapon tracking (`lastHeldWeaponIdByPlayer`).
+  - Added state cleansing triggers: when a player swaps their active weapon (or unequips it), the compiler-generated `clearTransientState(uuid)` is automatically triggered for the old weapon to purge active buffs (like Tao, Munen series, Zanso field states) instantly.
+  - **Tao Swap Cleansing Fix (P2)**: Resolved a leak where `taoStacks` (stored directly on `WeaponSkillService` instead of the generated handler) were kept when swapping away from *Tanboku Chokuu*. It is now explicitly cleared upon weapon swap.
+  - **Dynamic Shield Weapon Binding Fallback (P2)**: Fixed a bug where weapon-based shields could not be cleared on swap because the shield's `weaponId` was default-initialized to `null` by compilers/skills. `grantShield` now automatically resolves and binds the active held weapon ID if `weaponId` is not explicitly passed.
+- **Verification**:
+  - Recompiled and verified that the entire workspace builds successfully using `GRADLE_USER_HOME=.gradle-user ./gradlew generateWeapons classes --console=plain`.
+
+## CWC Transient State Cleanup & Weapon Upgrade UI Flow Hardening (2026-05-18)
+
+- **CWC transient state auto-generation & cleanup integration**:
+  - Enhanced the Cresora Weapon Compiler ([CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt)) to automatically generate `clearTransientState(playerId: UUID)` and `pruneTransientState(activePlayerIds: Set<UUID>)` override functions in all generated weapon skill classes.
+  - Added these methods to the [WeaponSkillHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/skill/WeaponSkillHandler.kt) interface so individual skills can cleanly reset player-specific transient states (e.g. active buff state maps, stack trackers).
+  - Integrated cleanup triggers into [WeaponSkillService](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponSkillService.kt):
+    - `pruneTransientState` is called during the server tick loop (`ServerTickEvents.END_SERVER_TICK`) for active player IDs.
+    - `clearTransientState` is triggered when resetting player-specific combat stats (e.g., on player death/disconnects).
+- **Weapon Upgrade & Material UI Stack Safety (Anti-Loss Protection)**:
+  - Updated [ArtifactUiFlow.openWeaponUpgrade](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/ArtifactUiFlow.kt) and [WeaponUpgradeScreenHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponUpgradeScreenHandler.kt) to accept and set an initial `ItemStack` on the upgrade slot.
+  - Improved material selection flow: when switching from weapon upgrade to material selection ([WeaponSkillMaterialScreenHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/WeaponSkillMaterialScreenHandler.kt)), the weapon item is safely carried over to the sub-handler.
+  - Implemented robust anti-loss protection: if the player closes the material selection UI without finishing the upgrade, `onClosed(player)` automatically returns the weapon stack back to the player's inventory (`offerOrDrop`).
+  - Fixed multiple-return and item-loss bugs during UI transitions by safely managing the `ItemStack` lifecycle and clearing references (`weaponStack = ItemStack.EMPTY`) after successful transitions or handoffs.
+
 ## Blood Moon Retry + Bed Swap Fix (2026-05-16)
 
 - Fixed the special-bed swap so the Blood War bed is force-updated as a paired structure instead of replacing the two halves independently.

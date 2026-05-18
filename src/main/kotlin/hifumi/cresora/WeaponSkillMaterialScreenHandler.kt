@@ -70,7 +70,16 @@ class WeaponSkillMaterialScreenHandler(
             }
             return
         }
-        super.onSlotClick(slotIndex, button, actionType, player)
+    }
+
+    override fun onClosed(player: PlayerEntity) {
+        super.onClosed(player)
+        if (player.world.isClient || completed || weaponStack.isEmpty) {
+            return
+        }
+
+        playerInventory.offerOrDrop(weaponStack)
+        weaponStack = ItemStack.EMPTY
     }
 
     fun selectedCount(): Int = properties.get(PROPERTY_SELECTED_COUNT)
@@ -100,7 +109,8 @@ class WeaponSkillMaterialScreenHandler(
         }
         selectedInventorySlots.clear()
         if (result.success) {
-            ArtifactUiFlow.openWeaponUpgrade(serverPlayer)
+            ArtifactUiFlow.openWeaponUpgrade(serverPlayer, weaponStack)
+            weaponStack = ItemStack.EMPTY
         } else {
             refreshEligibleArtifacts()
             refreshOptions()

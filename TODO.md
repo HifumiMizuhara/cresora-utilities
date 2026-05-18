@@ -5,13 +5,17 @@
 - [ ] Improve `execute` block Kotlin syntax highlighting support in IDEs (low priority).
 
 ## Compiler Improvements
-- [ ] Add automatic `import` detection or simplified import DSL to avoid long qualified names in `execute` blocks.
+- [x] Add automatic `import` detection or simplified import DSL to avoid long qualified names in `execute` blocks. (Completed 2026-05-18)
 - [ ] Replace remaining raw `execute` string passthroughs with typed AST nodes for safer code generation.
 - [ ] Add parser tests for malformed `.cresora` files and `area_of_effect` blocks.
-
+ 
 ## Runtime Hardening Follow-up
+- [x] Harden active weapon-skill scope so non-held weapon handlers cannot bleed stats or carry buffs during weapon swap (Completed 2026-05-18).
+- [x] Fix P2: Clear WeaponSkillService-level transient stats (e.g. `taoStacks`) on weapon swap (Completed 2026-05-18).
+- [x] Fix P2: Auto-resolve and bind held weapon ID to dynamic shields in `grantShield` if omitted, ensuring dynamic shields clear reliably on weapon swap (Completed 2026-05-18).
 - [ ] Add regression tests for weapon-skill scope so non-held weapon handlers cannot bleed into unrelated attribute calculations.
-- [ ] Add disconnect/reconnect coverage for debuffs, Masquerade respawn, and transient combat state.
+- [x] Integrate transient combat state cleanup and pruning across CWC-generated skills and WeaponSkillService (Completed 2026-05-18).
+- [ ] Add disconnect/reconnect coverage for debuffs and Masquerade respawn.
 - [ ] Add regression coverage for equipment mob loot injection and treasure chest reconnect scheduling.
 - [ ] Add invalid-content tests for unsupported equipment `effectHooks` and malformed resonance pools.
 

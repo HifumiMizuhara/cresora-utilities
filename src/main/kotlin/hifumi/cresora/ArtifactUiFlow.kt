@@ -42,10 +42,10 @@ object ArtifactUiFlow {
         )
     }
 
-    fun openWeaponUpgrade(player: ServerPlayerEntity) {
+    fun openWeaponUpgrade(player: ServerPlayerEntity, weaponStack: ItemStack = ItemStack.EMPTY) {
         player.openHandledScreen(
             SimpleNamedScreenHandlerFactory(
-                { syncId, playerInventory, _ -> WeaponUpgradeScreenHandler(syncId, playerInventory) },
+                { syncId, playerInventory, _ -> WeaponUpgradeScreenHandler(syncId, playerInventory, weaponStack) },
                 Text.translatable("screen.cresora.weapon_upgrade")
             )
         )

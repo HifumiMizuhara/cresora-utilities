@@ -28,20 +28,20 @@ weapon "Tanboku Chokuu" {
 
         on_activate {
             execute {
-                hifumi.cresora.WeaponSkillService.addTao(player, 1);
-                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained", hifumi.cresora.WeaponSkillService.getTao(player)).formatted(net.minecraft.util.Formatting.GOLD), true);
+                WeaponSkillService.addTao(player, 1);
+                player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained", WeaponSkillService.getTao(player)).formatted(Formatting.GOLD), true);
             }
             open_skill_menu("danro", "zanso", "bokuchu_munen", 3s)
         }
 
         on_damage_dealt {
             execute {
-                val stacks = hifumi.cresora.WeaponSkillService.getSoulBreakStacks(target);
+                val stacks = WeaponSkillService.getSoulBreakStacks(target);
                 if (stacks > 0 && !isTrueDamage) {
                     val boost = amount * (stacks * 0.04f);
                     target.damage(player.world, player.world.damageSources.magic(), boost);
                     if (player.world.time % 20L == 0L) {
-                         player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break", stacks, stacks * 5, stacks * 4).formatted(net.minecraft.util.Formatting.GRAY), true);
+                         player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break", stacks, stacks * 5, stacks * 4).formatted(Formatting.GRAY), true);
                     }
                 }
             }
@@ -55,21 +55,21 @@ weapon "Tanboku Chokuu" {
 
         on_activate {
             execute {
-                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                val world = player.world as? ServerWorld ?: return@execute;
                 val dir = player.rotationVecClient.multiply(1.0, 0.0, 1.0).normalize();
 
                 val hitBox = player.boundingBox.stretch(dir.multiply(5.0)).expand(1.0);
-                world.getOtherEntities(player, hitBox) { it is net.minecraft.entity.LivingEntity && it.isAlive }
+                world.getOtherEntities(player, hitBox) { it is LivingEntity && it.isAlive }
                     .forEach { entity ->
-                        val target = entity as net.minecraft.entity.LivingEntity;
-                        val damage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                        val target = entity as LivingEntity;
+                        val damage = WeaponCombatSupport.attackDamage(definition, data).toFloat();
                         target.damage(world, world.damageSources.playerAttack(player), damage);
-                        hifumi.cresora.WeaponSkillService.applySoulBreak(target, 1, 200L);
-                        world.spawnParticles(net.minecraft.particle.ParticleTypes.CRIT, target.x, target.y + 1, target.z, 5, 0.2, 0.2, 0.2, 0.1);
+                        WeaponSkillService.applySoulBreak(target, 1, 200L);
+                        world.spawnParticles(ParticleTypes.CRIT, target.x, target.y + 1, target.z, 5, 0.2, 0.2, 0.2, 0.1);
                     }
 
-                hifumi.cresora.WeaponSkillService.addTao(player, 1);
-                hifumi.cresora.WeaponSkillService.startCooldown(player, "tanboku_chokuu", 60L);
+                WeaponSkillService.addTao(player, 1);
+                WeaponSkillService.startCooldown(player, "tanboku_chokuu", 60L);
             }
             send_localized_message("item.cresora.weapon.tanboku_chokuu.danro_activated", "WHITE")
             close_skill_menu()
@@ -83,41 +83,41 @@ weapon "Tanboku Chokuu" {
 
         on_activate {
             execute {
-                if (!hifumi.cresora.WeaponSkillService.consumeTao(player, 3)) {
+                if (!WeaponSkillService.consumeTao(player, 3)) {
                     zansoActiveStates.remove(player.uuid);
-                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_insufficient", 3).formatted(net.minecraft.util.Formatting.RED), true);
+                    player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_insufficient", 3).formatted(Formatting.RED), true);
                     return@execute;
                 }
 
-                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val now = WeaponSkillService.currentWorldTime(player);
                 val state = zansoActiveStates.getOrPut(player.uuid) { ZansoActiveState(0L, 0) };
                 state.expireTick = now + 15 * 20L;
                 state.stacks = 1;
-                hifumi.cresora.WeaponSkillService.startCooldown(player, "tanboku_chokuu", 300L);
-                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_activated").formatted(net.minecraft.util.Formatting.AQUA), true);
+                WeaponSkillService.startCooldown(player, "tanboku_chokuu", 300L);
+                player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_activated").formatted(Formatting.AQUA), true);
                 close_skill_menu()
             }
         }
 
         on_player_tick {
             execute {
-                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val now = WeaponSkillService.currentWorldTime(player);
                 val state = zansoActiveStates.get(player.uuid);
                 if (state != null && now < state.expireTick) {
                     if (now % 30L == 0L) {
-                        val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
-                        world.getOtherEntities(player, player.boundingBox.expand(3.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive }
+                        val world = player.world as? ServerWorld ?: return@execute;
+                        world.getOtherEntities(player, player.boundingBox.expand(3.0)) { it is LivingEntity && it.isAlive }
                             .forEach { entity ->
-                                val target = entity as net.minecraft.entity.LivingEntity;
-                                val baseDamage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                                val target = entity as LivingEntity;
+                                val baseDamage = WeaponCombatSupport.attackDamage(definition, data).toFloat();
                                 target.damage(world, world.damageSources.playerAttack(player), baseDamage * 0.5f);
                                 target.damage(world, world.damageSources.magic(), baseDamage * 0.5f);
 
-                                if (target.health / target.maxHealth < 0.10f && !((target as? hifumi.cresora.AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false)) {
+                                if (target.health / target.maxHealth < 0.10f && !((target as? AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false)) {
                                     target.kill(world);
-                                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_instakill").formatted(net.minecraft.util.Formatting.DARK_RED), true);
+                                    player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_instakill").formatted(Formatting.DARK_RED), true);
                                 }
-                                world.spawnParticles(net.minecraft.particle.ParticleTypes.SNOWFLAKE, target.x, target.y + 1, target.z, 3, 0.1, 0.1, 0.1, 0.05);
+                                world.spawnParticles(ParticleTypes.SNOWFLAKE, target.x, target.y + 1, target.z, 3, 0.1, 0.1, 0.1, 0.05);
                             }
                     }
                 }
@@ -132,43 +132,43 @@ weapon "Tanboku Chokuu" {
 
         on_activate {
             execute {
-                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
-                if (!hifumi.cresora.WeaponSkillService.consumeTao(player, 7)) {
+                val world = player.world as? ServerWorld ?: return@execute;
+                if (!WeaponSkillService.consumeTao(player, 7)) {
                     munenSeqStates.remove(player.uuid);
-                    player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_insufficient", 7).formatted(net.minecraft.util.Formatting.RED), true);
+                    player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_insufficient", 7).formatted(Formatting.RED), true);
                     return@execute;
                 }
 
-                hifumi.cresora.WeaponSkillService.grantInvulnerability(player, 60L);
-                val target = world.getOtherEntities(player, player.boundingBox.expand(10.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive }
-                    .filterIsInstance<net.minecraft.entity.LivingEntity>()
+                WeaponSkillService.grantInvulnerability(player, 60L);
+                val target = world.getOtherEntities(player, player.boundingBox.expand(10.0)) { it is LivingEntity && it.isAlive }
+                    .filterIsInstance<LivingEntity>()
                     .maxByOrNull { it.health } ?: run {
-                        hifumi.cresora.WeaponSkillService.addTao(player, 7);
+                        WeaponSkillService.addTao(player, 7);
                         munenSeqStates.remove(player.uuid);
                     return@execute;
                 };
 
-                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val now = WeaponSkillService.currentWorldTime(player);
                 val state = munenSeqStates.getOrPut(player.uuid) { MunenSeqState(0L, 0) };
                 state.expireTick = now + 5 * 20L;
                 state.stacks = 0;
-                hifumi.cresora.WeaponSkillService.applyMark(target, "munen_target_" + player.uuid, 100L);
-                hifumi.cresora.WeaponSkillService.startCooldown(player, "tanboku_chokuu", 600L);
-                player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_activated").formatted(net.minecraft.util.Formatting.DARK_PURPLE), true);
+                WeaponSkillService.applyMark(target, "munen_target_" + player.uuid, 100L);
+                WeaponSkillService.startCooldown(player, "tanboku_chokuu", 600L);
+                player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_activated").formatted(Formatting.DARK_PURPLE), true);
                 close_skill_menu()
             }
         }
 
         on_player_tick {
             execute {
-                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val now = WeaponSkillService.currentWorldTime(player);
                 val state = munenSeqStates.get(player.uuid);
                 if (state != null && now < state.expireTick) {
                     if (now % 6L == 0L) {
-                        val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                        val world = player.world as? ServerWorld ?: return@execute;
                         val markId = "munen_target_" + player.uuid;
-                        val target = world.getOtherEntities(null, player.boundingBox.expand(16.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive && hifumi.cresora.WeaponSkillService.hasMark(it, markId) }
-                            .firstOrNull() as? net.minecraft.entity.LivingEntity;
+                        val target = world.getOtherEntities(null, player.boundingBox.expand(16.0)) { it is LivingEntity && it.isAlive && WeaponSkillService.hasMark(it, markId) }
+                            .firstOrNull() as? LivingEntity;
 
                         if (target == null) {
                             munenSeqStates.remove(player.uuid);
@@ -177,19 +177,19 @@ weapon "Tanboku Chokuu" {
 
                         val hit = state.stacks;
                         if (hit <= 6) {
-                            val damage = hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                            val damage = WeaponCombatSupport.attackDamage(definition, data).toFloat();
                             target.damage(world, world.damageSources.playerAttack(player), damage);
                             state.stacks += 1;
-                            world.spawnParticles(net.minecraft.particle.ParticleTypes.SWEEP_ATTACK, target.x, target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
+                            world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.x, target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
                         } else if (hit == 7) {
                             val trueDamage = target.maxHealth * 0.15f;
                             target.health = (target.health - trueDamage).coerceAtLeast(0.001f);
-                            hifumi.cresora.AdventureRankService.showMobTrueDamage(target, player, trueDamage);
-                            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_final", hifumi.cresora.WeaponSkillService.formatNumber(trueDamage.toDouble() / 2.0)).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
+                            AdventureRankService.showMobTrueDamage(target, player, trueDamage);
+                            player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_final", WeaponSkillService.formatNumber(trueDamage.toDouble() / 2.0)).formatted(Formatting.LIGHT_PURPLE), true);
 
                             munenSeqStates.remove(player.uuid);
-                            hifumi.cresora.WeaponSkillService.removeMark(target, markId);
-                            world.spawnParticles(net.minecraft.particle.ParticleTypes.EXPLOSION, target.x, target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
+                            WeaponSkillService.removeMark(target, markId);
+                            world.spawnParticles(ParticleTypes.EXPLOSION, target.x, target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
                         }
                     }
                 }
