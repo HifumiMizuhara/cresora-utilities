@@ -26,7 +26,8 @@ data class ArtifactDefNode(
 data class ArtifactBonusNode(
     val requiredPieces: Int,
     val stats: Map<String, Double> = emptyMap(),
-    val handlers: List<SkillHandlerNode> = emptyList()
+    val handlers: List<SkillHandlerNode> = emptyList(),
+    val buffs: List<BuffNode> = emptyList()
 ) : ASTNode()
 
 data class DictionaryDefNode(

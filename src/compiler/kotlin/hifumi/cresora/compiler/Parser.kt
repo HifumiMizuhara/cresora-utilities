@@ -166,6 +166,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
     private fun artifactBonus(pieces: Int): ArtifactBonusNode {
         val stats = mutableMapOf<String, Double>()
         val handlers = mutableListOf<SkillHandlerNode>()
+        val buffs = mutableListOf<BuffNode>()
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             val token = advance()
@@ -180,6 +181,11 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     stats[statName] = statValue
                 }
                 consume(TokenType.RIGHT_BRACE, "Expect '}' after stats")
+            } else if (token.type == TokenType.KEYWORD_BUFF) {
+                val buffId = consume(TokenType.STRING, "Expect buff id").lexeme
+                consume(TokenType.LEFT_BRACE, "Expect '{' for buff")
+                buffs.add(buff(buffId))
+                consume(TokenType.RIGHT_BRACE, "Expect '}' after buff")
             } else if (token.type == TokenType.IDENTIFIER && token.lexeme.startsWith("on_")) {
                 consume(TokenType.LEFT_BRACE, "Expect '{' for handler")
                 handlers.add(handler(token.lexeme))
@@ -190,7 +196,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 throw RuntimeException("Unknown artifact bonus field '${token.lexeme}' at line ${token.line}")
             }
         }
-        return ArtifactBonusNode(pieces, stats, handlers)
+        return ArtifactBonusNode(pieces, stats, handlers, buffs)
     }
 
     private fun stats(): StatsNode {
@@ -295,7 +301,9 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         val stats = mutableMapOf<String, Double>()
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            val field = advance().lexeme
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            val field = token.lexeme
             when (field) {
                 "translation_key" -> {
                     consume(TokenType.COLON, "Expect ':'")
@@ -312,7 +320,9 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 "stats" -> {
                     consume(TokenType.LEFT_BRACE, "Expect '{' for stats")
                     while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-                        val statName = advance().lexeme
+                        val nextStat = advance()
+                        if (nextStat.type == TokenType.SEMICOLON) continue
+                        val statName = nextStat.lexeme
                         consume(TokenType.COLON, "Expect ':'")
                         val statValue = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                         stats[statName] = statValue
@@ -333,6 +343,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
             val pairs = mutableMapOf<String, String>()
             while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
                 val token = advance()
+                if (token.type == TokenType.SEMICOLON) continue
                 val key = if (token.type == TokenType.IDENTIFIER || token.type == TokenType.STRING) {
                     token.lexeme
                 } else {
@@ -348,81 +359,78 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         return locales
     }
 
+    private fun action(eventName: String): ActionNode {
+        val name = advance().lexeme
+        if (name == "execute" && check(TokenType.LEFT_BRACE)) {
+            return ExecuteActionNode(executeBlock())
+        }
+
+        val args = mutableListOf<String>()
+        if (check(TokenType.LEFT_PAREN)) {
+            consume(TokenType.LEFT_PAREN, "Expect '('")
+            while (!check(TokenType.RIGHT_PAREN) && !isAtEnd()) {
+                val argToken = advance()
+                if (argToken.type == TokenType.STRING) args.add("\"${argToken.lexeme}\"")
+                else {
+                    var value = argToken.lexeme
+                    if (check(TokenType.IDENTIFIER) && peek().lexeme == "s") {
+                        value += advance().lexeme
+                    }
+                    args.add(value)
+                }
+                if (check(TokenType.COMMA)) advance()
+            }
+            consume(TokenType.RIGHT_PAREN, "Expect ')'")
+        }
+
+        if (check(TokenType.LEFT_BRACE)) {
+            consume(TokenType.LEFT_BRACE, "Expect '{' for block action")
+            val blockActions = mutableListOf<ActionNode>()
+            while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                blockActions.add(action(eventName))
+                if (check(TokenType.SEMICOLON)) advance()
+            }
+            consume(TokenType.RIGHT_BRACE, "Expect '}'")
+            
+            return when (name) {
+                "area_of_effect" -> {
+                    val radius = args.getOrNull(0)?.toDoubleOrNull() ?: 5.0
+                    AreaOfEffectActionNode(radius, blockActions)
+                }
+                else -> throw RuntimeException("Unsupported block action '$name' in handler '$eventName'")
+            }
+        } else {
+            return when (name) {
+                "open_skill_menu" -> {
+                    if (args.size < 2) throw RuntimeException("open_skill_menu requires at least one sub-skill and a duration")
+                    val subSkillIds = args.dropLast(1).map { it.removeSurrounding("\"") }
+                    val duration = parseTimeFromValue(args.last())
+                    OpenSkillMenuActionNode(subSkillIds, duration)
+                }
+                "close_skill_menu" -> CloseSkillMenuActionNode
+                "send_localized_message" -> {
+                     if (args.size < 2) throw RuntimeException("send_localized_message requires at least a key and a color")
+                     val key = args[0].removeSurrounding("\"")
+                     val color = args[1].removeSurrounding("\"")
+                     val callArgs = args.drop(2)
+                     SendLocalizedMessageActionNode(key, color, callArgs)
+                }
+                else -> {
+                    if (InstructionMapping.isKnown(name)) {
+                        InstructionCallNode(name, args)
+                    } else {
+                        CommandActionNode(name, args)
+                    }
+                }
+            }
+        }
+    }
+
     private fun handler(eventName: String): SkillHandlerNode {
         val actions = mutableListOf<ActionNode>()
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            val name = consume(TokenType.IDENTIFIER, "Expect action name").lexeme
-            if (check(TokenType.LEFT_PAREN)) {
-                consume(TokenType.LEFT_PAREN, "Expect '('")
-                val args = mutableListOf<String>()
-                while (!check(TokenType.RIGHT_PAREN)) {
-                    val argToken = advance()
-                    if (argToken.type == TokenType.STRING) {
-                        args.add("\"${argToken.lexeme}\"")
-                    } else {
-                        var value = argToken.lexeme
-                        if (check(TokenType.IDENTIFIER) && peek().lexeme == "s") {
-                            value += advance().lexeme
-                        }
-                        args.add(value)
-                    }
-                    if (check(TokenType.COMMA)) advance()
-                }
-                consume(TokenType.RIGHT_PAREN, "Expect ')'")
-                
-                if (check(TokenType.LEFT_BRACE)) {
-                    consume(TokenType.LEFT_BRACE, "Expect '{'")
-                    val blockActions = mutableListOf<ActionNode>()
-                    // Basic block parsing - doesn't support nested blocks well for now but enough for these actions
-                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-                        // For area_of_effect we might want specific sub-actions
-                        // For now let's just parse them as regular actions if we can recurse
-                        // Actually, let's just use CommandActionNode for internal actions too
-                        val subName = consume(TokenType.IDENTIFIER, "Expect action name").lexeme
-                        consume(TokenType.LEFT_PAREN, "Expect '('")
-                        val subArgs = mutableListOf<String>()
-                        while (!check(TokenType.RIGHT_PAREN)) {
-                            val subArgToken = advance()
-                            if (subArgToken.type == TokenType.STRING) subArgs.add("\"${subArgToken.lexeme}\"")
-                            else subArgs.add(subArgToken.lexeme)
-                            if (check(TokenType.COMMA)) advance()
-                        }
-                        consume(TokenType.RIGHT_PAREN, "Expect ')'")
-                        blockActions.add(CommandActionNode(subName, subArgs))
-                    }
-                    consume(TokenType.RIGHT_BRACE, "Expect '}'")
-                    
-                    when (name) {
-                        "area_of_effect" -> {
-                            val radius = args.getOrNull(0)?.toDoubleOrNull() ?: 5.0
-                            actions.add(AreaOfEffectActionNode(radius, blockActions))
-                        }
-                        else -> throw RuntimeException("Unsupported block action '$name' in handler '$eventName'")
-                    }
-                } else {
-                    when (name) {
-                        "open_skill_menu" -> {
-                            if (args.size < 2) throw RuntimeException("open_skill_menu requires at least one sub-skill and a duration")
-                            val subSkillIds = args.dropLast(1).map { it.removeSurrounding("\"") }
-                            val duration = parseTimeFromValue(args.last())
-                            actions.add(OpenSkillMenuActionNode(subSkillIds, duration))
-                        }
-                        "close_skill_menu" -> actions.add(CloseSkillMenuActionNode)
-                        "send_localized_message" -> {
-                             if (args.size < 2) throw RuntimeException("send_localized_message requires at least a key and a color")
-                             val key = args[0].removeSurrounding("\"")
-                             val color = args[1].removeSurrounding("\"")
-                             val callArgs = args.drop(2)
-                             actions.add(SendLocalizedMessageActionNode(key, color, callArgs))
-                        }
-                        else -> actions.add(CommandActionNode(name, args))
-                    }
-                }
-            } else if (name == "execute" && check(TokenType.LEFT_BRACE)) {
-                actions.add(ExecuteActionNode(executeBlock()))
-            } else {
-                throw RuntimeException("Unexpected token '$name' in handler '$eventName'")
-            }
+            actions.add(action(eventName))
+            if (check(TokenType.SEMICOLON)) advance()
         }
         return SkillHandlerNode(eventName, actions)
     }
@@ -431,7 +439,14 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         consume(TokenType.LEFT_BRACE, "Expect '{'")
         val statements = mutableListOf<ActionNode>()
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            statements.add(statement())
+            val name = peek().lexeme
+            // If it's a known instruction or a block action (area_of_effect, etc)
+            if (InstructionMapping.isKnown(name) || name == "area_of_effect" || name == "send_localized_message" || name == "close_skill_menu") {
+                statements.add(action("execute"))
+                if (check(TokenType.SEMICOLON)) advance()
+            } else {
+                statements.add(statement())
+            }
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}'")
         return statements

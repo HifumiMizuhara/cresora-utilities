@@ -131,7 +131,7 @@ object EquipmentContentRegistry {
                 logger.info("Loaded CAC artifact content from {}", CAC_CONTENT_RESOURCE)
             }
             .onFailure { throwable ->
-                logger.warn("Failed to load CAC artifact content from {}. If you haven't compiled .artifact files yet, this is expected.", CAC_CONTENT_RESOURCE)
+                logger.warn("Failed to load CAC artifact content from {}: {}", CAC_CONTENT_RESOURCE, throwable.message)
             }
     }
 

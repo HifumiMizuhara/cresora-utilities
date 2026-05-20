@@ -59,7 +59,7 @@ public object BokuchuMunenSkill : WeaponSkillHandler {
       WeaponSkillService.startCooldown(player, "tanboku_chokuu", 600L)
       player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_activated").formatted(Formatting.DARK_PURPLE),
           true)
-      hifumi.cresora.HotbarOverrideService.restoreHotbar(player)
+      HotbarOverrideService.restoreHotbar(player)
     }
 
 

@@ -75,7 +75,7 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
     WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    ; {
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = ColdMistCoilingSnowSkill.snowMistStates.getOrPut(player.uuid) {
         ColdMistCoilingSnowSkill.SnowMistState(0L, 0) }
@@ -84,6 +84,7 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.snow_mist.gained",
         Text.translatable("item.cresora.weapon.skill.buff.snow_mist.name"), state.stacks), true)
     }
+
     player.sendMessage(Text.translatable("item.cresora.weapon.skill.snow_frost_activated.generic").formatted(Formatting.AQUA),
         true)
 

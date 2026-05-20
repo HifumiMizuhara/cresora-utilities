@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.emi.trinkets.api.TrinketsApi
+import hifumi.cresora.equipment.ArtifactSkillRegistry
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.fabricmc.loader.api.FabricLoader
@@ -101,6 +102,7 @@ object CreSoraUtilities : ModInitializer {
 
 		EquipmentContentRegistry.init()
 		WeaponContentRegistry.init()
+		ArtifactSkillRegistry.init()
 		ArtifactSpecialItemRegistry.init()
 		registerEquipmentItems()
 		registerWeaponRarityFragmentItems()

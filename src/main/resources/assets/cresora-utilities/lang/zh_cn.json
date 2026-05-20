@@ -630,5 +630,10 @@
   "item.cresora.weapon.tanboku_chokuu.munen_activated": "第三式：墨中无念 — 无念七连击！",
   "item.cresora.weapon.tanboku_chokuu.munen_final": "终击！真实伤害：%s 心",
   "item.cresora-utilities.lossless_crown": "失色之冠",
-  "item.cresora-utilities.blood_tear": "血之泪"
+  "item.cresora-utilities.blood_tear": "血之泪",
+  "item.cresora-utilities.equipment.set.hinagata": "Hinagata",
+  "message.cresora.hinagata.curse": "已施加雏形之咒！",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.name": "Hinagata Stacks",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.gained": "获得效果: %s (%s 层)",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "效果结束: %s"
 }

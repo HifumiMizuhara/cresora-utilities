@@ -196,7 +196,7 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
     WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    ; {
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = KyokusuinoRyushoSkill.pavilionActiveStates.getOrPut(player.uuid) {
         KyokusuinoRyushoSkill.PavilionActiveState(0L, 0) }
@@ -207,6 +207,7 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
         Text.translatable("item.cresora.weapon.skill.buff.pavilion_active.name"), state.stacks),
         true)
     }
+
     player.sendMessage(Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic").formatted(Formatting.LIGHT_PURPLE),
         true)
 

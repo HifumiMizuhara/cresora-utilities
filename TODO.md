@@ -1,37 +1,37 @@
 ## Artifact Compiler (CAC) ブラッシュアップ
-- [ ] `ArtifactSkillHandler` を拡張し、より複雑な跨ぎターン状態保持（CWC の transient state と同様）をサポート。
-- [ ] CAC に `add_buff` などの組み込み命令を更に追加。
-- [ ] 実際のゲーム内での聖遺物セット効果の動作検証。
+- [x] `ArtifactSkillHandler` を拡張し、より複雑な跨ぎターン状態保持（CWC の transient state と同様）をサポート。 (Completed 2026-05-20)
+- [x] CAC に `add_buff` などの組み込み命令を追加。 (Completed 2026-05-20)
+- [ ] 実際のゲーム内での聖遺物セット効果の動作検証（runClient での目視確認）。
 
-## CWC & System Polish
-- [ ] Improve `execute` block Kotlin syntax highlighting support in IDEs (low priority).
+## CWC とシステムのブラッシュアップ
+- [ ] IDE での `execute` ブロックの Kotlin 構文ハイライト表示の改善（低優先度）。
 
-## Compiler Improvements
-- [x] Add automatic `import` detection or simplified import DSL to avoid long qualified names in `execute` blocks. (Completed 2026-05-18)
-- [ ] Replace remaining raw `execute` string passthroughs with typed AST nodes for safer code generation.
-- [ ] Add parser tests for malformed `.cresora` files and `area_of_effect` blocks.
+## コンパイラの改善
+- [x] `execute` ブロック内で完全修飾名を使用する代わりに、シンプルなクラス名で記述できるようにするための自動 `import` 検出またはインポート用の簡易 DSL の追加。 (Completed 2026-05-18)
+- [ ] より安全なコード生成のため、残りの raw `execute` 文字列パススルーを型付き AST ノードに置き換える。
+- [ ] 不正な形式の `.cresora` ファイルや `area_of_effect` ブロックに対するパーサーテストを追加する。
  
-## Runtime Hardening Follow-up
-- [x] Harden active weapon-skill scope so non-held weapon handlers cannot bleed stats or carry buffs during weapon swap (Completed 2026-05-18).
-- [x] Fix P2: Clear WeaponSkillService-level transient stats (e.g. `taoStacks`) on weapon swap (Completed 2026-05-18).
-- [x] Fix P2: Auto-resolve and bind held weapon ID to dynamic shields in `grantShield` if omitted, ensuring dynamic shields clear reliably on weapon swap (Completed 2026-05-18).
-- [ ] Add regression tests for weapon-skill scope so non-held weapon handlers cannot bleed into unrelated attribute calculations.
-- [x] Integrate transient combat state cleanup and pruning across CWC-generated skills and WeaponSkillService (Completed 2026-05-18).
-- [ ] Add disconnect/reconnect coverage for debuffs and Masquerade respawn.
-- [ ] Add regression coverage for equipment mob loot injection and treasure chest reconnect scheduling.
-- [ ] Add invalid-content tests for unsupported equipment `effectHooks` and malformed resonance pools.
+## ランタイムの堅牢化のフォローアップ
+- [x] アクティブな武器スキルのスコープを堅牢化し、武器切り替え時に非手持ちの武器ハンドラーがステータスをリークしたり、バフを持ち越したりしないように修正。 (Completed 2026-05-18)
+- [x] P2バグ修正: 武器の切り替え時に `WeaponSkillService` レベルの過渡的なステータス（例: `taoStacks`）をクリアするように修正。 (Completed 2026-05-18)
+- [x] P2バグ修正: `grantShield` において、手持ち武器の ID 指定が省略された場合に動的シールドを自動バインドさせ、武器の切り替え時に動的シールドが確実にクリアされるように修正。 (Completed 2026-05-18)
+- [ ] 非手持ちの武器ハンドラーが関連のない属性計算に影響を与えないようにするため、武器スキルのスコープに関する回帰テストを追加する。
+- [x] CWC が生成したスキルと `WeaponSkillService` 全体で、過渡的な戦闘ステータスのクリーンアップと刈り込み処理を統合。 (Completed 2026-05-18)
+- [ ] デバフおよび masquerade によるリスキル防止処理の切断/再接続テストの追加。
+- [ ] モブによる装備ドロップ注入および宝箱の再接続スケジュール処理に対する回帰テストを追加。
+- [ ] 未サポートの装備 `effectHooks` や、不正な形式の共鳴プールに対するエラー処理テストを追加。
 
-## Resonance Hunt (共鳴探索) Follow-up
-- [x] Add `resonant_locator` (共鳴探索コンパス) to the CreSora Shop (`shop_content.json`) so players can purchase it with CSC. (Completed 2026-05-19)
-- [ ] Configure `resonant_locator` as a guaranteed reward in specific Domain Stages or daily exploration logs.
+## Resonance Hunt (共鳴探索) フォローアップ
+- [x] プレイヤーが CSC で購入できるように、共鳴探索コンパス (`resonant_locator`) を CreSora ショップ (`shop_content.json`) に追加。 (Completed 2026-05-19)
+- [ ] 特定の秘境ステージ (Domain Stages) または毎日の探索ログの確定報酬として `resonant_locator` を設定。
 
-## New Content
-- [ ] Define detailed effects for special moon phases: Solar Eclipse, Lunar Eclipse, Death Moon, and Unknown.
-- [ ] Replace Blood Moon placeholder rewards with final implementations for `血色音符`, `失色之冠`, and `血之泪`.
-- [ ] Add dedicated visual texture assets for `moon_brick` and `moon_altar` (currently uses vanilla placeholder textures/models).
-- [x] Add persistence for in-progress Blood Moon battles if sessions need to survive server restart. (Wave state, mob tracking, and timers are now implemented.)
-- [ ] Add dedicated regression or machine-test coverage for Blood Moon wave spawning, bed protection, reward chest ownership, and natural-spawn pressure.
-- [ ] Transition generated skills (BokuchuMunen) from direct health modification to true damage sources.
-- [ ] Refactor legacy CommandActionNode AOE parsing to structural AreaOfEffectActionNode.
-- [ ] Persist originalBedStates in BloodMoonService for perfect recovery.
-- [ ] Explicitly initialize ArtifactSkillRegistry in CreSoraUtilities.onInitialize.
+## 新規コンテンツ
+- [ ] 特定の月相（日食、月食、デスムーン、未知）の特殊効果を詳細に定義。
+- [ ] ブラッドムーンの暫定報酬を、最終的な実装である `血色音符`、`失色之冠`、`血之泪` に置き換える。
+- [ ] `moon_brick` と `moon_altar` の専用テクスチャアセットを追加（現在はバニラの暫定テクスチャ/モデルを使用）。
+- [x] サーバー再起動時にブラッドムーンの戦闘状況（ウェーブ状態、モブ追跡、タイマーなど）を維持できるように、進行中の状態を永続化保存。 (Completed 2026-05-20)
+- [ ] ブラッドムーンのウェーブスポーン、ベッド保護、報酬チェストの所有権、自然スポーン圧力に関する専用の回帰または実機テストを追加。
+- [ ] 生成されるスキル（BokuchuMunen）を直接的な体力回復から、真ダメージ源に変更。
+- [ ] 既存の古い CommandActionNode AOE 解析ロジックを、構造的な AreaOfEffectActionNode にリファクタリング。
+- [ ] 完全な復旧のために `BloodMoonService` に `originalBedStates` を永続化保存。
+- [x] `CreSoraUtilities.onInitialize` で `ArtifactSkillRegistry` を明示的に初期化。 (Completed 2026-05-20)

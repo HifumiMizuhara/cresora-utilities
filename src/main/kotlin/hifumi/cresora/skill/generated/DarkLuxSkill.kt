@@ -39,7 +39,7 @@ public object DarkLuxSkill : WeaponSkillHandler {
         player.boundingBox.expand(5.0.toDouble())).forEach { target ->
         if (target != player) {
             // area_of_effect block
-    WeaponSkillService.applyMark(target, "lux", 30.toLong() * 20L)
+    // Unsupported nested AOE action: InstructionCallNode
         }
     }
 

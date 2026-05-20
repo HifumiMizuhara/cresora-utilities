@@ -36,10 +36,10 @@ public object ZansouSkill : WeaponSkillHandler {
       player.damage(player.world, player.damageSources.magic(), cost)
     }
 
-    WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
+    WeaponSkillService.startCooldown(player, definition.id, 600L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    ; {
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = QianqiuYeluoSkill.passiveStateStates.getOrPut(player.uuid) {
         QianqiuYeluoSkill.PassiveStateState(0L, 0) }
@@ -48,7 +48,8 @@ public object ZansouSkill : WeaponSkillHandler {
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.passive_state.gained",
         Text.translatable("item.cresora.weapon.skill.buff.passive_state.name"), state.stacks), true)
     }
-    ; {
+
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = QianqiuYeluoSkill.zansouModeStates.getOrPut(player.uuid) {
         QianqiuYeluoSkill.ZansouModeState(0L, 0) }
@@ -57,6 +58,7 @@ public object ZansouSkill : WeaponSkillHandler {
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.zansou_mode.gained",
         Text.translatable("item.cresora.weapon.skill.buff.zansou_mode.name"), state.stacks), true)
     }
+
 
     ; run execute@ {
       val jt = QianqiuYeluoSkill.jingtianStateStates.get(player.uuid)

@@ -30,10 +30,10 @@ public object DanraiSkill : WeaponSkillHandler {
     `data`: WeaponData,
     access: WeaponSkillAccess,
   ): ActionResult {
-    WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
+    WeaponSkillService.startCooldown(player, definition.id, 680L)
     WeaponSkillService.showCooldownBar(player, definition)
 
-    ; {
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = QianqiuYeluoSkill.passiveStateStates.getOrPut(player.uuid) {
         QianqiuYeluoSkill.PassiveStateState(0L, 0) }
@@ -42,7 +42,8 @@ public object DanraiSkill : WeaponSkillHandler {
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.passive_state.gained",
         Text.translatable("item.cresora.weapon.skill.buff.passive_state.name"), state.stacks), true)
     }
-    ; {
+
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = QianqiuYeluoSkill.jingtianStateStates.getOrPut(player.uuid) {
         QianqiuYeluoSkill.JingtianStateState(0L, 0) }
@@ -52,6 +53,7 @@ public object DanraiSkill : WeaponSkillHandler {
         Text.translatable("item.cresora.weapon.skill.buff.jingtian_state.name"), state.stacks),
         true)
     }
+
     HotbarOverrideService.restoreHotbar(player)
 
     player.sendMessage(Text.translatable("item.cresora.weapon.qianqiu_yeluo.danrai_activated").formatted(Formatting.YELLOW),

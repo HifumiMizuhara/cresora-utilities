@@ -175,7 +175,7 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
     `data`: WeaponData,
     access: WeaponSkillAccess,
   ): ActionResult {
-    ; {
+    run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = QianqiuYeluoSkill.qiucanStackStates.getOrPut(player.uuid) {
         QianqiuYeluoSkill.QiucanStackState(0L, 0) }
@@ -184,6 +184,7 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.qiucan_stack.gained",
         Text.translatable("item.cresora.weapon.skill.buff.qiucan_stack.name"), state.stacks), true)
     }
+
     HotbarOverrideService.overrideHotbar(player, definition.id, listOf("danrai", "zansou",
         "yoraku_manchisho"), 60)
 

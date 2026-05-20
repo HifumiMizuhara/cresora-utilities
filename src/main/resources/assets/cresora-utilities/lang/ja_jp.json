@@ -378,5 +378,10 @@
   "item.cresora.weapon.skill.buff.snow_mist.gained": "効果獲得: %s (%s 層)",
   "item.cresora.weapon.skill.buff.snow_mist.expired": "効果終了: %s",
   "item.cresora.weapon.skill.snow_frost_activated.generic": "雪氷の舞 起動！",
-  "item.cresora-utilities.lakeside_stride.skill": "湖畔の歩み"
+  "item.cresora-utilities.lakeside_stride.skill": "湖畔の歩み",
+  "item.cresora-utilities.equipment.set.hinagata": "Hinagata",
+  "message.cresora.hinagata.curse": "雛形の呪いを付与しました！",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.name": "Hinagata Stacks",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.gained": "効果獲得: %s (%s 層)",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "効果終了: %s"
 }

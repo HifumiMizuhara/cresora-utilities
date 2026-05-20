@@ -9,7 +9,7 @@
           "requiredPieces": 2,
           "stats": [
             {
-              "type": "ATK_PERCENT",
+              "type": "atk_percent",
               "value": 18.0
             }
           ],
@@ -19,11 +19,11 @@
           "requiredPieces": 4,
           "stats": [
             {
-              "type": "ATK_PERCENT",
+              "type": "atk_percent",
               "value": 20.0
             },
             {
-              "type": "CRIT_DMG",
+              "type": "crit_dmg",
               "value": 20.0
             }
           ],

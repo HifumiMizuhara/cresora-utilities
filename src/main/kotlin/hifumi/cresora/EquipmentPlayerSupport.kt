@@ -1,7 +1,9 @@
 package hifumi.cresora
 
 import dev.emi.trinkets.api.TrinketsApi
+import hifumi.cresora.equipment.ArtifactSkillRegistry
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.server.network.ServerPlayerEntity
 import java.util.EnumMap
 
 object EquipmentPlayerSupport {
@@ -55,12 +57,34 @@ object EquipmentPlayerSupport {
             for (bonus in activeSetBonus.bonus.stats) {
                 totals[bonus.type] = (totals[bonus.type] ?: 0.0) + bonus.value
             }
+            if (player is ServerPlayerEntity) {
+                for (hook in activeSetBonus.bonus.effectHooks) {
+                    val handler = ArtifactSkillRegistry.getHandler(hook.effectId) ?: continue
+                    val atkScalar = handler.getAttackDamageScalar(player)
+                    if (atkScalar != 0.0) {
+                        totals[StatType.ATK_PERCENT] = (totals[StatType.ATK_PERCENT] ?: 0.0) + atkScalar
+                    }
+                    val armorScalar = handler.getArmorScalar(player)
+                    if (armorScalar != 0.0) {
+                        totals[StatType.DEF_PERCENT] = (totals[StatType.DEF_PERCENT] ?: 0.0) + armorScalar
+                    }
+                    val critRate = handler.getCritRateBonus(player)
+                    if (critRate != 0.0) {
+                        totals[StatType.CRIT_RATE] = (totals[StatType.CRIT_RATE] ?: 0.0) + critRate
+                    }
+                    val critDmg = handler.getCritDamageBonus(player)
+                    if (critDmg != 0.0) {
+                        totals[StatType.CRIT_DMG] = (totals[StatType.CRIT_DMG] ?: 0.0) + critDmg
+                    }
+                }
+            }
         }
         for ((type, value) in MasqueradeService.getAggregatedSupportStats(player)) {
             totals[type] = (totals[type] ?: 0.0) + value
         }
         return totals
     }
+
 
     private fun getActiveSetBonuses(equippedData: List<EquipmentData>): List<ActiveSetBonus> {
         val setCounts = equippedData.groupingBy(EquipmentData::setId).eachCount()

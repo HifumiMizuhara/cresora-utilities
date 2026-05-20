@@ -641,5 +641,10 @@
   "item.cresora-utilities.sub_skill.bokuchu_munen": "Third Style: Munen",
   "message.cresora.hotbar_overridden": "Skill loadout open! Select a sub skill using hotbar keys.",
   "item.cresora-utilities.lossless_crown": "Lossless Crown",
-  "item.cresora-utilities.blood_tear": "Blood Tear"
+  "item.cresora-utilities.blood_tear": "Blood Tear",
+  "item.cresora-utilities.equipment.set.hinagata": "Hinagata",
+  "message.cresora.hinagata.curse": "Applied Hinagata curse!",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.name": "Hinagata Stacks",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.gained": "Gained effect: %s (%s stacks)",
+  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "Effect expired: %s"
 }

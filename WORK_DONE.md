@@ -1,11 +1,39 @@
 # WORK_DONE
 
+## コードレビューからのバグ修正 (2026-05-20)
+- [x] `CresoraCompiler` と `ArtifactCompiler` の両方で、問題のあった `; { ... }` デッドコードラムダの生成バグを修正し、`run { ... }` に置き換えました。
+- [x] 聖遺物からの過渡的なスカラーおよびボーナスステータスを完全に統合しました：
+    - `ArtifactSkillHandler` インターフェースを更新し、スカラーのオーバーライドを追加 (`getAttackDamageScalar`, `getArmorScalar`, `getCritRateBonus`, `getCritDamageBonus`)。
+    - `ArtifactSkillRegistry` のリフレクションの例外処理ブロックにロジックエラーのログ出力を追加。
+    - `EquipmentPlayerSupport.getAggregatedStats()` を更新し、有効な聖遺物スキルハンドラーを照会して、過渡的なステータスを属性や戦闘処理に動的に反映するように修正。
+- [x] `camelCase` 識別子変換の標準化：
+    - 重複する変換ロジックを置き換えるため、`CresoraCompiler` と `ArtifactCompiler` の両方で共通のヘルパー関数 `camelCase()` を抽出。
+    - 生成されるクラス名の命名規則を PascalCase に標準化 (例: `ArtifactSkillHinagata4pcOnAttackDealt`)。
+- [x] `ArtifactCompiler` におけるローカライズ自動生成の拡張：
+    - コンパイル時にバフ名、獲得メッセージ、失効メッセージの翻訳キーを自動生成。
+    - 出力される翻訳 JSON ファイルの末尾に改行を追加することで POSIX 互換性を確保。
+- [x] `InstructionMapping.kt` をリファクタリングし、`start_cooldown` に対する重複したチェックを整理し、`expanded` を読み取り専用の `val` に変更。
+- [x] コンパイラおよび命令マッピングにおけるコードレビューの課題 (S-1, S-2, S-3) を修正：
+    - `CresoraCompiler.kt` の `InstructionCallNode` 処理で `start_cooldown` をインターセプトし、冷却時間を正しく計算（`30s` などの時間リテラルを `* 20L` でティックに変換）し、不足していた `showCooldownBar(player, definition)` の呼び出しを復元。
+    - `CresoraCompiler.kt` と `ArtifactCompiler.kt` の両方で `send_message` 指令をインターセプトし、カラー引数が指定されている場合に装飾用の `Formatting.<COLOR>` を使用してメッセージをフォーマットするように修正。これにより色のフォーマットデグレードを解決。
+    - `InstructionMapping.kt` をリファクタリングし、曖昧さを避けるために文字列のコンテキストを型安全な `CompilerContext` 列挙型に変更。
+
+
+
 ## Artifact Compiler (CAC) & CWC Refactoring (2026-05-20)
 - [x] 聖遺物コンパイラ (Artifact Compiler - CAC) を実装。`.artifact` ファイルから JSON と Kotlin Hook クラスの生成をサポート。
 - [x] 聖遺物ランタイム Hook システムをリファクタリング。`EquipmentEffectHookService` を導入し、型安全なコンテキスト受け渡しをサポート。
 - [x] コンパイラ (CWC/CAC) の DSL 構文を強化。C-style のセミコロン終端や `log()`, `apply_mark()` などの組み込み命令をサポート。
 - [x] コンパイラの raw Kotlin コードブロック解析ロジックを修正。生ソースコード抽出 (Raw Source Extraction) により、空白や特殊記号による構文エラーを完全に解決。
 - [x] Lexer に Kotlin の数値接尾辞 (`L`, `f`, `d`) のサポートを追加。
+- [x] **CWC/CAC バフシステムの完全実装**:
+    - `.artifact` DSL に `buff` ブロックを追加。持続時間、最大スタック数、stats（属性加算）の定義をサポート。
+    - `add_buff` 命令を CWC/CAC 共通の intrinsic 指令として統合。武器スキルと聖遺物スキルの両方で共通のバフ付与ロジックを生成。
+    - 瞬態状態管理（Transient State Management）の自動生成を強化。各バフごとに `expireTick` と `stacks` を保持する `State` クラスと `MutableMap` を自動生成し、`onTick` での期限切れ自動削除ロジックを実装。
+    - サブスキルからのメインスキル状態へのアクセスを、クラス名修飾を介して型安全にサポート。
+    - 生成された聖遺物スキルを `ArtifactSkillRegistry` に明示的に登録する `ArtifactSkillRegistry.init()` を `CreSoraUtilities` に追加。
+    - 聖遺物の `stats` 解析における `StatType` のシリアライズ（小文字変換）を修正し、ランタイムでのロードエラーを解消。
+    - サーバー起動テストを実施し、CAC コンテンツの正常なロードと初期化フローを確認。
 
 
 ## Real-Device Gameplay Smoke Test (2026-05-19)

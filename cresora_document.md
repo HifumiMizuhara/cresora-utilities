@@ -11,9 +11,15 @@
   - **Kotlin**: `src/main/kotlin/hifumi/cresora/equipment/generated/` に `ArtifactSkill_...` クラスを生成。これらは `ArtifactSkillHandler` を実装し、セット効果を処理する。
   - **Registry**: `CompiledArtifactRegistry` を自動生成し、`ArtifactSkillRegistry` に全ハンドラーを一括登録。
 
-### 2. 聖遺物ランタイム Hook システム (EquipmentEffectHookService)
+### 2. 聖遺物ランタイム Hook システム (EquipmentEffectHookService) & 属性ステータス統合
 - **仕組み**: 従来の汎用的な `dispatch` 方式を廃止し、特定のトリガー（`onAttackDealt`, `onDamageTaken` 等）に対して型安全かつコンテキスト（`target`, `damage` 等）を保持した直接呼び出し方式へ移行。
 - **インターフェース**: `ArtifactSkillHandler` に定義されたメソッドを各セットがオーバーライドしてロジックを実装。
+  - バフなどの transient 状態からプレイヤーに動的なステータス補正を付与するため、以下のメソッドを追加：
+    - `getAttackDamageScalar(player)`: 攻撃力倍率補正
+    - `getArmorScalar(player)`: 防御力倍率補正
+    - `getCritRateBonus(player)`: 会心率補正 (単位: ％)
+    - `getCritDamageBonus(player)`: 会心ダメージ補正 (単位: ％)
+- **属性統合**: `EquipmentPlayerSupport.getAggregatedStats()` がこれらの動的補正値を active な聖遺物セットのハンドラーから自動的に集計し、プレイヤー属性 (`maxHealth`, `attackDamage`, `armor`) や `CombatStatSupport` (会心率/会心ダメージ) にシームレスに統合。
 
 ### 3. コンパイラ DSL 強化と安定化 (CWC/CAC 共通)
 - **C-Style 構文のサポート**: DSL 内の各ステートメントにおいて、末尾のセミコロン (`;`) をオプションで許容。

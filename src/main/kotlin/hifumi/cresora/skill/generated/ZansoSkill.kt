@@ -48,7 +48,7 @@ public object ZansoSkill : WeaponSkillHandler {
       WeaponSkillService.startCooldown(player, "tanboku_chokuu", 300L)
       player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.zanso_activated").formatted(Formatting.AQUA),
           true)
-      hifumi.cresora.HotbarOverrideService.restoreHotbar(player)
+      HotbarOverrideService.restoreHotbar(player)
     }
 
 
