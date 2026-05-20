@@ -36,14 +36,13 @@ public object RondoMelodySkill : WeaponSkillHandler {
 
 
     ; run execute@ {
-      val value = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data);
-                      hifumi.cresora.WeaponSkillService.grantShield(player, value,
-          definition.skill.durationSeconds * 20L);
-                     
-          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.activated",
+      val value = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data)
+      hifumi.cresora.WeaponSkillService.grantShield(player, value, definition.skill.durationSeconds
+          * 20L)
+      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.activated",
           net.minecraft.text.Text.translatable(definition.translationKey()),
           hifumi.cresora.WeaponSkillService.formatNumber(value /
-          2.0)).formatted(net.minecraft.util.Formatting.AQUA), true);
+          2.0)).formatted(net.minecraft.util.Formatting.AQUA), true)
     }
 
 
@@ -70,30 +69,30 @@ public object RondoMelodySkill : WeaponSkillHandler {
   ): Float {
 
     ; return run execute@ {
-    hifumi.cresora.WeaponSkillService.clearExpiredShield(player);
-                     val remainingShield = (player as
-        hifumi.cresora.WeaponSkillAccess).cresoraGetShieldHp();
-                     if (remainingShield > 0.0f) {
-                         var remainingAmount = amount;
-                         if (remainingAmount <= remainingShield) {
-                             (player as
-        hifumi.cresora.WeaponSkillAccess).cresoraSetShieldHp(remainingShield - remainingAmount);
-                             if ((player as hifumi.cresora.WeaponSkillAccess).cresoraGetShieldHp()
-        <= 0.0f) hifumi.cresora.WeaponSkillService.clearShield(player);
+    hifumi.cresora.WeaponSkillService.clearExpiredShield(player)
+    val remainingShield = (player as hifumi.cresora.WeaponSkillAccess).cresoraGetShieldHp()
+    if (remainingShield > 0.0f) {
+                             var remainingAmount = amount;
+                             if (remainingAmount <= remainingShield) {
+                                 (player as
+            hifumi.cresora.WeaponSkillAccess).cresoraSetShieldHp(remainingShield - remainingAmount);
+                                 if ((player as
+            hifumi.cresora.WeaponSkillAccess).cresoraGetShieldHp() <= 0.0f)
+            hifumi.cresora.WeaponSkillService.clearShield(player);
+                                
+            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.blocked",
+            hifumi.cresora.WeaponSkillService.formatNumber(remainingAmount /
+            2.0.toDouble())).formatted(net.minecraft.util.Formatting.AQUA), true);
+                                 return@execute 0.0f;
+                             }
+                             (player as hifumi.cresora.WeaponSkillAccess).cresoraSetShieldHp(0.0f);
+                             hifumi.cresora.WeaponSkillService.clearShield(player);
                             
-        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.blocked",
-        hifumi.cresora.WeaponSkillService.formatNumber(remainingAmount /
-        2.0.toDouble())).formatted(net.minecraft.util.Formatting.AQUA), true);
-                             return@execute 0.0f;
+            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.broken").formatted(net.minecraft.util.Formatting.RED),
+            true);
+                             return@execute remainingAmount - remainingShield;
                          }
-                         (player as hifumi.cresora.WeaponSkillAccess).cresoraSetShieldHp(0.0f);
-                         hifumi.cresora.WeaponSkillService.clearShield(player);
-                        
-        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.broken").formatted(net.minecraft.util.Formatting.RED),
-        true);
-                         return@execute remainingAmount - remainingShield;
-                     }
-                     return@execute amount;
+                         return@execute amount
     amount
     }
 

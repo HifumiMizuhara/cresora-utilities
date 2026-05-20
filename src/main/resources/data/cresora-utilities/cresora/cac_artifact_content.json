@@ -1,0 +1,44 @@
+{
+  "slots": [],
+  "sets": [
+    {
+      "id": "hinagata",
+      "translationKey": "item.cresora-utilities.equipment.set.hinagata",
+      "bonuses": [
+        {
+          "requiredPieces": 2,
+          "stats": [
+            {
+              "type": "ATK_PERCENT",
+              "value": 18.0
+            }
+          ],
+          "effectHooks": []
+        },
+        {
+          "requiredPieces": 4,
+          "stats": [
+            {
+              "type": "ATK_PERCENT",
+              "value": 20.0
+            },
+            {
+              "type": "CRIT_DMG",
+              "value": 20.0
+            }
+          ],
+          "effectHooks": [
+            {
+              "trigger": "attack_dealt",
+              "effectId": "hinagata_4pc_on_attack_dealt",
+              "parameters": {}
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "equipmentDefinitions": [],
+  "dropProfiles": [],
+  "mobLoot": []
+}

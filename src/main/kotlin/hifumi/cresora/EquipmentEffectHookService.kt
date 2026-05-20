@@ -4,46 +4,65 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
+import hifumi.cresora.equipment.ArtifactSkillRegistry
 
 object EquipmentEffectHookService {
 
     fun onEquipChanged(player: ServerPlayerEntity) {
-        dispatch(player, EquipmentEffectTrigger.EQUIP_CHANGED)
+        for (activeSetBonus in EquipmentPlayerSupport.getActiveSetBonuses(player)) {
+            for (hook in activeSetBonus.bonus.effectHooks) {
+                if (hook.trigger == EquipmentEffectTrigger.EQUIP_CHANGED) {
+                    ArtifactSkillRegistry.getHandler(hook.effectId)?.onEquipChanged(player)
+                }
+            }
+        }
     }
 
     fun onTick(player: ServerPlayerEntity) {
-        dispatch(player, EquipmentEffectTrigger.TICK)
+        for (activeSetBonus in EquipmentPlayerSupport.getActiveSetBonuses(player)) {
+            for (hook in activeSetBonus.bonus.effectHooks) {
+                if (hook.trigger == EquipmentEffectTrigger.TICK) {
+                    ArtifactSkillRegistry.getHandler(hook.effectId)?.onTick(player)
+                }
+            }
+        }
     }
 
     fun onAttackDealt(player: PlayerEntity, target: LivingEntity, damage: Double) {
         if (damage <= 0.0 || player !is ServerPlayerEntity) {
             return
         }
-        dispatch(player, EquipmentEffectTrigger.ATTACK_DEALT)
+        for (activeSetBonus in EquipmentPlayerSupport.getActiveSetBonuses(player)) {
+            for (hook in activeSetBonus.bonus.effectHooks) {
+                if (hook.trigger == EquipmentEffectTrigger.ATTACK_DEALT) {
+                    ArtifactSkillRegistry.getHandler(hook.effectId)?.onAttackDealt(player, target, damage)
+                }
+            }
+        }
     }
 
     fun onDamageTaken(player: PlayerEntity, source: DamageSource, damage: Double) {
         if (damage <= 0.0 || player !is ServerPlayerEntity) {
             return
         }
-        dispatch(player, EquipmentEffectTrigger.DAMAGE_TAKEN)
-    }
-
-    fun onKill(player: ServerPlayerEntity, target: LivingEntity) {
-        dispatch(player, EquipmentEffectTrigger.KILL)
-    }
-
-    private fun dispatch(player: ServerPlayerEntity, trigger: EquipmentEffectTrigger) {
         for (activeSetBonus in EquipmentPlayerSupport.getActiveSetBonuses(player)) {
             for (hook in activeSetBonus.bonus.effectHooks) {
-                if (hook.trigger != trigger) {
-                    continue
+                if (hook.trigger == EquipmentEffectTrigger.DAMAGE_TAKEN) {
+                    ArtifactSkillRegistry.getHandler(hook.effectId)?.onDamageTaken(player, source, damage)
                 }
-                throw IllegalStateException(
-                    "Unsupported equipment effect hook '${hook.effectId}' was loaded for trigger '${hook.trigger.id}'. " +
-                        "Reject unsupported hooks during content load instead of ignoring them at runtime."
-                )
             }
         }
     }
+
+    fun onKill(player: ServerPlayerEntity, target: LivingEntity) {
+        for (activeSetBonus in EquipmentPlayerSupport.getActiveSetBonuses(player)) {
+            for (hook in activeSetBonus.bonus.effectHooks) {
+                if (hook.trigger == EquipmentEffectTrigger.KILL) {
+                    ArtifactSkillRegistry.getHandler(hook.effectId)?.onKill(player, target)
+                }
+            }
+        }
+    }
+
+    // dispatch function removed in favor of explicit calls for type safety
 }

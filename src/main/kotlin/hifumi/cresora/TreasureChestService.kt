@@ -2,10 +2,12 @@ package hifumi.cresora
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
+import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemStack
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
@@ -20,6 +22,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Heightmap
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryKey
@@ -32,12 +35,10 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 object TreasureChestService {
-    private const val INITIAL_DELAY_TICKS = 20L * 45L
-    private const val RESPAWN_DELAY_TICKS = 20L * 75L
     private const val MAX_ACTIVE_CHESTS_PER_PLAYER = 5
-    private const val MIN_RADIUS = 7
-    private const val MAX_RADIUS = 15
-    private const val SPAWN_ATTEMPTS = 24
+    private const val MIN_RADIUS = 10
+    private const val MAX_RADIUS = 25
+    private const val SPAWN_ATTEMPTS = 32
 
     private data class ChestReward(
         val stars: Int,
@@ -56,18 +57,19 @@ object TreasureChestService {
     private data class ActiveChest(
         val ownerId: UUID,
         val key: ChestKey,
-        val reward: ChestReward
+        val reward: ChestReward,
+        val expireTime: Long
     )
 
+    // Using our custom block for all chests to completely prevent conflict with vanilla player chests
     private val rewards = listOf(
-        ChestReward(3, 400, 100, 70, Blocks.CHEST, ParticleTypes.HAPPY_VILLAGER),
-        ChestReward(4, 1_000, 125, 22, Blocks.TRAPPED_CHEST, ParticleTypes.ENCHANT),
-        ChestReward(5, 1_500, 150, 8, Blocks.ENDER_CHEST, ParticleTypes.END_ROD)
+        ChestReward(3, 400, 100, 70, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.HAPPY_VILLAGER),
+        ChestReward(4, 1_000, 125, 22, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.ENCHANT),
+        ChestReward(5, 1_500, 150, 8, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.END_ROD)
     )
 
     private val activeKeysByOwner: MutableMap<UUID, MutableSet<ChestKey>> = linkedMapOf()
     private val activeByKey: MutableMap<ChestKey, ActiveChest> = linkedMapOf()
-    private val nextSpawnTickByPlayer: MutableMap<UUID, Long> = linkedMapOf()
     private var persistentState: TreasureChestPersistentState? = null
     private var stateLoaded: Boolean = false
 
@@ -79,15 +81,16 @@ object TreasureChestService {
         UseBlockCallback.EVENT.register(UseBlockCallback { player, world, hand, hitResult ->
             onUseBlock(player, world, hand, hitResult)
         })
+
+        UseItemCallback.EVENT.register(UseItemCallback { player, world, hand ->
+            onUseItem(player, world, hand)
+        })
     }
 
     private fun tick(server: MinecraftServer) {
         ensureStateLoaded(server)
         val now = server.overworld.time
         cleanup(server)
-        for (player in server.playerManager.playerList) {
-            maybeSpawnFor(player, now)
-        }
         if (now % 20L == 0L) {
             emitParticles(server)
         }
@@ -95,20 +98,39 @@ object TreasureChestService {
 
     private fun cleanup(server: MinecraftServer) {
         val iterator = activeByKey.values.iterator()
+        val toRemove = mutableListOf<ActiveChest>()
+        val now = server.overworld.time
+
         while (iterator.hasNext()) {
             val chest = iterator.next()
             val world = server.getWorld(chest.key.worldKey)
-            val shouldRemove = world == null || (isChunkLoaded(world, chest.key.pos) && !isOurChestBlock(world.getBlockState(chest.key.pos).block))
-            if (!shouldRemove) {
-                continue
+            val isExpired = chest.expireTime != 0L && now >= chest.expireTime
+            val shouldRemove = world == null || isExpired || (isChunkLoaded(world, chest.key.pos) && !isOurChestBlock(world.getBlockState(chest.key.pos).block))
+            if (shouldRemove) {
+                iterator.remove() // Safely remove from activeByKey using iterator
+                toRemove.add(chest)
             }
-            iterator.remove()
+        }
+
+        // Safely unregister and clear block outside of the activeByKey iterator loop to prevent ConcurrentModificationException
+        for (chest in toRemove) {
+            val world = server.getWorld(chest.key.worldKey)
+            if (world != null) {
+                // If it expired, only remove the chest block from the world if the chunk is currently loaded.
+                // This prevents remote force-loading of chunks (needless chunk I/O) in the hot tick loop.
+                if (isChunkLoaded(world, chest.key.pos)) {
+                    val state = world.getBlockState(chest.key.pos)
+                    if (isOurChestBlock(state.block)) {
+                        world.setBlockState(chest.key.pos, Blocks.AIR.defaultState)
+                    }
+                }
+            }
             unregisterChest(chest)
         }
     }
 
     fun clearTransientState(player: ServerPlayerEntity) {
-        nextSpawnTickByPlayer.remove(player.uuid)
+        // Passive timer is deleted, this remains as a registry cleanup placeholder if needed
     }
 
     private fun emitParticles(server: MinecraftServer) {
@@ -134,39 +156,72 @@ object TreasureChestService {
         }
     }
 
-    private fun maybeSpawnFor(player: ServerPlayerEntity, now: Long) {
-        if (activeChestCount(player.uuid) >= MAX_ACTIVE_CHESTS_PER_PLAYER) {
-            return
+    private fun onUseItem(player: PlayerEntity, world: World, hand: Hand): ActionResult {
+        val stack = player.getStackInHand(hand)
+        if (world.isClient || stack.item != CreSoraUtilities.RESONANT_LOCATOR_ITEM) {
+            return ActionResult.PASS
         }
-        val playerWorld = player.world as ServerWorld
+
+        val serverPlayer = player as? ServerPlayerEntity ?: return ActionResult.PASS
+        val server = serverPlayer.server ?: return ActionResult.PASS
+        ensureStateLoaded(server)
+
+        if (serverPlayer.itemCooldownManager.isCoolingDown(stack)) {
+            return ActionResult.FAIL
+        }
+
+        val playerWorld = serverPlayer.world as ServerWorld
         if (playerWorld.registryKey == ArenaManager.DOMAIN_WORLD_KEY) {
-            return
+            serverPlayer.sendMessage(Text.translatable("message.cresora.treasure_chest.cannot_use_here").formatted(Formatting.RED), true)
+            return ActionResult.FAIL
         }
-        val nextAllowed = nextSpawnTickByPlayer[player.uuid]
-        if (nextAllowed == null) {
-            nextSpawnTickByPlayer[player.uuid] = now + INITIAL_DELAY_TICKS
-            return
+
+        if (activeChestCount(serverPlayer.uuid) >= MAX_ACTIVE_CHESTS_PER_PLAYER) {
+            serverPlayer.sendMessage(Text.translatable("message.cresora.treasure_chest.too_many").formatted(Formatting.RED), true)
+            return ActionResult.FAIL
         }
-        if (now < nextAllowed) {
-            return
+
+        val pos = findSpawnPosition(playerWorld, serverPlayer)
+        if (pos == null) {
+            serverPlayer.sendMessage(Text.translatable("message.cresora.treasure_chest.no_safe_spot").formatted(Formatting.RED), true)
+            return ActionResult.FAIL
         }
-        val pos = findSpawnPosition(playerWorld, player) ?: run {
-            nextSpawnTickByPlayer[player.uuid] = now + 20L * 15L
-            return
+
+        val reward = rollReward(serverPlayer)
+        if (!placeChest(playerWorld, pos, serverPlayer.horizontalFacing.opposite, reward.block)) {
+            serverPlayer.sendMessage(Text.translatable("message.cresora.treasure_chest.placement_failed").formatted(Formatting.RED), true)
+            return ActionResult.FAIL
         }
-        val reward = rollReward(player)
-        if (!placeChest(playerWorld, pos, player.horizontalFacing.opposite, reward.block)) {
-            nextSpawnTickByPlayer[player.uuid] = now + 20L * 15L
-            return
-        }
+
+        // Chest has a dynamic lifespan (TTL) of 10 minutes (12000 ticks)
+        val expireTicks = 20L * 60L * 10L
+        val expireTime = playerWorld.time + expireTicks
+
         val chest = ActiveChest(
-            ownerId = player.uuid,
+            ownerId = serverPlayer.uuid,
             key = ChestKey(playerWorld.registryKey, pos.toImmutable()),
-            reward = reward
+            reward = reward,
+            expireTime = expireTime
         )
         registerChest(chest)
-        nextSpawnTickByPlayer[player.uuid] = now + RESPAWN_DELAY_TICKS
-        player.sendMessage(
+
+        if (!serverPlayer.isCreative) {
+            stack.decrement(1)
+        }
+
+        // Set a 12-second cooldown to prevent locator spawn spam
+        serverPlayer.itemCooldownManager.set(stack, 20 * 12)
+
+        playerWorld.playSound(
+            null,
+            pos,
+            SoundEvents.BLOCK_BEACON_ACTIVATE,
+            SoundCategory.PLAYERS,
+            1.0f,
+            1.2f
+        )
+
+        serverPlayer.sendMessage(
             Text.translatable(
                 "message.cresora.treasure_chest.spawned",
                 reward.stars,
@@ -176,6 +231,32 @@ object TreasureChestService {
             ).formatted(Formatting.GOLD),
             false
         )
+
+        // Draw a beautiful high-fidelity guide path particle trail from the player eye to the newly spawned cache coordinates!
+        spawnGuideTrail(playerWorld, serverPlayer.eyePos, pos)
+
+        return ActionResult.SUCCESS
+    }
+
+    private fun spawnGuideTrail(world: ServerWorld, start: Vec3d, endPos: BlockPos) {
+        val end = Vec3d(endPos.x + 0.5, endPos.y + 0.5, endPos.z + 0.5)
+        val diff = end.subtract(start)
+        val steps = (diff.length() * 2.0).roundToInt().coerceAtLeast(6)
+        for (i in 0..steps) {
+            val progress = i.toDouble() / steps.toDouble()
+            val point = start.add(diff.multiply(progress))
+            world.spawnParticles(
+                ParticleTypes.END_ROD,
+                point.x,
+                point.y,
+                point.z,
+                1,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            )
+        }
     }
 
     private fun onUseBlock(
@@ -193,6 +274,17 @@ object TreasureChestService {
         val playerWorld = serverPlayer.world as ServerWorld
         val key = ChestKey(playerWorld.registryKey, hitResult.blockPos.toImmutable())
         val chest = activeByKey[key] ?: return ActionResult.PASS
+
+        // Strict ownership check to prevent chest theft by other players
+        if (chest.ownerId != serverPlayer.uuid) {
+            val ownerName = server.playerManager.getPlayer(chest.ownerId)?.name?.string ?: "其他玩家"
+            serverPlayer.sendMessage(
+                Text.translatable("message.cresora.treasure_chest.not_owner", ownerName).formatted(Formatting.RED),
+                true
+            )
+            return ActionResult.FAIL
+        }
+
         val creditsTotal = CreditsService.addCredits(serverPlayer, chest.reward.credits)
         val chordTotal = ResonanceService.addCurrency(serverPlayer, ResonanceCurrencyType.CHORD_PROGRESSION, chest.reward.chordProgression)
         removeChestBlock(playerWorld, chest)
@@ -349,7 +441,8 @@ object TreasureChestService {
         return ActiveChest(
             ownerId = ownerId,
             key = ChestKey(RegistryKey.of(RegistryKeys.WORLD, worldId), BlockPos(savedChest.x, savedChest.y, savedChest.z)),
-            reward = reward
+            reward = reward,
+            expireTime = savedChest.expireTime
         )
     }
 
@@ -378,7 +471,8 @@ object TreasureChestService {
                     z = chest.key.pos.z,
                     stars = chest.reward.stars,
                     credits = chest.reward.credits,
-                    chordProgression = chest.reward.chordProgression
+                    chordProgression = chest.reward.chordProgression,
+                    expireTime = chest.expireTime
                 )
             }
         )

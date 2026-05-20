@@ -3,9 +3,10 @@ package hifumi.cresora.compiler
 enum class TokenType {
     IDENTIFIER, NUMBER, STRING,
     LEFT_BRACE, RIGHT_BRACE, COLON, COMMA, LEFT_PAREN, RIGHT_PAREN,
-    DOT, OPERATOR,
+    DOT, OPERATOR, SEMICOLON,
     KEYWORD_WEAPON, KEYWORD_STATS, KEYWORD_SKILL, KEYWORD_BUFF, KEYWORD_TRANSLATIONS,
     KEYWORD_SUB_SKILL, KEYWORD_ICON, KEYWORD_DICTIONARY, KEYWORD_TEXTURE,
+    KEYWORD_ARTIFACT, KEYWORD_SET,
     EOF
 }
 
@@ -26,7 +27,9 @@ class Lexer(private val source: String) {
         "sub_skill" to TokenType.KEYWORD_SUB_SKILL,
         "icon" to TokenType.KEYWORD_ICON,
         "dictionary" to TokenType.KEYWORD_DICTIONARY,
-        "texture" to TokenType.KEYWORD_TEXTURE
+        "texture" to TokenType.KEYWORD_TEXTURE,
+        "artifact" to TokenType.KEYWORD_ARTIFACT,
+        "set" to TokenType.KEYWORD_SET
     )
 
     fun scanTokens(): List<Token> {
@@ -47,7 +50,7 @@ class Lexer(private val source: String) {
             '(' -> addToken(TokenType.LEFT_PAREN)
             ')' -> addToken(TokenType.RIGHT_PAREN)
             '.' -> addToken(TokenType.DOT)
-            ';' -> addToken(TokenType.OPERATOR)
+            ';' -> addToken(TokenType.SEMICOLON)
             '?' -> if (match(':')) addToken(TokenType.OPERATOR, "?:") else if (match('.')) addToken(TokenType.OPERATOR, "?.") else addToken(TokenType.OPERATOR)
             '-' -> if (match('>')) addToken(TokenType.OPERATOR, "->") else addToken(TokenType.OPERATOR)
             ':' -> if (match(':')) addToken(TokenType.OPERATOR, "::") else addToken(TokenType.COLON)
@@ -100,6 +103,9 @@ class Lexer(private val source: String) {
         if (peek() == '.' && peekNext().isDigit()) {
             advance()
             while (peek().isDigit()) advance()
+        }
+        if (peek() == 'L' || peek() == 'f' || peek() == 'd' || peek() == 'F' || peek() == 'D') {
+            advance()
         }
         addToken(TokenType.NUMBER)
     }

@@ -14,7 +14,8 @@ data class SavedTreasureChest(
     val z: Int,
     val stars: Int,
     val credits: Int,
-    val chordProgression: Int
+    val chordProgression: Int,
+    val expireTime: Long
 ) {
     companion object {
         val CODEC: Codec<SavedTreasureChest> = RecordCodecBuilder.create { instance ->
@@ -26,7 +27,8 @@ data class SavedTreasureChest(
                 Codec.INT.fieldOf("z").forGetter(SavedTreasureChest::z),
                 Codec.INT.fieldOf("stars").forGetter(SavedTreasureChest::stars),
                 Codec.INT.fieldOf("credits").forGetter(SavedTreasureChest::credits),
-                Codec.INT.fieldOf("chordProgression").forGetter(SavedTreasureChest::chordProgression)
+                Codec.INT.fieldOf("chordProgression").forGetter(SavedTreasureChest::chordProgression),
+                Codec.LONG.optionalFieldOf("expireTime", 0L).forGetter(SavedTreasureChest::expireTime)
             ).apply(instance, ::SavedTreasureChest)
         }
     }

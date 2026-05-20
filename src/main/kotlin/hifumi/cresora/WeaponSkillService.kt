@@ -64,6 +64,8 @@ object WeaponSkillService {
     // Tao (道) stacks for Tanmoku Chokuu (does not expire)
     private val taoStacks: MutableMap<UUID, Int> = mutableMapOf()
 
+    private val isProcessingDamage = ThreadLocal.withInitial { false }
+
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
             val now = server.overworld.time
@@ -329,12 +331,17 @@ object WeaponSkillService {
     }
 
     fun onAttackDealt(player: ServerPlayerEntity, target: LivingEntity, damage: Double) {
-        if (damage <= 0.0) return
+        if (damage <= 0.0 || isProcessingDamage.get()) return
 
-        val activeContext = activeWeaponContext(player) ?: return
-        val (heldDef, heldData) = activeContext
-        runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
-            handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
+        isProcessingDamage.set(true)
+        try {
+            val activeContext = activeWeaponContext(player) ?: return
+            val (heldDef, heldData) = activeContext
+            runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
+                handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
+            }
+        } finally {
+            isProcessingDamage.set(false)
         }
     }
 
@@ -605,6 +612,7 @@ object WeaponSkillService {
         temporaryGuardHpByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardExpireTickByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         lastHeldWeaponIdByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
+        taoStacks.keys.removeIf { !onlinePlayerIds.contains(it) }
     }
 
     private inline fun runWeaponHandlers(

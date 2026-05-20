@@ -1,0 +1,23 @@
+artifact "Hinagata" {
+    id: "hinagata";
+    
+    set 2 {
+        stats {
+            atk_percent: 18.0;
+        }
+    }
+    
+    set 4 {
+        stats {
+            atk_percent: 20.0;
+            crit_dmg: 20.0;
+        }
+        
+        on_attack_dealt {
+            execute {
+                apply_mark(target, "hinagata_curse", 100);
+                log("Applied Hinagata curse!");
+            }
+        }
+    }
+}

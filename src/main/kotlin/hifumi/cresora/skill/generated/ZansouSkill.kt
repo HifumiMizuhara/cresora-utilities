@@ -32,8 +32,8 @@ public object ZansouSkill : WeaponSkillHandler {
   ): ActionResult {
 
     ; run execute@ {
-      val cost = player.maxHealth * 0.20f;
-                      player.damage(player.world, player.damageSources.magic(), cost);
+      val cost = player.maxHealth * 0.20f
+      player.damage(player.world, player.damageSources.magic(), cost)
     }
 
     WeaponSkillService.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)
@@ -59,11 +59,11 @@ public object ZansouSkill : WeaponSkillHandler {
     }
 
     ; run execute@ {
-      val jt = QianqiuYeluoSkill.jingtianStateStates.get(player.uuid);
-                      if (jt != null) {
-                          jt.expireTick =
-          hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
-                      }
+      val jt = QianqiuYeluoSkill.jingtianStateStates.get(player.uuid)
+      if (jt != null) {
+                              jt.expireTick =
+              hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
+                          }
     }
 
     HotbarOverrideService.restoreHotbar(player)

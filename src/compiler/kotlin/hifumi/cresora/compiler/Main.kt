@@ -13,7 +13,11 @@ fun main(args: Array<String>) {
     println("Output: ${outputDir.absolutePath}")
     println("JSON: ${weaponJsonFile.absolutePath}")
 
-    val compiler = CresoraCompiler(inputDir, outputDir, weaponJsonFile)
-    compiler.compile()
+    val weaponCompiler = CresoraCompiler(inputDir, outputDir, weaponJsonFile)
+    weaponCompiler.compile()
+
+    val artifactJsonFile = File(projectRoot, "src/main/resources/data/cresora-utilities/cresora/cac_artifact_content.json")
+    val artifactCompiler = ArtifactCompiler(inputDir, outputDir, artifactJsonFile)
+    artifactCompiler.compile()
     println("Compilation finished successfully.")
 }

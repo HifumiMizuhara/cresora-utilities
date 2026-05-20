@@ -16,6 +16,19 @@ data class WeaponDefNode(
     val texture: String? = null
 ) : ASTNode()
 
+data class ArtifactDefNode(
+    val name: String,
+    val id: String,
+    val bonuses: List<ArtifactBonusNode>,
+    val translations: Map<String, Map<String, String>> = emptyMap()
+) : ASTNode()
+
+data class ArtifactBonusNode(
+    val requiredPieces: Int,
+    val stats: Map<String, Double> = emptyMap(),
+    val handlers: List<SkillHandlerNode> = emptyList()
+) : ASTNode()
+
 data class DictionaryDefNode(
     val id: String,
     val translations: Map<String, Map<String, String>>
@@ -75,6 +88,11 @@ data class CommandActionNode(
     val arguments: List<String>
 ) : ActionNode()
 
+data class InstructionCallNode(
+    val functionName: String,
+    val arguments: List<String>
+) : ActionNode()
+
 data class SendLocalizedMessageActionNode(
     val key: String,
     val color: String,
@@ -93,5 +111,5 @@ data class OpenSkillMenuActionNode(
 object CloseSkillMenuActionNode : ActionNode()
 
 data class ExecuteActionNode(
-    val content: String
+    val statements: List<ActionNode>
 ) : ActionNode()

@@ -78,10 +78,9 @@ public object TanbokuChokuuSkill : WeaponSkillHandler {
   ): ActionResult {
 
     ; run execute@ {
-      WeaponSkillService.addTao(player, 1);
-                     
-          player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained",
-          WeaponSkillService.getTao(player)).formatted(Formatting.GOLD), true);
+      WeaponSkillService.addTao(player, 1)
+      player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained",
+          WeaponSkillService.getTao(player)).formatted(Formatting.GOLD), true)
     }
 
     HotbarOverrideService.overrideHotbar(player, definition.id, listOf("danro", "zanso",
@@ -101,16 +100,17 @@ public object TanbokuChokuuSkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      val stacks = WeaponSkillService.getSoulBreakStacks(target);
-                      if (stacks > 0 && !isTrueDamage) {
-                          val boost = amount * (stacks * 0.04f);
-                          target.damage(player.world, player.world.damageSources.magic(), boost);
-                          if (player.world.time % 20L == 0L) {
-                              
-          player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break",
-          stacks, stacks * 5, stacks * 4).formatted(Formatting.GRAY), true);
+      val stacks = WeaponSkillService.getSoulBreakStacks(target)
+      if (stacks > 0 && !isTrueDamage) {
+                              val boost = amount * (stacks * 0.04f);
+                              target.damage(player.world, player.world.damageSources.magic(),
+              boost);
+                              if (player.world.time % 20L == 0L) {
+                                  
+              player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break",
+              stacks, stacks * 5, stacks * 4).formatted(Formatting.GRAY), true);
+                              }
                           }
-                      }
     }
 
   }

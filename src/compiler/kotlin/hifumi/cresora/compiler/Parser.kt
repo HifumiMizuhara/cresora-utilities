@@ -10,6 +10,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 nodes.add(weapon())
             } else if (check(TokenType.KEYWORD_DICTIONARY)) {
                 nodes.add(dictionary())
+            } else if (check(TokenType.KEYWORD_ARTIFACT)) {
+                nodes.add(artifact())
             } else {
                 val token = peek()
                 throw RuntimeException("Unexpected top-level token '${token.lexeme}' at line ${token.line}")
@@ -119,6 +121,78 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         return DictionaryDefNode(id, translations)
     }
 
+    private fun artifact(): ArtifactDefNode {
+        consume(TokenType.KEYWORD_ARTIFACT, "Expect 'artifact'")
+        val name = consume(TokenType.STRING, "Expect artifact name").lexeme
+        consume(TokenType.LEFT_BRACE, "Expect '{' before artifact body")
+
+        var id = ""
+        val bonuses = mutableListOf<ArtifactBonusNode>()
+        var translations = mutableMapOf<String, Map<String, String>>()
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            when (token.lexeme) {
+                "id" -> {
+                    consume(TokenType.COLON, "Expect ':' after id")
+                    id = consume(TokenType.STRING, "Expect id").lexeme
+                }
+                "set" -> {
+                    val pieces = consume(TokenType.NUMBER, "Expect number of pieces").lexeme.toInt()
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for set bonus")
+                    bonuses.add(artifactBonus(pieces))
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after set bonus")
+                }
+                "translations" -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for translations")
+                    translations = translations()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after translations")
+                }
+                else -> {
+                    if (token.type == TokenType.SEMICOLON) {
+                        // Skip optional semicolons
+                    } else {
+                        throw RuntimeException("Unknown artifact field '${token.lexeme}' at line ${token.line}")
+                    }
+                }
+            }
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after artifact body")
+        if (id.isBlank()) throw RuntimeException("Artifact '$name' is missing required id")
+        return ArtifactDefNode(name, id, bonuses, translations)
+    }
+
+    private fun artifactBonus(pieces: Int): ArtifactBonusNode {
+        val stats = mutableMapOf<String, Double>()
+        val handlers = mutableListOf<SkillHandlerNode>()
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.KEYWORD_STATS) {
+                consume(TokenType.LEFT_BRACE, "Expect '{' for stats")
+                while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                    val next = advance()
+                    if (next.type == TokenType.SEMICOLON) continue
+                    val statName = next.lexeme
+                    consume(TokenType.COLON, "Expect ':'")
+                    val statValue = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
+                    stats[statName] = statValue
+                }
+                consume(TokenType.RIGHT_BRACE, "Expect '}' after stats")
+            } else if (token.type == TokenType.IDENTIFIER && token.lexeme.startsWith("on_")) {
+                consume(TokenType.LEFT_BRACE, "Expect '{' for handler")
+                handlers.add(handler(token.lexeme))
+                consume(TokenType.RIGHT_BRACE, "Expect '}' after handler")
+            } else if (token.type == TokenType.SEMICOLON) {
+                // Skip optional semicolons
+            } else {
+                throw RuntimeException("Unknown artifact bonus field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+        return ArtifactBonusNode(pieces, stats, handlers)
+    }
+
     private fun stats(): StatsNode {
         var baseAttackDamage = 0.0
         var attackDamagePerLevel = 0.0
@@ -166,6 +240,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 consume(TokenType.LEFT_BRACE, "Expect '{' for buff")
                 buffs.add(buff(buffId))
                 consume(TokenType.RIGHT_BRACE, "Expect '}' after buff")
+            } else if (token.type == TokenType.SEMICOLON) {
+                // Skip optional semicolons
             } else {
                 consume(TokenType.COLON, "Expect ':'")
                 when (token.lexeme) {
@@ -343,28 +419,64 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     }
                 }
             } else if (name == "execute" && check(TokenType.LEFT_BRACE)) {
-                val openBrace = consume(TokenType.LEFT_BRACE, "Expect '{'")
-                val blockStartPos = openBrace.endOffset
-                var lastPos = blockStartPos
-                
-                var braceCount = 1
-                while (braceCount > 0 && !isAtEnd()) {
-                    if (check(TokenType.LEFT_BRACE)) braceCount++
-                    else if (check(TokenType.RIGHT_BRACE)) braceCount--
-                    
-                    if (braceCount > 0) {
-                        lastPos = advance().endOffset
-                    }
-                }
-                
-                val closeBrace = consume(TokenType.RIGHT_BRACE, "Expect '}'")
-                val content = source.substring(blockStartPos, closeBrace.startOffset)
-                actions.add(ExecuteActionNode(content.trim()))
+                actions.add(ExecuteActionNode(executeBlock()))
             } else {
-                    throw RuntimeException("Unexpected token '$name' in handler '$eventName'")
-                }
+                throw RuntimeException("Unexpected token '$name' in handler '$eventName'")
+            }
         }
         return SkillHandlerNode(eventName, actions)
+    }
+
+    private fun executeBlock(): List<ActionNode> {
+        consume(TokenType.LEFT_BRACE, "Expect '{'")
+        val statements = mutableListOf<ActionNode>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(statement())
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'")
+        return statements
+    }
+
+    private fun statement(): ActionNode {
+        val token = peek()
+        if (token.type == TokenType.IDENTIFIER && peekNext().type == TokenType.LEFT_PAREN && InstructionMapping.isKnown(token.lexeme)) {
+            val name = advance().lexeme
+            consume(TokenType.LEFT_PAREN, "Expect '('")
+            val args = mutableListOf<String>()
+            while (!check(TokenType.RIGHT_PAREN) && !isAtEnd()) {
+                val arg = advance()
+                if (arg.type == TokenType.STRING) {
+                    args.add("\"${arg.lexeme}\"")
+                } else {
+                    var value = arg.lexeme
+                    // Handle time suffixes like 5s
+                    if (check(TokenType.IDENTIFIER) && peek().lexeme == "s") {
+                        value += advance().lexeme
+                    }
+                    args.add(value)
+                }
+                if (check(TokenType.COMMA)) advance()
+            }
+            consume(TokenType.RIGHT_PAREN, "Expect ')'")
+            if (check(TokenType.SEMICOLON)) advance()
+            return InstructionCallNode(name, args)
+        } else {
+            // Fallback to ExpressionNode for raw Kotlin or simple expressions
+            val startToken = peek()
+            var lastToken = startToken
+            var braceCount = 0
+            while (!isAtEnd()) {
+                if (braceCount == 0 && (check(TokenType.SEMICOLON) || check(TokenType.RIGHT_BRACE))) break
+                
+                val t = advance()
+                if (t.type == TokenType.LEFT_BRACE) braceCount++
+                else if (t.type == TokenType.RIGHT_BRACE) braceCount--
+                lastToken = t
+            }
+            val rawContent = source.substring(startToken.startOffset, lastToken.endOffset)
+            if (check(TokenType.SEMICOLON)) advance()
+            return ExpressionNode(rawContent.trim())
+        }
     }
 
     private fun parseTime(): Double {
@@ -398,5 +510,6 @@ class Parser(private val source: String, private val tokens: List<Token>) {
 
     private fun isAtEnd() = peek().type == TokenType.EOF
     private fun peek() = tokens[current]
+    private fun peekNext() = if (current + 1 >= tokens.size) tokens.last() else tokens[current + 1]
     private fun previous() = tokens[current - 1]
 }

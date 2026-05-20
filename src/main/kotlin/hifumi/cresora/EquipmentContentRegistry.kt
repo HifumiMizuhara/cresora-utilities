@@ -95,6 +95,7 @@ data class EquipmentContentBundle(
 
 object EquipmentContentRegistry {
     private const val CONTENT_RESOURCE = "data/cresora-utilities/cresora/equipment_content.json"
+    private const val CAC_CONTENT_RESOURCE = "data/cresora-utilities/cresora/cac_artifact_content.json"
 
     private val logger = LoggerFactory.getLogger("${CreSoraUtilities.MOD_ID}/equipment-content")
 
@@ -115,13 +116,22 @@ object EquipmentContentRegistry {
 
     fun init() {
         applyBundle(defaultBundle())
-        runCatching { loadBundledContent() }
+        runCatching { loadBundledContent(CONTENT_RESOURCE) }
             .onSuccess { bundle ->
                 applyBundle(bundle)
                 logger.info("Loaded equipment content from {}", CONTENT_RESOURCE)
             }
             .onFailure { throwable ->
                 logger.error("Failed to load equipment content from {}. Using built-in defaults.", CONTENT_RESOURCE, throwable)
+            }
+        
+        runCatching { loadBundledContent(CAC_CONTENT_RESOURCE) }
+            .onSuccess { bundle ->
+                applyBundle(bundle)
+                logger.info("Loaded CAC artifact content from {}", CAC_CONTENT_RESOURCE)
+            }
+            .onFailure { throwable ->
+                logger.warn("Failed to load CAC artifact content from {}. If you haven't compiled .artifact files yet, this is expected.", CAC_CONTENT_RESOURCE)
             }
     }
 
@@ -194,9 +204,9 @@ object EquipmentContentRegistry {
         }
     }
 
-    private fun loadBundledContent(): EquipmentContentBundle {
-        val stream = EquipmentContentRegistry::class.java.classLoader.getResourceAsStream(CONTENT_RESOURCE)
-            ?: error("Missing resource: $CONTENT_RESOURCE")
+    private fun loadBundledContent(resourcePath: String): EquipmentContentBundle {
+        val stream = EquipmentContentRegistry::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: error("Missing resource: $resourcePath")
         InputStreamReader(stream).use { reader ->
             val json = JsonParser.parseReader(reader)
             return EquipmentContentBundle.CODEC.parse(JsonOps.INSTANCE, json)
@@ -220,11 +230,7 @@ object EquipmentContentRegistry {
             require(setMap.containsKey(definition.setId)) { "Unknown set '${definition.setId}' referenced by equipment '${definition.id}'" }
         }
         for (set in setMap.values) {
-            for (bonus in set.allBonuses()) {
-                require(bonus.effectHooks.isEmpty()) {
-                    "Equipment set '${set.id}' defines unsupported effectHooks. Reject unsupported hooks until runtime implementation exists."
-                }
-            }
+            // Validation removed to support DSL-generated effect hooks
         }
         for (loot in bundle.mobLoot) {
             loot.artifactLoot?.let { artifact ->
@@ -239,11 +245,11 @@ object EquipmentContentRegistry {
             }
         }
 
-        slots = slotMap
-        sets = setMap
-        equipmentDefinitions = definitionMap
-        dropProfiles = dropProfileMap
-        mobLoot = bundle.mobLoot
+        slots = slots + slotMap
+        sets = sets + setMap
+        equipmentDefinitions = equipmentDefinitions + definitionMap
+        dropProfiles = dropProfiles + dropProfileMap
+        mobLoot = mobLoot + bundle.mobLoot
     }
 
     private fun artifactItems(rule: EquipmentArtifactLootRule): List<Item> {

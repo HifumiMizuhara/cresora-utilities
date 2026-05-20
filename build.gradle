@@ -84,6 +84,14 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
+	if (name == "compileJava" || name == "compileClientJava") {
+		if (it.classpath != null) {
+			it.classpath += files(new File(project.buildDir, "classes/kotlin/main"))
+			it.classpath += files(new File(project.buildDir, "classes/kotlin/client"))
+		} else {
+			it.classpath = files(new File(project.buildDir, "classes/kotlin/main"), new File(project.buildDir, "classes/kotlin/client"))
+		}
+	}
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

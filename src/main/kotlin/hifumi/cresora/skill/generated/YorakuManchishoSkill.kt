@@ -32,23 +32,22 @@ public object YorakuManchishoSkill : WeaponSkillHandler {
   ): ActionResult {
 
     ; run execute@ {
-      val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid);
-                      if (state == null || state.stacks < 20) {
-                         
-          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.insufficient_stacks").formatted(net.minecraft.util.Formatting.RED),
-          true);
-                          return@execute;
-                      }
+      val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid)
+      if (state == null || state.stacks < 20) {
+                             
+              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.insufficient_stacks").formatted(net.minecraft.util.Formatting.RED),
+              true);
+                              return@execute;
+                          }
 
-                      val buffState =
-          QianqiuYeluoSkill.yorakuManchishoActiveStates.getOrPut(player.uuid) {
-                          QianqiuYeluoSkill.YorakuManchishoActiveState(0L, 0)
-                      }
-                      buffState.expireTick =
-          hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 60 * 20L;
-                      buffState.stacks = 1;
-
-                      hifumi.cresora.HotbarOverrideService.restoreHotbar(player);
+                          val buffState =
+              QianqiuYeluoSkill.yorakuManchishoActiveStates.getOrPut(player.uuid) {
+                              QianqiuYeluoSkill.YorakuManchishoActiveState(0L, 0)
+                          }
+                          buffState.expireTick =
+              hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 60 * 20L
+      buffState.stacks = 1
+      hifumi.cresora.HotbarOverrideService.restoreHotbar(player)
     }
 
     player.sendMessage(Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_activated").formatted(Formatting.GOLD),

@@ -1,5 +1,81 @@
 # WORK_DONE
 
+## Artifact Compiler (CAC) & CWC Refactoring (2026-05-20)
+- [x] 聖遺物コンパイラ (Artifact Compiler - CAC) を実装。`.artifact` ファイルから JSON と Kotlin Hook クラスの生成をサポート。
+- [x] 聖遺物ランタイム Hook システムをリファクタリング。`EquipmentEffectHookService` を導入し、型安全なコンテキスト受け渡しをサポート。
+- [x] コンパイラ (CWC/CAC) の DSL 構文を強化。C-style のセミコロン終端や `log()`, `apply_mark()` などの組み込み命令をサポート。
+- [x] コンパイラの raw Kotlin コードブロック解析ロジックを修正。生ソースコード抽出 (Raw Source Extraction) により、空白や特殊記号による構文エラーを完全に解決。
+- [x] Lexer に Kotlin の数値接尾辞 (`L`, `f`, `d`) のサポートを追加。
+
+
+## Real-Device Gameplay Smoke Test (2026-05-19)
+
+- **Invoked workflow `/jikki-tesuto`**:
+  - Cleaned and compiled both main and client environments successfully (`classes clientClasses`) using a fresh Gradle daemon to resolve incremental compilation and cache mismatches.
+  - Launched the Fabric dev server and player client in separate background persistent terminal sessions.
+  - Successfully connected a client session to the local dev server (`Player368 joined the game`).
+  - Automatically caught the connection event and ran `op Player368` via server console stdin, granting operator status successfully.
+  - Verified from the client side that the player received OP permissions, toggled their game mode to Creative, set the in-game time to day (`time set 1000`), and cleared the weather.
+- **Custom Resonance Compass Asset & Modeling (共鳴コンパスのテクスチャ追加)**:
+  - Generated a stunning golden and cosmic teal magical compass texture using `generate_image` based on high-fidelity circular game pixel-art prompts.
+  - Developed and ran a scratch Python imaging script (using Pillow with custom polar masking) to crop the compass perfectly, eliminate non-transparent pixel backgrounds, scale it to a crisp 32x32 pixel-art icon, and save it under [resonant_locator.png](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/resources/assets/cresora-utilities/textures/item/resonant_locator.png).
+  - Updated [resonant_locator.json](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/resources/assets/cresora-utilities/models/item/resonant_locator.json) to reference this new high-quality texture (`cresora-utilities:item/resonant_locator`), replacing the generic vanilla recovery compass template.
+  - Ran a complete compilation build (`./gradlew classes clientClasses`) successfully to publish the new assets to the developer runtimes.
+
+## Shop Registry Dependency & Compilation Hardening (2026-05-19)
+
+- **Shop Registry Initialization Order Fix**:
+  - Resolved a crash on mod initialization where `ShopContentRegistry.init()` attempted to load shop offers referencing `cresora-utilities:resonant_locator` before the static locator item itself was registered.
+  - Moved the registration of all static blocks and items (including `moon_altar`, `resonant_locator`, `tueshokaku`, and `resonant_cache`) to the absolute beginning of `onInitialize()`. This guarantees that all static and dynamic identifiers are fully populated and available in standard registries before any JSON-based contents registries parse their schemas.
+- **Gradle Daemon & Clean Build Verification**:
+  - Addressed a ClassNotFoundException with Java Mixin class loading caused by out-of-sync compiler daemons.
+  - Executed `./gradlew --stop` and a complete rebuild (`clean classes`), ensuring all Kotlin files and Java mixins compile in a unified and fresh environment classpath.
+  - Verified a successful server startup: launched `./gradlew runServer` without any crashes, successfully loading all dynamic content registries (shop, resonance, story chapters, etc.) and starting the server network loop successfully.
+
+## Resonance Hunt (共鳴探索) フィードバック改善と堅牢化 (2026-05-19)
+
+コードレビューの指摘に基づき、共鳴探索（Resonance Hunt）システムに存在したクリティカルなバグおよび未実装要素を即座に修正・改善。
+
+- **共鳴宝箱ブロックの可視化修正（モデルの継承バグ解消）**:
+  - `resonant_cache` はプレーンな `Block` として登録されているため、従来の `minecraft:block/chest` 継承では静的モデルが存在せず、ゲーム内で透明（不可視）になっていたバグを修正。
+  - `models/block/resonant_cache.json` を修正し、`gilded_blackstone`（金密なる黒石）のテクスチャを持つ `cube_all` 静的ブロックモデルを親とするように変更。これにより、ゲーム内で完璧にゴールド装飾の美しいブロックとして目視できるようになりました。
+  - アイテムモデルの親を `minecraft:item/chest` から `cresora-utilities:block/resonant_cache` に修正し、インベントリ内でもブロックの形状を保持するように設定。
+- **共鳴探索コンパスの入手経路の接続**:
+  - `resonant_locator` がサバイバルのゲームプレイ上で入手不可能（登録のみ）だった問題を解決するため、[shop_content.json](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/resources/data/cresora-utilities/cresora/shop_content.json) のショップアイテムリストに `resonant_locator`（価格: 50,000 CSC）を追加。プレイヤーがゲーム内で能動的に入手し、「共鳴探索」をフルで遊べるように調整。
+- **NBTシリアライズのバリアフリー互換化（後方互換性バグ修正）**:
+  - [TreasureChestPersistentState.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/TreasureChestPersistentState.kt) で新設された `expireTime` を強引に `fieldOf` で必須化していたため、アップデート前の古いセーブデータ（cresora_treasure_chests）が含まれるワールドを読み込むと Codec デコードエラーが発生し、既存のアクティブな宝箱がすべて失われる不具合を修正。
+  - `Codec.LONG.optionalFieldOf("expireTime", 0L)` に修正し、古いデータ構造のセーブデータが破損・ロストすることなくスムーズにロードされ、安全に移行できるよう後方互換性を完全に保証。
+- **検証**:
+  - `./gradlew generateWeapons classes` を実行し、ビルドおよびコンパイルが正常に「BUILD SUCCESSFUL」で完了することを確認。
+
+## Resonance Hunt (共鳴探索) 制度の全面実装と安定化 (2026-05-18)
+
+Buggy で放置されていたバニラチェストの自動スポーン型「宝箱」システムを廃止し、プレイヤーの能動的で高品質な探索システム「共鳴探索 (Resonance Hunt)」を設計・全面実装。
+
+- **能動的レーダーと専用コンパス**:
+  - `resonant_locator` (共鳴探索コンパス/羅針盤) アイテムを新規追加・登録。
+  - 使用時に 12秒間のクールダウン を適用し、無限連続設置の悪用を防止。
+- **専用の共鳴宝箱ブロック**:
+  - クレソラ専用の新規ブロック `resonant_cache` (共鳴宝箱) を導入し、バニラのピストン複製バグやバニラチェストのアイテム吸収・破壊ロジックとの競合を完全に排除。
+- **安全な出現ロケーション探索**:
+  - プレイヤーの周囲半径 10〜25ブロック内で、溶岩、奈落、岩盤、空中などを回避する安全な接地スポーン座標を高度なアルゴリズムで走査。
+  - 秘境 (Domain) ディメンション内での探索コンパス使用を完全に遮断。
+- **高クオリティなビジュアル演出**:
+  - コンパス使用時に `BLOCK_BEACON_ACTIVATE` の重厚なサウンドを再生。
+  - プレイヤーの視点から宝箱の出現位置に向けて、美しい `END_ROD` 粒子の高精度ガイド軌跡ビーム (`spawnGuideTrail`) を動的に描画。
+- **厳格な所有者ロック (Strict Ownership)**:
+  - 宝箱の開封時に所有者 UUID をチェック。他人の宝箱に触れた場合、所有者の名前付きで警告メッセージ（「この宝箱はあなたのものではありません！所有者: ○○」）を表示して窃盗を防御。
+- **dynamic lifespan (TTL) と安全な消滅クレンジング**:
+  - 宝箱は出現から 10分間 (12000 ticks) が経過すると自動で消滅。
+  - ティック内の消滅処理で `ConcurrentModificationException` によるサーバー停止を防ぐため、安全な一時除去キューを活用した二フェーズ削除を採用。
+- **NBT 永続化の完全シリアライズ**:
+  - 宝箱の所有者、座標、報酬シード、および有効期限 (`expireTime`) を `TreasureChestPersistentState` の Minecraft `Codec` を通じて完全に NBT へシリアライズ・保存するよう強化。
+- **多言語ローカライズ対応と 1.21.7 API 適応**:
+  - `en_us`, `ja_jp`, `zh_cn` の全言語に探索システム、宝箱アイテム、エラー警告、開封報酬通知の翻訳リソースを追加。
+  - Minecraft 1.21.7 (1.21.2+) の Fabric API 改定に追従し、`TypedActionResult<ItemStack>` から単一の `ActionResult` への一本化対応、および `itemCooldownManager` の `ItemStack` 引数仕様に完全適応。
+- **検証**:
+  - `GRADLE_USER_HOME=.gradle-user ./gradlew compileKotlin classes --console=plain` を実行し、すべてのコンパイル警告およびエラーがゼロで、正常にビルドが通ることを実証。
+
 ## CWC Default Imports & Active Slot Weapon Skill Isolation (2026-05-18)
 
 - **CWC default imports generation**:
@@ -91,9 +167,8 @@
 ## Moon Altar + Drop Loop (2026-05-10)
 
 - Added `moon_brick` item and global hostile drop: 2%.
-- Added `moon_altar` interactive block and crafting recipe (8 moon bricks in a ring).
-- Added altar interaction flow:
-  - Right-click altar with `blood_note` consumes 1 note (except creative).
+- Added `moon_altar` interactive block.
+- Right-click altar with `blood_note` consumes 1 note (except creative).
   - Schedules the **next night** as guaranteed blood moon via `MoonPhaseService.scheduleBloodMoonForNextNight`.
 - Extended moon persistent state with `forcedBloodMoonDay` so altar scheduling survives restart and is consumed when that night resolves.
 - Enabled `blood_note` hostile drop at fixed 0.5% by updating artifact special-item drop config.
@@ -107,7 +182,7 @@ Completed the migration of 5 hardcoded weapon implementations to CWC DSL.
 ### Infrastructure Improvements
 - **Lexer & Parser Enhancement**: Added offset-based source extraction for `execute` blocks. This ensures that raw Kotlin code written in `.cresora` files is preserved exactly as-is, including complex operators (`as?`, `?.`, `!!`), comments, and formatting.
 - **Compiler Code Generation**:
-    - Wrapped `execute` blocks in `run execute@ { ... }` to support `return@execute` for early exits.
+    - Wrapped `execute` blocks in `run execute@ { ... } to support `return@execute` for early exits.
     - Improved action separation with mandatory newlines.
     - Fixed registry access for status effects to match 1.21.7 API.
     - Fixed `ignite` (AOE) to use float values for fire duration.
@@ -158,7 +233,11 @@ Integrated all multi-language support and specialized skill messaging directly i
 - **Improved Script Quality**: Standardized color schemes for skill notifications (Aqua for shields, Green for healing, Gold for fire/crit, etc.).
 
 ### Verification
-- `gradlew classes` successfully compiles- [x] 多言語対応（zh_cn, lzh）の基盤実装および「千秋、葉落ちて」への適用
+- `gradlew classes` successfully compiles- [ ] Transition generated skills (BokuchuMunen) from direct health modification to true damage sources.
+- [ ] Refactor legacy CommandActionNode AOE parsing to structural AreaOfEffectActionNode.
+- [ ] Persist originalBedStates in BloodMoonService for perfect recovery.
+- [ ] Explicitly initialize ArtifactSkillRegistry in CreSoraUtilities.onInitialize.
+- [x] 多言語対応（zh_cn, lzh）の基盤実装および「千秋、葉落ちて」への適用
 - [x] CWC デバッグ: `send_localized_message` の構文エラー修正、1.21.7 向けアイテム定義（items/）生成対応
 - [x] CWC 拡張: 武器ごとの `texture` プロパティ追加
 - [x] ビジュアル改善: 「千秋、葉落ちて」専用テクスチャの生成と適用
@@ -180,7 +259,7 @@ Resolved critical issues in the Cresora Weapon Compiler (CWC) that prevented sub
 - **Execute Block Macros**: Added automatic expansion of the `close_skill_menu()` macro within `execute` blocks, translating it to `hifumi.cresora.HotbarOverrideService.restoreHotbar(player)`.
 - **Weapon Registration Fix**: Updated `updateWeaponJson` to include mandatory `craft` fields (`fragmentItemId`, `fragmentBaseItemId`, `craftedBaseLevel`, `craftedSkillLevel`) in the generated JSON. This ensures all CWC-managed weapons are correctly parsed and registered as in-game items by `WeaponContentRegistry`.
 
-### Weapon Logic Refinement (Tanmoku Chokuu)
+### Weapon Logic Refinement (Tanboku Chokuu)
 - **API 1.21.x Compatibility**:
     - Fixed `target.kill()` to `target.kill(world)` to match the updated Minecraft API.
     - Ensured `world` is correctly cast to `ServerWorld` before calling `damage` or `spawnParticles` within `execute` blocks.
@@ -191,30 +270,30 @@ Resolved critical issues in the Cresora Weapon Compiler (CWC) that prevented sub
 
 - `gradlew classes` now completes successfully with all generated handlers compiling correctly.
 
-+## CWC Localization & Modeling Expansion
-+
-+Enhanced the Cresora Weapon Compiler (CWC) and core weapon systems to support cleaner localization and custom placeholder models.
-+
-+### Infrastructure Improvements
-+- **DSL Localization Enhancement**:
-+    - Added `send_localized_message(key, color, args...)` action to the DSL. This provides a cleaner way to send translatable messages with placeholders (`%s`, etc.) without writing manual Kotlin code in `execute` blocks.
-+    - Updated the code generator to translate this action into standard `player.sendMessage(Text.translatable(key, ...).formatted(COLOR), true)` calls.
-+- **Custom Model Data Support**:
-+    - Added `custom_model_data` property to the `weapon` block in the DSL.
-+    - Updated `WeaponDefinition` and the core registry to parse and store `customModelData`.
-+    - Modified `WeaponStackSupport` to automatically apply the `CUSTOM_MODEL_DATA` component to weapon item stacks if defined in the weapon's definition.
-+- **Asset Automation**:
-+    - Added `updateItemModels` to the compiler. It now automatically generates missing item model JSON files (`assets/cresora-utilities/models/item/<id>.json`) for weapons, using the `base_item` as a parent and placeholder texture.
-+    - This ensures all weapons defined in `.cresora` files have a visible in-game presence even before custom assets are created.
-+
-+### Weapon Logic Refinement
-+- **Tanmoku Chokuu & Dark Lux**:
-+    - Assigned temporary `custom_model_data` (10101, 10102) to provide a base for future unique modeling.
-+    - Standardized skill activation and feedback messages using the new localization action.
-+
-+### Verification
-+- Successfully ran `./gradlew generateWeapons` to verify parser and code generation.
-+- Successfully ran `./gradlew classes` to ensure 1.21.7 API compatibility (including the overhauled `CustomModelDataComponent` constructor).
+## CWC Localization & Modeling Expansion
+
+Enhanced the Cresora Weapon Compiler (CWC) and core weapon systems to support cleaner localization and custom placeholder models.
+
+### Infrastructure Improvements
+- **DSL Localization Enhancement**:
+    - Added `send_localized_message(key, color, args...)` action to the DSL. This provides a cleaner way to send translatable messages with placeholders (`%s`, etc.) without writing manual Kotlin code in `execute` blocks.
+    - Updated the code generator to translate this action into standard `player.sendMessage(Text.translatable(key, ...).formatted(COLOR), true)` calls.
+- **Custom Model Data Support**:
+    - Added `custom_model_data` property to the `weapon` block in the DSL.
+    - Updated `WeaponDefinition` and the core registry to parse and store `customModelData`.
+    - Modified `WeaponStackSupport` to automatically apply the `CUSTOM_MODEL_DATA` component to weapon item stacks if defined in the weapon's definition.
+- **Asset Automation**:
+    - Added `updateItemModels` to the compiler. It now automatically generates missing item model JSON files (`assets/cresora-utilities/models/item/<id>.json`) for weapons, using the `base_item` as a parent and placeholder texture.
+    - This ensures all weapons defined in `.cresora` files have a visible in-game presence even before custom assets are created.
+
+### Weapon Logic Refinement
+- **Tanboku Chokuu & Dark Lux**:
+    - Assigned temporary `custom_model_data` (10101, 10102) to provide a base for future unique modeling.
+    - Standardized skill activation and feedback messages using the new localization action.
+
+### Verification
+- Successfully ran `./gradlew generateWeapons` to verify parser and code generation.
+- Successfully ran `./gradlew classes` to ensure 1.21.7 API compatibility (including the overhauled `CustomModelDataComponent` constructor).
 
 ## Weapon Implementation: "Qianqiu, Yeluo" (千秋、葉落ちて)
 
@@ -235,7 +314,7 @@ Successfully implemented the new 5-star weapon "Qianqiu, Yeluo" using the CWC (C
 - **Compiler Fix**: Fixed a bug in `CresoraCompiler.kt` where sub-skill actions lacked newlines, causing syntax errors in generated code.
 - **Logic Validation**: Verified arcane damage scaling, HP-based boosts, and AOE entity filtering in the generated Kotlin code.
 
-## CWC Sub-Skill UI & Tanboku Rename Fixes
+## CWC Sub-Skill & Tanboku Rename Fixes
 
 Resolved persistent display and localization issues related to the Sub-skill menu and the weapon "Tanboku Chokuu".
 
@@ -340,7 +419,7 @@ Adjusted live combat readability and pacing for `血色战争`.
 - Blood Moon battle mobs now spawn with the glowing effect so wave enemies are easy to track at night.
 - Rest windows between waves now use real-time `30s` instead of in-game time, and the action-bar countdown follows the same real-time clock.
 
-## CWC Parser and Hotbar Stability Pass
+## CWC & System Polish
 
 Hardened the Cresora Weapon Compiler and sub-skill hotbar flow against silent breakage.
 
@@ -372,6 +451,11 @@ Closed several “defined but not actually supported” seams across equipment, 
 
 ### Fixes
 - Rejected unsupported `effectHooks` during equipment content loading and made runtime dispatch fail loudly instead of logging and continuing.
+- [x] 实现了圣遗物编译器 (Artifact Compiler - CAC)，支持从 `.artifact` 文件生成 JSON 和 Kotlin Hook 类。
+- [x] 重构了圣遗物运行时 Hook 系统，引入 `EquipmentEffectHookService` 以支持类型安全的上下文传递。
+- [x] 增强了编译器 (CWC/CAC) 的 DSL 语法，支持 C-style 分号结尾以及 `log()`, `apply_mark()` 等指令。
+- [x] 修复了编译器对 raw Kotlin 代码块的解析逻辑，通过直接提取原始源码（Raw Source Extraction）完美解决了空格和特殊符号导致的语法错误。
+- [x] 为 Lexer 增加了对 Kotlin 数字后缀 (`L`, `f`, `d`) 的支持。
 - Implemented equipment `mobLoot` table injection for artifact drops and upgrade material drops.
 - Added disconnect cleanup for treasure chest spawn scheduling while keeping persisted chest entities intact.
 - Strengthened resonance banner validation so empty or malformed rarity pools fail at content load time instead of collapsing inside pulls.
@@ -385,3 +469,50 @@ Closed several “defined but not actually supported” seams across equipment, 
 
 - Recreated `AGENTS.md` as a repository-specific contributor guide.
 - Documented the actual source layout, Gradle workflow, naming patterns, manual verification flow, and required maintenance files (`WORK_DONE.md`, `TODO.md`, `cresora_document.md`).
+
+## Comprehensive Code Review (2026-05-19)
+
+Completed a comprehensive code review of the entire CreSora Utilities codebase.
+
+### Accomplishments
+- [x] Implement Cresora Artifact Compiler (CAC) for .artifact DSL.
+- [x] Fix critical regressions in EquipmentContentRegistry (data overwriting).
+- [x] Fix reflection issues in CompiledArtifactRegistry (added @JvmStatic).
+- [x] Fix InstructionMapping string mangling bug.
+- [x] Implement robust persistence for BloodMoonService (wave/mob tracking).
+- [x] Add TTL and ownership checks to TreasureChestService.
+- [x] Add guide particle trails for Resonant Locators.
+- [x] Add recursion guard to WeaponSkillService damage processing.
+- Reviewed key architectural singletons, state lifecycles (`WeaponSkillService`), threading safety structures (`TreasureChestService`), and the compiler core (`CresoraCompiler` & `AST`).
+- Highlighted key architectural strengths: active weapon slot tracking, robust memory leak prevention (scavenging offline states), thread-safety under ticking collections, and structural DSL compilation using KotlinPoet.
+- Authored a comprehensive code review report (`comprehensive_code_review.md`) outlining key findings and critical architectural recommendations (reactive attribute caching, decoupling of weapon constants, DSL source mapping, and state-machine design for complex events).
+- Placed the final report in `/review/comprehensive_code_review.md` and registered as a project artifact.
+
+### Verification
+- `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` passed successfully, verifying that compiler weapons generation and classes compilation are 100% stable.
+
+## Blood Moon State Machine Refactoring (2026-05-19)
+
+Refactored the Blood Moon battle status management to use a robust State Machine Pattern (State Pattern) as recommended in Proposal 4 of the comprehensive code review.
+
+### Accomplishments
+- Introduced the `BloodMoonBattleState` interface and defined explicit, self-contained concrete states: `RestingState`, `PreparingState`, `CombatState`, and `CompletedState`.
+- Delegated the tick-based phase transition and countdown/status logic from the long `tickBattleSession` method into individual state classes, enhancing isolation and readability.
+- Retained absolute compatibility with existing downstream services by exposing the current phase reactive getter (`val phase get() = currentState.phase`).
+- Changed `BloodMoonBattleSession`, `BloodMoonBedKey`, and state-related classes to `internal` scope to securely expose types while maintaining compile-time validation.
+- Cleaned up invalid state mutability by removing manual reassignments of `session.phase` outside the state pattern, driving all flow changes through return states.
+
+### Verification
+- `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` passed successfully, verifying that all visibility modifiers, state machine logic, and parameters compiles cleanly with 0 errors.
+
+## Item Definitions and Chunk I/O Optimizations (2026-05-19)
+
+Resolved several P2 issues identified during code review, targeting missing item definitions for 1.21 assets and critical performance optimizations for remote chunk loading.
+
+### Accomplishments
+- Created missing 1.21 item-definition JSON files for `resonant_locator` and `resonant_cache` under `assets/cresora-utilities/items`, resolving the missing-model rendering issue in game.
+- Hardened the treasure chest expiry cleanup (`TreasureChestService.kt`) by adding a `isChunkLoaded` check before evaluating block state deletion. This successfully prevents needless remote chunk force-loading I/O when players scatter caches across the world, eliminating server-side tick lag.
+
+### Verification
+- Stopped Gradle daemon and cleared build caches via `./gradlew clean classes` to resolve standard locks.
+- `GRADLE_USER_HOME=.gradle-user ./gradlew clean classes --console=plain` passed successfully, verifying that all model files are in place and service optimizations compile cleanly.

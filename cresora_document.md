@@ -1,6 +1,64 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-18 (CWC Default Imports & Active Slot Weapon Skill Isolation 反映)
+最終更新: 2026-05-20 (聖遺物コンパイラ Artifact Compiler - CAC 実装 & コンパイラ DSL 強化)
+
+## Artifact Compiler (CAC) & DSL 強化 (2026-05-20)
+
+### 1. 聖遺物コンパイラ (Artifact Compiler - CAC)
+- **概要**: `.artifact` DSL ファイルから、聖遺物セットの JSON 定義と、対応する Kotlin Hook クラスを自動生成するシステム。
+- **生成物**:
+  - **JSON**: `src/main/resources/data/cresora-utilities/cresora/cac_artifact_content.json` に集約。`EquipmentContentRegistry` の `Codec` に準拠。
+  - **Kotlin**: `src/main/kotlin/hifumi/cresora/equipment/generated/` に `ArtifactSkill_...` クラスを生成。これらは `ArtifactSkillHandler` を実装し、セット効果を処理する。
+  - **Registry**: `CompiledArtifactRegistry` を自動生成し、`ArtifactSkillRegistry` に全ハンドラーを一括登録。
+
+### 2. 聖遺物ランタイム Hook システム (EquipmentEffectHookService)
+- **仕組み**: 従来の汎用的な `dispatch` 方式を廃止し、特定のトリガー（`onAttackDealt`, `onDamageTaken` 等）に対して型安全かつコンテキスト（`target`, `damage` 等）を保持した直接呼び出し方式へ移行。
+- **インターフェース**: `ArtifactSkillHandler` に定義されたメソッドを各セットがオーバーライドしてロジックを実装。
+
+### 3. コンパイラ DSL 強化と安定化 (CWC/CAC 共通)
+- **C-Style 構文のサポート**: DSL 内の各ステートメントにおいて、末尾のセミコロン (`;`) をオプションで許容。
+- **組み込み命令 (Instruction Mapping)**: 
+  - `log(message)`: `player.sendMessage` に展開。
+  - `apply_mark(target, markId, duration)`: 状態異常の付与を簡略化。
+  - `spawn_particles(type, x, y, z, ...)`: 粒子生成の簡略化。
+- **生ソースコード抽出 (Raw Source Extraction)**:
+  - `execute` ブロック内の Kotlin コード解析において、トークン再構成ではなく原始ソースコードから直接抽出する方式を採用。
+  - これにより、空白の挿入位置や特殊記号（`!!`, `as?`, `return@label` 等）による構文破壊を完全に排除し、複雑な Kotlin ロジックを安全に埋め込み可能。
+- **数値リテラルの改善**: Lexer が Kotlin 固有sの接尾辞 (`L`, `f`, `d`) をネイティブにサポートし、数値リテラルの精度を維持。
+
+## Resonance Hunt (共鳴探索) API 更新 (2026-05-18)
+
+Buggy で放置されていたバニラチェストの自動スポーン型「宝箱」システムを廃止し、プレイヤーが自ら能動的に探索・発見を行う「共鳴探索 (Resonance Hunt)」システムを新規実装。
+
+### 構成要素とアイテム
+- **共鳴探索コンパス (Resonant Locator)**: `item.cresora-utilities.resonant_locator`
+  - プレイヤーが右クリックで使用する能動的なレーダーアイテム。
+  - 使用すると、プレイヤーの周囲に「共鳴の宝箱」を設置し、探索開始のトリガーを引く。
+  - クリエイティブモード以外では、使用時にアイテムスタックが1減る。
+  - Locator を連続で使用して宝箱を乱立させるのを防ぐため、使用時に **12秒間のクールダウン** を適用。
+- **共鳴の宝箱 (Resonant Cache)**: `block.cresora-utilities.resonant_cache`
+  - クレソラ専用の新規ブロック。バニラのピストン等による複製バグや、バニラの破壊・窃盗から守るため、独自のカスタムチェストとして実装。
+  - 10分間の dynamic lifespan (TTL) を持ち、有効期限が切れると自動的に消滅。
+  - 他人からの窃盗を防止する厳格な所有者チェック (Strict Ownership Enforcement) を備える。
+
+### サービスと仕組み (TreasureChestService)
+- **UseItemCallback**: 
+  - 共鳴探索コンパスの使用をフックし、`ActionResult` を返す 1.21.7 互換のコールバック。
+  - プレイヤーの周囲に安全なスポーンポイント（安全な高さ、マグマや奈落の回避、岩盤へのめり込み防止）を探索し、そこに共鳴の宝箱を設置。
+- **スポーンの制限**:
+  - プレイヤーが一度にアクティブにできる宝箱は最大 **5個**。
+  - 秘境 (Domain) ワールド内でのコンパスの使用は制限される。
+- **ガイドトレイル演出**:
+  - 宝箱の出現と同時に、プレイヤーの視点から宝箱の座標に向けて、美しい `END_ROD` 粒子の高精度な軌跡ビーム (`spawnGuideTrail`) を描画し、探索をアシスト。
+- **安全なクリーンアップループ**:
+  - 宝箱の消滅や破壊のティック処理において、`ConcurrentModificationException` を完全に防ぐため、削除対象を一時キュー（`toRemove`）に退避させてから安全なスレッド境界でクレンジングを実行。
+- **NBTシリアライズ**:
+  - 宝箱の所有者UUID、出現座標（ディメンション別）、報酬情報、および有効期限 (`expireTime`) を `TreasureChestPersistentState.kt` で `Codec` を通じて完全に NBT へシリアライズ・永続化保存。
+
+### 翻訳リソースの追加
+- `item.cresora-utilities.resonant_locator`: "共鳴探索コンパス" / "共鸣探索罗盘" / "Resonant Locator"
+- `block.cresora-utilities.resonant_cache`: "共鳴の宝箱" / "共鸣宝箱" / "Resonant Cache"
+- `message.cresora.treasure_chest.*`: 各種エラー（上限到達、安全な場所不足、他人の宝箱のロック、ディメンション制限など）の多言語警告メッセージを完全網羅。
 
 ## CWC Default Imports & Active Slot Weapon Skill Isolation (2026-05-18)
 

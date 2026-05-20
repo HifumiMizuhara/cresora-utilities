@@ -51,7 +51,9 @@ object CreSoraUtilities : ModInitializer {
 	val SUB_SKILL_DUMMY_ID: Identifier = Identifier.of(MOD_ID, "sub_skill_dummy")
 	private val MOON_BRICK_ID: Identifier = Identifier.of(MOD_ID, "moon_brick")
 	private val MOON_ALTAR_ID: Identifier = Identifier.of(MOD_ID, "moon_altar")
-
+	private val RESONANT_LOCATOR_ID: Identifier = Identifier.of(MOD_ID, "resonant_locator")
+	private val RESONANT_CACHE_ID: Identifier = Identifier.of(MOD_ID, "resonant_cache")
+ 
 	private val EQUIPMENT_ITEMS: MutableMap<String, ArtifactEquipmentItem> = linkedMapOf()
 	private val WEAPON_ITEMS: MutableMap<String, CresoraWeaponItem> = linkedMapOf()
 	private val WEAPON_FRAGMENT_ITEMS: MutableMap<String, WeaponFragmentItem> = linkedMapOf()
@@ -63,6 +65,9 @@ object CreSoraUtilities : ModInitializer {
 	val MOON_BRICK_ITEM: Item = Item(itemSettings(MOON_BRICK_ID))
 	val MOON_ALTAR_BLOCK: Block = Block(blockSettings(MOON_ALTAR_ID, Blocks.CHISELED_STONE_BRICKS))
 	val MOON_ALTAR_BLOCK_ITEM: Item = BlockItem(MOON_ALTAR_BLOCK, itemSettings(MOON_ALTAR_ID))
+	val RESONANT_LOCATOR_ITEM: Item = Item(itemSettings(RESONANT_LOCATOR_ID).maxCount(16))
+	val RESONANT_CACHE_BLOCK: Block = Block(blockSettings(RESONANT_CACHE_ID, Blocks.CHEST))
+	val RESONANT_CACHE_BLOCK_ITEM: Item = BlockItem(RESONANT_CACHE_BLOCK, itemSettings(RESONANT_CACHE_ID))
 
 	lateinit var UPGRADE_SCREEN_HANDLER: ScreenHandlerType<UpgradeScreenHandler>
 	lateinit var WEAPON_UPGRADE_SCREEN_HANDLER: ScreenHandlerType<WeaponUpgradeScreenHandler>
@@ -83,9 +88,24 @@ object CreSoraUtilities : ModInitializer {
 
 	override fun onInitialize() {
 		ModDataComponents.initialize()
+
+		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
+		Registry.register(Registries.BLOCK, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK)
+		Registry.register(Registries.ITEM, TUESHOKAKU_ID, TUESHOKAKU)
+		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
+		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
+		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
+		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
+		Registry.register(Registries.ITEM, RESONANT_LOCATOR_ID, RESONANT_LOCATOR_ITEM)
+		Registry.register(Registries.ITEM, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK_ITEM)
+
 		EquipmentContentRegistry.init()
 		WeaponContentRegistry.init()
 		ArtifactSpecialItemRegistry.init()
+		registerEquipmentItems()
+		registerWeaponRarityFragmentItems()
+		registerWeaponItems()
+		registerArtifactSpecialItems()
 		ShopContentRegistry.init()
 		MobCombatProfileRegistry.init()
 		DomainRewardProfileRegistry.init()
@@ -195,18 +215,7 @@ object CreSoraUtilities : ModInitializer {
 		WeaponSkillService.init()
 		NaturalRegenService.init()
 		HotbarOverrideService.init()
-		registerEquipmentItems()
-		registerWeaponRarityFragmentItems()
-		registerWeaponItems()
-		registerArtifactSpecialItems()
 		modifyLootTables()
-
-		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
-		Registry.register(Registries.ITEM, TUESHOKAKU_ID, TUESHOKAKU)
-		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
-		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
-		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
-		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
 
 		logger.info("CreSora Utilities initialized!")
 	}

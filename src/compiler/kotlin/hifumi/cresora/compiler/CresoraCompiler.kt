@@ -390,32 +390,37 @@ class CresoraCompiler(
                 funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora", "HotbarOverrideService"))
             }
             is ExecuteActionNode -> {
-                var content = action.content
-                content = content.replace("close_skill_menu()", "hifumi.cresora.HotbarOverrideService.restoreHotbar(player)")
-
-                if (skill != null) {
-                    for (buff in skill.buffs) {
-                        val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
-                        val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
-                        content = content.replace(mapName, "$className.$mapName")
-                        content = content.replace(stateClassName, "$className.$stateClassName")
-                    }
-                }
-
                 funSpec.addCode("\n; ")
                 if (eventName == "on_damage_absorbed" || eventName == "on_damage_taken") {
                     funSpec.addCode("return run execute@ {\n")
-                    funSpec.addCode("%L\n", content)
+                    action.statements.forEach { stmt ->
+                        emitAction(stmt, funSpec, skill, packageName, className, eventName)
+                    }
                     funSpec.addCode("amount\n")
                     funSpec.addCode("}\n")
                 } else {
                     funSpec.beginControlFlow("run execute@")
-                    funSpec.addCode("%L\n", content)
+                    action.statements.forEach { stmt ->
+                        emitAction(stmt, funSpec, skill, packageName, className, eventName)
+                    }
                     funSpec.endControlFlow()
                 }
             }
+            is InstructionCallNode -> {
+                val expanded = InstructionMapping.expand(action.functionName, action.arguments)
+                funSpec.addStatement("%L", expanded)
+            }
             is ExpressionNode -> {
-                funSpec.addStatement(action.content)
+                var content = action.content
+                if (skill != null) {
+                    for (buff in skill.buffs) {
+                        val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
+                        val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
+                        content = content.replace(Regex("\\b$mapName\\b"), "$className.$mapName")
+                        content = content.replace(Regex("\\b$stateClassName\\b"), "$className.$stateClassName")
+                    }
+                }
+                funSpec.addStatement("%L", content)
             }
         }
     }

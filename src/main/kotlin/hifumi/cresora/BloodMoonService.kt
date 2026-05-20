@@ -26,6 +26,7 @@ import net.minecraft.item.Items
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -50,7 +51,7 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-private data class BloodMoonBedKey(
+internal data class BloodMoonBedKey(
     val worldKey: RegistryKey<World>,
     val first: BlockPos,
     val second: BlockPos
@@ -96,13 +97,80 @@ private data class BloodMoonRewardBundle(
     fun allStacks(): List<ItemStack> = equipmentStacks + specialStacks + weaponStacks
 }
 
-private enum class BloodMoonBattlePhase {
+internal enum class BloodMoonBattlePhase {
     COMBAT,
     RESTING,
     COMPLETED
 }
 
-private class BloodMoonBattleSession(
+internal interface BloodMoonBattleState {
+    val phase: BloodMoonBattlePhase
+    fun tick(session: BloodMoonBattleSession, server: MinecraftServer, world: ServerWorld): BloodMoonBattleState
+}
+
+internal class RestingState : BloodMoonBattleState {
+    override val phase: BloodMoonBattlePhase = BloodMoonBattlePhase.RESTING
+
+    override fun tick(session: BloodMoonBattleSession, server: MinecraftServer, world: ServerWorld): BloodMoonBattleState {
+        if (world.time >= session.restUntilTick) {
+            session.nextWaveTick = world.time + BloodMoonService.START_DELAY_TICKS
+            session.lastActionBarSecond = -1
+            return PreparingState()
+        }
+        BloodMoonService.showRestStatus(server, world, session)
+        return this
+    }
+}
+
+internal class PreparingState : BloodMoonBattleState {
+    override val phase: BloodMoonBattlePhase = BloodMoonBattlePhase.COMBAT
+
+    override fun tick(session: BloodMoonBattleSession, server: MinecraftServer, world: ServerWorld): BloodMoonBattleState {
+        if (world.time >= session.nextWaveTick) {
+            if (session.nextWaveNumber > BloodMoonService.WAVE_COUNT) {
+                BloodMoonService.completeBattle(server, session)
+                return CompletedState
+            }
+            BloodMoonService.spawnWave(server, world, session)
+            return CombatState()
+        }
+        BloodMoonService.showPrepareStatus(server, world, session)
+        return this
+    }
+}
+
+internal class CombatState : BloodMoonBattleState {
+    override val phase: BloodMoonBattlePhase = BloodMoonBattlePhase.COMBAT
+
+    override fun tick(session: BloodMoonBattleSession, server: MinecraftServer, world: ServerWorld): BloodMoonBattleState {
+        if (session.activeMobUuids.isEmpty()) {
+            session.clearedWaveCount = maxOf(session.clearedWaveCount, session.activeWaveNumber)
+            session.activeWaveNumber = 0
+            if (session.clearedWaveCount >= BloodMoonService.WAVE_COUNT) {
+                BloodMoonService.completeBattle(server, session)
+                return CompletedState
+            }
+            session.restUntilTick = world.time + BloodMoonService.REST_TICKS
+            session.lastActionBarSecond = -1
+            session.bedInvulnerableUntilNextWave = true
+            BloodMoonService.serverMessageToParticipants(
+                server,
+                session,
+                Text.translatable("message.cresora.blood_moon.wave_cleared", session.clearedWaveCount, BloodMoonService.WAVE_COUNT).formatted(Formatting.GREEN),
+                false
+            )
+            return RestingState()
+        }
+        return this
+    }
+}
+
+internal object CompletedState : BloodMoonBattleState {
+    override val phase: BloodMoonBattlePhase = BloodMoonBattlePhase.COMPLETED
+    override fun tick(session: BloodMoonBattleSession, server: MinecraftServer, world: ServerWorld): BloodMoonBattleState = this
+}
+
+internal class BloodMoonBattleSession(
     val id: UUID,
     val bedKey: BloodMoonBedKey,
     val ownerUuid: UUID,
@@ -113,7 +181,8 @@ private class BloodMoonBattleSession(
     val activeMobUuids: MutableSet<UUID> = linkedSetOf()
     val mobBedAttackCooldowns: MutableMap<UUID, Long> = linkedMapOf()
     val triggeredBedGuardThresholds: MutableSet<Int> = linkedSetOf()
-    var phase: BloodMoonBattlePhase = BloodMoonBattlePhase.COMBAT
+    var currentState: BloodMoonBattleState = PreparingState()
+    val phase: BloodMoonBattlePhase get() = currentState.phase
     var activeWaveNumber: Int = 0
     var nextWaveNumber: Int = 1
     var clearedWaveCount: Int = 0
@@ -138,10 +207,10 @@ object BloodMoonService {
     private const val BED_ATTACK_INTERVAL_TICKS = 30L
     private const val BED_PATH_REFRESH_TICKS = 15L
     private const val BED_PATH_SPEED = 1.1
-    private const val WAVE_COUNT = 20
+    const val WAVE_COUNT = 20
     private const val REST_SECONDS = 30L
-    private const val REST_TICKS = REST_SECONDS * 20L
-    private const val START_DELAY_TICKS = 20L
+    val REST_TICKS = REST_SECONDS * 20L
+    const val START_DELAY_TICKS = 20L
     private const val CONFIRM_TIMEOUT_TICKS = 20L * 5L
     private const val MOB_DUPLICATION_CHANCE = 0.20
     private const val PLAYER_DAMAGE_PER_STACK = 0.10
@@ -168,8 +237,8 @@ object BloodMoonService {
     private val pendingRespawnRestoresByPlayer: MutableMap<UUID, ServerPlayerEntity.Respawn?> = linkedMapOf()
 
     private var activeSession: BloodMoonBattleSession? = null
-    private var lockedBattleDayIndex: Long = -1L
-    private var originalMobGriefing: Boolean? = null
+    private var persistentState: BloodMoonPersistentState? = null
+    private var stateLoaded: Boolean = false
     private var rewardChestState: BloodMoonRewardChestPersistentState? = null
 
     fun init() {
@@ -319,8 +388,9 @@ object BloodMoonService {
             return ActionResult.SUCCESS
         }
 
-        if (lockedBattleDayIndex == currentDayIndex(server)) {
-            serverPlayer.sendMessage(Text.translatable("message.cresora.blood_moon.already_cleared").formatted(Formatting.GRAY), false)
+        ensureStateLoaded(server)
+        if (persistentState?.lockedBattleDayIndex == currentDayIndex(server)) {
+            player.sendMessage(Text.translatable("message.cresora.blood_moon.already_cleared").formatted(Formatting.GRAY), true)
             return ActionResult.SUCCESS
         }
 
@@ -408,6 +478,7 @@ object BloodMoonService {
     }
 
     private fun tick(server: MinecraftServer) {
+        ensureStateLoaded(server)
         ensureRewardStateLoaded(server)
         purgeExpiredConfirmations(server)
         cleanupRewardChests(server)
@@ -416,10 +487,85 @@ object BloodMoonService {
         val session = activeSession
         if (session != null) {
             tickBattleSession(server, session)
+            updatePersistentSession(session)
+        } else {
+            clearPersistentSession()
         }
 
         tickBloodMoonTime(server)
         recoverMobGriefingIfDirty(server)
+    }
+
+    private fun ensureStateLoaded(server: MinecraftServer) {
+        if (stateLoaded) return
+        val world = server.overworld
+        persistentState = world.persistentStateManager.getOrCreate(BloodMoonPersistentState.TYPE)
+        stateLoaded = true
+
+        val saved = persistentState?.activeSession
+        if (saved != null) {
+            val worldKey = RegistryKey.of<World>(RegistryKeys.WORLD, Identifier.of(saved.bedKey.worldId))
+            val bedKey = BloodMoonBedKey(
+                worldKey,
+                BlockPos(saved.bedKey.firstX, saved.bedKey.firstY, saved.bedKey.firstZ),
+                BlockPos(saved.bedKey.secondX, saved.bedKey.secondY, saved.bedKey.secondZ)
+            )
+            // Reconstruct session. We use empty originalBedStates on recovery since the bed is already modified.
+            // This is a trade-off: if the server restarts, we might not be able to perfectly restore the bed look
+            // unless we also persist the original states. Let's add them to the persistent state in next iteration if needed.
+            val session = BloodMoonBattleSession(
+                saved.id,
+                bedKey,
+                saved.ownerUuid,
+                saved.startedDayIndex,
+                emptyMap() // TODO: Persist original bed states if critical
+            )
+            session.participants.addAll(saved.participants)
+            session.clearedWaveCount = saved.clearedWaveCount
+            session.nextWaveNumber = saved.nextWaveNumber
+            session.bedDurabilityPercent = saved.bedDurabilityPercent
+            session.nextWaveTick = saved.nextWaveTick
+            session.restUntilTick = saved.restUntilTick
+            session.activeMobUuids.addAll(saved.activeMobUuids)
+            session.currentState = when (saved.phase) {
+                "RESTING" -> RestingState()
+                "COMPLETED" -> CompletedState
+                else -> PreparingState()
+            }
+            activeSession = session
+        }
+    }
+
+    private fun updatePersistentSession(session: BloodMoonBattleSession) {
+        val state = persistentState ?: return
+        val savedBedKey = SavedBloodMoonBedKey(
+            session.bedKey.worldKey.value.toString(),
+            session.bedKey.first.x, session.bedKey.first.y, session.bedKey.first.z,
+            session.bedKey.second.x, session.bedKey.second.y, session.bedKey.second.z
+        )
+        state.activeSession = SavedBloodMoonSession(
+            session.id,
+            savedBedKey,
+            session.ownerUuid,
+            session.startedDayIndex,
+            session.participants.toList(),
+            session.clearedWaveCount,
+            session.nextWaveNumber,
+            session.bedDurabilityPercent,
+            session.phase.name,
+            session.nextWaveTick,
+            session.restUntilTick,
+            session.activeMobUuids.toList()
+        )
+        state.markDirty()
+    }
+
+    private fun clearPersistentSession() {
+        val state = persistentState ?: return
+        if (state.activeSession != null) {
+            state.activeSession = null
+            state.markDirty()
+        }
     }
 
     private fun tickBloodMoonTime(server: MinecraftServer) {
@@ -457,38 +603,12 @@ object BloodMoonService {
         }
         updateBattleMobPressure(world, session)
         enforceParticipants(server, world, session)
-        cleanupActiveMobsAndAdvance(server, world, session)
+        cleanupActiveMobs(server, world, session)
 
-        when (session.phase) {
-            BloodMoonBattlePhase.RESTING -> {
-                if (world.time >= session.restUntilTick) {
-                    session.phase = BloodMoonBattlePhase.COMBAT
-                    session.nextWaveTick = world.time + START_DELAY_TICKS
-                    session.lastActionBarSecond = -1
-                } else {
-                    showRestStatus(server, world, session)
-                    return
-                }
-            }
-            BloodMoonBattlePhase.COMBAT -> {
-                if (session.activeMobUuids.isNotEmpty()) {
-                    return
-                }
-                if (world.time < session.nextWaveTick) {
-                    showPrepareStatus(server, world, session)
-                    return
-                }
-                if (session.nextWaveNumber > WAVE_COUNT) {
-                    completeBattle(server, session)
-                    return
-                }
-                spawnWave(server, world, session)
-            }
-            BloodMoonBattlePhase.COMPLETED -> return
-        }
+        session.currentState = session.currentState.tick(session, server, world)
     }
 
-    private fun cleanupActiveMobsAndAdvance(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
+    private fun cleanupActiveMobs(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
         val iterator = session.activeMobUuids.iterator()
         while (iterator.hasNext()) {
             val mobUuid = iterator.next()
@@ -498,30 +618,9 @@ object BloodMoonService {
                 session.mobBedAttackCooldowns.remove(mobUuid)
             }
         }
-
-        if (session.phase != BloodMoonBattlePhase.COMBAT || session.activeWaveNumber <= 0 || session.activeMobUuids.isNotEmpty()) {
-            return
-        }
-
-        session.clearedWaveCount = maxOf(session.clearedWaveCount, session.activeWaveNumber)
-        session.activeWaveNumber = 0
-        if (session.clearedWaveCount >= WAVE_COUNT) {
-            completeBattle(server, session)
-            return
-        }
-        session.phase = BloodMoonBattlePhase.RESTING
-        session.restUntilTick = world.time + REST_TICKS
-        session.lastActionBarSecond = -1
-        session.bedInvulnerableUntilNextWave = true
-        serverMessageToParticipants(
-            server,
-            session,
-            Text.translatable("message.cresora.blood_moon.wave_cleared", session.clearedWaveCount, WAVE_COUNT).formatted(Formatting.GREEN),
-            false
-        )
     }
 
-    private fun spawnWave(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
+    internal fun spawnWave(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
         val waveNumber = session.nextWaveNumber.coerceAtLeast(1)
         val participantCount = session.participants.size.coerceAtLeast(1)
         val target = server.playerManager.playerList.firstOrNull { session.participants.contains(it.uuid) } ?: return
@@ -573,7 +672,6 @@ object BloodMoonService {
         session.activeWaveNumber = waveNumber
         session.nextWaveNumber += 1
         session.nextWaveTick = world.time
-        session.phase = BloodMoonBattlePhase.COMBAT
         session.lastActionBarSecond = -1
         serverMessageToParticipants(
             server,
@@ -583,17 +681,17 @@ object BloodMoonService {
         )
     }
 
-    private fun completeBattle(server: MinecraftServer, session: BloodMoonBattleSession) {
+    internal fun completeBattle(server: MinecraftServer, session: BloodMoonBattleSession) {
         if (session.phase == BloodMoonBattlePhase.COMPLETED) {
             return
         }
-        session.phase = BloodMoonBattlePhase.COMPLETED
         restoreMobGriefing(server)
         restoreBattleBed(server, session)
         spawnRewardChests(server, session)
         restoreParticipantRespawns(server, session.participants)
         serverMessageToParticipants(server, session, Text.translatable("message.cresora.blood_moon.victory").formatted(Formatting.GOLD), false)
         activeSession = null
+        clearPersistentSession()
     }
 
     private fun spawnRewardChests(server: MinecraftServer, session: BloodMoonBattleSession) {
@@ -732,7 +830,8 @@ object BloodMoonService {
     }
 
     private fun startBattle(server: MinecraftServer, player: ServerPlayerEntity, bedKey: BloodMoonBedKey) {
-        if (lockedBattleDayIndex == currentDayIndex(server)) {
+        ensureStateLoaded(server)
+        if (persistentState?.lockedBattleDayIndex == currentDayIndex(server)) {
             player.sendMessage(Text.translatable("message.cresora.blood_moon.already_cleared").formatted(Formatting.GRAY), false)
             return
         }
@@ -754,12 +853,15 @@ object BloodMoonService {
         session.participants += collectNearbyParticipants(server, world, bedKey)
         session.participants += player.uuid
         activeSession = session
-        lockedBattleDayIndex = session.startedDayIndex
 
         applySpecialBed(world, session)
         applyBattleRespawns(server, session)
         setMobGriefing(server, false)
         session.nextWaveTick = world.time + START_DELAY_TICKS
+
+        updatePersistentSession(session)
+        persistentState?.lockedBattleDayIndex = session.startedDayIndex
+        persistentState?.markDirty()
 
         serverMessageToParticipants(server, session, Text.translatable("message.cresora.blood_moon.started").formatted(Formatting.LIGHT_PURPLE), false)
         server.playerManager.playerList
@@ -812,7 +914,7 @@ object BloodMoonService {
         }
     }
 
-    private fun showRestStatus(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
+    internal fun showRestStatus(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
         val remainingSeconds = ((session.restUntilTick - world.time).coerceAtLeast(0L) / 20L).toInt()
         if (remainingSeconds == session.lastActionBarSecond) {
             return
@@ -826,7 +928,7 @@ object BloodMoonService {
         )
     }
 
-    private fun showPrepareStatus(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
+    internal fun showPrepareStatus(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
         val remainingSeconds = ((session.nextWaveTick - world.time).coerceAtLeast(0L) / 20L).toInt()
         if (remainingSeconds == session.lastActionBarSecond) {
             return
@@ -873,16 +975,18 @@ object BloodMoonService {
         if (activeSession != null) {
             return
         }
-        if (lockedBattleDayIndex < 0L) {
+        val locked = persistentState?.lockedBattleDayIndex ?: -1L
+        if (locked < 0L) {
             return
         }
-        if (lockedBattleDayIndex == currentDayIndex(server)) {
+        if (locked == currentDayIndex(server)) {
             return
         }
-        lockedBattleDayIndex = -1L
+        persistentState?.lockedBattleDayIndex = -1L
+        persistentState?.markDirty()
     }
 
-    private fun serverMessageToParticipants(server: MinecraftServer, session: BloodMoonBattleSession, message: Text, actionBar: Boolean) {
+    internal fun serverMessageToParticipants(server: MinecraftServer, session: BloodMoonBattleSession, message: Text, actionBar: Boolean) {
         server.playerManager.playerList
             .filter { session.participants.contains(it.uuid) }
             .forEach { it.sendMessage(message, actionBar) }
@@ -946,20 +1050,22 @@ object BloodMoonService {
 
     private fun setMobGriefing(server: MinecraftServer, value: Boolean) {
         val rule = server.gameRules.get(GameRules.DO_MOB_GRIEFING)
-        if (originalMobGriefing == null) {
-            originalMobGriefing = rule.get()
+        if (persistentState?.originalMobGriefing == null) {
+            persistentState?.originalMobGriefing = rule.get()
+            persistentState?.markDirty()
         }
         rule.set(value, server)
     }
 
     private fun restoreMobGriefing(server: MinecraftServer) {
-        val original = originalMobGriefing ?: return
+        val original = persistentState?.originalMobGriefing ?: return
         server.gameRules.get(GameRules.DO_MOB_GRIEFING).set(original, server)
-        originalMobGriefing = null
+        persistentState?.originalMobGriefing = null
+        persistentState?.markDirty()
     }
 
     private fun recoverMobGriefingIfDirty(server: MinecraftServer) {
-        if (activeSession != null || originalMobGriefing == null) {
+        if (activeSession != null || persistentState?.originalMobGriefing == null) {
             return
         }
         restoreMobGriefing(server)
@@ -1311,11 +1417,12 @@ object BloodMoonService {
             activeSession = null
             changed = true
         }
-        if (lockedBattleDayIndex >= 0L) {
-            lockedBattleDayIndex = -1L
+        if ((persistentState?.lockedBattleDayIndex ?: -1L) >= 0L) {
+            persistentState?.lockedBattleDayIndex = -1L
+            persistentState?.markDirty()
             changed = true
         }
-        if (originalMobGriefing != null) {
+        if (persistentState?.originalMobGriefing != null) {
             restoreMobGriefing(server)
             changed = true
         }

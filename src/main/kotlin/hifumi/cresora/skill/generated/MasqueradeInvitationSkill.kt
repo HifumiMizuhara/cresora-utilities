@@ -35,13 +35,12 @@ public object MasqueradeInvitationSkill : WeaponSkillHandler {
 
 
     ; run execute@ {
-      val value = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data);
-                      player.heal(value);
-                     
-          player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.heal_activated",
+      val value = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data)
+      player.heal(value)
+      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.heal_activated",
           net.minecraft.text.Text.translatable(definition.translationKey()),
           hifumi.cresora.WeaponSkillService.formatNumber(value /
-          2.0)).formatted(net.minecraft.util.Formatting.GREEN), true);
+          2.0)).formatted(net.minecraft.util.Formatting.GREEN), true)
     }
 
 
