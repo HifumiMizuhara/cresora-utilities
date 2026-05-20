@@ -24,6 +24,7 @@
 ## Resonance Hunt (共鳴探索) フォローアップ
 - [x] プレイヤーが CSC で購入できるように、共鳴探索コンパス (`resonant_locator`) を CreSora ショップ (`shop_content.json`) に追加。 (Completed 2026-05-19)
 - [ ] 特定の秘境ステージ (Domain Stages) または毎日の探索ログの確定報酬として `resonant_locator` を設定。
+- [ ] runClient での共鳴探索守護者チャレンジおよび星別アップグレード報酬のゲーム内実機テスト (目視確認)
 
 ## 新規コンテンツ
 - [ ] 特定の月相（日食、月食、デスムーン、未知）の特殊効果を詳細に定義。

@@ -1,11 +1,16 @@
 package hifumi.cresora
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
+import net.minecraft.entity.decoration.DisplayEntity
+import net.minecraft.entity.EntityType
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.particle.ParticleTypes
@@ -27,6 +32,7 @@ import net.minecraft.world.Heightmap
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.util.UUID
 import kotlin.math.PI
@@ -39,6 +45,11 @@ object TreasureChestService {
     private const val MIN_RADIUS = 10
     private const val MAX_RADIUS = 25
     private const val SPAWN_ATTEMPTS = 32
+
+    private const val TRIGGER_DISTANCE_SQ = 36.0 // 6 blocks
+    private const val RESET_DISTANCE_SQ = 1024.0 // 32 blocks
+    private const val ELITE_HEALTH_SCALAR = 2.5
+    private const val ELITE_DEFENSE_SCALAR = 2.0
 
     private data class ChestReward(
         val stars: Int,
@@ -61,6 +72,16 @@ object TreasureChestService {
         val expireTime: Long
     )
 
+    private data class ChestChallenge(
+        val chestKey: ChestKey,
+        val ownerId: UUID,
+        val stars: Int,
+        val guardianUuids: MutableSet<UUID> = linkedSetOf(),
+        var displayEntityUuid: UUID? = null,
+        var triggered: Boolean = false,
+        var completed: Boolean = false
+    )
+
     // Using our custom block for all chests to completely prevent conflict with vanilla player chests
     private val rewards = listOf(
         ChestReward(3, 400, 100, 70, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.HAPPY_VILLAGER),
@@ -70,6 +91,7 @@ object TreasureChestService {
 
     private val activeKeysByOwner: MutableMap<UUID, MutableSet<ChestKey>> = linkedMapOf()
     private val activeByKey: MutableMap<ChestKey, ActiveChest> = linkedMapOf()
+    private val activeChallenges: MutableMap<ChestKey, ChestChallenge> = linkedMapOf()
     private var persistentState: TreasureChestPersistentState? = null
     private var stateLoaded: Boolean = false
 
@@ -85,14 +107,391 @@ object TreasureChestService {
         UseItemCallback.EVENT.register(UseItemCallback { player, world, hand ->
             onUseItem(player, world, hand)
         })
+
+        ServerLivingEntityEvents.AFTER_DEATH.register(ServerLivingEntityEvents.AfterDeath { entity, damageSource ->
+            val killer = damageSource.attacker as? ServerPlayerEntity
+            if (entity is HostileEntity) {
+                onGuardianKilled(entity, killer)
+            }
+        })
     }
 
     private fun tick(server: MinecraftServer) {
         ensureStateLoaded(server)
         val now = server.overworld.time
         cleanup(server)
+        if (now % 10L == 0L) {
+            tickChallenges(server)
+        }
         if (now % 20L == 0L) {
             emitParticles(server)
+        }
+    }
+
+    private fun tickChallenges(server: MinecraftServer) {
+        val now = server.overworld.time
+        for (chest in activeByKey.values) {
+            var challenge = activeChallenges[chest.key]
+
+            if (challenge != null && challenge.completed) {
+                if (now % 20L == 0L) {
+                    val world = server.getWorld(chest.key.worldKey) ?: continue
+                    if (isChunkLoaded(world, chest.key.pos)) {
+                        world.spawnParticles(
+                            ParticleTypes.HAPPY_VILLAGER,
+                            chest.key.pos.x + 0.5,
+                            chest.key.pos.y + 1.05,
+                            chest.key.pos.z + 0.5,
+                            3,
+                            0.25,
+                            0.1,
+                            0.25,
+                            0.0
+                        )
+                    }
+                }
+                continue
+            }
+
+            val world = server.getWorld(chest.key.worldKey) ?: continue
+            if (!isChunkLoaded(world, chest.key.pos)) {
+                continue
+            }
+
+            val owner = server.playerManager.getPlayer(chest.ownerId)
+
+            if (challenge == null) {
+                if (owner != null && owner.world.registryKey == chest.key.worldKey && owner.squaredDistanceTo(chest.key.pos.toCenterPos()) <= TRIGGER_DISTANCE_SQ) {
+                    val newChallenge = ChestChallenge(chest.key, chest.ownerId, chest.reward.stars)
+                    activeChallenges[chest.key] = newChallenge
+                    triggerChallenge(server, world, chest, newChallenge, owner)
+                }
+            } else {
+                val distanceSquared = owner?.let {
+                    if (it.world.registryKey == chest.key.worldKey) it.squaredDistanceTo(chest.key.pos.toCenterPos()) else 99999.0
+                } ?: 99999.0
+
+                if (owner == null || !owner.isAlive || distanceSquared > RESET_DISTANCE_SQ) {
+                    resetChallenge(server, world, challenge)
+                } else {
+                    val iterator = challenge.guardianUuids.iterator()
+                    var remaining = 0
+                    while (iterator.hasNext()) {
+                        val uuid = iterator.next()
+                        val entity = world.getEntity(uuid)
+                        if (entity == null || !entity.isAlive || entity.isRemoved) {
+                            iterator.remove()
+                        } else {
+                            remaining++
+                            if (entity is HostileEntity && (entity.target == null || entity.target != owner)) {
+                                entity.target = owner
+                            }
+                        }
+                    }
+
+                    if (remaining == 0) {
+                        completeChallenge(server, world, chest, challenge, owner)
+                    } else {
+                        syncChallengeDisplay(world, chest, challenge, remaining)
+                        spawnActiveChallengeParticles(world, chest.key.pos)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun spawnActiveChallengeParticles(world: ServerWorld, pos: BlockPos) {
+        val centerX = pos.x + 0.5
+        val centerY = pos.y + 0.5
+        val centerZ = pos.z + 0.5
+        val radius = 1.5
+        val steps = 8
+        for (i in 0 until steps) {
+            val angle = i * (PI * 2.0 / steps)
+            val px = centerX + radius * cos(angle)
+            val pz = centerZ + radius * sin(angle)
+            world.spawnParticles(
+                ParticleTypes.SOUL_FIRE_FLAME,
+                px,
+                centerY,
+                pz,
+                1,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            )
+        }
+    }
+
+    private fun triggerChallenge(server: MinecraftServer, world: ServerWorld, chest: ActiveChest, challenge: ChestChallenge, player: ServerPlayerEntity) {
+        challenge.triggered = true
+        val rank = AdventureRankService.getRank(player)
+        val count = when (challenge.stars) {
+            3 -> 3
+            4 -> 3
+            5 -> 4
+            else -> 2
+        }
+
+        for (i in 0 until count) {
+            val isElite = when (challenge.stars) {
+                3 -> false
+                4 -> i == 0
+                5 -> i < 2
+                else -> false
+            }
+
+            val type = if (isElite && challenge.stars == 5 && i == 0) {
+                EntityType.WITHER_SKELETON
+            } else if (world.random.nextBoolean()) {
+                EntityType.ZOMBIE
+            } else {
+                EntityType.SKELETON
+            }
+
+            val guardian = spawnGuardian(world, type, chest.key.pos, player, isElite, rank)
+            if (guardian != null) {
+                challenge.guardianUuids.add(guardian.uuid)
+            }
+        }
+
+        if (challenge.guardianUuids.isEmpty()) {
+            challenge.triggered = false
+            activeChallenges.remove(chest.key)
+            player.sendMessage(
+                Text.literal("§c[共鸣探索] 守护者唤醒失败，请重试或在更开阔的位置放置宝箱！"),
+                false
+            )
+            return
+        }
+
+        world.playSound(
+            null,
+            chest.key.pos,
+            SoundEvents.ENTITY_WITHER_SPAWN,
+            SoundCategory.HOSTILE,
+            0.6f,
+            1.2f
+        )
+
+        player.sendMessage(
+            Text.literal("§6[共鸣探索] §f守护者已被唤醒，击败它们以解锁共鸣宝箱！"),
+            false
+        )
+
+        syncChallengeDisplay(world, chest, challenge, challenge.guardianUuids.size)
+    }
+
+    private fun spawnGuardian(world: ServerWorld, entityType: EntityType<out HostileEntity>, pos: BlockPos, player: ServerPlayerEntity, elite: Boolean, rank: Int): HostileEntity? {
+        val spawnPos = findGuardianSpawnSpot(world, pos) ?: pos.up(2)
+        val entity = entityType.create(world, null, spawnPos, SpawnReason.EVENT, true, false) ?: return null
+        entity.refreshPositionAndAngles(spawnPos.x + 0.5, spawnPos.y + 0.05, spawnPos.z + 0.5, world.random.nextFloat() * 360f, 0f)
+
+        val access = entity as? AdventureRankMobAccess
+        if (access != null) {
+            access.cresoraSetMobAdventureRank(rank)
+            FieldMobPackService.markExplicit(entity, elite)
+        }
+
+        val healthScalar = if (elite) ELITE_HEALTH_SCALAR else 1.0
+        val defenseScalar = if (elite) ELITE_DEFENSE_SCALAR else 1.0
+        AdventureRankService.applyMobScaling(entity, rank, healthScalar, defenseScalar, defenseScalar)
+
+        entity.isGlowing = true
+        entity.target = player
+
+        world.spawnEntity(entity)
+        return entity
+    }
+
+    private fun findGuardianSpawnSpot(world: ServerWorld, chestPos: BlockPos): BlockPos? {
+        for (attempt in 0..16) {
+            val dx = world.random.nextInt(5) - 2
+            val dz = world.random.nextInt(5) - 2
+            if (dx == 0 && dz == 0) continue
+            val candidate = chestPos.add(dx, 0, dz)
+            for (dy in -3..3) {
+                val finalPos = candidate.up(dy)
+                if (world.getBlockState(finalPos).isAir &&
+                    world.getBlockState(finalPos.up()).isAir &&
+                    world.getBlockState(finalPos.down()).isSideSolidFullSquare(world, finalPos.down(), Direction.UP)) {
+                    return finalPos
+                }
+            }
+        }
+        return null
+    }
+
+    private fun resetChallenge(server: MinecraftServer, world: ServerWorld, challenge: ChestChallenge) {
+        challenge.displayEntityUuid?.let { uuid ->
+            world.getEntity(uuid)?.discard()
+        }
+        challenge.displayEntityUuid = null
+
+        challenge.guardianUuids.forEach { uuid ->
+            world.getEntity(uuid)?.discard()
+        }
+        challenge.guardianUuids.clear()
+
+        challenge.triggered = false
+        challenge.completed = false
+        activeChallenges.remove(challenge.chestKey)
+
+        val owner = server.playerManager.getPlayer(challenge.ownerId)
+        owner?.sendMessage(
+            Text.literal("§c[共鸣探索] §f由于你离宝箱过远或不幸死亡，共鸣挑战已重置。"),
+            false
+        )
+    }
+
+    private fun completeChallenge(server: MinecraftServer, world: ServerWorld, chest: ActiveChest, challenge: ChestChallenge, player: ServerPlayerEntity) {
+        challenge.completed = true
+
+        challenge.displayEntityUuid?.let { uuid ->
+            world.getEntity(uuid)?.discard()
+        }
+        challenge.displayEntityUuid = null
+
+        world.playSound(
+            null,
+            chest.key.pos,
+            SoundEvents.UI_TOAST_CHALLENGE_COMPLETE,
+            SoundCategory.PLAYERS,
+            0.85f,
+            1.1f
+        )
+
+        world.spawnParticles(
+            ParticleTypes.HAPPY_VILLAGER,
+            chest.key.pos.x + 0.5,
+            chest.key.pos.y + 1.25,
+            chest.key.pos.z + 0.5,
+            20,
+            0.5,
+            0.5,
+            0.5,
+            0.1
+        )
+
+        player.sendMessage(
+            Text.literal("§6[共鸣探索] §a共鸣挑战成功！你可以开启宝箱了。"),
+            false
+        )
+    }
+
+    private fun syncChallengeDisplay(world: ServerWorld, chest: ActiveChest, challenge: ChestChallenge, remaining: Int) {
+        val display = resolveChallengeDisplay(world, challenge) ?: createChallengeDisplay(world, chest, challenge, remaining)
+        display.setText(Text.literal("§6[共鸣挑战] §f击败守护者！ §7(剩余: $remaining)"))
+    }
+
+    private fun resolveChallengeDisplay(world: ServerWorld, challenge: ChestChallenge): DisplayEntity.TextDisplayEntity? {
+        val uuid = challenge.displayEntityUuid ?: return null
+        return world.getEntity(uuid) as? DisplayEntity.TextDisplayEntity
+    }
+
+    private fun createChallengeDisplay(world: ServerWorld, chest: ActiveChest, challenge: ChestChallenge, remaining: Int): DisplayEntity.TextDisplayEntity {
+        val display = DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world)
+        display.setPosition(chest.key.pos.x + 0.5, chest.key.pos.y + 1.25, chest.key.pos.z + 0.5)
+        display.setBillboardMode(DisplayEntity.BillboardMode.CENTER)
+        display.setViewRange(1.5f)
+        display.setDisplayWidth(0.0f)
+        display.setDisplayHeight(0.0f)
+        display.setShadowStrength(0.0f)
+        display.setBackground(0)
+        display.setTextOpacity((-1).toByte())
+        val flags =
+            (DisplayEntity.TextDisplayEntity.SHADOW_FLAG.toInt() or DisplayEntity.TextDisplayEntity.SEE_THROUGH_FLAG.toInt()).toByte()
+        display.setDisplayFlags(flags)
+        display.setNoGravity(true)
+        display.isInvulnerable = true
+        display.isSilent = true
+        display.setText(Text.literal("§6[共鸣挑战] §f击败守护者！ §7(剩余: $remaining)"))
+        world.spawnEntity(display)
+        challenge.displayEntityUuid = display.uuid
+        return display
+    }
+
+    private fun onGuardianKilled(entity: HostileEntity, killer: ServerPlayerEntity?) {
+        val entityUuid = entity.uuid
+        val challenge = activeChallenges.values.find { it.guardianUuids.contains(entityUuid) } ?: return
+        challenge.guardianUuids.remove(entityUuid)
+
+        val targetPlayer = killer ?: entity.world.server?.playerManager?.getPlayer(challenge.ownerId) ?: return
+        val amount = if ((entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true) 100 else 40
+        val totalCredits = CreditsService.addCredits(targetPlayer, amount)
+
+        targetPlayer.sendMessage(
+            Text.literal("§6[共鸣探索] §f击杀守护者：CSC +$amount | 当前 CSC ${ArtifactSpecialItem.formatWholeNumber(totalCredits)}"),
+            true
+        )
+
+        val random = entity.random
+        val lootStack = ItemStack(net.minecraft.item.Items.GOLD_NUGGET, random.nextBetween(1, 3))
+        val itemEntity = net.minecraft.entity.ItemEntity(entity.world, entity.x, entity.y, entity.z, lootStack)
+        entity.world.spawnEntity(itemEntity)
+    }
+
+    private fun grantUpgradedChallengeRewards(player: ServerPlayerEntity, stars: Int) {
+        val random = player.random
+        val isEquipment = random.nextBoolean()
+
+        if (isEquipment) {
+            val candidateDefinitions = EquipmentContentRegistry.equipmentDefinitions()
+            if (candidateDefinitions.isNotEmpty()) {
+                val definition = candidateDefinitions[random.nextInt(candidateDefinitions.size)]
+                val item = EquipmentStackSupport.itemForDefinitionId(definition.id)
+                if (item != null) {
+                    val rarity = when (stars) {
+                        3 -> EquipmentRarity.THREE_STAR
+                        4 -> EquipmentRarity.FOUR_STAR
+                        5 -> EquipmentRarity.FIVE_STAR
+                        else -> EquipmentRarity.THREE_STAR
+                    }
+                    val level = random.nextBetween(0, 4)
+                    val stack = ItemStack(item)
+                    val data = EquipmentGenerationService.createEquipment(
+                        random = random,
+                        definition = definition,
+                        startingLevel = level,
+                        forcedRarity = rarity
+                    )
+                    EquipmentStackSupport.syncEquipmentData(stack, data)
+                    giveStack(player, stack)
+                    player.sendMessage(
+                        Text.literal("§6[共鸣奖励] §f获得了圣遗物残响: ").append(stack.name),
+                        false
+                    )
+                }
+            }
+        } else {
+            val weaponRarity = when (stars) {
+                3 -> WeaponRarity.THREE_STAR
+                4 -> WeaponRarity.FOUR_STAR
+                5 -> if (random.nextBoolean()) WeaponRarity.FIVE_STAR else WeaponRarity.FOUR_STAR
+                else -> WeaponRarity.THREE_STAR
+            }
+            val itemId = Identifier.of(CreSoraUtilities.MOD_ID, weaponRarity.fragmentItemId())
+            val item = Registries.ITEM.get(itemId)
+            if (item != net.minecraft.item.Items.AIR) {
+                val count = if (stars == 5) random.nextBetween(1, 2) else 1
+                val stack = ItemStack(item, count)
+                giveStack(player, stack)
+                player.sendMessage(
+                    Text.literal("§6[共鸣奖励] §f获得了武器碎片: ").append(stack.name).append(" x$count"),
+                    false
+                )
+            }
+        }
+    }
+
+    private fun giveStack(player: ServerPlayerEntity, stack: ItemStack) {
+        val remaining = stack.copy()
+        if (player.inventory.insertStack(remaining)) {
+            return
+        }
+        if (!remaining.isEmpty) {
+            player.dropItem(remaining, false)
         }
     }
 
@@ -107,17 +506,14 @@ object TreasureChestService {
             val isExpired = chest.expireTime != 0L && now >= chest.expireTime
             val shouldRemove = world == null || isExpired || (isChunkLoaded(world, chest.key.pos) && !isOurChestBlock(world.getBlockState(chest.key.pos).block))
             if (shouldRemove) {
-                iterator.remove() // Safely remove from activeByKey using iterator
+                iterator.remove()
                 toRemove.add(chest)
             }
         }
 
-        // Safely unregister and clear block outside of the activeByKey iterator loop to prevent ConcurrentModificationException
         for (chest in toRemove) {
             val world = server.getWorld(chest.key.worldKey)
             if (world != null) {
-                // If it expired, only remove the chest block from the world if the chunk is currently loaded.
-                // This prevents remote force-loading of chunks (needless chunk I/O) in the hot tick loop.
                 if (isChunkLoaded(world, chest.key.pos)) {
                     val state = world.getBlockState(chest.key.pos)
                     if (isOurChestBlock(state.block)) {
@@ -125,12 +521,17 @@ object TreasureChestService {
                     }
                 }
             }
-            unregisterChest(chest)
+            unregisterChest(chest, server)
         }
     }
 
     fun clearTransientState(player: ServerPlayerEntity) {
-        // Passive timer is deleted, this remains as a registry cleanup placeholder if needed
+        val server = player.server ?: return
+        val toReset = activeChallenges.values.filter { it.ownerId == player.uuid && it.triggered && !it.completed }
+        for (challenge in toReset) {
+            val world = server.getWorld(challenge.chestKey.worldKey) ?: continue
+            resetChallenge(server, world, challenge)
+        }
     }
 
     private fun emitParticles(server: MinecraftServer) {
@@ -149,7 +550,7 @@ object TreasureChestService {
                 chest.key.pos.z + 0.5,
                 6,
                 0.25,
-                0.15,
+                0.1,
                 0.25,
                 0.0
             )
@@ -193,7 +594,6 @@ object TreasureChestService {
             return ActionResult.FAIL
         }
 
-        // Chest has a dynamic lifespan (TTL) of 10 minutes (12000 ticks)
         val expireTicks = 20L * 60L * 10L
         val expireTime = playerWorld.time + expireTicks
 
@@ -209,7 +609,6 @@ object TreasureChestService {
             stack.decrement(1)
         }
 
-        // Set a 12-second cooldown to prevent locator spawn spam
         serverPlayer.itemCooldownManager.set(stack, 20 * 12)
 
         playerWorld.playSound(
@@ -232,7 +631,6 @@ object TreasureChestService {
             false
         )
 
-        // Draw a beautiful high-fidelity guide path particle trail from the player eye to the newly spawned cache coordinates!
         spawnGuideTrail(playerWorld, serverPlayer.eyePos, pos)
 
         return ActionResult.SUCCESS
@@ -275,7 +673,6 @@ object TreasureChestService {
         val key = ChestKey(playerWorld.registryKey, hitResult.blockPos.toImmutable())
         val chest = activeByKey[key] ?: return ActionResult.PASS
 
-        // Strict ownership check to prevent chest theft by other players
         if (chest.ownerId != serverPlayer.uuid) {
             val ownerName = server.playerManager.getPlayer(chest.ownerId)?.name?.string ?: "其他玩家"
             serverPlayer.sendMessage(
@@ -285,10 +682,28 @@ object TreasureChestService {
             return ActionResult.FAIL
         }
 
+        val challenge = activeChallenges.getOrPut(key) {
+            ChestChallenge(key, chest.ownerId, chest.reward.stars)
+        }
+        if (!challenge.triggered) {
+            triggerChallenge(server, playerWorld, chest, challenge, serverPlayer)
+            return ActionResult.FAIL
+        }
+        if (!challenge.completed) {
+            serverPlayer.sendMessage(
+                Text.literal("§c请先击败周围的守护者！"),
+                true
+            )
+            return ActionResult.FAIL
+        }
+
         val creditsTotal = CreditsService.addCredits(serverPlayer, chest.reward.credits)
         val chordTotal = ResonanceService.addCurrency(serverPlayer, ResonanceCurrencyType.CHORD_PROGRESSION, chest.reward.chordProgression)
+
+        grantUpgradedChallengeRewards(serverPlayer, chest.reward.stars)
+
         removeChestBlock(playerWorld, chest)
-        unregisterChest(chest)
+        unregisterChest(chest, server)
         serverPlayer.sendMessage(
             Text.translatable(
                 "message.cresora.treasure_chest.opened",
@@ -311,17 +726,29 @@ object TreasureChestService {
         return ActionResult.SUCCESS
     }
 
-    private fun activeChestCount(ownerId: UUID): Int {
-        return activeKeysByOwner[ownerId]?.size ?: 0
-    }
-
     private fun registerChest(chest: ActiveChest) {
         activeByKey[chest.key] = chest
         activeKeysByOwner.getOrPut(chest.ownerId) { linkedSetOf() }.add(chest.key)
         syncPersistentState()
     }
 
-    private fun unregisterChest(chest: ActiveChest) {
+    private fun activeChestCount(ownerId: UUID): Int {
+        return activeKeysByOwner[ownerId]?.size ?: 0
+    }
+
+    private fun unregisterChest(chest: ActiveChest, server: MinecraftServer) {
+        val challenge = activeChallenges.remove(chest.key)
+        if (challenge != null) {
+            val world = server.getWorld(chest.key.worldKey)
+            if (world != null) {
+                challenge.displayEntityUuid?.let { uuid ->
+                    world.getEntity(uuid)?.discard()
+                }
+                challenge.guardianUuids.forEach { uuid ->
+                    world.getEntity(uuid)?.discard()
+                }
+            }
+        }
         activeByKey.remove(chest.key)
         val keys = activeKeysByOwner[chest.ownerId]
         if (keys != null) {
@@ -423,6 +850,7 @@ object TreasureChestService {
     private fun restoreFromPersistentState(server: MinecraftServer, state: TreasureChestPersistentState) {
         activeKeysByOwner.clear()
         activeByKey.clear()
+        activeChallenges.clear()
         for (savedChest in state.chests) {
             val restored = restoreChest(savedChest) ?: continue
             if (server.getWorld(restored.key.worldKey) == null) {
