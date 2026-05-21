@@ -17,7 +17,7 @@ object InstructionMapping {
         "apply_status_effect" to "hifumi.cresora.WeaponCombatSupport.applyStatusEffect(player, %args%)",
         "close_skill_menu" to "hifumi.cresora.HotbarOverrideService.restoreHotbar(player)",
         "spawn_particles" to "hifumi.cresora.WeaponCombatSupport.spawnParticles(player, %args%)",
-        "deal_true_damage" to "target.damage(player.world as net.minecraft.server.world.ServerWorld, player.world.damageSources.magic(), %args%.toFloat())",
+        "deal_true_damage" to "hifumi.cresora.WeaponSkillService.dealTrueDamage(player, target, %args%.toFloat())",
         "ignite" to "target.setOnFireFor(%args%.toFloat())"
     )
 

@@ -1,5 +1,19 @@
 # WORK_DONE
 
+## 確定ダメージ (True Damage) 一元管理リファクタ (2026-05-21)
+- [x] 確定ダメージ（True Damage）処理ロジックの `WeaponSkillService` への一元化：
+    - `WeaponSkillService.dealTrueDamage(player, target, amount)` を実装し、Minecraft の `damage()` パイプラインを正しく経由するよう改善。
+    - `isDealingTrueDamage` を ThreadLocal で管理し、確定ダメージ処理中にスレッドセーフなフラグ制御を確立。
+- [x] `LivingEntityMixin` を拡張し、確定ダメージを処理する際の適切なバイパスを実装：
+    - 確定ダメージ適用時、モブ防御力、属性耐性、および各種被ダメージ倍率（MusicEcho, Masquerade, Story 等）の計算を安全にスキップ。
+    - `cresora$showMobDamage` で確定ダメージ起因のダメージを検知し、`AdventureRankService.showMobTrueDamage`（確定ダメージ表示）を適切に呼び出すように分岐を整理。
+- [x] 再帰ループの防止と安全弁の強化：
+    - `WeaponSkillService.onAttackDealt` において、`isDealingTrueDamage` フラグを `onDamageDealt` ハンドラーへ伝播（`isTrueDamage` パラメータ）。
+    - 確定ダメージ起因の攻撃で、淡墨長空の「破魂」スタックなどの追加ダメージボーナスが再帰的にループするのを防止。
+- [x] CWC (Cresora Weapon Compiler) 命令および DSL への統合：
+    - compiler の `InstructionMapping.kt` を更新し、DSL 上の `deal_true_damage` 組み込み命令が `WeaponSkillService.dealTrueDamage` を呼び出すように変更。
+    - 淡墨長空の「墨中無念」DSL (`tanboku_chokuu.cresora`) と自動生成された Kotlin ハンドラーの 7撃目の確定ダメージ処理を新メソッド呼び出しへ統一。
+
 ## Resonance Hunt (共鳴探索) 守護者チャレンジシステムの統合 (2026-05-20)
 - [x] 共鳴探索（Resonance Hunt）における守護者チャレンジ（Guardian Challenge）システムを設計・完全実装：
     - 宝箱の周囲6ブロック以内に所有者プレイヤーが接近した際、チャレンジが自動でトリガーされる近接検知ロジックを実装。

@@ -32,7 +32,7 @@
 - [ ] `moon_brick` と `moon_altar` の専用テクスチャアセットを追加（現在はバニラの暫定テクスチャ/モデルを使用）。
 - [x] サーバー再起動時にブラッドムーンの戦闘状況（ウェーブ状態、モブ追跡、タイマーなど）を維持できるように、進行中の状態を永続化保存。 (Completed 2026-05-20)
 - [ ] ブラッドムーンのウェーブスポーン、ベッド保護、報酬チェストの所有権、自然スポーン圧力に関する専用の回帰または実機テストを追加。
-- [ ] 生成されるスキル（BokuchuMunen）を直接的な体力回復から、真ダメージ源に変更。
+- [x] 生成されるスキル（BokuchuMunen）を直接的な体力操作から、真ダメージ（確定ダメージ）源に変更。 (Completed 2026-05-21)
 - [ ] 既存の古い CommandActionNode AOE 解析ロジックを、構造的な AreaOfEffectActionNode にリファクタリング。
 - [ ] 完全な復旧のために `BloodMoonService` に `originalBedStates` を永続化保存。
 - [x] `CreSoraUtilities.onInitialize` で `ArtifactSkillRegistry` を明示的に初期化。 (Completed 2026-05-20)

@@ -100,10 +100,7 @@ public object BokuchuMunenSkill : WeaponSkillHandler {
               target.y + 1, target.z, 1, 0.0, 0.0, 0.0, 0.0);
                                   } else if (hit == 7) {
                                       val trueDamage = target.maxHealth * 0.15f;
-                                      target.health = (target.health -
-              trueDamage).coerceAtLeast(0.001f);
-                                      AdventureRankService.showMobTrueDamage(target, player,
-              trueDamage);
+                                      WeaponSkillService.dealTrueDamage(player, target, trueDamage);
                                      
               player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.munen_final",
               WeaponSkillService.formatNumber(trueDamage.toDouble() /

@@ -1,6 +1,19 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-20 (聖遺物コンパイラ Artifact Compiler - CAC 実装 & コンパイラ DSL 強化)
+最終更新: 2026-05-21 (確定ダメージ True Damage 一元管理リファクタ)
+
+## True Damage (確定ダメージ) 一元管理リファクタ (2026-05-21)
+
+- **概要**: 各所に散在していた「確定ダメージ (True Damage)」の処理ロジックを `WeaponSkillService.dealTrueDamage` に集約・一元管理。
+- **仕組み**:
+  - `WeaponSkillService.dealTrueDamage(player, target, amount)` を追加。内部で `isDealingTrueDamage` スレッドローカルフラグを設定し、`player.damageSources.indirectMagic(player, player)` を通じてダメージ処理を実行。
+  - `LivingEntityMixin.java` 内の `cresora$applyCombatScaling` で `WeaponSkillService.isDealingTrueDamage()` を検証し、確定ダメージ処理時にはモブ防御力や物理/術耐性、および各種被ダメージスケーリング (MusicEcho/Masquerade/Story 等) を完全にバイパスするよう変更。
+  - `cresora$showMobDamage` でダメージ表示の際に、確定ダメージの場合は `AdventureRankService.INSTANCE.showMobTrueDamage` を呼び出すように変更。
+- **再帰防止**:
+  - `WeaponSkillService.onAttackDealt` において、`isDealingTrueDamage` フラグを参照し、`isTrueDamage` ブーリアンを各武器スキルハンドラーの `onDamageDealt` メソッドへ伝播。
+  - 淡墨長空の「墨中無念」やその他スキルで、確定ダメージ起因の再帰的な攻撃・ダメージボーナスループ（破魂バフ等）が発生するのを防止。
+- **CWC 命令の統合**:
+  - CWC (Cresora Weapon Compiler) の `deal_true_damage` 組み込み命令の展開先を `hifumi.cresora.WeaponSkillService.dealTrueDamage(player, target, %args%.toFloat())` に変更。
 
 ## Artifact Compiler (CAC) & DSL 強化 (2026-05-20)
 

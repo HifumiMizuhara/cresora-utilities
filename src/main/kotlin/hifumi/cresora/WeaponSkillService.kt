@@ -65,6 +65,10 @@ object WeaponSkillService {
     private val taoStacks: MutableMap<UUID, Int> = mutableMapOf()
 
     private val isProcessingDamage = ThreadLocal.withInitial { false }
+    private val isDealingTrueDamage = ThreadLocal.withInitial { false }
+
+    @JvmStatic
+    fun isDealingTrueDamage(): Boolean = isDealingTrueDamage.get()
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -337,11 +341,23 @@ object WeaponSkillService {
         try {
             val activeContext = activeWeaponContext(player) ?: return
             val (heldDef, heldData) = activeContext
+            val isTrue = isDealingTrueDamage.get()
             runWeaponHandlers(heldDef.skill.effectId, heldDef, heldData) { handler, def, data ->
-                handler.onDamageDealt(player, target, damage.toFloat(), false, def, data)
+                handler.onDamageDealt(player, target, damage.toFloat(), isTrue, def, data)
             }
         } finally {
             isProcessingDamage.set(false)
+        }
+    }
+
+    @JvmStatic
+    fun dealTrueDamage(player: ServerPlayerEntity, target: LivingEntity, amount: Float) {
+        if (amount <= 0.0f) return
+        isDealingTrueDamage.set(true)
+        try {
+            target.damage(player.world as ServerWorld, player.damageSources.indirectMagic(player, player), amount)
+        } finally {
+            isDealingTrueDamage.set(false)
         }
     }
 

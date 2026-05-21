@@ -40,6 +40,9 @@ public class LivingEntityMixin {
 
     @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
     private float cresora$applyCombatScaling(float amount, net.minecraft.server.world.ServerWorld world, DamageSource source) {
+        if (WeaponSkillService.isDealingTrueDamage()) {
+            return amount;
+        }
         if ((Object) this instanceof MobEntity) {
             amount = (float) (amount * MusicEchoContentRegistry.INSTANCE.mobDamageTakenMultiplier());
         }
@@ -113,7 +116,11 @@ public class LivingEntityMixin {
                 WeaponSkillService.INSTANCE.onAttackDealt(serverPlayer, hostile, damageDone);
             }
         }
-        AdventureRankService.INSTANCE.showMobDamage(hostile, source, damageDone);
+        if (WeaponSkillService.isDealingTrueDamage() && source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+            AdventureRankService.INSTANCE.showMobTrueDamage(hostile, serverPlayer, damageDone);
+        } else {
+            AdventureRankService.INSTANCE.showMobDamage(hostile, source, damageDone);
+        }
         AdventureRankService.INSTANCE.refreshMobDisplay(hostile);
     }
 
