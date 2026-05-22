@@ -1,6 +1,39 @@
 # WORK_DONE
 
+## コンパイラアセット処理および構文解析器の最適化 (2026-05-22)
+- [x] Movement/Artifact コンパイラのアセット走査最適化：
+    - `MovementCompiler.kt` と `ArtifactCompiler.kt` のファイル走査フィルターを変更し、それぞれ `.movement` と `.artifact` 拡張子のみを対象にするように最適化。余計なファイル読み込みとパース処理を排除。
+- [x] 翻訳キー重複警告の追加：
+    - `MovementCompiler.kt` の `updateStoryTexts` にて、同一キーに対して異なる翻訳テキストがマージされ上書きされる際のコンソール警告ログを追加。
+- [x] レアリティ変換バグの解消：
+    - `MovementCompiler.kt` の `mapRarity` において、`"4_STAR"` から `"4_star"` へのマッピングでデッドコードとなっていた条件分岐を大文字の正規化により解消。
+- [x] `Parser.kt` の重複関数整理：
+    - 完全に一致していた `phasePreBattle()` と `phasePostBattle()` を `parseDialoguePhase()` に統合し、コードの重複を解消。
+- [x] キーワード解析の厳密化と型安全化：
+    - `movement()`, `phaseBattle()`, `battleWave()`, `modifiers()`, `rewards()` における識別子文字列マッチングを、`TokenType` を使った厳密な型安全マッチングへ移行。
+    - 将来的なキーワードの追加と干渉を防ぐため、文字列識別子フィールドを `TokenType.IDENTIFIER` でラップ。
+    - `phase` 解析時の冗長な `TokenType.IDENTIFIER` チェックを削除し簡素化。
+- [x] 変数シャドウイングの解消：
+    - `battleWave()` 内で、同名のクラスメソッド `modifiers()` との衝突を回避するため、ローカル変数 `modifiers` を `waveModifiers` にリネーム。
+
+## Movement Compiler (CMC) の実装 & メインストーリー一元化 (2026-05-22)
+- [x] ストーリー定義（会話、戦闘ウェーブ、報酬、多言語翻訳等）を管理する Movement Compiler (CMC) を実装：
+    - `src/compiler/kotlin/hifumi/cresora/compiler/MovementCompiler.kt` を新規実装。
+    - 各 `.movement` ファイルから定義を読み込み、`story_content.json` を生成、また多言語の翻訳キーを `story_texts.json` へ自動でマージする仕組みを構築。
+- [x] Lexer / Parser / AST の拡張とコンパイラ統合：
+    - `Lexer.kt` にストーリー関連のトークン・キーワードを追加。
+    - `AST.kt` に `MovementDefNode`, `DialogueLineNode`, `BattleWaveNode`, `SpawnNode` などのノード群を定義。
+    - `Parser.kt` でストーリー定義の入れ子フェーズ（`pre_battle`, `battle`, `post_battle`）や目標（`battle_objective`）等の構文解析をサポート。
+    - `Main.kt` に `MovementCompiler` を組み込み、ビルドパイプラインに統合。
+- [x] 既存ストーリーチャプターの `.movement` への移行：
+    - `chapter_0_0.movement`, `chapter_0_1.movement`, `chapter_d0_1.movement`, `chapter_d0_2.movement`, `chapter_0_2.movement` を記述し、既存の JSON 定義と多言語翻訳（ja_jp, en_us, zh_cn, lzh）をすべて DSL に移行。
+- [x] Gradle タスクのリネームと後方互換性の維持：
+    - コンパイラが武器だけでなく聖遺物・ストーリーも含めた全アセットをビルドすることに伴い、Gradle タスク名を `generateWeapons` から `compileAssets` へリネーム。
+    - 既存のスクリプト等を考慮し、非推奨（deprecated）として `generateWeapons` タスクも残し、`compileAssets` へ委譲するよう設定。
+    - ガイド文書 (`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`, `cresora_document.md`) 内のタスクコマンド指定をすべて `compileAssets` へアップデート。
+
 ## 確定ダメージ (True Damage) 一元管理リファクタ (2026-05-21)
+
 - [x] 確定ダメージ（True Damage）処理ロジックの `WeaponSkillService` への一元化：
     - `WeaponSkillService.dealTrueDamage(player, target, amount)` を実装し、Minecraft の `damage()` パイプラインを正しく経由するよう改善。
     - `isDealingTrueDamage` を ThreadLocal で管理し、確定ダメージ処理中にスレッドセーフなフラグ制御を確立。

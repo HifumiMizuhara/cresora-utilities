@@ -23,13 +23,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Just compile without packaging
 ./gradlew compileKotlin
 
-# Generate weapons from .cresora files (runs automatically before compileKotlin)
-./gradlew generateWeapons
+# Compile all DSL files (weapons, artifacts, movements) to code and JSON (runs automatically before compileKotlin)
+./gradlew compileAssets
 ```
 
 **Build runs automatically:**
-- `generateWeapons` task runs before `compileKotlin`, transforming `.cresora` files in `src/main/cresora/` into Kotlin code and JSON
-- If Kotlin compilation fails after changing `.cresora` files, manually run `./gradlew generateWeapons` to diagnose compiler issues
+- `compileAssets` task runs before `compileKotlin`, transforming `.cresora`, `.artifact`, and `.movement` files in `src/main/cresora/` into Kotlin code and JSON
+- If Kotlin compilation fails after changing DSL files, manually run `./gradlew compileAssets` to diagnose compiler issues
 
 ### Project Structure
 
@@ -168,7 +168,7 @@ Mixins are bridged in `src/main/java/hifumi/cresora/mixin/` (Java for compatibil
 ### Adding a Weapon Skill
 
 1. Author in `src/main/cresora/*.cresora` (DSL file)
-2. Run `./gradlew generateWeapons` to compile
+2. Run `./gradlew compileAssets` to compile
 3. Verify generated Kotlin service and JSON in `cwc_weapon_content.json`
 4. Add translations if skill has custom feedback messages
 5. Link skill to weapon via registry or JSON
@@ -210,7 +210,7 @@ Client screens live in `src/main/resources/assets/cresora-utilities/textures/gui
 ## Debugging & Troubleshooting
 
 - **Mod won't start:** Check `CreSoraUtilities.onInitialize()` for registration order issues
-- **Weapon skill not appearing:** Verify `generateWeapons` completed; check `cwc_weapon_content.json` was generated
+- **Weapon skill not appearing:** Verify `compileAssets` completed; check `cwc_weapon_content.json` was generated
 - **Screen handler black/won't open:** Ensure `ScreenHandlerType` is registered and client screen is mapped in fabric.mod.json
 - **Test run crashes:** Check `run/` for latest log in `logs/latest.log`
 - **Mixin access failures:** Verify Java mixin files are in `src/main/java/`, not `src/main/kotlin/`

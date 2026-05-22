@@ -12,6 +12,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 nodes.add(dictionary())
             } else if (check(TokenType.KEYWORD_ARTIFACT)) {
                 nodes.add(artifact())
+            } else if (check(TokenType.KEYWORD_MOVEMENT)) {
+                nodes.add(movement())
             } else {
                 val token = peek()
                 throw RuntimeException("Unexpected top-level token '${token.lexeme}' at line ${token.line}")
@@ -492,6 +494,366 @@ class Parser(private val source: String, private val tokens: List<Token>) {
             if (check(TokenType.SEMICOLON)) advance()
             return ExpressionNode(rawContent.trim())
         }
+    }
+
+    private class BattlePhaseResult(
+        val hints: List<String>,
+        val weapons: List<GrantedWeaponNode>,
+        val objective: BattleObjectiveNode,
+        val waves: List<BattleWaveNode>
+    )
+
+    private fun movement(): MovementDefNode {
+        consume(TokenType.KEYWORD_MOVEMENT, "Expect 'movement'")
+        val name = consume(TokenType.STRING, "Expect movement name").lexeme
+        consume(TokenType.LEFT_BRACE, "Expect '{' before movement body")
+
+        var id = ""
+        var displayName = ""
+        var groupId: String? = null
+        var sortOrder = 0
+        var titleTextId: String? = null
+        var linkedDomainId: String? = null
+        val domainRewardIds = mutableListOf<String>()
+        var unlockRank = 1
+        var prerequisiteChapterId: String? = null
+        var preBattleStory = emptyList<DialogueLineNode>()
+        var combatHints = emptyList<String>()
+        var grantedWeapons = emptyList<GrantedWeaponNode>()
+        var battleObjective = BattleObjectiveNode("defeat_all", 0)
+        var battleWaves = emptyList<BattleWaveNode>()
+        var postBattleStory = emptyList<DialogueLineNode>()
+        var rewards = RewardsNode(0, emptyMap())
+        var translations = emptyMap<String, Map<String, String>>()
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            when (token.type) {
+                TokenType.KEYWORD_PHASE -> {
+                    val phaseToken = if (check(TokenType.KEYWORD_PRE_BATTLE) || check(TokenType.KEYWORD_BATTLE) || check(TokenType.KEYWORD_POST_BATTLE)) {
+                        advance()
+                    } else {
+                        throw RuntimeException("Expect phase name at line ${peek().line}")
+                    }
+                    val phaseName = phaseToken.lexeme
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for phase")
+                    when (phaseName) {
+                        "pre_battle" -> preBattleStory = parseDialoguePhase()
+                        "battle" -> {
+                            val battleResult = phaseBattle()
+                            combatHints = battleResult.hints
+                            grantedWeapons = battleResult.weapons
+                            battleObjective = battleResult.objective
+                            battleWaves = battleResult.waves
+                        }
+                        "post_battle" -> postBattleStory = parseDialoguePhase()
+                        else -> throw RuntimeException("Unknown phase '$phaseName' at line ${token.line}")
+                    }
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after phase")
+                }
+                TokenType.KEYWORD_REWARDS -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for rewards")
+                    rewards = rewards()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after rewards")
+                }
+                TokenType.KEYWORD_TRANSLATIONS -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for translations")
+                    translations = translations()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after translations")
+                }
+                TokenType.IDENTIFIER -> {
+                    val field = token.lexeme
+                    when (field) {
+                        "id" -> {
+                            consume(TokenType.COLON, "Expect ':' after id")
+                            id = consume(TokenType.STRING, "Expect id").lexeme
+                        }
+                        "display_name" -> {
+                            consume(TokenType.COLON, "Expect ':' after display_name")
+                            displayName = consume(TokenType.STRING, "Expect display_name").lexeme
+                        }
+                        "group_id" -> {
+                            consume(TokenType.COLON, "Expect ':' after group_id")
+                            groupId = consume(TokenType.STRING, "Expect group_id").lexeme
+                        }
+                        "sort_order" -> {
+                            consume(TokenType.COLON, "Expect ':' after sort_order")
+                            sortOrder = consume(TokenType.NUMBER, "Expect sort_order number").lexeme.toInt()
+                        }
+                        "title_text_id" -> {
+                            consume(TokenType.COLON, "Expect ':' after title_text_id")
+                            titleTextId = consume(TokenType.STRING, "Expect title_text_id").lexeme
+                        }
+                        "linked_domain_id" -> {
+                            consume(TokenType.COLON, "Expect ':' after linked_domain_id")
+                            linkedDomainId = consume(TokenType.STRING, "Expect linked_domain_id").lexeme
+                        }
+                        "domain_reward_ids" -> {
+                            consume(TokenType.COLON, "Expect ':' after domain_reward_ids")
+                            consume(TokenType.LEFT_BRACKET, "Expect '['")
+                            while (!check(TokenType.RIGHT_BRACKET) && !isAtEnd()) {
+                                val rewardId = consume(TokenType.STRING, "Expect domain reward id").lexeme
+                                domainRewardIds.add(rewardId)
+                                if (check(TokenType.COMMA)) advance()
+                            }
+                            consume(TokenType.RIGHT_BRACKET, "Expect ']'")
+                        }
+                        "unlock_rank" -> {
+                            consume(TokenType.COLON, "Expect ':' after unlock_rank")
+                            unlockRank = consume(TokenType.NUMBER, "Expect unlock_rank number").lexeme.toInt()
+                        }
+                        "prerequisite_chapter_id" -> {
+                            consume(TokenType.COLON, "Expect ':' after prerequisite_chapter_id")
+                            prerequisiteChapterId = consume(TokenType.STRING, "Expect prerequisite_chapter_id").lexeme
+                        }
+                        else -> throw RuntimeException("Unknown movement field '$field' at line ${token.line}")
+                    }
+                }
+                else -> throw RuntimeException("Unknown movement field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after movement body")
+        if (id.isBlank()) throw RuntimeException("Movement chapter '$name' is missing required id")
+        if (displayName.isBlank()) displayName = name
+        return MovementDefNode(
+            name, id, displayName, groupId, sortOrder, titleTextId, linkedDomainId, domainRewardIds,
+            unlockRank, prerequisiteChapterId, preBattleStory, combatHints, grantedWeapons,
+            battleObjective, battleWaves, postBattleStory, rewards, translations
+        )
+    }
+
+    private fun parseDialoguePhase(): List<DialogueLineNode> {
+        val lines = mutableListOf<DialogueLineNode>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            if (token.type == TokenType.KEYWORD_DIALOGUE) {
+                lines.add(dialogueLine())
+            } else {
+                throw RuntimeException("Expect dialogue statement at line ${token.line}")
+            }
+        }
+        return lines
+    }
+
+    private fun dialogueLine(): DialogueLineNode {
+        consume(TokenType.LEFT_PAREN, "Expect '(' after dialogue")
+        val first = consume(TokenType.STRING, "Expect dialogue string parameter").lexeme
+        var speakerId: String? = null
+        var textId = first
+        if (check(TokenType.COMMA)) {
+            advance()
+            speakerId = first
+            textId = consume(TokenType.STRING, "Expect dialogue text string parameter").lexeme
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')'")
+        if (check(TokenType.SEMICOLON)) advance()
+        return DialogueLineNode(speakerId, textId)
+    }
+
+    private fun phaseBattle(): BattlePhaseResult {
+        val hints = mutableListOf<String>()
+        val weapons = mutableListOf<GrantedWeaponNode>()
+        var objective = BattleObjectiveNode("defeat_all", 0)
+        val waves = mutableListOf<BattleWaveNode>()
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            when (token.type) {
+                TokenType.KEYWORD_COMBAT_HINTS -> {
+                    consume(TokenType.LEFT_BRACKET, "Expect '['")
+                    while (!check(TokenType.RIGHT_BRACKET) && !isAtEnd()) {
+                        hints.add(consume(TokenType.STRING, "Expect hint translation key").lexeme)
+                        if (check(TokenType.COMMA)) advance()
+                    }
+                    consume(TokenType.RIGHT_BRACKET, "Expect ']'")
+                }
+                TokenType.KEYWORD_GRANTED_WEAPONS -> {
+                    consume(TokenType.LEFT_BRACKET, "Expect '['")
+                    while (!check(TokenType.RIGHT_BRACKET) && !isAtEnd()) {
+                        weapons.add(grantedWeapon())
+                        if (check(TokenType.COMMA)) advance()
+                    }
+                    consume(TokenType.RIGHT_BRACKET, "Expect ']'")
+                }
+                TokenType.KEYWORD_BATTLE_OBJECTIVE -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{'")
+                    objective = battleObjective()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}'")
+                }
+                TokenType.KEYWORD_WAVE -> {
+                    val rank = consume(TokenType.NUMBER, "Expect enemy rank").lexeme.toInt()
+                    consume(TokenType.LEFT_BRACE, "Expect '{'")
+                    waves.add(battleWave(rank))
+                    consume(TokenType.RIGHT_BRACE, "Expect '}'")
+                }
+                else -> throw RuntimeException("Unknown battle phase field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+        return BattlePhaseResult(hints, weapons, objective, waves)
+    }
+
+    private fun grantedWeapon(): GrantedWeaponNode {
+        consume(TokenType.KEYWORD_WEAPON, "Expect 'weapon'")
+        consume(TokenType.LEFT_PAREN, "Expect '('")
+        val weaponId = consume(TokenType.STRING, "Expect weapon ID").lexeme
+        consume(TokenType.COMMA, "Expect ','")
+        val rarityName = consume(TokenType.IDENTIFIER, "Expect rarity (e.g. FIVE_STAR)").lexeme
+        var baseLevel = 1
+        var skillLevel = 1
+        var removeOnExit = true
+
+        while (check(TokenType.COMMA)) {
+            advance()
+            val paramName = consume(TokenType.IDENTIFIER, "Expect parameter name").lexeme
+            consume(TokenType.COLON, "Expect ':'")
+            when (paramName) {
+                "base_level" -> baseLevel = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
+                "skill_level" -> skillLevel = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
+                "remove_on_exit" -> {
+                    val boolToken = advance()
+                    removeOnExit = boolToken.lexeme.toBoolean()
+                }
+                else -> throw RuntimeException("Unknown weapon parameter '$paramName'")
+            }
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')'")
+        return GrantedWeaponNode(weaponId, rarityName, baseLevel, skillLevel, removeOnExit)
+    }
+
+    private fun battleObjective(): BattleObjectiveNode {
+        var type = "defeat_all"
+        var durationSeconds = 0
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            when (token.lexeme) {
+                "type" -> {
+                    consume(TokenType.COLON, "Expect ':'")
+                    type = consume(TokenType.IDENTIFIER, "Expect objective type").lexeme
+                }
+                "duration_seconds" -> {
+                    consume(TokenType.COLON, "Expect ':'")
+                    durationSeconds = consume(TokenType.NUMBER, "Expect duration seconds").lexeme.toInt()
+                }
+                else -> throw RuntimeException("Unknown objective field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+        return BattleObjectiveNode(type, durationSeconds)
+    }
+
+    private fun battleWave(enemyRank: Int): BattleWaveNode {
+        var spawnDelayTicks = 40
+        val spawns = mutableListOf<SpawnNode>()
+        var waveModifiers = ModifiersNode(0.0, false)
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            when (token.type) {
+                TokenType.IDENTIFIER -> {
+                    if (token.lexeme == "spawn_delay_ticks") {
+                        consume(TokenType.COLON, "Expect ':'")
+                        spawnDelayTicks = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
+                    } else {
+                        throw RuntimeException("Unknown wave field '${token.lexeme}' at line ${token.line}")
+                    }
+                }
+                TokenType.KEYWORD_SPAWNS -> {
+                    consume(TokenType.LEFT_BRACKET, "Expect '['")
+                    while (!check(TokenType.RIGHT_BRACKET) && !isAtEnd()) {
+                        spawns.add(spawn())
+                        if (check(TokenType.COMMA)) advance()
+                    }
+                    consume(TokenType.RIGHT_BRACKET, "Expect ']'")
+                }
+                TokenType.KEYWORD_MODIFIERS -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{'")
+                    waveModifiers = modifiers()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}'")
+                }
+                else -> throw RuntimeException("Unknown wave field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+        return BattleWaveNode(enemyRank, spawnDelayTicks, spawns, waveModifiers)
+    }
+
+    private fun spawn(): SpawnNode {
+        consume(TokenType.KEYWORD_SPAWN, "Expect 'spawn'")
+        consume(TokenType.LEFT_PAREN, "Expect '('")
+        val entityTypeId = consume(TokenType.STRING, "Expect entity type ID").lexeme
+        var count = 1
+        if (check(TokenType.COMMA)) {
+            advance()
+            consume(TokenType.IDENTIFIER, "Expect 'count'")
+            consume(TokenType.COLON, "Expect ':'")
+            count = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')'")
+        return SpawnNode(entityTypeId, count)
+    }
+
+    private fun modifiers(): ModifiersNode {
+        var damageReductionPercent = 0.0
+        var trueDamageImmune = false
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            when (token.type) {
+                TokenType.IDENTIFIER -> {
+                    when (token.lexeme) {
+                        "damage_reduction_percent" -> {
+                            consume(TokenType.COLON, "Expect ':'")
+                            damageReductionPercent = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
+                        }
+                        "true_damage_immune" -> {
+                            consume(TokenType.COLON, "Expect ':'")
+                            val boolToken = advance()
+                            trueDamageImmune = boolToken.lexeme.toBoolean()
+                        }
+                        else -> throw RuntimeException("Unknown modifiers field '${token.lexeme}' at line ${token.line}")
+                    }
+                }
+                else -> throw RuntimeException("Unknown modifiers field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+        return ModifiersNode(damageReductionPercent, trueDamageImmune)
+    }
+
+    private fun rewards(): RewardsNode {
+        var credits = 0
+        val currencies = mutableMapOf<String, Int>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            when (token.type) {
+                TokenType.IDENTIFIER -> {
+                    if (token.lexeme == "credits") {
+                        consume(TokenType.COLON, "Expect ':'")
+                        credits = consume(TokenType.NUMBER, "Expect credits").lexeme.toInt()
+                    } else {
+                        throw RuntimeException("Unknown rewards field '${token.lexeme}' at line ${token.line}")
+                    }
+                }
+                TokenType.KEYWORD_RESONANCE_CURRENCIES -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{'")
+                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                        val currencyToken = advance()
+                        if (currencyToken.type == TokenType.SEMICOLON) continue
+                        val name = currencyToken.lexeme
+                        consume(TokenType.COLON, "Expect ':'")
+                        val amount = consume(TokenType.NUMBER, "Expect amount").lexeme.toInt()
+                        currencies[name] = amount
+                    }
+                    consume(TokenType.RIGHT_BRACE, "Expect '}'")
+                }
+                else -> throw RuntimeException("Unknown rewards field '${token.lexeme}' at line ${token.line}")
+            }
+        }
+        return RewardsNode(credits, currencies)
     }
 
     private fun parseTime(): Double {

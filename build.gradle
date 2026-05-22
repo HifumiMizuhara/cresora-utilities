@@ -112,7 +112,7 @@ dependencies {
 	compilerImplementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 
-task generateWeapons(type: JavaExec) {
+task compileAssets(type: JavaExec) {
     group = "cresora"
     mainClass = "hifumi.cresora.compiler.MainKt"
     classpath = sourceSets.compiler.runtimeClasspath
@@ -120,7 +120,15 @@ task generateWeapons(type: JavaExec) {
     errorOutput = System.err
 }
 
-compileKotlin.dependsOn generateWeapons
+compileKotlin.dependsOn compileAssets
+
+task generateWeapons {
+    dependsOn compileAssets
+    doLast {
+        logger.warn("Task 'generateWeapons' is deprecated. Please use 'compileAssets' instead.")
+    }
+}
+
 
 tasks.named("runServer") {
 	standardInput = System.in

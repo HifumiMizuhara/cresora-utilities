@@ -12,11 +12,11 @@ This file provides guidance to the Gemini / Antigravity AI coding assistant when
 
 Always use Java 21. Prefer the local Gradle cache path already used in this repo:
 
-- **Regenerate weapons and CWC content**:
+- **Compile all DSL assets (Weapons, Artifacts, Movements)**:
   ```bash
-  GRADLE_USER_HOME=.gradle-user ./gradlew generateWeapons --console=plain
+  GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets --console=plain
   ```
-  Regenerates weapon classes and `cwc_weapon_content.json` from `.cresora` files in `src/main/cresora/`. Runs automatically before compilation.
+  Compiles `.cresora`, `.artifact`, and `.movement` files in `src/main/cresora/` to Kotlin code, JSON configurations, and translation maps. Runs automatically before compilation.
   
 - **Compile and verify (Minimum gate before committing)**:
   ```bash

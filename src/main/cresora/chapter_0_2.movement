@@ -1,0 +1,187 @@
+movement "0-2" {
+    id: "0-2"
+    sort_order: 40
+    title_text_id: "story.cresora.chapter.0_2.title"
+    unlock_rank: 1
+    prerequisite_chapter_id: "0-1"
+
+    phase pre_battle {
+        dialogue("story.cresora.chapter.0_2.pre_0")
+        dialogue("story.cresora.chapter.0_2.pre_1")
+        dialogue("story.cresora.chapter.0_2.pre_2")
+        dialogue("story.cresora.chapter.0_2.pre_3")
+        dialogue("story.cresora.chapter.0_2.speaker.oldman", "story.cresora.chapter.0_2.pre_4")
+        dialogue("story.cresora.chapter.0_2.speaker.player", "story.cresora.chapter.0_2.pre_5")
+        dialogue("story.cresora.chapter.0_2.speaker.oldman", "story.cresora.chapter.0_2.pre_6")
+        dialogue("story.cresora.chapter.0_2.speaker.oldman", "story.cresora.chapter.0_2.pre_7")
+        dialogue("story.cresora.chapter.0_2.pre_8")
+        dialogue("story.cresora.chapter.0_2.speaker.player", "story.cresora.chapter.0_2.pre_9")
+        dialogue("story.cresora.chapter.0_2.speaker.oldman", "story.cresora.chapter.0_2.pre_10")
+        dialogue("story.cresora.chapter.0_2.pre_11")
+        dialogue("story.cresora.chapter.0_2.pre_12")
+    }
+
+    phase battle {
+        combat_hints ["story.cresora.chapter.0_2.hint_0", "story.cresora.chapter.0_2.hint_1", "story.cresora.chapter.0_2.hint_2"]
+        granted_weapons [weapon("rondo_melody", TWO_STAR, base_level: 60, skill_level: 10)]
+        battle_objective {
+            type: survive_time
+            duration_seconds: 45
+        }
+        wave 50 {
+            spawns [spawn("minecraft:skeleton")]
+            modifiers {
+                damage_reduction_percent: 100.0
+                true_damage_immune: true
+            }
+        }
+    }
+
+    phase post_battle {
+        dialogue("story.cresora.chapter.0_2.post_0")
+        dialogue("story.cresora.chapter.0_2.speaker.lumine", "story.cresora.chapter.0_2.post_1")
+        dialogue("story.cresora.chapter.0_2.speaker.player", "story.cresora.chapter.0_2.post_2")
+        dialogue("story.cresora.chapter.0_2.post_3")
+        dialogue("story.cresora.chapter.0_2.speaker.lumine", "story.cresora.chapter.0_2.post_4")
+        dialogue("story.cresora.chapter.0_2.speaker.player", "story.cresora.chapter.0_2.post_5")
+        dialogue("story.cresora.chapter.0_2.speaker.lumine", "story.cresora.chapter.0_2.post_6")
+        dialogue("story.cresora.chapter.0_2.speaker.lumine", "story.cresora.chapter.0_2.post_7")
+        dialogue("story.cresora.chapter.0_2.post_8")
+        dialogue("story.cresora.chapter.0_2.post_9")
+    }
+
+    rewards {
+        credits: 0
+    }
+
+    translations {
+        ja_jp {
+            "story.cresora.chapter.0_2.title": "狂奏"
+            "story.cresora.chapter.0_2.speaker.oldman": "？？？"
+            "story.cresora.chapter.0_2.speaker.player": "＜Player＞"
+            "story.cresora.chapter.0_2.speaker.lumine": "Lumine"
+            "story.cresora.chapter.0_2.pre_0": "逃げろ！"
+            "story.cresora.chapter.0_2.pre_1": "遠くまで、とりあえず早く！"
+            "story.cresora.chapter.0_2.pre_2": "得も言えぬ違和感と相まって体を染み渡る恐怖に駆られ、思わず川沿いをひた走っていた。"
+            "story.cresora.chapter.0_2.pre_3": "気がつけば、川の流れ行く先は、あたかも海のように広がっていた湖でした。"
+            "story.cresora.chapter.0_2.pre_4": "おい！若造！お前はソリストか？"
+            "story.cresora.chapter.0_2.pre_5": "！"
+            "story.cresora.chapter.0_2.pre_6": "すまん、驚かせたな。ソリスト。悪いが、ちょっと手伝ってくれないか？"
+            "story.cresora.chapter.0_2.pre_7": "ここはまもなくコンサートをやる予定じゃのう"
+            "story.cresora.chapter.0_2.pre_8": "突如現れた年配者の指差す先を目で追ったら、そこにはゾンビとスケルトンの群れしかなかった。"
+            "story.cresora.chapter.0_2.pre_9": "おじいさん、それはモンスターですよ"
+            "story.cresora.chapter.0_2.pre_10": "何を言っとる、若造め。これは立派なコンサートの観衆じゃ。ほら、コンサートはもう始まっている。"
+            "story.cresora.chapter.0_2.pre_11": "え、出演者は、私？"
+            "story.cresora.chapter.0_2.pre_12": "こうして、ゾンビとスケルトンのうめき声の中で、「コンサート」が幕を開けたのだった。"
+            "story.cresora.chapter.0_2.hint_0": "最大Lvの『円舞曲のメロディ』を一時配布しました。戦闘終了後に回収されます。"
+            "story.cresora.chapter.0_2.hint_1": "このスケルトンは被ダメージ軽減100%かつ確定ダメージ無効。倒す必要はありません。"
+            "story.cresora.chapter.0_2.hint_2": "右クリックでシールドを張り、残り45秒のカウントダウンが尽きるまで生き延びてください。"
+            "story.cresora.chapter.0_2.post_0": "チッ、手強い！"
+            "story.cresora.chapter.0_2.post_1": "ソリストさん、もうちょっと持ちこたえなさい！"
+            "story.cresora.chapter.0_2.post_2": "えっ！"
+            "story.cresora.chapter.0_2.post_3": "後ろを見たら、そこには心配顔のLumineが立ち尽くしていた。彼女が手持ちのウェポンをかざすと、さっきまで無傷だったスケルトンが溶けるように残骸と化した。"
+            "story.cresora.chapter.0_2.post_4": "ソリストさんったら、勝手に走り回ったら困るよ"
+            "story.cresora.chapter.0_2.post_5": "Lumine、一つ聞いてもいい？"
+            "story.cresora.chapter.0_2.post_6": "はい？"
+            "story.cresora.chapter.0_2.post_7": "もちろんですよ。なぜなら、「■■■■」の意味は、「■■■」だから。"
+            "story.cresora.chapter.0_2.post_8": "気がつけば、彼女はもう答え終わった。頑張って思い出そうとしたが、さきほど自分がした質問さえ、霧散してしまい、やはり何も出なかった。"
+            "story.cresora.chapter.0_2.post_9": "そして、よく見ると、Lumineの表情はいつのまにか憐れみを帯びたものへと変わっていた。"
+        }
+        en_us {
+            "story.cresora.chapter.0_2.title": "Mad Crescendo"
+            "story.cresora.chapter.0_2.speaker.oldman": "???"
+            "story.cresora.chapter.0_2.speaker.player": "<Player>"
+            "story.cresora.chapter.0_2.speaker.lumine": "Lumine"
+            "story.cresora.chapter.0_2.pre_0": "Run!"
+            "story.cresora.chapter.0_2.pre_1": "Far away, quickly, anywhere!"
+            "story.cresora.chapter.0_2.pre_2": "Seized by a nameless terror that seeped through your body alongside an indescribable sense of wrongness, you found yourself sprinting along the riverbank."
+            "story.cresora.chapter.0_2.pre_3": "Before you realized it, the river had led you to a vast lake, wide as though it were the sea itself."
+            "story.cresora.chapter.0_2.pre_4": "Hey! Young one! Are you a Soloist?"
+            "story.cresora.chapter.0_2.pre_5": "!"
+            "story.cresora.chapter.0_2.pre_6": "Sorry, did I startle you? Soloist. I hate to ask, but could you lend me a hand?"
+            "story.cresora.chapter.0_2.pre_7": "A concert is about to begin here, you see."
+            "story.cresora.chapter.0_2.pre_8": "You followed the old man's finger and found, at the end of it, nothing but a horde of zombies and skeletons."
+            "story.cresora.chapter.0_2.pre_9": "Sir, those are monsters."
+            "story.cresora.chapter.0_2.pre_10": "What are you saying, boy? These are a fine concert audience. Look, the concert has already begun."
+            "story.cresora.chapter.0_2.pre_11": "Wait, I'm the performer?"
+            "story.cresora.chapter.0_2.pre_12": "And so, amid the groans of zombies and skeletons, the 'concert' raised its curtain."
+            "story.cresora.chapter.0_2.hint_0": "A temporary max-level 'Melody of the Rondo' has been issued. It will be reclaimed after the battle."
+            "story.cresora.chapter.0_2.hint_1": "This skeleton has 100% damage reduction and is immune to fixed damage. You do not need to kill it."
+            "story.cresora.chapter.0_2.hint_2": "Right-click to raise your shield and survive until the 45-second countdown reaches zero."
+            "story.cresora.chapter.0_2.post_0": "Tch, this thing is tough!"
+            "story.cresora.chapter.0_2.post_1": "Soloist, hold on just a little longer!"
+            "story.cresora.chapter.0_2.post_2": "Huh!?"
+            "story.cresora.chapter.0_2.post_3": "When you turned around, Lumine was standing there, worry written across her face. The moment she raised the weapon in her hand, the skeleton that had been utterly unharmed until then melted into ruin."
+            "story.cresora.chapter.0_2.post_4": "Honestly, Soloist, you cannot just run off on your own like that."
+            "story.cresora.chapter.0_2.post_5": "Lumine, can I ask you one thing?"
+            "story.cresora.chapter.0_2.post_6": "Yes?"
+            "story.cresora.chapter.0_2.post_7": "Of course. Because the meaning of '■■■■' is '■■■'."
+            "story.cresora.chapter.0_2.post_8": "Before you knew it, she had already finished answering. You tried hard to remember, yet even the question you had just asked scattered like mist, and nothing came back."
+            "story.cresora.chapter.0_2.post_9": "And when you looked closely, Lumine's expression had somehow changed into one tinged with pity."
+        }
+        zh_cn {
+            "story.cresora.chapter.0_2.title": "狂奏"
+            "story.cresora.chapter.0_2.speaker.oldman": "？？？"
+            "story.cresora.chapter.0_2.speaker.player": "＜Player＞"
+            "story.cresora.chapter.0_2.speaker.lumine": "流明"
+            "story.cresora.chapter.0_2.pre_0": "快逃！"
+            "story.cresora.chapter.0_2.pre_1": "先跑远点，总之快点！"
+            "story.cresora.chapter.0_2.pre_2": "莫名的违和感与渗入全身的恐惧交织在一起，你不由得沿着河岸拼命奔跑。"
+            "story.cresora.chapter.0_2.pre_3": "回过神时，河流的去向已经通往一片宽阔得宛如大海般的湖泊。"
+            "story.cresora.chapter.0_2.pre_4": "喂！小子！你是独奏者吗？"
+            "story.cresora.chapter.0_2.pre_5": "！"
+            "story.cresora.chapter.0_2.pre_6": "抱歉，吓到你了吧，独奏者。不好意思，能不能请你帮我个忙？"
+            "story.cresora.chapter.0_2.pre_7": "这里马上就要举办一场演奏会了。"
+            "story.cresora.chapter.0_2.pre_8": "你顺着突然出现的老人手指的方向望去，那里只有成群的僵尸与骷髅。"
+            "story.cresora.chapter.0_2.pre_9": "老爷爷，那是怪物啊。"
+            "story.cresora.chapter.0_2.pre_10": "胡说什么，小子。这可是堂堂正正的演奏会观众。你看，演奏会已经开始了。"
+            "story.cresora.chapter.0_2.pre_11": "欸，演出者……是我？"
+            "story.cresora.chapter.0_2.pre_12": "就这样，在僵尸与骷髅的嘶吼声中，这场“演奏会”拉开了帷幕。"
+            "story.cresora.chapter.0_2.hint_0": "已临时发放满级“圆舞曲的旋律”，战斗结束后会回收。"
+            "story.cresora.chapter.0_2.hint_1": "这只骷髅拥有100%减伤，且免疫确定伤害，不需要击败它。"
+            "story.cresora.chapter.0_2.hint_2": "右键展开护盾，坚持到45秒倒计时归零即可。"
+            "story.cresora.chapter.0_2.post_0": "啧，真棘手！"
+            "story.cresora.chapter.0_2.post_1": "独奏者，再撑一会儿！"
+            "story.cresora.chapter.0_2.post_2": "欸！？"
+            "story.cresora.chapter.0_2.post_3": "回头一看，Lumine正带着担忧的神情站在那里。她举起手中的武器，方才还毫发无伤的骷髅就像融化一般化作残骸。"
+            "story.cresora.chapter.0_2.post_4": "独奏者，你可不能这样一个人乱跑呀。"
+            "story.cresora.chapter.0_2.post_5": "Lumine，我能问你一件事吗？"
+            "story.cresora.chapter.0_2.post_6": "嗯？"
+            "story.cresora.chapter.0_2.post_7": "当然可以。因为“■■■■”的意思，就是“■■■”。"
+            "story.cresora.chapter.0_2.post_8": "回过神时，她已经把答案说完了。你努力想要回忆，可就连刚刚自己问了什么，都像雾一样散去，终究什么也没留下。"
+            "story.cresora.chapter.0_2.post_9": "而且仔细一看，Lumine的表情不知何时已经染上了怜悯。"
+        }
+        lzh {
+            "story.cresora.chapter.0_2.title": "狂奏"
+            "story.cresora.chapter.0_2.speaker.oldman": "？？？"
+            "story.cresora.chapter.0_2.speaker.player": "＜Player＞"
+            "story.cresora.chapter.0_2.speaker.lumine": "流明"
+            "story.cresora.chapter.0_2.pre_0": "速走！"
+            "story.cresora.chapter.0_2.pre_1": "且遠去之，務速！"
+            "story.cresora.chapter.0_2.pre_2": "莫名之乖戾與滲體之怖交作，遂不覺沿河狂奔。"
+            "story.cresora.chapter.0_2.pre_3": "及自省時，川流所向，已成巨湖，廣若海然。"
+            "story.cresora.chapter.0_2.pre_4": "噫！少年！汝為獨奏者乎？"
+            "story.cresora.chapter.0_2.pre_5": "！"
+            "story.cresora.chapter.0_2.pre_6": "失敬，驚汝矣，獨奏者。煩汝少助我，可乎？"
+            "story.cresora.chapter.0_2.pre_7": "此間頃刻將啟一場樂會。"
+            "story.cresora.chapter.0_2.pre_8": "汝循其所指而視，彼處惟見殭屍與骷髏成群。"
+            "story.cresora.chapter.0_2.pre_9": "翁翁，此乃怪也。"
+            "story.cresora.chapter.0_2.pre_10": "何出此言，少年。此乃堂堂樂會之觀眾也。子試觀之，樂會已啟矣。"
+            "story.cresora.chapter.0_2.pre_11": "咦，登臺者乃我乎？"
+            "story.cresora.chapter.0_2.pre_12": "於是，在殭屍與骷髏之呻吟中，此「樂會」遂啟其幕。"
+            "story.cresora.chapter.0_2.hint_0": "權授滿級「圓舞曲之律」一柄，戰畢即收。"
+            "story.cresora.chapter.0_2.hint_1": "此骷髏減傷百之百，且免於確定之傷，毋庸擊之。"
+            "story.cresora.chapter.0_2.hint_2": "右擊張盾，守至四十五秒倒數既盡即可。"
+            "story.cresora.chapter.0_2.post_0": "咄，勁敵也！"
+            "story.cresora.chapter.0_2.post_1": "獨奏者，再持頃刻！"
+            "story.cresora.chapter.0_2.post_2": "咦！？"
+            "story.cresora.chapter.0_2.post_3": "回首而視，流明憂然佇立其後。其舉手中之兵，方才全然無傷之骷髏，遂若融化而為餘骸。"
+            "story.cresora.chapter.0_2.post_4": "獨奏者，汝不可擅自奔走如此也。"
+            "story.cresora.chapter.0_2.post_5": "流明，我可問一事乎？"
+            "story.cresora.chapter.0_2.post_6": "然。何也？"
+            "story.cresora.chapter.0_2.post_7": "固可。蓋「■■■■」之義，即「■■■」也。"
+            "story.cresora.chapter.0_2.post_8": "及自覺時，其答已畢。力思而追之，然方才所問之語亦如霧散，卒無所得。"
+            "story.cresora.chapter.0_2.post_9": "且更視之，流明之色，不知何時已帶憫然。"
+        }
+    }
+}

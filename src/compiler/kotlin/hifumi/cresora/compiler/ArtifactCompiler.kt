@@ -25,7 +25,7 @@ class ArtifactCompiler(
 
         val allArtifacts = mutableListOf<ArtifactDefNode>()
         inputDir.walk()
-            .filter { it.extension == "artifact" || it.extension == "cresora" }
+            .filter { it.extension == "artifact" }
             .forEach { file ->
                 val source = file.readText()
                 val lexer = Lexer(source)

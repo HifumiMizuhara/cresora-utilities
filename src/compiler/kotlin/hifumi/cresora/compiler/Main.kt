@@ -19,5 +19,11 @@ fun main(args: Array<String>) {
     val artifactJsonFile = File(projectRoot, "src/main/resources/data/cresora-utilities/cresora/cac_artifact_content.json")
     val artifactCompiler = ArtifactCompiler(inputDir, outputDir, artifactJsonFile)
     artifactCompiler.compile()
+
+    val storyJsonFile = File(projectRoot, "src/main/resources/data/cresora-utilities/cresora/story_content.json")
+    val storyTextsFile = File(projectRoot, "src/main/resources/data/cresora-utilities/cresora/story_texts.json")
+    val movementCompiler = MovementCompiler(inputDir, storyJsonFile, storyTextsFile)
+    movementCompiler.compile()
+
     println("Compilation finished successfully.")
 }

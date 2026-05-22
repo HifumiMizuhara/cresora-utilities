@@ -1,6 +1,23 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-21 (確定ダメージ True Damage 一元管理リファクタ)
+最終更新: 2026-05-22 (Movement Compiler (CMC) 一元化実装)
+
+## Movement Compiler (CMC) の実装 & メインストーリー一元化 (2026-05-22)
+
+- **概要**: ストーリーの定義（会話、戦闘ウェーブ、報酬、多言語翻訳など）を `.movement` DSL ファイルから自動生成するシステム。
+- **DSL仕様**:
+  - `movement "chapter_id"` で定義し、メタデータとして `id`, `sort_order`, `title_text_id`, `unlock_rank`, `prerequisite_chapter_id`（オプション）, `domain_reward_ids`（オプション）, `linked_domain_id`（オプション）を設定可能。
+  - 各種フェーズ（戦闘前会話、戦闘、戦闘後会話、報酬、翻訳）を専用ブロックで構造化して記述：
+    - `phase pre_battle`: `dialogue("speaker_id", "text_id")` または話者なしの `dialogue("text_id")` で戦闘前会話を定義。
+    - `phase battle`: 戦闘フェーズ。`battle_objective { type: survive_time duration_seconds: 45 }` などでクリア目標を設定。また、`wave <rank> { spawn_delay_ticks: 40 spawns [spawn("entity_id", count: 1)] modifiers { damage_reduction_percent: 100.0 true_damage_immune: true } }` で敵の出現ウェーブを定義。
+    - `phase post_battle`: 戦闘後会話を `dialogue` で定義。
+    - `rewards`: `credits` や `resonance_currencies` (例: `substitute_chord: 100`) でクリア報酬を定義。
+    - `translations`: 各ロケール (`ja_jp`, `en_us`, `zh_cn`, `lzh`) ごとに、作中で参照される `speaker_id` や `text_id` の翻訳対訳辞書を記述。
+- **生成物**:
+  - **JSON (Content)**: `src/main/resources/data/cresora-utilities/cresora/story_content.json`。`StoryContentRegistry` の `Codec` に準拠し、`preBattleStory` や `battle` などの空リスト型フィールドはシリアライズ時に自動的に省略され、データ構造の簡素化を図る。
+  - **JSON (Translations)**: `src/main/resources/data/cresora-utilities/cresora/story_texts.json`。多言語の翻訳テキストがマージされ、ゲームランタイムの翻訳マップを拡張する。
+- **再コンパイル**:
+  - `./gradlew compileAssets` を実行した際、CWC (Weapon)・CAC (Artifact) コンパイル後に CMC が自動実行され、`.movement` 定義からJSONおよび多言語テキストを最新状態に再生成する。
 
 ## True Damage (確定ダメージ) 一元管理リファクタ (2026-05-21)
 
@@ -1427,7 +1444,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 1. `src/main/cresora/` に `*.cresora` ファイルを作成し、定義とスクリプトを記述
 2. モデル・アイテム定義（`assets`側）・翻訳を追加
-3. `./gradlew generateWeapons` を実行してコードと JSON を生成
+3. `./gradlew compileAssets` を実行してコードと JSON を生成
 4. 必要なら `ResonanceContentRegistry` や秘境報酬にも接続
 
 新しいストーリー:

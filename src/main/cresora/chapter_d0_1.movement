@@ -1,0 +1,28 @@
+movement "D0-1" {
+    id: "D0-1"
+    group_id: "0"
+    sort_order: 20
+    title_text_id: "story.cresora.chapter.d0_1.title"
+    linked_domain_id: "lakeside_sanctum"
+    unlock_rank: 1
+    prerequisite_chapter_id: "0-1"
+
+    rewards {
+        credits: 0
+    }
+
+    translations {
+        ja_jp {
+            "story.cresora.chapter.d0_1.title": "湖畔の聖域"
+        }
+        en_us {
+            "story.cresora.chapter.d0_1.title": "Lakeside Sanctum"
+        }
+        zh_cn {
+            "story.cresora.chapter.d0_1.title": "湖畔圣域"
+        }
+        lzh {
+            "story.cresora.chapter.d0_1.title": "湖畔聖域"
+        }
+    }
+}

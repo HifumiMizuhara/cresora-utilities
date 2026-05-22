@@ -114,3 +114,64 @@ object CloseSkillMenuActionNode : ActionNode()
 data class ExecuteActionNode(
     val statements: List<ActionNode>
 ) : ActionNode()
+
+data class MovementDefNode(
+    val name: String,
+    val id: String,
+    val displayName: String,
+    val groupId: String?,
+    val sortOrder: Int,
+    val titleTextId: String?,
+    val linkedDomainId: String?,
+    val domainRewardIds: List<String>,
+    val unlockRank: Int,
+    val prerequisiteChapterId: String?,
+    val preBattleStory: List<DialogueLineNode>,
+    val combatHints: List<String>,
+    val grantedWeapons: List<GrantedWeaponNode>,
+    val battleObjective: BattleObjectiveNode,
+    val battleWaves: List<BattleWaveNode>,
+    val postBattleStory: List<DialogueLineNode>,
+    val rewards: RewardsNode,
+    val translations: Map<String, Map<String, String>>
+) : ASTNode()
+
+data class DialogueLineNode(
+    val speakerId: String?,
+    val textId: String
+) : ASTNode()
+
+data class GrantedWeaponNode(
+    val weaponId: String,
+    val rarity: String,
+    val baseLevel: Int,
+    val skillLevel: Int,
+    val removeOnExit: Boolean
+) : ASTNode()
+
+data class BattleObjectiveNode(
+    val type: String,
+    val durationSeconds: Int
+) : ASTNode()
+
+data class BattleWaveNode(
+    val enemyRank: Int,
+    val spawnDelayTicks: Int,
+    val spawns: List<SpawnNode>,
+    val modifiers: ModifiersNode
+) : ASTNode()
+
+data class SpawnNode(
+    val entityTypeId: String,
+    val count: Int
+) : ASTNode()
+
+data class ModifiersNode(
+    val damageReductionPercent: Double,
+    val trueDamageImmune: Boolean
+) : ASTNode()
+
+data class RewardsNode(
+    val credits: Int,
+    val resonanceCurrencies: Map<String, Int>
+) : ASTNode()
