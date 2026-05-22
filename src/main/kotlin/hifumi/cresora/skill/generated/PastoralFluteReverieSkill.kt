@@ -1,16 +1,16 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.AdventureRankMobAccess
-import hifumi.cresora.AdventureRankService
-import hifumi.cresora.CreditsService
-import hifumi.cresora.CresoraDebuffService
-import hifumi.cresora.HotbarOverrideService
-import hifumi.cresora.WeaponCombatSupport
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.adventurerank.AdventureRankMobAccess
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponCombatSupport
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponSkillService
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
@@ -35,12 +35,12 @@ public object PastoralFluteReverieSkill : WeaponSkillHandler {
 
 
     ; run execute@ {
-      val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player)
+      val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
       val expireTick = now + definition.skill.durationSeconds.coerceAtLeast(1) * 20L
-      val normalPercent = hifumi.cresora.WeaponCombatSupport.skillValuePercent(definition,
+      val normalPercent = hifumi.cresora.weapon.WeaponCombatSupport.skillValuePercent(definition,
           data).coerceAtLeast(0.0)
       val sunlightPercent =
-          hifumi.cresora.WeaponCombatSupport.secondarySkillValuePercent(definition,
+          hifumi.cresora.weapon.WeaponCombatSupport.secondarySkillValuePercent(definition,
           data).coerceAtLeast(normalPercent)
       val isSunlit = !player.world.isRaining && player.world.isDay &&
           player.world.isSkyVisible(player.blockPos.up())
@@ -53,8 +53,10 @@ public object PastoralFluteReverieSkill : WeaponSkillHandler {
                                   "item.cresora.weapon.skill.sunlit_haste_activated",
                                   net.minecraft.text.Text.translatable(definition.translationKey()),
                                   definition.skill.durationSeconds,
-                                  hifumi.cresora.WeaponSkillService.formatNumber(normalPercent),
-                                  hifumi.cresora.WeaponSkillService.formatNumber(sunlightPercent)
+                                 
+              hifumi.cresora.weapon.WeaponSkillService.formatNumber(normalPercent),
+                                 
+              hifumi.cresora.weapon.WeaponSkillService.formatNumber(sunlightPercent)
                               ).formatted(net.minecraft.util.Formatting.YELLOW),
                               true
                           )

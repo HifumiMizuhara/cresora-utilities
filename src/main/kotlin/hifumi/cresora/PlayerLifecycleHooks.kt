@@ -1,5 +1,13 @@
 package hifumi.cresora
 
+import hifumi.cresora.bloodmoon.BloodMoonService
+import hifumi.cresora.combat.CombatFeedbackService
+import hifumi.cresora.debuff.CresoraDebuffService
+import hifumi.cresora.equipment.EquipmentAttributeService
+import hifumi.cresora.masquerade.MasqueradeService
+import hifumi.cresora.treasure.TreasureChestService
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponSkillService
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 
 object PlayerLifecycleHooks {

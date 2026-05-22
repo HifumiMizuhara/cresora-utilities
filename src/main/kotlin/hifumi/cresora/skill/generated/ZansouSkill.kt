@@ -1,16 +1,16 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.AdventureRankMobAccess
-import hifumi.cresora.AdventureRankService
-import hifumi.cresora.CreditsService
-import hifumi.cresora.CresoraDebuffService
-import hifumi.cresora.HotbarOverrideService
-import hifumi.cresora.WeaponCombatSupport
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.adventurerank.AdventureRankMobAccess
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponCombatSupport
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponSkillService
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
@@ -64,7 +64,7 @@ public object ZansouSkill : WeaponSkillHandler {
       val jt = QianqiuYeluoSkill.jingtianStateStates.get(player.uuid)
       if (jt != null) {
                               jt.expireTick =
-              hifumi.cresora.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
+              hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
                           }
     }
 

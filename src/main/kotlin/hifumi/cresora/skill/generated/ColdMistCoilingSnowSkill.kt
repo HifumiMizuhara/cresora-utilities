@@ -1,16 +1,16 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.AdventureRankMobAccess
-import hifumi.cresora.AdventureRankService
-import hifumi.cresora.CreditsService
-import hifumi.cresora.CresoraDebuffService
-import hifumi.cresora.HotbarOverrideService
-import hifumi.cresora.WeaponCombatSupport
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.adventurerank.AdventureRankMobAccess
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponCombatSupport
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
 import kotlin.Boolean
 import kotlin.Double
@@ -102,7 +102,7 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player)
+      val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
       val state = ColdMistCoilingSnowSkill.snowMistStates.get(player.uuid)
       if (state != null && now < state.expireTick) {
                               if (state.stacks < 5) {
@@ -113,7 +113,8 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
               true);
                               }
                               // Apply frost mark to target (using the new generic mark system)
-                              hifumi.cresora.WeaponSkillService.applyMark(target, "frost", 200L);
+                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "frost",
+              200L);
                              
               target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS,
               200, 1, false, true, true));
@@ -132,7 +133,7 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
       server.worlds.forEach { world ->
                               world.iterateEntities().forEach { entity ->
                                   if (entity is net.minecraft.entity.LivingEntity &&
-              hifumi.cresora.WeaponSkillService.hasMark(entity, "frost")) {
+              hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, "frost")) {
                                       val now = world.time;
                                       // Simple frost damage slowness and freeze
                                      

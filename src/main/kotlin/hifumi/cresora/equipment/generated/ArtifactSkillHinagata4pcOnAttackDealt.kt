@@ -1,9 +1,9 @@
 package hifumi.cresora.equipment.generated
 
-import hifumi.cresora.CresoraDebuffService
-import hifumi.cresora.EquipmentEffectHookService
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.equipment.ArtifactSkillHandler
+import hifumi.cresora.equipment.EquipmentEffectHookService
+import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
 import kotlin.Double
 import kotlin.Int
@@ -55,7 +55,7 @@ public class ArtifactSkillHinagata4pcOnAttackDealt : ArtifactSkillHandler {
     target: LivingEntity,
     damage: Double,
   ) {
-    hifumi.cresora.WeaponSkillService.applyMark(target, "hinagata_curse", 100)
+    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "hinagata_curse", 100)
     run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = this.hinagataStacksStates.getOrPut(player.uuid) { HinagataStacksState(0L, 0) }

@@ -139,7 +139,7 @@ class ArtifactCompiler(
                     .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
             }
 
-            onTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora", "WeaponSkillService"))
+            onTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
             for (buff in bonus.buffs) {
                 val mapName = camelCase(buff.id) + "States"
                 val buffNameKey = buff.translationKey ?: "item.cresora.artifact.skill.buff.${buff.id}.name"
@@ -254,7 +254,7 @@ class ArtifactCompiler(
                 )
             }
             is CloseSkillMenuActionNode -> {
-                funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora", "HotbarOverrideService"))
+                funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
             }
             is ExpressionNode -> {
                 var content = action.content
@@ -290,7 +290,7 @@ class ArtifactCompiler(
                     |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
                     |}
                     |
-                """.trimMargin(), ClassName("hifumi.cresora", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
             } else {
                 funSpec.addStatement("// Buff $buffId not found")
             }
@@ -423,9 +423,9 @@ class ArtifactCompiler(
             .addImport("net.minecraft.entity.effect", "StatusEffects")
             .addImport("net.minecraft.registry", "Registries")
             .addImport("net.minecraft.particle", "ParticleTypes")
-            .addImport("hifumi.cresora", "WeaponSkillService")
-            .addImport("hifumi.cresora", "CresoraDebuffService")
-            .addImport("hifumi.cresora", "EquipmentEffectHookService")
+            .addImport("hifumi.cresora.weapon", "WeaponSkillService")
+            .addImport("hifumi.cresora.debuff", "CresoraDebuffService")
+            .addImport("hifumi.cresora.equipment", "EquipmentEffectHookService")
     }
 
     private fun generateScalarOverride(

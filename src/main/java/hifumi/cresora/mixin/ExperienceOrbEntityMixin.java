@@ -1,6 +1,7 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.CreditsService;
+import hifumi.cresora.credits.CreditsService;
+
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;

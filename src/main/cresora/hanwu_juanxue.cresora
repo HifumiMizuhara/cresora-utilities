@@ -34,7 +34,7 @@ weapon "Cold Mist, Coiling Snow" {
         on_damage_dealt {
             execute {
                 // If the player has snow_mist buff, we increment it and apply frost mark to target
-                val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player);
+                val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
                 val state = snowMistStates.get(player.uuid);
                 if (state != null && now < state.expireTick) {
                     if (state.stacks < 5) {
@@ -42,7 +42,7 @@ weapon "Cold Mist, Coiling Snow" {
                         player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.snow_mist_stack", state.stacks, state.stacks * 10.0).formatted(net.minecraft.util.Formatting.AQUA), true);
                     }
                     // Apply frost mark to target (using the new generic mark system)
-                    hifumi.cresora.WeaponSkillService.applyMark(target, "frost", 200L);
+                    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "frost", 200L);
                     target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 200, 1, false, true, true));
                 }
             }
@@ -51,7 +51,7 @@ weapon "Cold Mist, Coiling Snow" {
             execute {
                 server.worlds.forEach { world ->
                     world.iterateEntities().forEach { entity ->
-                        if (entity is net.minecraft.entity.LivingEntity && hifumi.cresora.WeaponSkillService.hasMark(entity, "frost")) {
+                        if (entity is net.minecraft.entity.LivingEntity && hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, "frost")) {
                             val now = world.time;
                             // Simple frost damage slowness and freeze
                             entity.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 40, 1, false, true, true));

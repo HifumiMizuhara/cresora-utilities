@@ -1,16 +1,16 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.AdventureRankMobAccess
-import hifumi.cresora.AdventureRankService
-import hifumi.cresora.CreditsService
-import hifumi.cresora.CresoraDebuffService
-import hifumi.cresora.HotbarOverrideService
-import hifumi.cresora.WeaponCombatSupport
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.adventurerank.AdventureRankMobAccess
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponCombatSupport
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponSkillService
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
@@ -35,25 +35,26 @@ public object HighMountainsFlowingWaterSkill : WeaponSkillHandler {
 
 
     ; run execute@ {
-      val immediateHealHp = hifumi.cresora.WeaponCombatSupport.skillValueHp(definition, data)
-      val pulseHealHp = hifumi.cresora.WeaponCombatSupport.secondarySkillValueHp(definition,
+      val immediateHealHp = hifumi.cresora.weapon.WeaponCombatSupport.skillValueHp(definition, data)
+      val pulseHealHp = hifumi.cresora.weapon.WeaponCombatSupport.secondarySkillValueHp(definition,
           data).coerceAtLeast(0.0f)
-      val expireTick = hifumi.cresora.WeaponSkillService.currentWorldTime(player) +
+      val expireTick = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player) +
           definition.skill.durationSeconds * 20L
-      val count = hifumi.cresora.WeaponSkillService.healNearbyAllies(player,
+      val count = hifumi.cresora.weapon.WeaponSkillService.healNearbyAllies(player,
           definition.skill.radiusMeters, immediateHealHp)
-      val results = hifumi.cresora.WeaponSkillService.restoreHealthOrGuard(player, immediateHealHp,
-          expireTick)
+      val results = hifumi.cresora.weapon.WeaponSkillService.restoreHealthOrGuard(player,
+          immediateHealHp, expireTick)
       player.sendMessage(
                               net.minecraft.text.Text.translatable(
                                   "item.cresora.weapon.skill.healing_aura_activated",
                                   net.minecraft.text.Text.translatable(definition.translationKey()),
-                                  hifumi.cresora.WeaponSkillService.formatNumber(results.first /
-              2.0),
-                                  hifumi.cresora.WeaponSkillService.formatNumber(results.second /
-              2.0),
+                                 
+              hifumi.cresora.weapon.WeaponSkillService.formatNumber(results.first / 2.0),
+                                 
+              hifumi.cresora.weapon.WeaponSkillService.formatNumber(results.second / 2.0),
                                   count,
-                                  hifumi.cresora.WeaponSkillService.formatNumber(pulseHealHp / 2.0),
+                                  hifumi.cresora.weapon.WeaponSkillService.formatNumber(pulseHealHp
+              / 2.0),
                                   definition.skill.durationSeconds
                               ).formatted(net.minecraft.util.Formatting.GREEN),
                               true
@@ -71,20 +72,21 @@ public object HighMountainsFlowingWaterSkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player)
-      if (hifumi.cresora.WeaponSkillService.isCoolingDown(player, "gaoshan_liushui")) {
+      val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
+      if (hifumi.cresora.weapon.WeaponSkillService.isCoolingDown(player, "gaoshan_liushui")) {
                                val remaining =
-              hifumi.cresora.WeaponSkillService.getRemainingCooldownTicks(player,
+              hifumi.cresora.weapon.WeaponSkillService.getRemainingCooldownTicks(player,
               "gaoshan_liushui");
                                val activeTicks = (20L * 20L - remaining).toLong();
                                // Periodic healing and knockback
                                if (activeTicks > 0 && activeTicks <= 8 * 20 && activeTicks % 40 ==
               0L) {
                                    val pulseHealHp =
-              hifumi.cresora.WeaponCombatSupport.secondarySkillValueHp(definition,
+              hifumi.cresora.weapon.WeaponCombatSupport.secondarySkillValueHp(definition,
               data).coerceAtLeast(0.0f);
-                                   hifumi.cresora.WeaponSkillService.restoreHealthOrGuard(player,
-              pulseHealHp, now + 200L);
+                                  
+              hifumi.cresora.weapon.WeaponSkillService.restoreHealthOrGuard(player, pulseHealHp,
+              now + 200L);
                                    // Knockback
                                    val radius = definition.skill.radiusMeters;
                                    player.world.getOtherEntities(player,

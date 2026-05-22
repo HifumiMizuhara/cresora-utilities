@@ -1,18 +1,21 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.CombatFeedbackService;
-import hifumi.cresora.CombatStatSupport;
-import hifumi.cresora.CombatDamageType;
-import hifumi.cresora.CombatDamageTypeSupport;
-import hifumi.cresora.CresoraDebuffService;
-import hifumi.cresora.EquipmentPlayerSupport;
-import hifumi.cresora.MasqueradeService;
+import hifumi.cresora.bloodmoon.BloodMoonService;
+import hifumi.cresora.combat.CombatDamageType;
+import hifumi.cresora.combat.CombatDamageTypeSupport;
+import hifumi.cresora.combat.CombatFeedbackService;
+import hifumi.cresora.combat.CombatStatSupport;
+import hifumi.cresora.debuff.CresoraDebuffService;
+import hifumi.cresora.equipment.EquipmentPlayerSupport;
+import hifumi.cresora.masquerade.MasqueradeService;
+import hifumi.cresora.weapon.WeaponCombatSupport;
+import hifumi.cresora.weapon.WeaponData;
+import hifumi.cresora.weapon.WeaponDefinition;
+import hifumi.cresora.weapon.WeaponSkillService;
+import hifumi.cresora.weapon.WeaponStackSupport;
+
 import hifumi.cresora.StatType;
-import hifumi.cresora.WeaponCombatSupport;
-import hifumi.cresora.WeaponData;
-import hifumi.cresora.WeaponDefinition;
-import hifumi.cresora.WeaponSkillService;
-import hifumi.cresora.WeaponStackSupport;
+
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -86,7 +89,7 @@ public class PlayerEntityMixin {
         double critRate = Math.min(1.0, CombatStatSupport.effectiveCritRateRatio(totals) + weaponCritRateBonus / 100.0);
         double critDamage = CombatStatSupport.effectiveCritDamageRatio(totals) + weaponCritDamageBonus;
         double damageMultiplier = 1.0 + Math.max(0.0, allBonus);
-        double bloodMoonMultiplier = hifumi.cresora.BloodMoonService.INSTANCE.playerDamageMultiplier(player);
+        double bloodMoonMultiplier = BloodMoonService.INSTANCE.playerDamageMultiplier(player);
 
         double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier * bloodMoonMultiplier;
         if (critRate > 0.0) {

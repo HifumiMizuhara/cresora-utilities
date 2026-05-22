@@ -30,7 +30,7 @@
   - `WeaponSkillService.onAttackDealt` において、`isDealingTrueDamage` フラグを参照し、`isTrueDamage` ブーリアンを各武器スキルハンドラーの `onDamageDealt` メソッドへ伝播。
   - 淡墨長空の「墨中無念」やその他スキルで、確定ダメージ起因の再帰的な攻撃・ダメージボーナスループ（破魂バフ等）が発生するのを防止。
 - **CWC 命令の統合**:
-  - CWC (Cresora Weapon Compiler) の `deal_true_damage` 組み込み命令の展開先を `hifumi.cresora.WeaponSkillService.dealTrueDamage(player, target, %args%.toFloat())` に変更。
+  - CWC (Cresora Weapon Compiler) の `deal_true_damage` 組み命令の展開先を `hifumi.cresora.weapon.WeaponSkillService.dealTrueDamage(player, target, %args%.toFloat())` に変更。
 
 ## Artifact Compiler (CAC) & DSL 強化 (2026-05-20)
 
@@ -122,7 +122,7 @@ Buggy で放置されていたバニラチェストの自動スポーン型「�
 
 - **CWC 自動インポート機能の組み込み**:
   - Cresora Weapon Compiler (`CresoraCompiler.kt`) が KotlinPoet を用いて生成するスキルクラスに、Minecraft / クレソラ関連の常用クラス（`Text`, `LivingEntity`, `ServerWorld`, `ParticleTypes`, `WeaponSkillService`, `AdventureRankService` など）を自動的にインポートする仕組みを追加。
-  - DSL（`.cresora`）ファイル内の `execute` ブロックにおいて、完全修飾名（例: `hifumi.cresora.WeaponSkillService`）を記述する代わりに `WeaponSkillService` のようなシンプルなクラス名での呼び出しが可能になり、コードの可読性を大幅に向上。
+  - DSL（`.cresora`）ファイル内の `execute` ブロックにおいて、完全修飾名（例: `hifumi.cresora.weapon.WeaponSkillService`）を記述する代わりに `WeaponSkillService` のようなシンプルなクラス名での呼び出しが可能になり、コードの可読性を大幅に向上。
   - 淡墨長空（`tanboku_chokuu.cresora`）などの主要な DSL ファイルをこのクリーンな記述形式にマイグレート。
 
 - **アクティブスロットの武器スキル孤立化・属性リーク防止 (Active Slot Tracking)**:

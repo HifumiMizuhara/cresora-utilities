@@ -1,17 +1,18 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.AdventureRankAccess;
-import hifumi.cresora.AdventureRankProgression;
-import hifumi.cresora.AdventureRankService;
-import hifumi.cresora.CreditsAccess;
-import hifumi.cresora.CreditsService;
-import hifumi.cresora.MasqueradeProgressAccess;
-import hifumi.cresora.MasqueradeProgressService;
-import hifumi.cresora.ResonanceAccess;
-import hifumi.cresora.ResonanceService;
-import hifumi.cresora.StoryProgressAccess;
-import hifumi.cresora.StoryProgressService;
-import hifumi.cresora.WeaponSkillAccess;
+import hifumi.cresora.adventurerank.AdventureRankAccess;
+import hifumi.cresora.adventurerank.AdventureRankProgression;
+import hifumi.cresora.adventurerank.AdventureRankService;
+import hifumi.cresora.credits.CreditsAccess;
+import hifumi.cresora.credits.CreditsService;
+import hifumi.cresora.masquerade.MasqueradeProgressAccess;
+import hifumi.cresora.masquerade.MasqueradeProgressService;
+import hifumi.cresora.resonance.ResonanceAccess;
+import hifumi.cresora.resonance.ResonanceService;
+import hifumi.cresora.story.StoryProgressAccess;
+import hifumi.cresora.story.StoryProgressService;
+import hifumi.cresora.weapon.WeaponSkillAccess;
+
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;

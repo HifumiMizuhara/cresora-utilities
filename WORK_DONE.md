@@ -1,5 +1,34 @@
 # WORK_DONE
 
+## プロジェクトパッケージ構造のリファクタリング (2026-05-22)
+- [x] パッケージの整理とソースファイルの再配置：
+    - 肥大化した `hifumi.cresora` ルートパッケージから、Kotlin ファイル群をドメイン別の新しいサブパッケージへ移動。
+    - サブパッケージ構成：
+        - `hifumi.cresora.adventurerank` (冒険ランク関連)
+        - `hifumi.cresora.resonance` (共鳴/ガチャ関連)
+        - `hifumi.cresora.masquerade` (マスカレード/キャラ切り替え関連)
+        - `hifumi.cresora.bloodmoon` (ブラッドムーン関連)
+        - `hifumi.cresora.story` (ストーリー関連)
+        - `hifumi.cresora.domain` (秘境関連)
+        - `hifumi.cresora.treasure` (宝箱関連)
+        - `hifumi.cresora.credits` (クレジット関連)
+        - `hifumi.cresora.combat` (戦闘/ダメージ計算関連)
+        - `hifumi.cresora.equipment` (装備/聖遺物関連)
+        - `hifumi.cresora.weapon` (武器関連)
+        - `hifumi.cresora.debuff` (デバフ関連)
+        - `hifumi.cresora.musicecho` (楽章共鳴関連)
+    - `src/main/kotlin` および `src/client/kotlin` 内のファイルを対応するディレクトリ階層へ物理的に移動。
+    - クライアント用 `Datagen.kt` を `src/client/kotlin/hifumi/cresora/` 直下に整理。
+- [x] パッケージ宣言とインポート文の修正：
+    - 移動したすべての Kotlin ファイル内の `package` 宣言を更新。
+    - 全ソースコード（メイン/クライアントソース、Java Mixin ファイル、アセットコンパイラ、および自動生成された武器/聖遺物ハンドラーコード）のインポート参照を新しいパッケージ構成に適合するように修正。
+- [x] アセットコンパイラ（CWC / CAC）の出力インポートの修正：
+    - `CresoraCompiler.kt` (CWC) および `ArtifactCompiler.kt` (CAC) を修正し、生成コードに挿入されるデフォルトインポート宣言を新しいパッケージ構造に合わせて更新。
+- [x] ビルドと整合性の検証：
+    - `./gradlew compileAssets` で DSL アセット生成および生成コード内のインポートエラーがないことを確認。
+    - `./gradlew classes` によるコンパイルチェックを行い、警告・エラーなくビルドが成功することを確認。
+    - `cresora_document.md` 内のパッケージ修飾クラス名（例: `WeaponSkillService` への参照）を新パッケージ名へ更新。
+
 ## コンパイラアセット処理および構文解析器の最適化 (2026-05-22)
 - [x] Movement/Artifact コンパイラのアセット走査最適化：
     - `MovementCompiler.kt` と `ArtifactCompiler.kt` のファイル走査フィルターを変更し、それぞれ `.movement` と `.artifact` 拡張子のみを対象にするように最適化。余計なファイル読み込みとパース処理を排除。

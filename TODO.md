@@ -5,6 +5,8 @@
 
 ## CWC とシステムのブラッシュアップ
 - [ ] IDE での `execute` ブロックの Kotlin 構文ハイライト表示の改善（低優先度）。
+- [ ] DSLファイル（`.cresora`）内のFQN冗長性の排除と短縮名へのマイグレーション（CWCの自動インポート機能の活用）。
+  - 対象ファイル（FQN使用が多いもの）: `rondo_melody.cresora`, `kyokusui_no_ryusho.cresora`, `gaoshan_liushui.cresora`, `dark_lux.cresora`, `qianqiu_yeluo.cresora` 等
 
 ## コンパイラの改善
 - [x] `execute` ブロック内で完全修飾名を使用する代わりに、シンプルなクラス名で記述できるようにするための自動 `import` 検出またはインポート用の簡易 DSL の追加。 (Completed 2026-05-18)

@@ -1,7 +1,8 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.FieldMobPackService;
-import hifumi.cresora.BloodMoonService;
+import hifumi.cresora.bloodmoon.BloodMoonService;
+import hifumi.cresora.combat.FieldMobPackService;
+
 import net.minecraft.entity.EntityData;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.HostileEntity;

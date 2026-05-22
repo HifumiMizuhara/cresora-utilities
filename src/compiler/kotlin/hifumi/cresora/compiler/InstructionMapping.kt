@@ -7,17 +7,17 @@ enum class CompilerContext {
 
 object InstructionMapping {
     private val mappings = mapOf(
-        "heal" to "hifumi.cresora.WeaponCombatSupport.healHp(player, %args%)",
-        "grant_shield" to "hifumi.cresora.WeaponCombatSupport.grantShield(player, %args%)",
-        "start_cooldown" to "hifumi.cresora.WeaponSkillService.startCooldown(player, definition.id, %args%)",
-        "apply_mark" to "hifumi.cresora.WeaponSkillService.applyMark(%args%)",
+        "heal" to "hifumi.cresora.weapon.WeaponCombatSupport.healHp(player, %args%)",
+        "grant_shield" to "hifumi.cresora.weapon.WeaponCombatSupport.grantShield(player, %args%)",
+        "start_cooldown" to "hifumi.cresora.weapon.WeaponSkillService.startCooldown(player, definition.id, %args%)",
+        "apply_mark" to "hifumi.cresora.weapon.WeaponSkillService.applyMark(%args%)",
         "log" to "player.sendMessage(net.minecraft.text.Text.literal(%args%))",
-        "grant_invulnerability" to "hifumi.cresora.WeaponSkillService.grantInvulnerability(%args%)",
+        "grant_invulnerability" to "hifumi.cresora.weapon.WeaponSkillService.grantInvulnerability(%args%)",
         "send_message" to "player.sendMessage(net.minecraft.text.Text.translatable(%args%), true)",
-        "apply_status_effect" to "hifumi.cresora.WeaponCombatSupport.applyStatusEffect(player, %args%)",
-        "close_skill_menu" to "hifumi.cresora.HotbarOverrideService.restoreHotbar(player)",
-        "spawn_particles" to "hifumi.cresora.WeaponCombatSupport.spawnParticles(player, %args%)",
-        "deal_true_damage" to "hifumi.cresora.WeaponSkillService.dealTrueDamage(player, target, %args%.toFloat())",
+        "apply_status_effect" to "hifumi.cresora.weapon.WeaponCombatSupport.applyStatusEffect(player, %args%)",
+        "close_skill_menu" to "hifumi.cresora.weapon.HotbarOverrideService.restoreHotbar(player)",
+        "spawn_particles" to "hifumi.cresora.weapon.WeaponCombatSupport.spawnParticles(player, %args%)",
+        "deal_true_damage" to "hifumi.cresora.weapon.WeaponSkillService.dealTrueDamage(player, target, %args%.toFloat())",
         "ignite" to "target.setOnFireFor(%args%.toFloat())"
     )
 

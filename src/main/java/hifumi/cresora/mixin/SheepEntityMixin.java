@@ -1,7 +1,8 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.BaaMimicService;
-import hifumi.cresora.WeaponSkillService;
+import hifumi.cresora.combat.BaaMimicService;
+import hifumi.cresora.weapon.WeaponSkillService;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.item.ItemStack;

@@ -1,5 +1,19 @@
 package hifumi.cresora
 
+import hifumi.cresora.domain.DomainRewardScreen
+import hifumi.cresora.domain.DomainSelectionScreen
+import hifumi.cresora.equipment.ArtifactAlphaScreen
+import hifumi.cresora.equipment.ArtifactBetaScreen
+import hifumi.cresora.equipment.ArtifactShopScreen
+import hifumi.cresora.masquerade.MasqueradeLoadoutScreen
+import hifumi.cresora.masquerade.MasqueradeSupportScreen
+import hifumi.cresora.resonance.ResonanceResultScreen
+import hifumi.cresora.resonance.ResonanceScreen
+import hifumi.cresora.story.StoryChapterSelectionScreen
+import hifumi.cresora.story.StoryDialogueClient
+import hifumi.cresora.story.StoryStageSelectionScreen
+import hifumi.cresora.weapon.WeaponSkillMaterialScreen
+import hifumi.cresora.weapon.WeaponUpgradeScreen
 import net.fabricmc.api.ClientModInitializer
 import net.minecraft.client.gui.screen.ingame.HandledScreens
 

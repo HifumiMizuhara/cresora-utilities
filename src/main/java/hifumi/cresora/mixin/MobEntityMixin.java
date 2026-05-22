@@ -1,8 +1,9 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.AdventureRankMobAccess;
-import hifumi.cresora.AdventureRankService;
-import hifumi.cresora.FieldMobPackService;
+import hifumi.cresora.adventurerank.AdventureRankMobAccess;
+import hifumi.cresora.adventurerank.AdventureRankService;
+import hifumi.cresora.combat.FieldMobPackService;
+
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.storage.ReadView;

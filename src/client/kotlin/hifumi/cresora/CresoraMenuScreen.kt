@@ -1,5 +1,6 @@
 package hifumi.cresora
 
+import hifumi.cresora.equipment.ArtifactChestScreenBase
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text

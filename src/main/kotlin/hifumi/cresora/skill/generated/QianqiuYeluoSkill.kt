@@ -1,16 +1,16 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.AdventureRankMobAccess
-import hifumi.cresora.AdventureRankService
-import hifumi.cresora.CreditsService
-import hifumi.cresora.CresoraDebuffService
-import hifumi.cresora.HotbarOverrideService
-import hifumi.cresora.WeaponCombatSupport
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.adventurerank.AdventureRankMobAccess
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponCombatSupport
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
 import kotlin.Boolean
 import kotlin.Double
@@ -135,10 +135,10 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
     ; 
 
     ; run execute@ {
-      val now = hifumi.cresora.WeaponSkillService.currentWorldTime(player)
+      val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
                           val passive = QianqiuYeluoSkill.passiveStateStates.get(player.uuid)
                           if (passive != null) {
-                              if (!hifumi.cresora.WeaponSkillService.hasStatus(player,
+                              if (!hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
               "zansou_mode")) {
                                   if (now % 40L == 0L && player.health / player.maxHealth > 0.30f) {
                                       val damage = player.maxHealth * 0.02f
@@ -154,7 +154,7 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
               true)
                               }
                           }
-                          if (hifumi.cresora.WeaponSkillService.hasStatus(player,
+                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
               "yoraku_manchisho_active")) {
                               val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid)
                               if (state == null || state.stacks <= 0) {
@@ -201,10 +201,11 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
 
     ; return run execute@ {
     var finalAmount = amount
-                        if (hifumi.cresora.WeaponSkillService.hasStatus(player, "passive_state")) {
+                        if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
+            "passive_state")) {
                             finalAmount *= 0.40f
                         }
-                        if (hifumi.cresora.WeaponSkillService.hasStatus(player,
+                        if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
             "yoraku_manchisho_active")) {
                             if (finalAmount >= player.health) {
                                 finalAmount = (player.health - 1.0f).coerceAtLeast(0.0f)
@@ -230,8 +231,8 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
                           val world = player.world as? net.minecraft.server.world.ServerWorld ?:
               return@execute
 
-                          if (hifumi.cresora.WeaponSkillService.hasStatus(player, "passive_state"))
-              {
+                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
+              "passive_state")) {
                               val missingHp = (player.maxHealth - player.health).coerceAtLeast(0.0f)
                               val boost = (missingHp / 2.0f * 0.01f).coerceAtMost(0.20f)
                               if (boost > 0) {
@@ -239,29 +240,33 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
                               }
                           }
 
-                          if (hifumi.cresora.WeaponSkillService.hasStatus(player, "jingtian_state"))
-              {
+                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
+              "jingtian_state")) {
                               val zansouBoost = if
-              (hifumi.cresora.WeaponSkillService.hasStatus(player, "zansou_mode")) 1.5f else 1.0f
+              (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "zansou_mode")) 1.5f else
+              1.0f
                               target.damage(world, world.damageSources.magic(), (amount * 0.15f) *
               zansouBoost)
                               if (world.random.nextDouble() < 0.30) {
-                                  hifumi.cresora.WeaponSkillService.applyMark(target, "root", 120L)
+                                  hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "root",
+              120L)
                                  
               target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS,
               120, 255, false, false, true))
                               }
                           }
 
-                          if (hifumi.cresora.WeaponSkillService.hasStatus(player, "zansou_mode")) {
-                              hifumi.cresora.WeaponSkillService.applyMark(target, "lux", 200L)
+                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
+              "zansou_mode")) {
+                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "lux",
+              200L)
                           }
 
-                          if (hifumi.cresora.WeaponSkillService.hasStatus(player,
+                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
               "yoraku_manchisho_active")) {
                               val aoeRange = 4.5
                               val baseDamage =
-              hifumi.cresora.WeaponCombatSupport.attackDamage(definition, data).toFloat()
+              hifumi.cresora.weapon.WeaponCombatSupport.attackDamage(definition, data).toFloat()
                              
               world.getEntitiesByClass(net.minecraft.entity.LivingEntity::class.java,
               player.boundingBox.expand(aoeRange)) { it.isAlive && it != player }

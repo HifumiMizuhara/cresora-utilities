@@ -187,11 +187,11 @@ class CresoraCompiler(
                 FunSpec.builder("onPlayerTick")
                     .addModifiers(KModifier.OVERRIDE)
                     .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
-                    .addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                    .addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                    .addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                    .addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
 
-            onPlayerTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora", "WeaponSkillService"))
+            onPlayerTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
             for (buff in skill.buffs) {
                 val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
                 val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
@@ -248,28 +248,28 @@ class CresoraCompiler(
                     "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
                     "heal" -> {
                         val amount = action.arguments[0].let { if (it == "skill_value") "%T.healHp(definition, data)" else "$it.toFloat()" }
-                        funSpec.addStatement("player.heal($amount)", ClassName("hifumi.cresora", "WeaponCombatSupport"))
+                        funSpec.addStatement("player.heal($amount)", ClassName("hifumi.cresora.weapon", "WeaponCombatSupport"))
                     }
                     "grant_shield" -> {
                         val amount = action.arguments[0].let { if (it == "skill_value") "%T.shieldHp(definition, data)" else "$it.toFloat()" }
                         val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("(player as %T).cresoraSetShieldHp($amount)", ClassName("hifumi.cresora", "WeaponSkillAccess"), ClassName("hifumi.cresora", "WeaponCombatSupport"))
-                        funSpec.addStatement("(player as %T).cresoraSetShieldExpireTick(%T.currentWorldTime(player) + $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillAccess"), ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("(player as %T).cresoraSetShieldHp($amount)", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"), ClassName("hifumi.cresora.weapon", "WeaponCombatSupport"))
+                        funSpec.addStatement("(player as %T).cresoraSetShieldExpireTick(%T.currentWorldTime(player) + $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"), ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "start_cooldown" -> {
-                        funSpec.addStatement("%T.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"))
-                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("%T.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "apply_mark" -> {
                         val target = action.arguments[0]
                         val markId = action.arguments[1].removeSurrounding("\"")
                         val duration = action.arguments[2].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("%T.applyMark($target, %S, $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"), markId)
+                        funSpec.addStatement("%T.applyMark($target, %S, $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"), markId)
                     }
                     "grant_invulnerability" -> {
                         val target = action.arguments[0]
                         val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("%T.grantInvulnerability($target, $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("%T.grantInvulnerability($target, $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "send_message" -> {
                         val key = action.arguments[0].removeSurrounding("\"")
@@ -310,7 +310,7 @@ class CresoraCompiler(
             }
             is OpenSkillMenuActionNode -> {
                 val subSkillList = action.subSkillEffectIds.joinToString(", ") { "\"$it\"" }
-                funSpec.addStatement("%T.overrideHotbar(player, definition.id, listOf($subSkillList), ${action.durationSeconds.toLong() * 20L})", ClassName("hifumi.cresora", "HotbarOverrideService"))
+                funSpec.addStatement("%T.overrideHotbar(player, definition.id, listOf($subSkillList), ${action.durationSeconds.toLong() * 20L})", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
             }
             is AreaOfEffectActionNode -> {
                 val radius = action.radius
@@ -338,7 +338,7 @@ class CresoraCompiler(
                 )
             }
             is CloseSkillMenuActionNode -> {
-                funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora", "HotbarOverrideService"))
+                funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
             }
             is ExecuteActionNode -> {
                 funSpec.addCode("\n; ")
@@ -372,8 +372,8 @@ class CresoraCompiler(
                                 "${durationSec.toLong() * 20L}L"
                             }
                         }
-                        funSpec.addStatement("%T.startCooldown(player, definition.id, $duration)", ClassName("hifumi.cresora", "WeaponSkillService"))
-                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("%T.startCooldown(player, definition.id, $duration)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "send_message" -> {
                         val key = action.arguments[0].removeSurrounding("\"")
@@ -421,7 +421,7 @@ class CresoraCompiler(
                     |    player.sendMessage(%T.translatable("item.cresora.weapon.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
                     |}
                     |
-                """.trimMargin(), ClassName("hifumi.cresora", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
             } else {
                 funSpec.addStatement("// Buff $buffId not found")
             }
@@ -470,9 +470,9 @@ class CresoraCompiler(
         when (eventName) {
             "on_activate" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
-                builder.addParameter("access", ClassName("hifumi.cresora", "WeaponSkillAccess"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
+                builder.addParameter("access", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"))
                 builder.returns(ClassName("net.minecraft.util", "ActionResult"))
             }
             "on_damage_dealt" -> {
@@ -480,32 +480,32 @@ class CresoraCompiler(
                 builder.addParameter("target", ClassName("net.minecraft.entity", "LivingEntity"))
                 builder.addParameter("amount", Float::class)
                 builder.addParameter("isTrueDamage", Boolean::class)
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
             "on_player_tick" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
             "on_damage_absorbed" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
                 builder.addParameter("amount", Float::class)
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
                 builder.returns(Float::class)
             }
             "on_damage_taken" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
                 builder.addParameter("amount", Float::class)
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
                 builder.returns(Float::class)
             }
             "on_tick" -> {
                 builder.addParameter("server", ClassName("net.minecraft.server", "MinecraftServer"))
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
         }
     }
@@ -790,15 +790,15 @@ class CresoraCompiler(
             .addImport("net.minecraft.entity.effect", "StatusEffects")
             .addImport("net.minecraft.registry", "Registries")
             .addImport("net.minecraft.particle", "ParticleTypes")
-            .addImport("hifumi.cresora", "WeaponSkillService")
-            .addImport("hifumi.cresora", "CresoraDebuffService")
-            .addImport("hifumi.cresora", "CreditsService")
-            .addImport("hifumi.cresora", "HotbarOverrideService")
-            .addImport("hifumi.cresora", "WeaponCombatSupport")
-            .addImport("hifumi.cresora", "WeaponSkillAccess")
-            .addImport("hifumi.cresora", "WeaponDefinition")
-            .addImport("hifumi.cresora", "WeaponData")
-            .addImport("hifumi.cresora", "AdventureRankMobAccess")
-            .addImport("hifumi.cresora", "AdventureRankService")
+            .addImport("hifumi.cresora.weapon", "WeaponSkillService")
+            .addImport("hifumi.cresora.debuff", "CresoraDebuffService")
+            .addImport("hifumi.cresora.credits", "CreditsService")
+            .addImport("hifumi.cresora.weapon", "HotbarOverrideService")
+            .addImport("hifumi.cresora.weapon", "WeaponCombatSupport")
+            .addImport("hifumi.cresora.weapon", "WeaponSkillAccess")
+            .addImport("hifumi.cresora.weapon", "WeaponDefinition")
+            .addImport("hifumi.cresora.weapon", "WeaponData")
+            .addImport("hifumi.cresora.adventurerank", "AdventureRankMobAccess")
+            .addImport("hifumi.cresora.adventurerank", "AdventureRankService")
     }
 }

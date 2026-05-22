@@ -1,5 +1,9 @@
 package hifumi.cresora
 
+import hifumi.cresora.equipment.ArtifactDisplayStackFactory
+import hifumi.cresora.equipment.ArtifactSpecialItemDefinition
+import hifumi.cresora.equipment.ArtifactSpecialItemRegistry
+import hifumi.cresora.equipment.ArtifactSpecialItemSupport
 import com.google.gson.JsonParser
 import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps

@@ -1,5 +1,10 @@
 package hifumi.cresora
 
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.equipment.ArtifactSpecialItemKind
+import hifumi.cresora.equipment.ArtifactSpecialItemSupport
+import hifumi.cresora.equipment.ArtifactUiFlow
+import hifumi.cresora.equipment.EquipmentStackSupport
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
