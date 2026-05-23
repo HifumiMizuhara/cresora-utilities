@@ -189,21 +189,7 @@ object EquipmentContentRegistry {
                 }
             }
 
-            rule.upgradeMaterialLoot?.let { material ->
-                val poolBuilder = LootPool.builder()
-                    .conditionally(net.minecraft.loot.condition.RandomChanceLootCondition.builder(material.chance))
-                    .with(
-                        ItemEntry.builder(CreSoraUtilities.TUESHOKAKU).apply(
-                            SetCountLootFunction.builder(
-                                UniformLootNumberProvider.create(
-                                    material.levelMin.toFloat(),
-                                    material.levelMax.toFloat()
-                                )
-                            )
-                        )
-                    )
-                builder.pool(poolBuilder)
-            }
+            // Tueshokaku is deprecated and deleted, so we do not inject it into loot pools anymore
         }
     }
 

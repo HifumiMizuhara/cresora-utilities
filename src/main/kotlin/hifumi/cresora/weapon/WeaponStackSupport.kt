@@ -81,7 +81,8 @@ object WeaponStackSupport {
             weaponId = definition.id,
             rarity = definition.craft.craftedRarity,
             baseLevel = definition.craft.craftedBaseLevel,
-            skillLevel = definition.craft.craftedSkillLevel
+            skillLevel = definition.craft.craftedSkillLevel,
+            breakthrough = 0
         ).normalized(definition)
     }
 
@@ -89,7 +90,8 @@ object WeaponStackSupport {
         definition: WeaponDefinition,
         rarity: WeaponRarity,
         baseLevel: Int,
-        skillLevel: Int
+        skillLevel: Int,
+        breakthrough: Int = 0
     ): ItemStack {
         val item = weaponItem(definition.id) ?: error("Weapon item not registered: ${definition.id}")
         val stack = ItemStack(item)
@@ -99,7 +101,8 @@ object WeaponStackSupport {
                 weaponId = definition.id,
                 rarity = rarity,
                 baseLevel = baseLevel,
-                skillLevel = skillLevel
+                skillLevel = skillLevel,
+                breakthrough = breakthrough
             )
         )
         return stack

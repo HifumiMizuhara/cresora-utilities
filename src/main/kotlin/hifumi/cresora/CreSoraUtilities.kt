@@ -103,7 +103,6 @@ object CreSoraUtilities : ModInitializer {
 	const val MOD_ID = "cresora-utilities"
 
 	private val logger = LoggerFactory.getLogger(MOD_ID)
-	private val TUESHOKAKU_ID: Identifier = Identifier.of(MOD_ID, "tueshokaku")
 	private val VERSION_VERIFIER_ID: Identifier = Identifier.of("${MOD_ID}$version", "versionverifier")
 	val SUB_SKILL_DUMMY_ID: Identifier = Identifier.of(MOD_ID, "sub_skill_dummy")
 	private val MOON_BRICK_ID: Identifier = Identifier.of(MOD_ID, "moon_brick")
@@ -116,7 +115,6 @@ object CreSoraUtilities : ModInitializer {
 	private val WEAPON_FRAGMENT_ITEMS: MutableMap<String, WeaponFragmentItem> = linkedMapOf()
 	private val WEAPON_RARITY_FRAGMENT_ITEMS: MutableMap<WeaponRarity, Item> = linkedMapOf()
 	private val ARTIFACT_SPECIAL_ITEMS: MutableMap<String, ArtifactSpecialItem> = linkedMapOf()
-	val TUESHOKAKU: Item = tueshokaku(itemSettings(TUESHOKAKU_ID))
 	val VERIFY: Item = Item(itemSettings(VERSION_VERIFIER_ID))
 	val SUB_SKILL_DUMMY: Item = SubSkillItem(itemSettings(SUB_SKILL_DUMMY_ID).maxCount(1))
 	val MOON_BRICK_ITEM: Item = Item(itemSettings(MOON_BRICK_ID))
@@ -148,7 +146,6 @@ object CreSoraUtilities : ModInitializer {
 
 		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
 		Registry.register(Registries.BLOCK, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK)
-		Registry.register(Registries.ITEM, TUESHOKAKU_ID, TUESHOKAKU)
 		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
 		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
 		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)

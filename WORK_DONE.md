@@ -1,5 +1,39 @@
 # WORK_DONE
 
+## 《高山流水》武器自定义贴图实现 (2026-05-23)
+- [x] 武器自定义贴图生成与优化：
+  - 基于武器《高山流水》的传统国风（子期与伯牙、高山流水、古琴琴弦与翠色玉石）设定，利用生图模型生成了高质量的武器艺术概念图。
+  - 使用 Python 与 Pillow 对生成的图像进行后期处理：剔除纯黑背景并转换为透明通道、将剑身垂直与水平翻转使手柄朝向左下、剑尖朝向右上（符合 Minecraft 经典武器贴图朝向规范）、重构为 32x32 分辨率的高保真像素风 PNG 贴图。
+  - 将处理后的贴图保存至项目路径 `src/main/resources/assets/cresora-utilities/textures/item/gaoshan_liushui.png`。
+- [x] 武器 DSL 与模型编译配置：
+  - 修改 `src/main/cresora/gaoshan_liushui.cresora`，在 weapon 定义中指定 `texture: "cresora-utilities:item/gaoshan_liushui"`。
+  - 执行 `compileAssets` 资产编译，使 CWC 编译器自动根据此属性生成 `gaoshan_liushui.json` 物品模型文件，成功将材质引用指向自定义贴图路径。
+  - 运行 `classes` 任务完成全量代码编译和验证，确保无任何编译错误或行为回归。
+
+## 武器突破（精炼）机制与 Tueshokaku 废除 (2026-05-23)
+- [x] 武器突破（精炼）机制实现：
+    - `WeaponData` 数据类新增 `breakthrough`（精炼等级 0~2）字段，支持 Codec 序列化与 NBT 数据同步。通过 optional 属性确保与原有武器 item stack 后方兼容性。
+    - `WeaponUpgradeService` 新增 `levelCap`, `maxSkillLevelForBreakthrough`, `breakthroughCscCost`, `breakthroughFragmentCost` 方法，设定按比例递增的等级上限（精炼0级为 maxBaseLevel 的 50%，精炼1级为 75%，精炼2级为 100%），限制技能等级上限（精炼0/1/2级分别最大可升级技能至3/7/10级），并基于武器星级阶梯式计算 CSC 与武器碎片消耗。
+    - `WeaponCombatSupport` 实现精炼属性倍率（精炼0级100%，精炼1级115%，精炼2级130%）与额外属性增益（精炼1级 +5% 暴击率，精炼2级 +10% 暴击率与 +10% 全伤害加成）。
+    - `PlayerEntityMixin.java` 修改以向 `critRateBonusPercent` 传入 `weaponData` 以包含精炼带来的暴击率加成。
+- [x] 强化操作与 UI 逻辑重构：
+    - `WeaponUpgradeLogic` 支持当武器等级达到当前精炼上限且 breakthrough < 2 时，将原有升级预览转为精炼预览，重置武器等级为 1 并进阶精炼等阶，限制技能等级升级不能超过当前精炼等级对应的技能上限。
+    - `WeaponUpgradeScreen` 将“基础升级”按钮动态更改为“精炼”，并修改显示展示当前精炼等级的伤害增益和费用。
+    - 增加中文（简体、文言）、日文、英文下有关精炼、精炼等级不足等 UI 及交互提示翻译。
+- [x] 废弃并彻底删除 Tueshokaku：
+    - 物理删除 `tueshokaku.kt` 及相关资源模型文件 (`tueshokaku.json`)。
+    - 移除 `CreSoraUtilities.kt` 中的 Tueshokaku 注册与字段。
+    - 移除 `UpgradeLogic.kt` 与 `UpgradeScreenHandler.kt` 对 Tueshokaku 强化素材的处理逻辑，防具（Pendant）强化逻辑转为仅能使用同类防具（Pendant）作为素材。
+    - 移除 `EquipmentContentRegistry.kt` 构建怪物战利品表时对 Tueshokaku 的注入逻辑。
+- [x] 代码审核反馈与深度优化（2026-05-23 Code Review 反馈落实）：
+    - 物理清理 `adventure_rank_upgrade_materials.json` 标签中残留的 Tueshokaku 引用，防止运行时警告。
+    - 清理 4 国语言翻译文件中废弃 of Tueshokaku 与相关升级失败文案词条。
+    - 去除 `UpgradeLogic.kt` 中因删除代码遗留的多余空白行。
+    - 重构 `WeaponData.normalized(definition)`，使其直接调用 `WeaponUpgradeService` 的等级与技能限制计算方法，消除了两处完全重复的判定逻辑。
+    - 将 `WeaponCombatSupport` 中硬编码的精炼战斗属性加成（+15% 伤害、+5%/+10% 暴击率、+10% 全属性伤害加成）提取为 `WeaponUpgradeService` 的统一常量，提升代码可读性与可维护性。
+- [x] 整合与验证：
+    - `./gradlew classes` 编译验证成功。
+
 ## プロジェクトパッケージ構造のリファクタリング (2026-05-22)
 - [x] パッケージの整理とソースファイルの再配置：
     - 肥大化した `hifumi.cresora` ルートパッケージから、Kotlin ファイル群をドメイン別の新しいサブパッケージへ移動。
@@ -648,3 +682,21 @@ Resolved several P2 issues identified during code review, targeting missing item
 ### Verification
 - Stopped Gradle daemon and cleared build caches via `./gradlew clean classes` to resolve standard locks.
 - `GRADLE_USER_HOME=.gradle-user ./gradlew clean classes --console=plain` passed successfully, verifying that all model files are in place and service optimizations compile cleanly.
+
+## CWC Weapon Texture Fallback and Sub-Skill Dummy Model Warning Fixes (2026-05-23)
+
+Resolved weapon custom textures not being applied and block model warnings during client startup.
+
+### Accomplishments
+- **Dynamic Weapon Texture Mapping**:
+  - Updated the model generator in `CresoraCompiler.kt` to check if a custom weapon texture PNG file exists (`assets/cresora-utilities/textures/item/<weapon_id>.png`).
+  - If a custom texture PNG exists, the generated model JSON now automatically uses the custom texture (`cresora-utilities:item/<weapon_id>`) instead of immediately falling back to the vanilla base item's texture (e.g. `minecraft:item/wooden_sword`).
+  - If the custom PNG does not exist (like for test or placeholder weapons), it safely falls back to the vanilla base item's texture.
+- **Sub-skill Dummy Model Warning Fix**:
+  - Removed outdated block model overrides in `CresoraCompiler.kt` that forced sub-skill dummy models for `minecraft:lightning_rod` and `minecraft:blue_ice` to use incorrect block paths (e.g. `minecraft:lightning_rod`), which caused startup warning logs on 1.21.7.
+  - Sub-skill dummy icon selectors now cleanly resolve to correct item models (`minecraft:item/lightning_rod` and `minecraft:item/blue_ice`).
+
+### Verification
+- `GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets --console=plain` successfully compiled and generated all model files with correct texture path references (e.g., `cadenza_allegro.json` pointing to `cresora-utilities:item/cadenza_allegro`).
+- `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` compiled successfully with 0 errors.
+

@@ -54,19 +54,38 @@ object WeaponUpgradeLogic {
             ?: return BasePreview(0, 0, 0.0, 0.0, 0, 0, false, "screen.cresora.weapon_upgrade.need_weapon")
         val data = WeaponStackSupport.ensureWeaponData(stack)
         val currentAttack = WeaponCombatSupport.attackDamage(definition, data)
-        val resultAttack = WeaponCombatSupport.attackDamage(definition, data.copy(baseLevel = data.baseLevel + 1).normalized(definition))
-        if (data.baseLevel >= definition.maxBaseLevel) {
-            return BasePreview(data.baseLevel, data.baseLevel, currentAttack, currentAttack, 0, 0, false, "screen.cresora.weapon_upgrade.max_base")
+        val currentCap = WeaponUpgradeService.levelCap(definition, data.breakthrough)
+
+        if (data.baseLevel >= currentCap) {
+            if (data.breakthrough >= 2) {
+                return BasePreview(data.baseLevel, data.baseLevel, currentAttack, currentAttack, 0, 0, false, "screen.cresora.weapon_upgrade.max_breakthrough")
+            }
+            val targetBt = data.breakthrough + 1
+            val resultAttack = WeaponCombatSupport.attackDamage(definition, data.copy(baseLevel = 1, breakthrough = targetBt).normalized(definition))
+            val cscCost = WeaponUpgradeService.breakthroughCscCost(data.rarity, targetBt)
+            val fragmentCost = WeaponUpgradeService.breakthroughFragmentCost(data.rarity, targetBt)
+
+            if (availableCredits != null && availableCredits < cscCost) {
+                return BasePreview(data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost, false, "item.cresora.not_enough_credits")
+            }
+            if (availableFragments != null && availableFragments < fragmentCost) {
+                return BasePreview(data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost, false, "screen.cresora.weapon_upgrade.no_fragments")
+            }
+            return BasePreview(data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost, true, "screen.cresora.weapon_upgrade.ready_breakthrough")
         }
+
+        val resultLevel = data.baseLevel + 1
+        val resultAttack = WeaponCombatSupport.attackDamage(definition, data.copy(baseLevel = resultLevel).normalized(definition))
         val cscCost = WeaponUpgradeService.baseUpgradeCost(definition, data.baseLevel)
         val fragmentCost = definition.upgrades.baseFragmentCost
+
         if (availableCredits != null && availableCredits < cscCost) {
-            return BasePreview(data.baseLevel, data.baseLevel + 1, currentAttack, resultAttack, cscCost, fragmentCost, false, "item.cresora.not_enough_credits")
+            return BasePreview(data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost, false, "item.cresora.not_enough_credits")
         }
         if (availableFragments != null && availableFragments < fragmentCost) {
-            return BasePreview(data.baseLevel, data.baseLevel + 1, currentAttack, resultAttack, cscCost, fragmentCost, false, "screen.cresora.weapon_upgrade.no_fragments")
+            return BasePreview(data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost, false, "screen.cresora.weapon_upgrade.no_fragments")
         }
-        return BasePreview(data.baseLevel, data.baseLevel + 1, currentAttack, resultAttack, cscCost, fragmentCost, true, "screen.cresora.weapon_upgrade.ready_base")
+        return BasePreview(data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost, true, "screen.cresora.weapon_upgrade.ready_base")
     }
 
     fun getSkillPreview(stack: ItemStack, availableCredits: Int?, availableArtifacts: Int? = null): SkillPreview {
@@ -87,6 +106,10 @@ object WeaponUpgradeLogic {
         }
         if (data.skillLevel >= definition.maxSkillLevel) {
             return SkillPreview(data.skillLevel, data.skillLevel, definition.skill.effectId, currentValue, currentValue, 0, 0, 0, false, "screen.cresora.weapon_upgrade.max_skill")
+        }
+        val skillCap = WeaponUpgradeService.maxSkillLevelForBreakthrough(data.breakthrough)
+        if (data.skillLevel >= skillCap) {
+            return SkillPreview(data.skillLevel, data.skillLevel, definition.skill.effectId, currentValue, currentValue, 0, 0, 0, false, "screen.cresora.weapon_upgrade.need_breakthrough")
         }
         val cscCost = WeaponUpgradeService.skillUpgradeCost(definition, data.skillLevel)
         val artifactCost = WeaponUpgradeService.skillArtifactCost(definition, data.skillLevel)
@@ -184,7 +207,18 @@ object WeaponUpgradeLogic {
             CreditsService.addCredits(player, preview.cscCost)
             return AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.no_fragments").formatted(Formatting.RED))
         }
-        WeaponStackSupport.syncWeaponData(stack, data.copy(baseLevel = data.baseLevel + 1))
+
+        val currentCap = WeaponUpgradeService.levelCap(definition, data.breakthrough)
+        if (data.baseLevel >= currentCap && data.breakthrough < 2) {
+            val nextBt = data.breakthrough + 1
+            WeaponStackSupport.syncWeaponData(stack, data.copy(baseLevel = 1, breakthrough = nextBt).normalized(definition))
+            return AttemptResult(
+                true,
+                Text.translatable("screen.cresora.weapon_upgrade.upgraded_breakthrough", data.breakthrough, nextBt)
+            )
+        }
+
+        WeaponStackSupport.syncWeaponData(stack, data.copy(baseLevel = data.baseLevel + 1).normalized(definition))
         return AttemptResult(
             true,
             Text.translatable("screen.cresora.weapon_upgrade.upgraded_base", preview.currentLevel, preview.resultLevel)

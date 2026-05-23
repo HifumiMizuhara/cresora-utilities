@@ -8,14 +8,14 @@
         "when": "danrai",
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:lightning_rod"
+          "model": "minecraft:block/lightning_rod"
         }
       },
       {
         "when": "zansou",
         "model": {
           "type": "minecraft:model",
-          "model": "minecraft:blue_ice"
+          "model": "minecraft:block/blue_ice"
         }
       },
       {

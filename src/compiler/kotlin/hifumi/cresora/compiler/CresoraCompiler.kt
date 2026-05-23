@@ -702,12 +702,17 @@ class CresoraCompiler(
             val modelJson = JsonObject()
             modelJson.addProperty("parent", "minecraft:item/handheld")
             val textures = JsonObject()
-            val texturePath = weapon.texture ?: weapon.baseItem.let {
-                if (it.contains(":")) {
-                    val parts = it.split(":")
-                    "${parts[0]}:item/${parts[1]}"
-                } else {
-                    "minecraft:item/$it"
+            val customTextureFile = File(assetsDir, "textures/item/${weapon.id}.png")
+            val texturePath = weapon.texture ?: if (customTextureFile.exists()) {
+                "cresora-utilities:item/${weapon.id}"
+            } else {
+                weapon.baseItem.let {
+                    if (it.contains(":")) {
+                        val parts = it.split(":")
+                        "${parts[0]}:item/${parts[1]}"
+                    } else {
+                        "minecraft:item/$it"
+                    }
                 }
             }
             textures.addProperty("layer0", texturePath)
@@ -742,27 +747,19 @@ class CresoraCompiler(
             caseModel.addProperty("type", "minecraft:model")
             val modelPath = if (subSkill.icon.contains(":")) {
                 val parts = subSkill.icon.split(":")
-                if (parts[0] == "minecraft") {
-                    // For Minecraft, referring to the model of a block/item usually works better
-                    // if we point directly to the item definition's intended model.
-                    // In 1.21, "minecraft:lightning_rod" might just work if we use it correctly.
-                    // However, to be safe, we keep the item/ suffix for items but detect blocks.
-                    "${parts[0]}:item/${parts[1]}"
+                if (parts[1] == "lightning_rod" || parts[1] == "blue_ice") {
+                    "${parts[0]}:block/${parts[1]}"
                 } else {
                     "${parts[0]}:item/${parts[1]}"
                 }
             } else {
-                "minecraft:item/${subSkill.icon}"
+                if (subSkill.icon == "lightning_rod" || subSkill.icon == "blue_ice") {
+                    "minecraft:block/${subSkill.icon}"
+                } else {
+                    "minecraft:item/${subSkill.icon}"
+                }
             }
-            // Fix for fallback missing texture too
-            if (subSkill.icon == "minecraft:lightning_rod") {
-                 // Special case for blocks that don't have a simple item model path
-                 caseModel.addProperty("model", "minecraft:lightning_rod")
-            } else if (subSkill.icon == "minecraft:blue_ice") {
-                 caseModel.addProperty("model", "minecraft:blue_ice")
-            } else {
-                 caseModel.addProperty("model", modelPath)
-            }
+            caseModel.addProperty("model", modelPath)
             case.add("model", caseModel)
             cases.add(case)
         }

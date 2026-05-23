@@ -391,6 +391,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `rarity: WeaponRarity`
 - `baseLevel: Int`
 - `skillLevel: Int`
+- `breakthrough: Int` (精錬レベル 0..2)
 
 公開メソッド:
 

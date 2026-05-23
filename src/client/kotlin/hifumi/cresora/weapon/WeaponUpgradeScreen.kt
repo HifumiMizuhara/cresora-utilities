@@ -50,7 +50,11 @@ class WeaponUpgradeScreen(
         skillButton.active = skillPreview.canUpgrade
         dismantleButton.active = dismantlePreview.canDismantle
         baseButton.message = if (basePreview.canUpgrade) {
-            Text.translatable("screen.cresora.weapon_upgrade.base_button")
+            if (basePreview.messageKey == "screen.cresora.weapon_upgrade.ready_breakthrough") {
+                Text.translatable("screen.cresora.weapon_upgrade.breakthrough_button")
+            } else {
+                Text.translatable("screen.cresora.weapon_upgrade.base_button")
+            }
         } else {
             compactStatus(basePreview.messageKey, true)
         }
@@ -88,7 +92,8 @@ class WeaponUpgradeScreen(
         context.drawText(textRenderer, title, titleX, titleY, 0x30261A, false)
         context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX, playerInventoryTitleY, 0x5F503D, false)
         if (definition != null && data != null) {
-            context.drawText(textRenderer, Text.translatable(definition.translationKey()), 8, 20, 0x2F1D0D, false)
+            val displayName = Text.translatable("screen.cresora.weapon_upgrade.display_name", Text.translatable(definition.translationKey()), data.breakthrough)
+            context.drawText(textRenderer, displayName, 8, 20, 0x2F1D0D, false)
             context.drawText(textRenderer, Text.translatable(data.rarity.translationKey()), 8, 31, 0x8B6A34, false)
             context.drawText(
                 textRenderer,
@@ -221,6 +226,9 @@ class WeaponUpgradeScreen(
                 }
             }
             "item.cresora.not_enough_credits" -> Text.translatable("screen.cresora.weapon_upgrade.no_credits")
+            "screen.cresora.weapon_upgrade.max_breakthrough" -> Text.translatable("screen.cresora.weapon_upgrade.max_breakthrough")
+            "screen.cresora.weapon_upgrade.need_breakthrough" -> Text.translatable("screen.cresora.weapon_upgrade.need_breakthrough")
+            "screen.cresora.weapon_upgrade.ready_breakthrough" -> Text.translatable("screen.cresora.weapon_upgrade.ready_breakthrough")
             else -> if (base) Text.translatable("screen.cresora.weapon_upgrade.base_button") else Text.translatable("screen.cresora.weapon_upgrade.skill_button")
         }
     }

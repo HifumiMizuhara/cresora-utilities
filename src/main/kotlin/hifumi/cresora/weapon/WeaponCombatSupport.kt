@@ -5,24 +5,29 @@ object WeaponCombatSupport {
 
     fun attackDamage(definition: WeaponDefinition, data: WeaponData): Double {
         val curve = definition.attackCurve
-        if (curve.isEmpty()) {
-            return definition.baseAttackDamage + (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel
-        }
-        val level = data.baseLevel.coerceIn(1, definition.maxBaseLevel)
-        if (level <= curve.first().level) {
-            return curve.first().attackDamage
-        }
-        for (index in 1 until curve.size) {
-            val previous = curve[index - 1]
-            val next = curve[index]
-            if (level > next.level) {
-                continue
+        val raw = if (curve.isEmpty()) {
+            definition.baseAttackDamage + (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel
+        } else {
+            val level = data.baseLevel.coerceIn(1, definition.maxBaseLevel)
+            if (level <= curve.first().level) {
+                curve.first().attackDamage
+            } else {
+                var calculated = curve.last().attackDamage
+                for (index in 1 until curve.size) {
+                    val previous = curve[index - 1]
+                    val next = curve[index]
+                    if (level > next.level) {
+                        continue
+                    }
+                    val span = (next.level - previous.level).coerceAtLeast(1)
+                    val progress = (level - previous.level).toDouble() / span.toDouble()
+                    calculated = previous.attackDamage + (next.attackDamage - previous.attackDamage) * progress
+                    break
+                }
+                calculated
             }
-            val span = (next.level - previous.level).coerceAtLeast(1)
-            val progress = (level - previous.level).toDouble() / span.toDouble()
-            return previous.attackDamage + (next.attackDamage - previous.attackDamage) * progress
         }
-        return curve.last().attackDamage
+        return raw * (1.0 + WeaponUpgradeService.BREAKTHROUGH_ATTACK_FACTOR * data.breakthrough)
     }
 
     fun attackDamageModifier(definition: WeaponDefinition, data: WeaponData): Double {
@@ -33,10 +38,18 @@ object WeaponCombatSupport {
         return definition.totalAttackSpeed - PLAYER_BASE_ATTACK_SPEED
     }
 
-    fun critRateBonusPercent(definition: WeaponDefinition): Double = definition.critRateBonusPercent
+    fun critRateBonusPercent(definition: WeaponDefinition, data: WeaponData? = null): Double {
+        val baseCrit = definition.critRateBonusPercent
+        val btBonus = when (data?.breakthrough) {
+            1 -> WeaponUpgradeService.BREAKTHROUGH_1_CRIT_RATE_BONUS
+            2 -> WeaponUpgradeService.BREAKTHROUGH_2_CRIT_RATE_BONUS
+            else -> 0.0
+        }
+        return baseCrit + btBonus
+    }
 
-    fun totalCritRateBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition): Double {
-        return critRateBonusPercent(definition) + WeaponSkillService.critRateBonusPercent(player, definition.id)
+    fun totalCritRateBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition, data: WeaponData? = null): Double {
+        return critRateBonusPercent(definition, data) + WeaponSkillService.critRateBonusPercent(player, definition.id)
     }
 
     fun totalCritDamageBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition): Double {
@@ -45,11 +58,14 @@ object WeaponCombatSupport {
 
     fun allDamageBonusPercent(definition: WeaponDefinition, data: WeaponData): Double {
         val maxBonus = definition.maxAllDamageBonusPercent.coerceAtLeast(0.0)
-        if (maxBonus <= 0.0 || definition.maxBaseLevel <= 1) {
-            return 0.0
+        val normalBonus = if (maxBonus <= 0.0 || definition.maxBaseLevel <= 1) {
+            0.0
+        } else {
+            val progress = (data.baseLevel.coerceIn(1, definition.maxBaseLevel) - 1).toDouble() / (definition.maxBaseLevel - 1).toDouble()
+            maxBonus * progress.coerceIn(0.0, 1.0)
         }
-        val progress = (data.baseLevel.coerceIn(1, definition.maxBaseLevel) - 1).toDouble() / (definition.maxBaseLevel - 1).toDouble()
-        return maxBonus * progress.coerceIn(0.0, 1.0)
+        val btBonus = if (data.breakthrough == 2) WeaponUpgradeService.BREAKTHROUGH_2_ALL_DAMAGE_BONUS else 0.0
+        return normalBonus + btBonus
     }
 
     fun skillValueHearts(definition: WeaponDefinition, data: WeaponData): Double {
