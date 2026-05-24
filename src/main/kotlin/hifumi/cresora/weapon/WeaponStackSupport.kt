@@ -1,5 +1,6 @@
 package hifumi.cresora.weapon
 
+import hifumi.cresora.CreSoraUtilities
 import hifumi.cresora.ModDataComponents
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -137,6 +138,35 @@ object WeaponStackSupport {
             if (remaining == 0) {
                 player.inventory.markDirty()
                 return true
+            }
+        }
+        player.inventory.markDirty()
+        return remaining == 0
+    }
+
+    fun countRoleMaterials(player: net.minecraft.entity.player.PlayerEntity, role: WeaponRole, breakthroughLevel: Int): Int {
+        val item = if (breakthroughLevel == 1) CreSoraUtilities.getRoleProofItem(role) else CreSoraUtilities.getRoleInsightItem(role)
+        return (0 until player.inventory.size()).sumOf { slot ->
+            val stack = player.inventory.getStack(slot)
+            if (stack.item == item) stack.count else 0
+        }
+    }
+
+    fun removeRoleMaterials(player: net.minecraft.entity.player.PlayerEntity, role: WeaponRole, breakthroughLevel: Int, amount: Int): Boolean {
+        var remaining = amount.coerceAtLeast(0)
+        if (remaining == 0) return true
+        val item = if (breakthroughLevel == 1) CreSoraUtilities.getRoleProofItem(role) else CreSoraUtilities.getRoleInsightItem(role)
+        if (countRoleMaterials(player, role, breakthroughLevel) < remaining) return false
+        for (slot in 0 until player.inventory.size()) {
+            val stack = player.inventory.getStack(slot)
+            if (stack.item == item && !stack.isEmpty) {
+                val decrement = minOf(remaining, stack.count)
+                stack.decrement(decrement)
+                remaining -= decrement
+                if (remaining == 0) {
+                    player.inventory.markDirty()
+                    return true
+                }
             }
         }
         player.inventory.markDirty()

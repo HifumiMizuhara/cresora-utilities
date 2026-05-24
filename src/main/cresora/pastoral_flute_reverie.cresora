@@ -3,6 +3,7 @@ weapon "Pastoral Flute Reverie" {
     rarity: "3_star"
     base_item: "minecraft:wooden_sword"
     damage_type: physical
+    role: vanguard
     stats {
         base_damage: 7.0
         damage_per_level: 0.18

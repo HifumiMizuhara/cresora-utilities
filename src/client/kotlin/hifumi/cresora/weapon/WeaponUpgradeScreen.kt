@@ -1,4 +1,5 @@
 package hifumi.cresora.weapon
+import hifumi.cresora.CreSoraUtilities
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.widget.ButtonWidget
@@ -21,7 +22,7 @@ class WeaponUpgradeScreen(
         titleX = 8
         titleY = 6
         playerInventoryTitleX = 8
-        playerInventoryTitleY = 72
+        playerInventoryTitleY = 76
     }
 
     override fun init() {
@@ -77,8 +78,8 @@ class WeaponUpgradeScreen(
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.fill(x, y, x + backgroundWidth, y + backgroundHeight, 0xFF2A221A.toInt())
         context.fill(x + 2, y + 2, x + backgroundWidth - 2, y + backgroundHeight - 2, 0xFFF0E2C2.toInt())
-        context.fill(x + 7, y + 18, x + 91, y + 69, 0xFFE4D3B0.toInt())
-        context.fill(x + 95, y + 18, x + 169, y + 69, 0xFFE4D3B0.toInt())
+        context.fill(x + 7, y + 18, x + 91, y + 73, 0xFFE4D3B0.toInt())
+        context.fill(x + 95, y + 18, x + 169, y + 73, 0xFFE4D3B0.toInt())
     }
 
     override fun drawForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
@@ -103,15 +104,39 @@ class WeaponUpgradeScreen(
                 0x2F1D0D,
                 false
             )
+            if (basePreview.roleMaterialCost > 0) {
+                val roleItem = if (data.breakthrough == 0) {
+                    CreSoraUtilities.getRoleProofItem(definition.role)
+                } else {
+                    CreSoraUtilities.getRoleInsightItem(definition.role)
+                }
+                val roleText = Text.translatable(
+                    "screen.cresora.weapon_upgrade.role_materials",
+                    roleItem.name,
+                    formatWhole(basePreview.roleMaterialCost),
+                    formatWhole(basePreview.availableRoleMaterials)
+                )
+                context.drawText(
+                    textRenderer,
+                    roleText,
+                    8,
+                    50,
+                    0x2F1D0D,
+                    false
+                )
+            }
         } else {
             context.drawText(textRenderer, Text.translatable("screen.cresora.weapon_upgrade.need_weapon"), 8, 20, 0x8F2E23, false)
         }
+
+        val baseLineY = if (basePreview.roleMaterialCost > 0) 60 else 54
+        val baseAttackY = if (basePreview.roleMaterialCost > 0) 70 else 64
 
         context.drawText(
             textRenderer,
             Text.translatable("screen.cresora.weapon_upgrade.base_line", basePreview.currentLevel, basePreview.resultLevel),
             8,
-            54,
+            baseLineY,
             0x2F1D0D,
             false
         )
@@ -119,7 +144,7 @@ class WeaponUpgradeScreen(
             textRenderer,
             Text.translatable("screen.cresora.weapon_upgrade.base_attack", formatOne(basePreview.currentAttack), formatOne(basePreview.resultAttack)),
             8,
-            64,
+            baseAttackY,
             0x2F1D0D,
             false
         )
@@ -183,7 +208,7 @@ class WeaponUpgradeScreen(
                 false
             )
         }
-        context.drawText(textRenderer, compactStatus(basePreview.messageKey, true), 8, 74, statusColor(basePreview.canUpgrade), false)
+        context.drawText(textRenderer, compactStatus(basePreview.messageKey, true), 8, 77, statusColor(basePreview.canUpgrade), false)
         context.drawText(textRenderer, compactStatus(skillPreview.messageKey, false), 95, if (skillPreview.artifactCost > 0) 118 else 108, statusColor(skillPreview.canUpgrade), false)
     }
 
@@ -214,6 +239,7 @@ class WeaponUpgradeScreen(
             "screen.cresora.weapon_upgrade.max_base" -> Text.translatable("screen.cresora.weapon_upgrade.max_base")
             "screen.cresora.weapon_upgrade.max_skill" -> Text.translatable("screen.cresora.weapon_upgrade.max_skill")
             "screen.cresora.weapon_upgrade.no_fragments" -> Text.translatable("screen.cresora.weapon_upgrade.no_fragments")
+            "screen.cresora.weapon_upgrade.no_role_materials" -> Text.translatable("screen.cresora.weapon_upgrade.no_role_materials")
             "screen.cresora.weapon_upgrade.no_artifact_materials" -> Text.translatable("screen.cresora.weapon_upgrade.no_artifact_materials")
             "screen.cresora.weapon_upgrade.ready_base" -> Text.translatable("screen.cresora.weapon_upgrade.ready_base")
             "screen.cresora.weapon_upgrade.ready_skill" -> Text.translatable("screen.cresora.weapon_upgrade.ready_skill")

@@ -3,6 +3,7 @@ weapon "Requiem Toward Dawn" {
     rarity: "4_star"
     base_item: "minecraft:iron_sword"
     damage_type: arcane
+    role: caster
     stats {
         base_damage: 8.5
         damage_per_level: 0.2

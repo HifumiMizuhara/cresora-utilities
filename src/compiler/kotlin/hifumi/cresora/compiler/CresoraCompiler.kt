@@ -524,6 +524,7 @@ class CresoraCompiler(
             weaponObj.addProperty("maxBaseLevel", weapon.stats.maxBaseLevel)
             weaponObj.addProperty("maxSkillLevel", weapon.stats.maxSkillLevel)
             weaponObj.addProperty("damageType", weapon.damageType)
+            weaponObj.addProperty("role", weapon.role)
             weapon.customModelData?.let { weaponObj.addProperty("custom_model_data", it) }
 
             val skillObj = JsonObject()

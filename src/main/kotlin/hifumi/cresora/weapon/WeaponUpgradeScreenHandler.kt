@@ -33,6 +33,8 @@ class WeaponUpgradeScreenHandler(
         private const val PROPERTY_FRAGMENTS = 2
         private const val PROPERTY_ARTIFACTS = 3
         private const val PROPERTY_DISMANTLE_CONFIRM = 4
+        private const val PROPERTY_ROLE_MATERIALS_OWNED = 5
+        private const val PROPERTY_ROLE_MATERIALS_REQUIRED = 6
     }
 
     private val weaponInventory: Inventory = object : SimpleInventory(CUSTOM_SLOT_COUNT) {
@@ -41,7 +43,7 @@ class WeaponUpgradeScreenHandler(
             onContentChanged(this)
         }
     }
-    private val properties: PropertyDelegate = ArrayPropertyDelegate(5)
+    private val properties: PropertyDelegate = ArrayPropertyDelegate(7)
     private var dismantleConfirmClicks: Int = 0
 
     init {
@@ -152,7 +154,23 @@ class WeaponUpgradeScreenHandler(
     fun getWeaponStack(): ItemStack = slots[WEAPON_SLOT].stack
 
     fun getBasePreview(player: PlayerEntity): WeaponUpgradeLogic.BasePreview {
-        return WeaponUpgradeLogic.getBasePreview(getWeaponStack(), availableCredits(player), availableFragments(player))
+        val stack = getWeaponStack()
+        val definition = WeaponStackSupport.getDefinition(stack)
+        val data = WeaponStackSupport.getWeaponData(stack)
+        val roleMaterials = if (definition != null && data != null) {
+            if (player.world.isClient) {
+                currentRoleMaterialsOwned()
+            } else {
+                val targetBt = data.breakthrough + 1
+                WeaponStackSupport.countRoleMaterials(player, definition.role, targetBt)
+            }
+        } else 0
+        return WeaponUpgradeLogic.getBasePreview(
+            stack,
+            availableCredits(player),
+            availableFragments(player),
+            roleMaterials
+        )
     }
 
     fun getSkillPreview(player: PlayerEntity): WeaponUpgradeLogic.SkillPreview {
@@ -171,6 +189,10 @@ class WeaponUpgradeScreenHandler(
 
     fun currentArtifacts(): Int = properties.get(PROPERTY_ARTIFACTS)
 
+    fun currentRoleMaterialsOwned(): Int = properties.get(PROPERTY_ROLE_MATERIALS_OWNED)
+
+    fun currentRoleMaterialsRequired(): Int = properties.get(PROPERTY_ROLE_MATERIALS_REQUIRED)
+
     fun dismantleConfirmRemaining(): Int {
         val clicks = properties.get(PROPERTY_DISMANTLE_CONFIRM)
         return if (clicks <= 0) 0 else (REQUIRED_DISMANTLE_CLICKS - clicks).coerceAtLeast(0)
@@ -182,6 +204,15 @@ class WeaponUpgradeScreenHandler(
         val definition = WeaponStackSupport.getDefinition(getWeaponStack())
         properties.set(PROPERTY_FRAGMENTS, definition?.let { WeaponStackSupport.countFragments(player, it) } ?: 0)
         properties.set(PROPERTY_ARTIFACTS, definition?.let { WeaponSkillArtifactSupport.eligibleArtifacts(player, it).size } ?: 0)
+        val data = WeaponStackSupport.getWeaponData(getWeaponStack())
+        if (definition != null && data != null && data.baseLevel >= WeaponUpgradeService.levelCap(definition, data.breakthrough) && data.breakthrough < 2) {
+            val targetBt = data.breakthrough + 1
+            properties.set(PROPERTY_ROLE_MATERIALS_OWNED, WeaponStackSupport.countRoleMaterials(player, definition.role, targetBt))
+            properties.set(PROPERTY_ROLE_MATERIALS_REQUIRED, WeaponUpgradeService.breakthroughRoleMaterialCost(data.rarity, targetBt))
+        } else {
+            properties.set(PROPERTY_ROLE_MATERIALS_OWNED, 0)
+            properties.set(PROPERTY_ROLE_MATERIALS_REQUIRED, 0)
+        }
     }
 
     private fun availableCredits(player: PlayerEntity): Int? {

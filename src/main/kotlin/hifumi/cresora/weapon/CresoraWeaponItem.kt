@@ -34,6 +34,12 @@ class CresoraWeaponItem(
         val resolved = definition.resolve()
         val data = WeaponStackSupport.getWeaponData(stack) ?: WeaponStackSupport.defaultWeaponData(resolved)
         textConsumer.accept(Text.translatable(data.rarity.translationKey()).formatted(Formatting.GOLD))
+        textConsumer.accept(
+            Text.translatable(
+                "item.cresora.weapon.role",
+                Text.translatable(resolved.role.translationKey())
+            ).formatted(Formatting.GRAY)
+        )
         textConsumer.accept(Text.translatable("item.cresora.weapon.base_level", data.baseLevel, resolved.maxBaseLevel).formatted(Formatting.GRAY))
         textConsumer.accept(Text.translatable("item.cresora.weapon.skill_level", data.skillLevel, resolved.maxSkillLevel).formatted(Formatting.GRAY))
         textConsumer.accept(

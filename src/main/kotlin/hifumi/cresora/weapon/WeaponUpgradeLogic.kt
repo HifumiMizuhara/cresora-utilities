@@ -21,6 +21,8 @@ object WeaponUpgradeLogic {
         val resultAttack: Double,
         val cscCost: Int,
         val fragmentCost: Int,
+        val roleMaterialCost: Int,
+        val availableRoleMaterials: Int,
         val canUpgrade: Boolean,
         val messageKey: String?
     )
@@ -49,29 +51,40 @@ object WeaponUpgradeLogic {
         val message: Text
     )
 
-    fun getBasePreview(stack: ItemStack, availableCredits: Int?, availableFragments: Int?): BasePreview {
+    fun getBasePreview(stack: ItemStack, availableCredits: Int?, availableFragments: Int?, availableRoleMaterials: Int? = null): BasePreview {
         val definition = WeaponStackSupport.getDefinition(stack)
-            ?: return BasePreview(0, 0, 0.0, 0.0, 0, 0, false, "screen.cresora.weapon_upgrade.need_weapon")
+            ?: return BasePreview(0, 0, 0.0, 0.0, 0, 0, 0, 0, false, "screen.cresora.weapon_upgrade.need_weapon")
         val data = WeaponStackSupport.ensureWeaponData(stack)
         val currentAttack = WeaponCombatSupport.attackDamage(definition, data)
         val currentCap = WeaponUpgradeService.levelCap(definition, data.breakthrough)
 
         if (data.baseLevel >= currentCap) {
             if (data.breakthrough >= 2) {
-                return BasePreview(data.baseLevel, data.baseLevel, currentAttack, currentAttack, 0, 0, false, "screen.cresora.weapon_upgrade.max_breakthrough")
+                return BasePreview(data.baseLevel, data.baseLevel, currentAttack, currentAttack, 0, 0, 0, 0, false, "screen.cresora.weapon_upgrade.max_breakthrough")
             }
             val targetBt = data.breakthrough + 1
             val resultAttack = WeaponCombatSupport.attackDamage(definition, data.copy(baseLevel = 1, breakthrough = targetBt).normalized(definition))
             val cscCost = WeaponUpgradeService.breakthroughCscCost(data.rarity, targetBt)
             val fragmentCost = WeaponUpgradeService.breakthroughFragmentCost(data.rarity, targetBt)
+            val roleMaterialCost = WeaponUpgradeService.breakthroughRoleMaterialCost(data.rarity, targetBt)
+            val haveRoleMat = availableRoleMaterials ?: 0
 
-            if (availableCredits != null && availableCredits < cscCost) {
-                return BasePreview(data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost, false, "item.cresora.not_enough_credits")
+            val hasCredits = availableCredits == null || availableCredits >= cscCost
+            val hasFragments = availableFragments == null || availableFragments >= fragmentCost
+            val hasRoleMaterials = availableRoleMaterials == null || availableRoleMaterials >= roleMaterialCost
+
+            val canUpgrade = hasCredits && hasFragments && hasRoleMaterials
+            val messageKey = when {
+                !hasCredits -> "item.cresora.not_enough_credits"
+                !hasFragments -> "screen.cresora.weapon_upgrade.no_fragments"
+                !hasRoleMaterials -> "screen.cresora.weapon_upgrade.no_role_materials"
+                else -> "screen.cresora.weapon_upgrade.ready_breakthrough"
             }
-            if (availableFragments != null && availableFragments < fragmentCost) {
-                return BasePreview(data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost, false, "screen.cresora.weapon_upgrade.no_fragments")
-            }
-            return BasePreview(data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost, true, "screen.cresora.weapon_upgrade.ready_breakthrough")
+
+            return BasePreview(
+                data.baseLevel, 1, currentAttack, resultAttack, cscCost, fragmentCost,
+                roleMaterialCost, haveRoleMat, canUpgrade, messageKey
+            )
         }
 
         val resultLevel = data.baseLevel + 1
@@ -79,13 +92,19 @@ object WeaponUpgradeLogic {
         val cscCost = WeaponUpgradeService.baseUpgradeCost(definition, data.baseLevel)
         val fragmentCost = definition.upgrades.baseFragmentCost
 
-        if (availableCredits != null && availableCredits < cscCost) {
-            return BasePreview(data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost, false, "item.cresora.not_enough_credits")
+        val hasCredits = availableCredits == null || availableCredits >= cscCost
+        val hasFragments = availableFragments == null || availableFragments >= fragmentCost
+        val canUpgrade = hasCredits && hasFragments
+        val messageKey = when {
+            !hasCredits -> "item.cresora.not_enough_credits"
+            !hasFragments -> "screen.cresora.weapon_upgrade.no_fragments"
+            else -> "screen.cresora.weapon_upgrade.ready_base"
         }
-        if (availableFragments != null && availableFragments < fragmentCost) {
-            return BasePreview(data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost, false, "screen.cresora.weapon_upgrade.no_fragments")
-        }
-        return BasePreview(data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost, true, "screen.cresora.weapon_upgrade.ready_base")
+
+        return BasePreview(
+            data.baseLevel, resultLevel, currentAttack, resultAttack, cscCost, fragmentCost,
+            0, availableRoleMaterials ?: 0, canUpgrade, messageKey
+        )
     }
 
     fun getSkillPreview(stack: ItemStack, availableCredits: Int?, availableArtifacts: Int? = null): SkillPreview {
@@ -196,7 +215,17 @@ object WeaponUpgradeLogic {
         definition: WeaponDefinition,
         data: WeaponData
     ): AttemptResult {
-        val preview = getBasePreview(stack, CreditsService.getCredits(player), WeaponStackSupport.countFragments(player, definition))
+        val currentCap = WeaponUpgradeService.levelCap(definition, data.breakthrough)
+        val targetBt = data.breakthrough + 1
+        val haveRoleMaterials = if (data.baseLevel >= currentCap && data.breakthrough < 2) {
+            WeaponStackSupport.countRoleMaterials(player, definition.role, targetBt)
+        } else 0
+        val preview = getBasePreview(
+            stack,
+            CreditsService.getCredits(player),
+            WeaponStackSupport.countFragments(player, definition),
+            haveRoleMaterials
+        )
         if (!preview.canUpgrade) {
             return AttemptResult(false, Text.translatable(preview.messageKey ?: "screen.cresora.weapon_upgrade.need_weapon").formatted(Formatting.RED))
         }
@@ -208,9 +237,18 @@ object WeaponUpgradeLogic {
             return AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.no_fragments").formatted(Formatting.RED))
         }
 
-        val currentCap = WeaponUpgradeService.levelCap(definition, data.breakthrough)
-        if (data.baseLevel >= currentCap && data.breakthrough < 2) {
+        val isBreakthrough = data.baseLevel >= currentCap && data.breakthrough < 2
+        if (isBreakthrough) {
             val nextBt = data.breakthrough + 1
+            if (!WeaponStackSupport.removeRoleMaterials(player, definition.role, nextBt, preview.roleMaterialCost)) {
+                // Rollback credits and fragments
+                CreditsService.addCredits(player, preview.cscCost)
+                val fragmentItem = WeaponStackSupport.fragmentItem(definition.id)
+                if (fragmentItem != null && preview.fragmentCost > 0) {
+                    player.inventory.offerOrDrop(ItemStack(fragmentItem, preview.fragmentCost))
+                }
+                return AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.no_role_materials").formatted(Formatting.RED))
+            }
             WeaponStackSupport.syncWeaponData(stack, data.copy(baseLevel = 1, breakthrough = nextBt).normalized(definition))
             return AttemptResult(
                 true,

@@ -2,6 +2,7 @@ weapon "Rondo Melody" {
     id: "rondo_melody"
     rarity: "2_star"
     base_item: "minecraft:wooden_sword"
+    role: defender
     stats {
         base_damage: 7.0
         damage_per_level: 0.18

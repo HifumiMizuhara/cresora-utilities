@@ -38,3 +38,7 @@
 - [ ] 既存の古い CommandActionNode AOE 解析ロジックを、構造的な AreaOfEffectActionNode にリファクタリング。
 - [ ] 完全な復旧のために `BloodMoonService` に `originalBedStates` を永続化保存。
 - [x] `CreSoraUtilities.onInitialize` で `ArtifactSkillRegistry` を明示的に初期化。 (Completed 2026-05-20)
+
+## 武器突破システム
+- [ ] ドメイン（ダンジョン）報酬やショップの仕組みをリファクタリングし、今回追加したロール専用突破素材（証 / 極意）のゲーム内入手経路（ドロップや販売など）を追加する。
+

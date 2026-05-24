@@ -3,6 +3,7 @@ weapon "Dummy 4 Star B" {
     rarity: "4_star"
     base_item: "minecraft:golden_sword"
     damage_type: physical
+    role: defender
     stats {
         base_damage: 8.5
         damage_per_level: 0.2
@@ -23,6 +24,7 @@ weapon "Example Saber" {
     rarity: "3_star"
     base_item: "minecraft:iron_sword"
     damage_type: physical
+    role: specialist
     stats {
         base_damage: 10.0
         damage_per_level: 0.5
@@ -43,6 +45,7 @@ weapon "Buff Test Saber" {
     rarity: "4_star"
     base_item: "minecraft:iron_sword"
     damage_type: physical
+    role: caster
     stats {
         base_damage: 12.0
         damage_per_level: 0.6
@@ -63,6 +66,7 @@ weapon "Crimson Flash" {
     rarity: "5_star"
     base_item: "minecraft:netherite_sword"
     damage_type: physical
+    role: vanguard
     stats {
         base_damage: 12.0
         damage_per_level: 0.8
@@ -92,6 +96,7 @@ weapon "Azure Blade" {
     rarity: "3_star"
     base_item: "minecraft:iron_sword"
     damage_type: physical
+    role: guard
     stats {
         base_damage: 9.0
         damage_per_level: 0.4
@@ -112,6 +117,7 @@ weapon "Stance Test" {
     rarity: "5_star"
     base_item: "minecraft:netherite_sword"
     damage_type: physical
+    role: guard
     stats {
         base_damage: 10.0
         damage_per_level: 0.5
@@ -130,6 +136,7 @@ weapon "Lossless Crown" {
     rarity: "5_star"
     base_item: "minecraft:netherite_sword"
     damage_type: physical
+    role: supporter
     stats {
         base_damage: 11.0
         damage_per_level: 0.7
@@ -150,6 +157,7 @@ weapon "Blood Tear" {
     rarity: "4_star"
     base_item: "minecraft:iron_sword"
     damage_type: physical
+    role: guard
     stats {
         base_damage: 8.8
         damage_per_level: 0.45

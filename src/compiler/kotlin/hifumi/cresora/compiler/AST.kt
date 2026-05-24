@@ -8,6 +8,7 @@ data class WeaponDefNode(
     val rarity: String,
     val baseItem: String,
     val damageType: String,
+    val role: String = "guard",
     val stats: StatsNode,
     val skill: SkillNode?,
     val translations: Map<String, Map<String, String>> = emptyMap(),

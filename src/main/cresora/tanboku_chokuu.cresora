@@ -4,6 +4,7 @@ weapon "Tanboku Chokuu" {
     base_item: "minecraft:diamond_sword"
     custom_model_data: 10101
     damage_type: physical
+    role: guard
     stats {
         base_damage: 9.0
         damage_per_level: 0.0

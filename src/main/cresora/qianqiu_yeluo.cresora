@@ -4,6 +4,7 @@ weapon "Qianqiu, Yeluo" {
     base_item: "minecraft:diamond_sword"
     custom_model_data: 10103
     damage_type: arcane
+    role: caster
     stats {
         base_damage: 9.0
         damage_per_level: 0.1

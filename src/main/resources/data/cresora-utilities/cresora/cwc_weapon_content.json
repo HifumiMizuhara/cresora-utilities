@@ -9,6 +9,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "arcane",
+      "role": "caster",
       "custom_model_data": 10103,
       "skill": {
         "effectId": "qianqiu_yeluo",
@@ -54,6 +55,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "supporter",
       "custom_model_data": 10102,
       "skill": {
         "effectId": "dark_lux",
@@ -99,6 +101,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "defender",
       "skill": {
         "effectId": "shield",
         "durationSeconds": 15,
@@ -143,6 +146,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 1,
       "damageType": "physical",
+      "role": "supporter",
       "skill": {
         "effectId": "orchid_pavilion_echo",
         "durationSeconds": 16,
@@ -187,6 +191,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "vanguard",
       "skill": {
         "effectId": "sunlit_haste",
         "durationSeconds": 50,
@@ -231,6 +236,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 1,
       "damageType": "physical",
+      "role": "defender",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -275,6 +281,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "specialist",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -319,6 +326,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "caster",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -363,6 +371,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "vanguard",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -407,6 +416,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "guard",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -451,6 +461,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "guard",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -495,6 +506,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "supporter",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -539,6 +551,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "guard",
       "skill": {
         "effectId": "none",
         "durationSeconds": 0,
@@ -583,6 +596,7 @@
       "maxBaseLevel": 80,
       "maxSkillLevel": 1,
       "damageType": "physical",
+      "role": "specialist",
       "skill": {
         "effectId": "baa_mimic",
         "durationSeconds": 0,
@@ -627,6 +641,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "medic",
       "skill": {
         "effectId": "heal",
         "durationSeconds": 0,
@@ -671,6 +686,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "medic",
       "skill": {
         "effectId": "healing_aura",
         "durationSeconds": 8,
@@ -715,6 +731,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "guard",
       "custom_model_data": 10101,
       "skill": {
         "effectId": "rougan_kenpo",
@@ -760,6 +777,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "arcane",
+      "role": "caster",
       "skill": {
         "effectId": "flame_aura",
         "durationSeconds": 10,
@@ -804,6 +822,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "arcane",
+      "role": "caster",
       "skill": {
         "effectId": "snow_frost",
         "durationSeconds": 10,
@@ -848,6 +867,7 @@
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
       "damageType": "physical",
+      "role": "guard",
       "skill": {
         "effectId": "current_hp_true_damage",
         "durationSeconds": 0,

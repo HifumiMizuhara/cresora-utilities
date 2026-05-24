@@ -3,6 +3,7 @@ weapon "High Mountains, Flowing Water" {
     rarity: "4_star"
     base_item: "minecraft:iron_sword"
     damage_type: physical
+    role: medic
     texture: "cresora-utilities:item/gaoshan_liushui"
     stats {
         base_damage: 8.5

@@ -74,4 +74,22 @@ object WeaponUpgradeService {
             else -> 0
         }
     }
+
+    fun breakthroughRoleMaterialCost(rarity: WeaponRarity, targetBreakthrough: Int): Int {
+        return when (targetBreakthrough) {
+            1 -> when (rarity) {
+                WeaponRarity.TWO_STAR -> 1
+                WeaponRarity.THREE_STAR -> 2
+                WeaponRarity.FOUR_STAR -> 4
+                WeaponRarity.FIVE_STAR -> 8
+            }
+            2 -> when (rarity) {
+                WeaponRarity.TWO_STAR -> 1
+                WeaponRarity.THREE_STAR -> 2
+                WeaponRarity.FOUR_STAR -> 4
+                WeaponRarity.FIVE_STAR -> 8
+            }
+            else -> 0
+        }
+    }
 }

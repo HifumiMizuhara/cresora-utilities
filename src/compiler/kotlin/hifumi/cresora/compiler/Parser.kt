@@ -31,6 +31,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var rarity = ""
         var baseItem = ""
         var damageType = "physical"
+        var role = "guard"
         var stats: StatsNode? = null
         var skill: SkillNode? = null
         var translations = mutableMapOf<String, Map<String, String>>()
@@ -57,6 +58,15 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 "damage_type" -> {
                     consume(TokenType.COLON, "Expect ':' after damage_type")
                     damageType = consume(TokenType.IDENTIFIER, "Expect damage_type").lexeme
+                }
+                "role" -> {
+                    consume(TokenType.COLON, "Expect ':' after role")
+                    val parsedRole = consume(TokenType.IDENTIFIER, "Expect role").lexeme
+                    val validRoles = setOf("vanguard", "guard", "defender", "sniper", "caster", "medic", "supporter", "specialist", "catalyst")
+                    if (parsedRole.lowercase() !in validRoles) {
+                        throw RuntimeException("Unknown role '$parsedRole' at line ${token.line}")
+                    }
+                    role = parsedRole.lowercase()
                 }
                 "stats" -> {
                     consume(TokenType.LEFT_BRACE, "Expect '{' for stats")
@@ -97,7 +107,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         if (id.isBlank()) throw RuntimeException("Weapon '$name' is missing required id")
         if (rarity.isBlank()) throw RuntimeException("Weapon '$name' is missing required rarity")
         if (baseItem.isBlank()) throw RuntimeException("Weapon '$name' is missing required base_item")
-        return WeaponDefNode(name, id, rarity, baseItem, damageType, resolvedStats, skill, translations, subSkills, customModelData, texture)
+        return WeaponDefNode(name, id, rarity, baseItem, damageType, role, resolvedStats, skill, translations, subSkills, customModelData, texture)
     }
 
     private fun dictionary(): DictionaryDefNode {

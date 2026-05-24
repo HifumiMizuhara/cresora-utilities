@@ -3,6 +3,7 @@ weapon "Kyokusui no Ryusho" {
     rarity: "5_star"
     base_item: "minecraft:diamond_sword"
     damage_type: physical
+    role: supporter
     stats {
         base_damage: 8.0
         damage_per_level: 0.0

@@ -1,6 +1,26 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-22 (Movement Compiler (CMC) 一元化実装)
+最終更新: 2026-05-24 (武器突破におけるロール専用素材の追加)
+
+## 武器突破（昇格）におけるロール専用素材の追加 (2026-05-24)
+
+- **概要**: 武器の突破（限界突破）プロセスにおいて、レア度や役割に応じた「ロール専用突破素材（T1 証 / T2 極意）」を要求するシステム。
+- **武器ロール (WeaponRole)**:
+  - `VANGUARD` (先鋒), `GUARD` (前衛), `DEFENDER` (重装), `SNIPER` (狙撃), `CASTER` (術師), `MEDIC` (医療), `SUPPORTER` (補助), `SPECIALIST` (特殊), `CATALYST` (法器) の 9 種類。
+  - DSL ファイル (`.cresora`) に `role: <role_name>` を指定することで定義可能（未指定の場合はデフォルトで `guard` が割り当てられる）。
+  - `WeaponDefinition` 内の `role` フィールドとして保持され、アイテムツールチップにも表示される。
+- **ロール専用素材**:
+  - 各ロールごとに T1 (Proof/証) と T2 (Insight/極意) の 2 ティア、計 18 種類のアイテムを登録。
+  - `CreSoraUtilities.getRoleProofItem(role: WeaponRole): Item` および `getRoleInsightItem(role: WeaponRole): Item` で取得可能。
+- **突破コストと消費ロジック**:
+  - `WeaponUpgradeService.breakthroughRoleMaterialCost(rarity: WeaponRarity, targetBreakthrough: Int): Int` により、突破時の必要コストを計算。
+    - コスト設定: 2星 = 1個, 3星 = 2個, 4星 = 4個, 5星 = 8個
+  - 限界突破時 (レベル 30 から 45 への突破時は T1 素材、レベル 45 から 60 への突破時は T2 素材) に、プレイヤーインベントリから該当するロール専用素材を消費。
+  - `WeaponStackSupport` 内の `countRoleMaterials` / `removeRoleMaterials` を用いて、トランザクション安全に素材のカウントと消費を実行。
+  - 不足時はエラーメッセージ `"screen.cresora.weapon_upgrade.no_role_materials"` を返し、突破を中断。
+- **UI 同期と描画**:
+  - `WeaponUpgradeScreenHandler` の同期プロパティを 7 に拡張。インベントリ内の所持数と必要な素材数をクライアントへ同期。
+  - `WeaponUpgradeScreen.kt` において、突破画面の装飾ボックスの縦幅を拡張し、Fragments表示の下部に「素材名 必要数 / 所持数」を表示。
 
 ## Movement Compiler (CMC) の実装 & メインストーリー一元化 (2026-05-22)
 
@@ -336,6 +356,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `StatEntry.kt`
 - `CombatDamageType.kt`
 - `WeaponRarity.kt`
+- `WeaponRole.kt`
 
 `StatType`:
 
@@ -358,6 +379,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - 現行の実戦表示は `PHYSICAL_RESISTANCE` / `ARCANE_RESISTANCE` 側が本流
 - `CombatDamageType` は `PHYSICAL` と `ARCANE` の 2 系統
 - `WeaponRarity` は `TWO_STAR` から `FIVE_STAR`
+- `WeaponRole` は `VANGUARD` (先鋒), `GUARD` (前衛), `DEFENDER` (重装), `SNIPER` (狙撃), `CASTER` (術師), `MEDIC` (医療), `SUPPORTER` (補助), `SPECIALIST` (特殊), `CATALYST` (法器) の 9 種類
 
 ### 4.2 EquipmentData
 
@@ -480,6 +502,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `critRateBonusPercent`
 - `maxAllDamageBonusPercent`
 - `damageType`
+- `role`
 - `attackCurve`
 - `customModelData` (Optional)
 - `skill`

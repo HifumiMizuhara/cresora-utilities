@@ -1,5 +1,62 @@
 # WORK_DONE
 
+## 武器突破（昇格）におけるロール専用素材の追加 (2026-05-24)
+- [x] ロール専用突破素材の登録：
+  - 各ロールに対応した2つのティア（T1: 証/Proof、T2: 極意/Insight）の新規アイテム（計18個）を `CreSoraUtilities.kt` に登録。
+  - アイテムモデル定義を追加し、T1は紙 (`minecraft:item/paper`)、T2は本 (`minecraft:item/book`) のバニラテクスチャを再利用するモデル設定を適用。
+- [x] 突破素材の必要コスト設定：
+  - 武器のレア度（2星〜5星）に応じて、必要数を「2星=1個、3星=2個、4星=4個、5星=8個」に設定。
+- [x] 強化ロジックへの統合：
+  - `WeaponUpgradeService.kt` に `breakthroughRoleMaterialCost` を実装。
+  - `WeaponStackSupport.kt` にプレイヤーインベントリ内のロール素材のカウントおよび消費用のユーティリティ関数を追加。
+  - `WeaponUpgradeLogic.kt` の基礎強化処理（`attemptBaseUpgrade`）において、突破時に対応するロール専用素材を消費するように改修。不足している場合は `"screen.cresora.weapon_upgrade.no_role_materials"` エラーを返すように検証。
+- [x] UIおよび多言語対応：
+  - `WeaponUpgradeScreenHandler` の同期プロパティを拡張し、クライアントへ必要/所持ロール素材数を同期。
+  - `WeaponUpgradeScreen.kt` で、突破が必要な時に「Fragments（欠片）」表示の下部にロール専用素材のコスト情報「素材名 必要数 / 所持数」をレンダリング。
+  - 画面サイズの都合上、左右の装飾ボックスの高さを `73` に拡張し、インベントリタイトルやステータス文字位置を調整して重複表示を回避。
+  - 4言語（日英中・文言）に素材名およびステータスメッセージの翻訳を追加。
+- [x] 将来のタスク管理：
+  - 将来のドメイン報酬・ショップシステム大規模リファクタリング時に突破素材の入手経路を組み込むTODOを `TODO.md` に追加。
+
+## 武器のロール（分類）システムの実装 (2026-05-24)
+- [x] 武器ロールの定義とシリアライズ：
+  - 新規ファイル `src/main/kotlin/hifumi/cresora/weapon/WeaponRole.kt` を作成し、先鋒 (Vanguard)、前衛 (Guard)、重装 (Defender)、狙撃 (Sniper)、術師 (Caster)、医療 (Medic)、補助 (Supporter)、特殊 (Specialist)、法器 (Catalyst) の9種類のロールを示す `WeaponRole` 列挙型を定义。
+  - DFU の `Codec` を実装し、JSON へのシリアライズとデシリアライズを可能に。
+- [x] DSLコンパイラ (CWC) の拡張：
+  - `AST.kt` の `WeaponDefNode` に `role` フィールドを追加。
+  - `Parser.kt` に DSL での `role` フィールドのパースロジックおよびバリデーション（不正なロール名でビルドエラーにする仕組み）を追加。
+  - `CresoraCompiler.kt` で AST ノードからコンパイルされた武器 JSON (`cwc_weapon_content.json`) へ `role` を出力するよう拡張。
+- [x] 武器定義 (WeaponDefinition) の更新と DFU 16フィールド制限の回避：
+  - `WeaponContentRegistry.kt` 内の `WeaponDefinition` データクラスに `role` を追加。
+  - 17個になった定義フィールドに対し、DFU `RecordCodecBuilder` の16フィールド制限を回避するため、ゲームプレイに必須のステータス情報（`baseAttackDamage` 等）を `WeaponStats` という中間 `MapCodec` にグルーピングしてフラットにマッピングするよう `WEAPON_DEFINITION_CODEC` をリファクタリング。
+- [x] 既存の武器へのロールの割り当て：
+  - 各武器のスキルや設定を解析し、最適なロールを決定して `.cresora` ファイルに `role` を追加しました：
+    - `cadenza_allegro` -> `role: specialist`（羊に変身させるクラウドコントロール）
+    - `dark_lux` -> `role: supporter`（物理耐性・術耐性デバフの付与）
+    - `gaoshan_liushui` -> `role: medic`（持続的な回復オーラの付与）
+    - `hanwu_juanxue` -> `role: caster`（寒霜の蓄積による術攻撃）
+    - `kyokusui_no_ryusho` -> `role: supporter`（チームへの強力な攻撃バフ）
+    - `lakeside_stride` -> `role: guard`（攻撃的な確定ダメージバースト）
+    - `masquerade_invitation` -> `role: medic`（直接ヒールスキル）
+    - `pastoral_flute_reverie` -> `role: vanguard`（移動速度大幅アップの加速スキル）
+    - `qianqiu_yeluo` -> `role: caster`（術ダメージによるバフ重複コンボ）
+    - `requiem_toward_dawn` -> `role: caster`（火焔付与の術属性オーラ）
+    - `rondo_melody` -> `role: defender`（シールド付与による自己防御）
+    - `tanboku_chokuu` -> `role: guard`（複数の剣術の構えを切り替えて戦うメイン物理アタッカー）
+  - すべてのテスト武器（`crimson_flash`, `azure_blade`, `stance_test`, `lossless_crown`, `blood_tear`）についてもそれぞれ適切なロールを定義しました。
+  - DSL 資産再コンパイルおよび `classes` 编译を実行し、すべての既存武器定義が割り当てたロールで正常にロード・ビルドできることを実証しました。
+- [x] ツールチップでのロール表示と多言語翻訳：
+  - `CresoraWeaponItem.kt` の `appendTooltip` に武器ロールを多言語対応で表示する行を追加。
+  - 日本語 (`ja_jp.json`)、英語 (`en_us.json`)、簡体字中国語 (`zh_cn.json`)、文言 (`lzh.json`) 各言語ファイルに武器ロールの表示文言と各ロール名の翻訳を追加。
+- [x] 動作検証：
+  - DSL 資産コンパイル `compileAssets` を実行し、武器 JSON に設定したロールが出力されること、未設定の既存武器が `guard` ロールとして正しく後方互換処理されることを確認。
+  - プロジェクト全クラスビルド `classes` を実行し、全コードが正常にコンパイル・ビルドできることを検証。
+
+## 开发者文档整合与清理 (2026-05-23)
+- [x] 将 `AGENTS.md`, `CLAUDE.md` 和 `GEMINI.md` 的内容进行分析、对比与合并，整合为一份最全面且使用 Gemini 编译指令的 `GEMINI.md` 开发者引导指南。
+- [x] 删除冗余文档：在整合完成后，物理删除不再需要的 `AGENTS.md` 和 `CLAUDE.md`，确立未来仅使用 Gemini 辅助开发的文档基础。
+- [x] 执行 `classes` 任务完成全量代码编译和验证，确保无任何编译错误或行为回归。
+
 ## 《高山流水》武器自定义贴图实现 (2026-05-23)
 - [x] 武器自定义贴图生成与优化：
   - 基于武器《高山流水》的传统国风（子期与伯牙、高山流水、古琴琴弦与翠色玉石）设定，利用生图模型生成了高质量的武器艺术概念图。

@@ -5,6 +5,7 @@ import hifumi.cresora.combat.CombatDamageType
 import hifumi.cresora.equipment.EquipmentRarity
 import com.google.gson.JsonParser
 import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import com.mojang.serialization.JsonOps
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import org.slf4j.LoggerFactory
@@ -171,6 +172,7 @@ data class WeaponDefinition(
     val critRateBonusPercent: Double = 0.0,
     val maxAllDamageBonusPercent: Double = 0.0,
     val damageType: CombatDamageType = CombatDamageType.PHYSICAL,
+    val role: WeaponRole = WeaponRole.GUARD,
     val attackCurve: List<WeaponAttackCurvePoint> = emptyList(),
     val skill: WeaponSkillDefinition,
     val upgrades: WeaponUpgradeDefinition,
@@ -191,6 +193,7 @@ data class WeaponDefinition(
             totalAttackSpeed = 0.0,
             maxBaseLevel = 1,
             maxSkillLevel = 1,
+            role = WeaponRole.GUARD,
             skill = WeaponSkillDefinition("none", 0, 0, 0.0, 0.0),
             upgrades = WeaponUpgradeDefinition(0, 0, 0, 0),
             craft = WeaponCraftDefinition("dummy", "air", 0, WeaponRarity.TWO_STAR, 1, 1),
@@ -219,6 +222,34 @@ data class WeaponContentBundle(
     }
 }
 
+data class WeaponStats(
+    val baseAttackDamage: Double,
+    val attackDamagePerLevel: Double,
+    val totalAttackSpeed: Double,
+    val maxBaseLevel: Int,
+    val maxSkillLevel: Int,
+    val critRateBonusPercent: Double,
+    val maxAllDamageBonusPercent: Double,
+    val damageType: CombatDamageType,
+    val role: WeaponRole
+) {
+    companion object {
+        val CODEC: MapCodec<WeaponStats> = RecordCodecBuilder.mapCodec { instance ->
+            instance.group(
+                Codec.DOUBLE.fieldOf("baseAttackDamage").forGetter(WeaponStats::baseAttackDamage),
+                Codec.DOUBLE.fieldOf("attackDamagePerLevel").forGetter(WeaponStats::attackDamagePerLevel),
+                Codec.DOUBLE.fieldOf("totalAttackSpeed").forGetter(WeaponStats::totalAttackSpeed),
+                Codec.INT.fieldOf("maxBaseLevel").forGetter(WeaponStats::maxBaseLevel),
+                Codec.INT.fieldOf("maxSkillLevel").forGetter(WeaponStats::maxSkillLevel),
+                Codec.DOUBLE.optionalFieldOf("critRateBonusPercent", 0.0).forGetter(WeaponStats::critRateBonusPercent),
+                Codec.DOUBLE.optionalFieldOf("maxAllDamageBonusPercent", 0.0).forGetter(WeaponStats::maxAllDamageBonusPercent),
+                CombatDamageType.CODEC.optionalFieldOf("damageType", CombatDamageType.PHYSICAL).forGetter(WeaponStats::damageType),
+                WeaponRole.CODEC.optionalFieldOf("role", WeaponRole.GUARD).forGetter(WeaponStats::role)
+            ).apply(instance, ::WeaponStats)
+        }
+    }
+}
+
 object WeaponContentRegistry {
     private const val CONTENT_RESOURCE = "data/cresora-utilities/cresora/weapon_content.json"
     private const val CWC_CONTENT_RESOURCE = "data/cresora-utilities/cresora/cwc_weapon_content.json"
@@ -227,22 +258,45 @@ object WeaponContentRegistry {
         instance.group(
             Codec.STRING.fieldOf("id").forGetter(WeaponDefinition::id),
             Codec.STRING.fieldOf("baseItemId").forGetter(WeaponDefinition::baseItemId),
-            Codec.DOUBLE.fieldOf("baseAttackDamage").forGetter(WeaponDefinition::baseAttackDamage),
-            Codec.DOUBLE.fieldOf("attackDamagePerLevel").forGetter(WeaponDefinition::attackDamagePerLevel),
-            Codec.DOUBLE.fieldOf("totalAttackSpeed").forGetter(WeaponDefinition::totalAttackSpeed),
-            Codec.INT.fieldOf("maxBaseLevel").forGetter(WeaponDefinition::maxBaseLevel),
-            Codec.INT.fieldOf("maxSkillLevel").forGetter(WeaponDefinition::maxSkillLevel),
-            Codec.DOUBLE.optionalFieldOf("critRateBonusPercent", 0.0).forGetter(WeaponDefinition::critRateBonusPercent),
-            Codec.DOUBLE.optionalFieldOf("maxAllDamageBonusPercent", 0.0).forGetter(WeaponDefinition::maxAllDamageBonusPercent),
-            CombatDamageType.CODEC.optionalFieldOf("damageType", CombatDamageType.PHYSICAL).forGetter(WeaponDefinition::damageType),
+            WeaponStats.CODEC.forGetter { wd ->
+                WeaponStats(
+                    baseAttackDamage = wd.baseAttackDamage,
+                    attackDamagePerLevel = wd.attackDamagePerLevel,
+                    totalAttackSpeed = wd.totalAttackSpeed,
+                    maxBaseLevel = wd.maxBaseLevel,
+                    maxSkillLevel = wd.maxSkillLevel,
+                    critRateBonusPercent = wd.critRateBonusPercent,
+                    maxAllDamageBonusPercent = wd.maxAllDamageBonusPercent,
+                    damageType = wd.damageType,
+                    role = wd.role
+                )
+            },
             WeaponAttackCurvePoint.CODEC.listOf().optionalFieldOf("attackCurve", emptyList()).forGetter(WeaponDefinition::attackCurve),
             WeaponSkillDefinition.CODEC.fieldOf("skill").forGetter(WeaponDefinition::skill),
             WeaponUpgradeDefinition.CODEC.fieldOf("upgrades").forGetter(WeaponDefinition::upgrades),
             WeaponCraftDefinition.CODEC.fieldOf("craft").forGetter(WeaponDefinition::craft),
             WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops),
             Codec.INT.optionalFieldOf("custom_model_data").forGetter { java.util.Optional.ofNullable(it.customModelData) }
-        ).apply(instance) { id, baseItemId, baseAtk, atkPerLv, speed, maxBase, maxSkill, crit, allDmg, dmgType, curve, skill, upgrades, craft, drops, modelData ->
-            WeaponDefinition(id, baseItemId, baseAtk, atkPerLv, speed, maxBase, maxSkill, crit, allDmg, dmgType, curve, skill, upgrades, craft, drops, modelData.orElse(null))
+        ).apply(instance) { id, baseItemId, stats, curve, skill, upgrades, craft, drops, modelData ->
+            WeaponDefinition(
+                id = id,
+                baseItemId = baseItemId,
+                baseAttackDamage = stats.baseAttackDamage,
+                attackDamagePerLevel = stats.attackDamagePerLevel,
+                totalAttackSpeed = stats.totalAttackSpeed,
+                maxBaseLevel = stats.maxBaseLevel,
+                maxSkillLevel = stats.maxSkillLevel,
+                critRateBonusPercent = stats.critRateBonusPercent,
+                maxAllDamageBonusPercent = stats.maxAllDamageBonusPercent,
+                damageType = stats.damageType,
+                role = stats.role,
+                attackCurve = curve,
+                skill = skill,
+                upgrades = upgrades,
+                craft = craft,
+                drops = drops,
+                customModelData = modelData.orElse(null)
+            )
         }
     }
 

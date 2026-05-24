@@ -52,6 +52,7 @@ import hifumi.cresora.weapon.WeaponContentRegistry
 import hifumi.cresora.weapon.WeaponDefinitionRef
 import hifumi.cresora.weapon.WeaponFragmentItem
 import hifumi.cresora.weapon.WeaponRarity
+import hifumi.cresora.weapon.WeaponRole
 import hifumi.cresora.weapon.WeaponSkillMaterialScreenHandler
 import hifumi.cresora.weapon.WeaponSkillService
 import hifumi.cresora.weapon.WeaponStackSupport
@@ -115,6 +116,8 @@ object CreSoraUtilities : ModInitializer {
 	private val WEAPON_FRAGMENT_ITEMS: MutableMap<String, WeaponFragmentItem> = linkedMapOf()
 	private val WEAPON_RARITY_FRAGMENT_ITEMS: MutableMap<WeaponRarity, Item> = linkedMapOf()
 	private val ARTIFACT_SPECIAL_ITEMS: MutableMap<String, ArtifactSpecialItem> = linkedMapOf()
+	private val ROLE_PROOF_ITEMS: MutableMap<WeaponRole, Item> = linkedMapOf()
+	private val ROLE_INSIGHT_ITEMS: MutableMap<WeaponRole, Item> = linkedMapOf()
 	val VERIFY: Item = Item(itemSettings(VERSION_VERIFIER_ID))
 	val SUB_SKILL_DUMMY: Item = SubSkillItem(itemSettings(SUB_SKILL_DUMMY_ID).maxCount(1))
 	val MOON_BRICK_ITEM: Item = Item(itemSettings(MOON_BRICK_ID))
@@ -161,6 +164,7 @@ object CreSoraUtilities : ModInitializer {
 		registerWeaponRarityFragmentItems()
 		registerWeaponItems()
 		registerArtifactSpecialItems()
+		registerRoleMaterials()
 		ShopContentRegistry.init()
 		MobCombatProfileRegistry.init()
 		DomainRewardProfileRegistry.init()
@@ -287,6 +291,14 @@ object CreSoraUtilities : ModInitializer {
 		return ARTIFACT_SPECIAL_ITEMS[definitionId] ?: error("Unknown registered artifact special item: $definitionId")
 	}
 
+	fun getRoleProofItem(role: WeaponRole): Item {
+		return ROLE_PROOF_ITEMS[role] ?: error("Unregistered proof item for role: $role")
+	}
+
+	fun getRoleInsightItem(role: WeaponRole): Item {
+		return ROLE_INSIGHT_ITEMS[role] ?: error("Unregistered insight item for role: $role")
+	}
+
 	private fun itemSettings(id: Identifier): Item.Settings {
 		return Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, id))
 	}
@@ -334,6 +346,18 @@ object CreSoraUtilities : ModInitializer {
 			val item = ArtifactSpecialItem(definition.id, itemSettings(itemId))
 			ARTIFACT_SPECIAL_ITEMS[definition.id] = Registry.register(Registries.ITEM, itemId, item)
 			ArtifactSpecialItemSupport.registerItem(item, definition.id)
+		}
+	}
+
+	private fun registerRoleMaterials() {
+		for (role in WeaponRole.entries) {
+			val proofId = Identifier.of(MOD_ID, "${role.id}_proof")
+			val proofItem = Item(itemSettings(proofId))
+			ROLE_PROOF_ITEMS[role] = Registry.register(Registries.ITEM, proofId, proofItem)
+
+			val insightId = Identifier.of(MOD_ID, "${role.id}_insight")
+			val insightItem = Item(itemSettings(insightId))
+			ROLE_INSIGHT_ITEMS[role] = Registry.register(Registries.ITEM, insightId, insightItem)
 		}
 	}
 

@@ -3,6 +3,7 @@ weapon "Cadenza Allegro" {
     rarity: "4_star"
     base_item: "minecraft:wooden_sword"
     damage_type: physical
+    role: specialist
     stats {
         base_damage: 8.5
         damage_per_level: 0.2

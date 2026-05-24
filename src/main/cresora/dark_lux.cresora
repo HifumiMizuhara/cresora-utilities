@@ -4,6 +4,7 @@ weapon "Dark Lux" {
     base_item: "minecraft:netherite_sword"
     custom_model_data: 10102
     damage_type: physical
+    role: supporter
     stats {
         base_damage: 8.5
         damage_per_level: 0.2
