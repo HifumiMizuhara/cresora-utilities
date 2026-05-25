@@ -811,3 +811,17 @@ Resolved weapon custom textures not being applied and block model warnings durin
 - `GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets --console=plain` successfully compiled and generated all model files with correct texture path references (e.g., `cadenza_allegro.json` pointing to `cresora-utilities:item/cadenza_allegro`).
 - `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` compiled successfully with 0 errors.
 
+## Release 1.4.0 (2026-05-26)
+
+Merged improvements into development branch, bumped release version to 1.4.0, and created tag.
+
+### Accomplishments
+- [x] Merged `feature/architecture-improvements` branch into `dev` branch.
+- [x] Bumped `mod_version` to `1.4.0` in `gradle.properties`.
+- [x] Ran asset/class compilation and fully verified local compilation stability.
+- [x] Tagged the release commit with `1.4.0`.
+
+### Verification
+- `GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets classes --console=plain` passed.
+- `GRADLE_USER_HOME=.gradle-user ./gradlew build --console=plain` successfully packaged `cresora-utilities-1.4.0.jar` and `cresora-utilities-1.4.0-sources.jar`.
+- Created annotated git tag `1.4.0` pointing to the release commit on `dev`.
