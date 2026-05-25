@@ -153,11 +153,13 @@ object WeaponSkillService {
         }
     }
 
+    @JvmStatic
     fun applyMark(target: LivingEntity, markId: String, durationTicks: Long) {
         val now = target.world.time
         targetMarks.getOrPut(target.uuid) { mutableMapOf() }[markId] = now + durationTicks
     }
 
+    @JvmStatic
     fun hasMark(target: LivingEntity, markId: String): Boolean {
         val expire = targetMarks[target.uuid]?.get(markId) ?: return false
         return target.world.time < expire
@@ -333,6 +335,28 @@ object WeaponSkillService {
     fun armorScalar(player: ServerPlayerEntity): Double {
         val definition = activeWeaponContext(player)?.first ?: return 0.0
         return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getArmorScalar(player) }
+    }
+
+    fun healthScalar(player: ServerPlayerEntity): Double {
+        val activeContext = activeWeaponContext(player) ?: return 0.0
+        val definition = activeContext.first
+        val weaponHpPercent = definition.hpBonusPercent
+        val skillHpPercent = runWeaponBonus(definition.skill.effectId, definition) { handler, _ ->
+            handler.getHealthBonusPercent(player)
+        }
+        return (weaponHpPercent + skillHpPercent) / 100.0
+    }
+
+    @JvmStatic
+    fun allDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
+        val activeContext = activeWeaponContext(player) ?: return 0.0
+        if (weaponId != null && activeContext.first.id != weaponId) {
+            return 0.0
+        }
+        val definition = activeContext.first
+        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ ->
+            handler.getAllDamageBonus(player)
+        }
     }
 
     fun onAttackDealt(player: ServerPlayerEntity, target: LivingEntity, damage: Double) {

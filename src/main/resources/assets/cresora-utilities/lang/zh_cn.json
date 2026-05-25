@@ -52,6 +52,7 @@
   "item.cresora.weapon.skill_level": "技能Lv: %s / %s",
   "item.cresora.weapon.attack": "攻击力: %s",
   "item.cresora.weapon.crit_rate_bonus": "暴击率 +%s%%",
+  "item.cresora.weapon.hp_bonus": "生命值 +%s%%",
   "item.cresora.weapon.all_damage_bonus": "全伤害 +%s%%",
   "item.cresora.weapon.damage_type": "伤害类型: %s",
   "item.cresora.weapon.damage_type.physical": "物理",
@@ -149,6 +150,7 @@
   "status.cresora.dark": " [暗]",
   "status.cresora.lux": " [芒]",
   "status.cresora.entanglement": " [缠]",
+  "status.cresora.kyundeath": " [❤]",
   "status.cresora.mob.normal": " [杂兵]",
   "status.cresora.mob.elite": " [精英]",
   "commands.cresora.moon.header": "月相",
@@ -669,5 +671,11 @@
   "message.cresora.hinagata.curse": "已施加雏形之咒！",
   "item.cresora.artifact.skill.buff.hinagata_stacks.name": "Hinagata Stacks",
   "item.cresora.artifact.skill.buff.hinagata_stacks.gained": "获得效果: %s (%s 层)",
-  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "效果结束: %s"
+  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "效果结束: %s",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui": "遥远少女的决意",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui.skill": "少女的凝视",
+  "item.cresora.weapon.skill.buff.ketsui.name": "决意",
+  "item.cresora.weapon.skill.buff.ketsui.gained": "获得效果: %s (%s 层)",
+  "item.cresora.weapon.skill.buff.ketsui.expired": "决意失效",
+  "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女的凝视 启动！对 %s 个目标施加了萌死。"
 }

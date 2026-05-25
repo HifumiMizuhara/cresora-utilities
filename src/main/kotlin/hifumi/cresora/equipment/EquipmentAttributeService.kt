@@ -26,6 +26,7 @@ object EquipmentAttributeService {
                 val totals = EquipmentPlayerSupport.getAggregatedStats(player)
                 val bonuses = EquipmentStatCalculator.calculateAttributeBonuses(totals)
                 val bloodMoonHealthScalar = BloodMoonService.playerHealthMultiplier(player)
+                val weaponHealthScalar = hifumi.cresora.weapon.WeaponSkillService.healthScalar(player)
 
                 updateModifier(attackInstance, ATTACK_FLAT_ID, bonuses.attackFlat, EntityAttributeModifier.Operation.ADD_VALUE)
                 updateModifier(attackInstance, ATTACK_SCALAR_ID, bonuses.attackScalar, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
@@ -33,7 +34,7 @@ object EquipmentAttributeService {
                 updateModifier(
                     healthInstance,
                     HEALTH_SCALAR_ID,
-                    (1.0 + bonuses.healthScalar) * bloodMoonHealthScalar - 1.0,
+                    (1.0 + bonuses.healthScalar + weaponHealthScalar) * bloodMoonHealthScalar - 1.0,
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
                 updateModifier(armorInstance, ARMOR_FLAT_ID, bonuses.armorFlat, EntityAttributeModifier.Operation.ADD_VALUE)

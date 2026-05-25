@@ -1,5 +1,33 @@
 # WORK_DONE
 
+## 新武器「遥かなる少女の決意・★５」とCWC HPステータス拡張の追加 (2026-05-25)
+- [x] CWC (Cresora Weapon Compiler) にHPパーセンテージステータスを拡張：
+  - [AST.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/AST.kt) および [Parser.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/Parser.kt) を拡張し、DSLの `stats` ブロックで `hp_bonus: 10.0` のようにHPパーセンテージを指定できるよう改修。
+  - [CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt) を改修し、HPパーセンテージを `cwc_weapon_content.json` へシリアライズして出力するとともに、生成される Kotlin ハンドラーに `getHealthBonusPercent(player)` および `getAllDamageBonus(player)` の動的バフ補正値メソッドを自動生成するロジックを実装。
+- [x] コアシステムおよびステータス計算への統合：
+  - [WeaponContentRegistry.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponContentRegistry.kt) の `WeaponStats` と `WeaponDefinition` に `hpBonusPercent` フィールドを追加し、Codecでのシリアライズ・デシリアライズに対応。
+  - [WeaponSkillHandler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/skill/WeaponSkillHandler.kt) に `getHealthBonusPercent(player)` および `getAllDamageBonus(player)` のデフォルト実装を追加。
+  - [WeaponSkillService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponSkillService.kt) に `healthScalar(player)` および `allDamageBonusPercent(player, weaponId)` を実装し、アクティブ武器の基礎HPボーナスとスキルによる動的HP/全ダメージボーナスを合算して提供する仕組みを構築。
+  - [EquipmentAttributeService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/equipment/EquipmentAttributeService.kt) のプレイヤー最大体力更新ロジックに武器のHP%補正を統合。
+  - [PlayerEntityMixin.java](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/java/hifumi/cresora/mixin/PlayerEntityMixin.java) の攻撃ダメージ計算に武器スキル全ダメージボーナスを乗算するよう改修。
+- [x] 「キュン死」デバフと戦闘フィードバックの拡張：
+  - [LivingEntityMixin.java](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/java/hifumi/cresora/mixin/LivingEntityMixin.java) を改修し、攻撃者が `"kyundeath"` マークを付与されている場合、最終与ダメージを 20% 低下させるデバフ処理を実装。
+  - [CombatFeedbackService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/combat/CombatFeedbackService.kt) に `hasPendingCrit(player)` を追加し、パッシブスキルの会心トリガー判定に利用可能に。
+  - [CombatMobDisplayService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/combat/CombatMobDisplayService.kt) において、`"kyundeath"` マークが付与されているモブのネームタグ末尾にハートマーク `[❤]` を表示するように改修。
+- [x] ツールチップ・言語ファイル・DSL定義の追加：
+  - [CresoraWeaponItem.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/CresoraWeaponItem.kt) で武器のHP%属性ボーナス（例：`HP +10.0%`）を緑色でツールチップに描画するよう変更。
+  - 4ヶ国語（日英中・文言）の言語ファイルに対応する翻訳キー（武器名、スキル、バフ、デバフ、ツールチップなど）を追加。
+  - [harukanaru_shojo_no_ketsui.cresora](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/cresora/harukanaru_shojo_no_ketsui.cresora) にて新武器「遥かなる少女の決意」のスペックを定義（HP+10%、会心+10%、アクティブスキル「少女の眼差し」でキュン死デバフ適用、会心時に「決意」バフをスタックし会心ダメ&全ダメボーナスが最大100スタックするパッシブを実装）。
+- [x] コードレビュー指摘に伴う最適化・修正：
+  - スキル非発動時の毎秒エンティティ走査負荷（パフォーマンス）を排除するため、プレイヤーへの `"ketsui_active"` マーク付与によるガードを実装。
+  - DoTループ内での `recordCrit` 呼び出しを削除し、バフが自己ループで無限スタックする問題を防止。
+  - `ketsui.gained` の翻訳キーの `%s` 変数を2つに修正し、効果名とスタック数が正しくフォーマットされて表示されるよう修正（4ヶ国語）。
+  - Java Mixin から Kotlin object にアクセスする際、静的アクセス `@JvmStatic` を介する記述に統一。
+  - `lzh.json` の末尾改行を追加。
+- [x] ビルドおよびアセットコンパイル検証：
+  - `compileAssets` を実行し、CWCによる Kotlin コードおよび JSON データファイルがエラーなしで自動生成されることを確認。
+  - `classes` ターゲットをビルドし、プロジェクト全体のKotlin/Javaコードが正常にビルド・コンパイルできることを確認。
+
 ## 武器突破（昇格）におけるロール専用素材の追加 (2026-05-24)
 - [x] ロール専用突破素材の登録：
   - 各ロールに対応した2つのティア（T1: 証/Proof、T2: 極意/Insight）の新規アイテム（計18個）を `CreSoraUtilities.kt` に登録。

@@ -219,6 +219,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var maxSkillLevel = 10
         var critRateBonusPercent = 0.0
         var maxAllDamageBonusPercent = 0.0
+        var hpBonusPercent = 0.0
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             val field = advance().lexeme
@@ -231,10 +232,11 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 "max_skill_level" -> maxSkillLevel = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
                 "crit_rate_bonus" -> critRateBonusPercent = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                 "max_all_damage_bonus" -> maxAllDamageBonusPercent = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
+                "hp_bonus" -> hpBonusPercent = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                 else -> throw RuntimeException("Unknown stats field '$field'")
             }
         }
-        return StatsNode(baseAttackDamage, attackDamagePerLevel, totalAttackSpeed, maxBaseLevel, maxSkillLevel, critRateBonusPercent, maxAllDamageBonusPercent)
+        return StatsNode(baseAttackDamage, attackDamagePerLevel, totalAttackSpeed, maxBaseLevel, maxSkillLevel, critRateBonusPercent, maxAllDamageBonusPercent, hpBonusPercent)
     }
 
     private fun skill(name: String): SkillNode {

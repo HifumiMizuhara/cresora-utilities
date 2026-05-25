@@ -1,0 +1,153 @@
+weapon "Resolve of the Distant Girl" {
+    id: "harukanaru_shojo_no_ketsui"
+    rarity: "5_star"
+    base_item: "minecraft:netherite_sword"
+    damage_type: arcane
+    role: specialist
+    stats {
+        base_damage: 10.0
+        damage_per_level: 0.0
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+        crit_rate_bonus: 10.0
+        hp_bonus: 10.0
+    }
+    skill "Girl's Gaze" {
+        effect_id: "harukanaru_shojo_no_ketsui"
+        cooldown: 60s
+        duration: 5s
+
+        buff "ketsui" {
+            max_stacks: 100
+            duration: 40s
+            stats {
+                crit_dmg_per_stack: 2.0
+                all_dmg_percent_per_stack: 2.0
+            }
+        }
+
+        on_activate {
+            start_cooldown()
+            execute {
+                hifumi.cresora.weapon.WeaponSkillService.applyMark(player, "ketsui_active", 100L);
+                val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                val range = 8.0;
+                val targets = world.getOtherEntities(player, player.boundingBox.expand(range)) {
+                    it is net.minecraft.entity.LivingEntity &&
+                    it.isAlive &&
+                    it !is net.minecraft.entity.player.PlayerEntity
+                }
+                .filterIsInstance<net.minecraft.entity.LivingEntity>()
+                .sortedBy { it.squaredDistanceTo(player) }
+                .take(4);
+
+                targets.forEach { target ->
+                    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "kyundeath", 100L);
+                    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "kyundeath_" + player.uuid, 100L);
+                    world.spawnParticles(
+                        net.minecraft.particle.ParticleTypes.HEART,
+                        target.x, target.y + 1.0, target.z,
+                        5, 0.3, 0.3, 0.3, 0.0
+                    );
+                }
+
+                player.sendMessage(
+                    net.minecraft.text.Text.translatable(
+                        "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated",
+                        targets.size
+                    ).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
+                    true
+                );
+            }
+        }
+
+        on_damage_dealt {
+            execute {
+                if (hifumi.cresora.combat.CombatFeedbackService.hasPendingCrit(player)) {
+                    val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
+                    val state = ketsuiStates.getOrPut(player.uuid) { KetsuiState(0L, 0) };
+                    state.expireTick = now + 40 * 20L;
+                    state.stacks = (state.stacks + 1).coerceAtMost(100);
+                    player.sendMessage(
+                        net.minecraft.text.Text.translatable(
+                            "item.cresora.weapon.skill.buff.ketsui.gained",
+                            net.minecraft.text.Text.translatable("item.cresora.weapon.skill.buff.ketsui.name"),
+                            state.stacks
+                        ),
+                        true
+                    );
+                }
+            }
+        }
+
+        on_player_tick {
+            execute {
+                val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
+                if (now % 20L == 0L) {
+                    if (!hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "ketsui_active")) return@execute;
+                    val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                    val markId = "kyundeath_" + player.uuid;
+                    world.getOtherEntities(
+                        player,
+                        player.boundingBox.expand(16.0)
+                    ) { entity ->
+                        entity is net.minecraft.entity.LivingEntity &&
+                        entity.isAlive &&
+                        hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, markId)
+                    }
+                    .forEach { entity ->
+                        val target = entity as net.minecraft.entity.LivingEntity;
+                        val hits = player.random.nextBetween(1, 3);
+                        for (i in 0 until hits) {
+                            target.damage(
+                                world,
+                                world.damageSources.indirectMagic(player, player),
+                                1.0f
+                            );
+                        }
+                        world.spawnParticles(
+                            net.minecraft.particle.ParticleTypes.HEART,
+                            target.x, target.y + 1.0, target.z,
+                            3, 0.2, 0.2, 0.2, 0.0
+                        );
+                    }
+                }
+            }
+        }
+    }
+    translations {
+        en_us {
+            name: "Resolve of the Distant Girl"
+            skill_name: "Girl's Gaze"
+            "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "Girl's Gaze activated! Inflicted Kyundeath on %s targets."
+            "item.cresora.weapon.skill.buff.ketsui.name": "Resolve"
+            "item.cresora.weapon.skill.buff.ketsui.gained": "Gained effect: %s (%s stacks)"
+            "item.cresora.weapon.skill.buff.ketsui.expired": "Resolve expired"
+        }
+        ja_jp {
+            name: "遥かなる少女の決意"
+            skill_name: "少女の眼差し"
+            "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女の眼差し 起動！ %s体の敵にキュン死を付与しました。"
+            "item.cresora.weapon.skill.buff.ketsui.name": "決意"
+            "item.cresora.weapon.skill.buff.ketsui.gained": "効果獲得: %s (%s 層)"
+            "item.cresora.weapon.skill.buff.ketsui.expired": "決意の効果が終了しました"
+        }
+        zh_cn {
+            name: "遥远少女的决意"
+            skill_name: "少女的凝视"
+            "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女的凝视 启动！对 %s 个目标施加了萌死。"
+            "item.cresora.weapon.skill.buff.ketsui.name": "决意"
+            "item.cresora.weapon.skill.buff.ketsui.gained": "获得效果: %s (%s 层)"
+            "item.cresora.weapon.skill.buff.ketsui.expired": "决意失效"
+        }
+        lzh {
+            name: "遙遠少女之決意"
+            skill_name: "少女之凝視"
+            "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女之凝視 啓！施萌死於 %s 敵。"
+            "item.cresora.weapon.skill.buff.ketsui.name": "決意"
+            "item.cresora.weapon.skill.buff.ketsui.gained": "得%s（層：%s）"
+            "item.cresora.weapon.skill.buff.ketsui.expired": "決意失效"
+        }
+    }
+}

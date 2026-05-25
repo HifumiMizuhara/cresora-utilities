@@ -50,7 +50,8 @@ data class StatsNode(
     val maxBaseLevel: Int,
     val maxSkillLevel: Int,
     val critRateBonusPercent: Double = 0.0,
-    val maxAllDamageBonusPercent: Double = 0.0
+    val maxAllDamageBonusPercent: Double = 0.0,
+    val hpBonusPercent: Double = 0.0
 ) : ASTNode()
 
 data class SkillNode(

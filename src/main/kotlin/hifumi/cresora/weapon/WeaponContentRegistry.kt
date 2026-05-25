@@ -171,6 +171,7 @@ data class WeaponDefinition(
     val maxSkillLevel: Int,
     val critRateBonusPercent: Double = 0.0,
     val maxAllDamageBonusPercent: Double = 0.0,
+    val hpBonusPercent: Double = 0.0,
     val damageType: CombatDamageType = CombatDamageType.PHYSICAL,
     val role: WeaponRole = WeaponRole.GUARD,
     val attackCurve: List<WeaponAttackCurvePoint> = emptyList(),
@@ -193,6 +194,7 @@ data class WeaponDefinition(
             totalAttackSpeed = 0.0,
             maxBaseLevel = 1,
             maxSkillLevel = 1,
+            hpBonusPercent = 0.0,
             role = WeaponRole.GUARD,
             skill = WeaponSkillDefinition("none", 0, 0, 0.0, 0.0),
             upgrades = WeaponUpgradeDefinition(0, 0, 0, 0),
@@ -230,6 +232,7 @@ data class WeaponStats(
     val maxSkillLevel: Int,
     val critRateBonusPercent: Double,
     val maxAllDamageBonusPercent: Double,
+    val hpBonusPercent: Double,
     val damageType: CombatDamageType,
     val role: WeaponRole
 ) {
@@ -243,6 +246,7 @@ data class WeaponStats(
                 Codec.INT.fieldOf("maxSkillLevel").forGetter(WeaponStats::maxSkillLevel),
                 Codec.DOUBLE.optionalFieldOf("critRateBonusPercent", 0.0).forGetter(WeaponStats::critRateBonusPercent),
                 Codec.DOUBLE.optionalFieldOf("maxAllDamageBonusPercent", 0.0).forGetter(WeaponStats::maxAllDamageBonusPercent),
+                Codec.DOUBLE.optionalFieldOf("hpBonusPercent", 0.0).forGetter(WeaponStats::hpBonusPercent),
                 CombatDamageType.CODEC.optionalFieldOf("damageType", CombatDamageType.PHYSICAL).forGetter(WeaponStats::damageType),
                 WeaponRole.CODEC.optionalFieldOf("role", WeaponRole.GUARD).forGetter(WeaponStats::role)
             ).apply(instance, ::WeaponStats)
@@ -267,6 +271,7 @@ object WeaponContentRegistry {
                     maxSkillLevel = wd.maxSkillLevel,
                     critRateBonusPercent = wd.critRateBonusPercent,
                     maxAllDamageBonusPercent = wd.maxAllDamageBonusPercent,
+                    hpBonusPercent = wd.hpBonusPercent,
                     damageType = wd.damageType,
                     role = wd.role
                 )
@@ -288,6 +293,7 @@ object WeaponContentRegistry {
                 maxSkillLevel = stats.maxSkillLevel,
                 critRateBonusPercent = stats.critRateBonusPercent,
                 maxAllDamageBonusPercent = stats.maxAllDamageBonusPercent,
+                hpBonusPercent = stats.hpBonusPercent,
                 damageType = stats.damageType,
                 role = stats.role,
                 attackCurve = curve,

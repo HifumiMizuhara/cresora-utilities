@@ -45,6 +45,11 @@ public class LivingEntityMixin {
         if (WeaponSkillService.isDealingTrueDamage()) {
             return amount;
         }
+        if (source.getAttacker() instanceof LivingEntity attacker) {
+            if (WeaponSkillService.hasMark(attacker, "kyundeath")) {
+                amount = amount * 0.8f;
+            }
+        }
         if ((Object) this instanceof MobEntity) {
             amount = (float) (amount * MusicEchoContentRegistry.INSTANCE.mobDamageTakenMultiplier());
         }

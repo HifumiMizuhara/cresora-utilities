@@ -81,6 +81,7 @@ object CombatMobDisplayService {
         if (WeaponSkillService.hasStatus(entity, "dark")) markers.add(Text.translatable("status.cresora.dark").formatted(Formatting.DARK_GRAY))
         if (WeaponSkillService.hasStatus(entity, "lux")) markers.add(Text.translatable("status.cresora.lux").formatted(Formatting.AQUA))
         if (WeaponSkillService.hasStatus(entity, "entanglement")) markers.add(Text.translatable("status.cresora.entanglement").formatted(Formatting.RED))
+        if (WeaponSkillService.hasStatus(entity, "kyundeath")) markers.add(Text.translatable("status.cresora.kyundeath").formatted(Formatting.LIGHT_PURPLE))
         
         val result = Text.empty()
         for (m in markers) {

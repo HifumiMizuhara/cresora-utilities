@@ -8,6 +8,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 5.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "arcane",
       "role": "caster",
       "custom_model_data": 10103,
@@ -54,6 +57,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "supporter",
       "custom_model_data": 10102,
@@ -100,6 +106,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "defender",
       "skill": {
@@ -145,6 +154,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 1,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "supporter",
       "skill": {
@@ -190,6 +202,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "vanguard",
       "skill": {
@@ -235,6 +250,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 1,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "defender",
       "skill": {
@@ -280,6 +298,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "specialist",
       "skill": {
@@ -325,6 +346,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "caster",
       "skill": {
@@ -370,6 +394,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "vanguard",
       "skill": {
@@ -415,6 +442,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "guard",
       "skill": {
@@ -460,6 +490,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "guard",
       "skill": {
@@ -505,6 +538,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "supporter",
       "skill": {
@@ -550,6 +586,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "guard",
       "skill": {
@@ -595,6 +634,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 80,
       "maxSkillLevel": 1,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "specialist",
       "skill": {
@@ -640,6 +682,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "medic",
       "skill": {
@@ -685,6 +730,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "medic",
       "skill": {
@@ -730,6 +778,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "guard",
       "custom_model_data": 10101,
@@ -776,6 +827,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 10.0,
+      "hpBonusPercent": 0.0,
       "damageType": "arcane",
       "role": "caster",
       "skill": {
@@ -814,6 +868,54 @@
       }
     },
     {
+      "id": "harukanaru_shojo_no_ketsui",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 10.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "critRateBonusPercent": 10.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 10.0,
+      "damageType": "arcane",
+      "role": "specialist",
+      "skill": {
+        "effectId": "harukanaru_shojo_no_ketsui",
+        "durationSeconds": 5,
+        "cooldownSeconds": 60,
+        "baseValue": 0.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "harukanaru_shojo_no_ketsui_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
       "id": "hanwu_juanxue",
       "baseItemId": "minecraft:diamond_sword",
       "baseAttackDamage": 8.0,
@@ -821,6 +923,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "arcane",
       "role": "caster",
       "skill": {
@@ -866,6 +971,9 @@
       "totalAttackSpeed": 1.6,
       "maxBaseLevel": 60,
       "maxSkillLevel": 10,
+      "critRateBonusPercent": 10.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "guard",
       "skill": {

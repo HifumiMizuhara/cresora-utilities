@@ -62,6 +62,14 @@ class CresoraWeaponItem(
                 ).formatted(Formatting.YELLOW)
             )
         }
+        if (resolved.hpBonusPercent > 0.0) {
+            textConsumer.accept(
+                Text.translatable(
+                    "item.cresora.weapon.hp_bonus",
+                    formatNumber(resolved.hpBonusPercent)
+                ).formatted(Formatting.GREEN)
+            )
+        }
         val currentAllDamageBonus = WeaponCombatSupport.allDamageBonusPercent(resolved, data)
         if (currentAllDamageBonus > 0.0) {
             textConsumer.accept(

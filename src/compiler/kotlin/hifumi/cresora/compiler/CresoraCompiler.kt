@@ -232,6 +232,8 @@ class CresoraCompiler(
         generateScalarOverride(typeSpec, skill, "getArmorScalar", listOf("armor_per_stack", "defense_per_stack", "def_per_stack"), packageName, className)
         generateScalarOverride(typeSpec, skill, "getCritRateBonus", listOf("crit_rate_per_stack"), packageName, className)
         generateScalarOverride(typeSpec, skill, "getCritDamageBonus", listOf("crit_dmg_per_stack", "crit_damage_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getHealthBonusPercent", listOf("health_percent_per_stack", "hp_percent_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getAllDamageBonus", listOf("all_dmg_percent_per_stack", "all_damage_percent_per_stack", "all_damage_bonus_per_stack", "all_dmg_bonus_per_stack"), packageName, className)
     }
 
     private fun emitAction(
@@ -523,6 +525,9 @@ class CresoraCompiler(
             weaponObj.addProperty("totalAttackSpeed", weapon.stats.totalAttackSpeed)
             weaponObj.addProperty("maxBaseLevel", weapon.stats.maxBaseLevel)
             weaponObj.addProperty("maxSkillLevel", weapon.stats.maxSkillLevel)
+            weaponObj.addProperty("critRateBonusPercent", weapon.stats.critRateBonusPercent)
+            weaponObj.addProperty("maxAllDamageBonusPercent", weapon.stats.maxAllDamageBonusPercent)
+            weaponObj.addProperty("hpBonusPercent", weapon.stats.hpBonusPercent)
             weaponObj.addProperty("damageType", weapon.damageType)
             weaponObj.addProperty("role", weapon.role)
             weapon.customModelData?.let { weaponObj.addProperty("custom_model_data", it) }

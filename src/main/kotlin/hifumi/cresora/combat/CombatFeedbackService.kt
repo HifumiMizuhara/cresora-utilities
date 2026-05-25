@@ -27,6 +27,11 @@ object CombatFeedbackService {
         }
     }
 
+    fun hasPendingCrit(player: ServerPlayerEntity): Boolean {
+        val pending = pendingCrits[player.uuid] ?: return false
+        return player.world.time <= pending.expireTick
+    }
+
     fun clearTransientState(player: ServerPlayerEntity) {
         pendingCrits.remove(player.uuid)
     }

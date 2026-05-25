@@ -1,6 +1,27 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-24 (武器突破におけるロール専用素材の追加)
+最終更新: 2026-05-25 (新武器「遥かなる少女の決意」の追加とCWC HPステータス拡張)
+
+## 新武器「遥かなる少女の決意」の追加とCWC HPステータス拡張 (2026-05-25)
+
+- **概要**: 5星特殊武器「遥かなる少女の決意」の実装に伴い、武器コンパイラ (CWC) の拡張と、HPボーナス%および全ダメージボーナス%を扱うAPIの追加が行われた。
+- **CWC stats 拡張**:
+  - DSLの `stats` ブロックで `hp_bonus: <value>` を指定可能に変更。
+  - コンパイル時に生成される武器JSONの `stats` オブジェクトに `hpBonusPercent` が出力され、`WeaponContentRegistry` にシリアライズされる。
+- **武器スキルハンドラー拡張 (WeaponSkillHandler)**:
+  - `fun getHealthBonusPercent(player: ServerPlayerEntity): Double` (デフォルト `0.0`) を追加。スキルやバフで動的に変動するプレイヤーの最大HPボーナス%を返す。
+  - `fun getAllDamageBonus(player: ServerPlayerEntity): Double` (デフォルト `0.0`) を追加。スキルやバフで動的に変動するプレイヤーの全ダメージボーナス%を返す。
+- **ステータス集計と適用API (WeaponSkillService)**:
+  - `fun healthScalar(player: ServerPlayerEntity): Double`:
+    - アクティブ武器の基礎 `hpBonusPercent` と、武器スキルによる動的な `getHealthBonusPercent(player)` を合算し、属性スカラー値として提供する（例: 10%ボーナス時は `0.10`）。
+    - 取得されたスカラー値は `EquipmentAttributeService` に統合され、プレイヤーの `GENERIC_MAX_HEALTH` 属性の乗算修飾子として反映される。
+  - `fun allDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double`:
+    - アクティブ武器スキルの全ダメージボーナスを集計して返す。
+    - `PlayerEntityMixin` でプレイヤーの最終与ダメージスケーリングに乗算適用される。
+- **戦闘フィードバックと「キュン死」デバフ**:
+  - `CombatFeedbackService.hasPendingCrit(player)` を追加。プレイヤーが与えた攻撃が会心（クリティカル）ダメージであるか検証する。
+  - 対象に `"kyundeath"` マークが付与されている場合、`LivingEntityMixin` にてその対象から発せられる与ダメージを 20% 低下させる。
+  - `"kyundeath"` マーク付きのエンティティのネームタグ末尾にハートマーク `[❤]` がレンダリングされる。
 
 ## 武器突破（昇格）におけるロール専用素材の追加 (2026-05-24)
 

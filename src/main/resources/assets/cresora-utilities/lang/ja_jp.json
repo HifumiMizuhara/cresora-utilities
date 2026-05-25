@@ -52,6 +52,7 @@
   "item.cresora.weapon.skill_level": "スキルLv: %s / %s",
   "item.cresora.weapon.attack": "攻撃力: %s",
   "item.cresora.weapon.crit_rate_bonus": "会心率 +%s%%",
+  "item.cresora.weapon.hp_bonus": "HP +%s%%",
   "item.cresora.weapon.all_damage_bonus": "全ダメージ +%s%%",
   "item.cresora.weapon.damage_type": "ダメージ種別: %s",
   "item.cresora.weapon.damage_type.physical": "物理",
@@ -149,6 +150,7 @@
   "status.cresora.dark": " [暗]",
   "status.cresora.lux": " [芒]",
   "status.cresora.entanglement": " [纏]",
+  "status.cresora.kyundeath": " [❤]",
   "status.cresora.debuff.applied": "デバフを付与されました: %s",
   "status.cresora.debuff.removed": "デバフが解除されました: %s",
   "debuff.cresora.nerve_damage": "神経損傷",
@@ -417,5 +419,11 @@
   "message.cresora.hinagata.curse": "雛形の呪いを付与しました！",
   "item.cresora.artifact.skill.buff.hinagata_stacks.name": "Hinagata Stacks",
   "item.cresora.artifact.skill.buff.hinagata_stacks.gained": "効果獲得: %s (%s 層)",
-  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "効果終了: %s"
+  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "効果終了: %s",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui": "遥かなる少女の決意",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui.skill": "少女の眼差し",
+  "item.cresora.weapon.skill.buff.ketsui.name": "決意",
+  "item.cresora.weapon.skill.buff.ketsui.gained": "効果獲得: %s (%s 層)",
+  "item.cresora.weapon.skill.buff.ketsui.expired": "決意の効果が終了しました",
+  "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女の眼差し 起動！ %s体の敵にキュン死を付与しました。"
 }

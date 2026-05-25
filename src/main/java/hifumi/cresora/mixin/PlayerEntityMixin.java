@@ -81,9 +81,14 @@ public class PlayerEntityMixin {
             weaponCritRateBonus = WeaponCombatSupport.INSTANCE.critRateBonusPercent(weaponDefinition, weaponData);
         }
 
-        double weaponAllDamageBonus = weaponDefinition != null && weaponData != null
-            ? WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData) / 100.0
-            : 0.0;
+        double weaponAllDamageBonus = 0.0;
+        if (player instanceof ServerPlayerEntity && weaponDefinition != null && weaponData != null) {
+            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
+            weaponAllDamageBonus = (WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData)
+                + WeaponSkillService.allDamageBonusPercent(serverPlayer, weaponDefinition.getId())) / 100.0;
+        } else if (weaponDefinition != null && weaponData != null) {
+            weaponAllDamageBonus = WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData) / 100.0;
+        }
 
         double allBonus = totals.getOrDefault(StatType.ALL_DMG_BONUS, 0.0) / 100.0 + weaponAllDamageBonus;
         double critRate = Math.min(1.0, CombatStatSupport.effectiveCritRateRatio(totals) + weaponCritRateBonus / 100.0);

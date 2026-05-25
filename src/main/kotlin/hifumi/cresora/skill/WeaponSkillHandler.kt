@@ -42,6 +42,10 @@ interface WeaponSkillHandler {
 
     fun getCritDamageBonus(player: ServerPlayerEntity): Double = 0.0
 
+    fun getHealthBonusPercent(player: ServerPlayerEntity): Double = 0.0
+
+    fun getAllDamageBonus(player: ServerPlayerEntity): Double = 0.0
+
     fun getRegenStageBonus(player: ServerPlayerEntity): Int = 0
 
     fun clearTransientState(playerId: UUID) {}

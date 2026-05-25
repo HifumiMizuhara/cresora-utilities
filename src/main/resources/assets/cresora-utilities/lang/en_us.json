@@ -52,6 +52,7 @@
   "item.cresora.weapon.skill_level": "Skill Lv: %s / %s",
   "item.cresora.weapon.attack": "ATK: %s",
   "item.cresora.weapon.crit_rate_bonus": "Crit Rate +%s%%",
+  "item.cresora.weapon.hp_bonus": "HP +%s%%",
   "item.cresora.weapon.all_damage_bonus": "All Damage +%s%%",
   "item.cresora.weapon.damage_type": "Damage Type: %s",
   "item.cresora.weapon.damage_type.physical": "Physical",
@@ -149,6 +150,7 @@
   "status.cresora.dark": " [D]",
   "status.cresora.lux": " [L]",
   "status.cresora.entanglement": " [E]",
+  "status.cresora.kyundeath": " [❤]",
   "status.cresora.debuff.applied": "Applied debuff: %s",
   "status.cresora.debuff.removed": "Debuff expired: %s",
   "debuff.cresora.nerve_damage": "Nerve Damage",
@@ -680,5 +682,11 @@
   "message.cresora.hinagata.curse": "Applied Hinagata curse!",
   "item.cresora.artifact.skill.buff.hinagata_stacks.name": "Hinagata Stacks",
   "item.cresora.artifact.skill.buff.hinagata_stacks.gained": "Gained effect: %s (%s stacks)",
-  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "Effect expired: %s"
+  "item.cresora.artifact.skill.buff.hinagata_stacks.expired": "Effect expired: %s",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui": "Resolve of the Distant Girl",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui.skill": "Girl's Gaze",
+  "item.cresora.weapon.skill.buff.ketsui.name": "Resolve",
+  "item.cresora.weapon.skill.buff.ketsui.gained": "Gained effect: %s (%s stacks)",
+  "item.cresora.weapon.skill.buff.ketsui.expired": "Resolve expired",
+  "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "Girl's Gaze activated! Inflicted Kyundeath on %s targets."
 }

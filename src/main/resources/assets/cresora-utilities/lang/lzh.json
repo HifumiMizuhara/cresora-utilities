@@ -51,6 +51,7 @@
   "item.cresora.weapon.skill_level": "技Lv: %s / %s",
   "item.cresora.weapon.attack": "攻: %s",
   "item.cresora.weapon.crit_rate_bonus": "會率 +%s%%",
+  "item.cresora.weapon.hp_bonus": "生命 +%s%%",
   "item.cresora.weapon.all_damage_bonus": "全傷 +%s%%",
   "item.cresora.weapon.damage_type": "傷類: %s",
   "item.cresora.weapon.damage_type.physical": "形",
@@ -144,6 +145,7 @@
   "status.cresora.dark": " [暗]",
   "status.cresora.lux": " [芒]",
   "status.cresora.entanglement": " [纏]",
+  "status.cresora.kyundeath": " [❤]",
   "status.cresora.mob.normal": " [卒]",
   "status.cresora.mob.elite": " [精]",
   "commands.cresora.moon.header": "月相",
@@ -651,5 +653,11 @@
   "item.cresora.weapon.tanboku_chokuu.munen_activated": "第三式：墨中無念 — 無念七連擊！",
   "item.cresora.weapon.tanboku_chokuu.munen_final": "終擊！定傷：%s 心",
   "item.cresora-utilities.lossless_crown": "失色之冠",
-  "item.cresora-utilities.blood_tear": "血之淚"
+  "item.cresora-utilities.blood_tear": "血之淚",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui": "遙遠少女之決意",
+  "item.cresora-utilities.harukanaru_shojo_no_ketsui.skill": "少女之凝視",
+  "item.cresora.weapon.skill.buff.ketsui.name": "決意",
+  "item.cresora.weapon.skill.buff.ketsui.gained": "得%s（層：%s）",
+  "item.cresora.weapon.skill.buff.ketsui.expired": "決意失效",
+  "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女之凝視 啓！施萌死於 %s 敵。"
 }
