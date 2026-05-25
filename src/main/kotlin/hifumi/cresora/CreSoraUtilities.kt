@@ -1,9 +1,67 @@
 package hifumi.cresora
 
+import hifumi.cresora.adventurerank.AdventureRankHooks
+import hifumi.cresora.adventurerank.AdventureRankProfile
+import hifumi.cresora.adventurerank.AdventureRankProgression
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.bloodmoon.BloodMoonHooks
+import hifumi.cresora.bloodmoon.MoonAltarService
+import hifumi.cresora.bloodmoon.MoonPhaseHooks
+import hifumi.cresora.combat.MobCombatProfileRegistry
+import hifumi.cresora.combat.NaturalRegenService
+import hifumi.cresora.debuff.CresoraDebuffHooks
+import hifumi.cresora.domain.DomainContentRegistry
+import hifumi.cresora.domain.DomainHooks
+import hifumi.cresora.domain.DomainRewardProfileRegistry
+import hifumi.cresora.domain.DomainRewardScreenHandler
+import hifumi.cresora.domain.DomainSelectionScreenHandler
+import hifumi.cresora.equipment.ArtifactAlphaScreenHandler
+import hifumi.cresora.equipment.ArtifactBetaScreenHandler
+import hifumi.cresora.equipment.ArtifactEquipmentItem
+import hifumi.cresora.equipment.ArtifactShopScreenHandler
+import hifumi.cresora.equipment.ArtifactSpecialItem
+import hifumi.cresora.equipment.ArtifactSpecialItemRegistry
+import hifumi.cresora.equipment.ArtifactSpecialItemSupport
+import hifumi.cresora.equipment.EquipmentAttributeService
+import hifumi.cresora.equipment.EquipmentContentRegistry
+import hifumi.cresora.equipment.EquipmentDefinitionRef
+import hifumi.cresora.equipment.EquipmentGenerationService
+import hifumi.cresora.equipment.EquipmentRarity
+import hifumi.cresora.equipment.EquipmentStackSupport
+import hifumi.cresora.masquerade.MasqueradeContentRegistry
+import hifumi.cresora.masquerade.MasqueradeHooks
+import hifumi.cresora.masquerade.MasqueradeLoadoutScreenHandler
+import hifumi.cresora.masquerade.MasqueradeSupportScreenHandler
+import hifumi.cresora.musicecho.MusicEchoContentRegistry
+import hifumi.cresora.resonance.ResonanceContentRegistry
+import hifumi.cresora.resonance.ResonanceResultScreenHandler
+import hifumi.cresora.resonance.ResonanceScreenHandler
+import hifumi.cresora.story.StoryChapterSelectionScreenHandler
+import hifumi.cresora.story.StoryContentRegistry
+import hifumi.cresora.story.StoryDialogueNetworking
+import hifumi.cresora.story.StoryHooks
+import hifumi.cresora.story.StoryStageSelectionScreenHandler
+import hifumi.cresora.story.StoryTextRegistry
+import hifumi.cresora.treasure.TreasureChestService
+import hifumi.cresora.weapon.CresoraWeaponItem
+import hifumi.cresora.weapon.HotbarOverrideHooks
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.SubSkillItem
+import hifumi.cresora.weapon.WeaponAttributeService
+import hifumi.cresora.weapon.WeaponContentRegistry
+import hifumi.cresora.weapon.WeaponDefinitionRef
+import hifumi.cresora.weapon.WeaponFragmentItem
+import hifumi.cresora.weapon.WeaponRarity
+import hifumi.cresora.weapon.WeaponRole
+import hifumi.cresora.weapon.WeaponSkillMaterialScreenHandler
+import hifumi.cresora.weapon.WeaponSkillService
+import hifumi.cresora.weapon.WeaponStackSupport
+import hifumi.cresora.weapon.WeaponUpgradeScreenHandler
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.emi.trinkets.api.TrinketsApi
+import hifumi.cresora.equipment.ArtifactSkillRegistry
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.fabricmc.loader.api.FabricLoader
@@ -46,23 +104,28 @@ object CreSoraUtilities : ModInitializer {
 	const val MOD_ID = "cresora-utilities"
 
 	private val logger = LoggerFactory.getLogger(MOD_ID)
-	private val TUESHOKAKU_ID: Identifier = Identifier.of(MOD_ID, "tueshokaku")
 	private val VERSION_VERIFIER_ID: Identifier = Identifier.of("${MOD_ID}$version", "versionverifier")
 	val SUB_SKILL_DUMMY_ID: Identifier = Identifier.of(MOD_ID, "sub_skill_dummy")
 	private val MOON_BRICK_ID: Identifier = Identifier.of(MOD_ID, "moon_brick")
 	private val MOON_ALTAR_ID: Identifier = Identifier.of(MOD_ID, "moon_altar")
-
+	private val RESONANT_LOCATOR_ID: Identifier = Identifier.of(MOD_ID, "resonant_locator")
+	private val RESONANT_CACHE_ID: Identifier = Identifier.of(MOD_ID, "resonant_cache")
+ 
 	private val EQUIPMENT_ITEMS: MutableMap<String, ArtifactEquipmentItem> = linkedMapOf()
 	private val WEAPON_ITEMS: MutableMap<String, CresoraWeaponItem> = linkedMapOf()
 	private val WEAPON_FRAGMENT_ITEMS: MutableMap<String, WeaponFragmentItem> = linkedMapOf()
 	private val WEAPON_RARITY_FRAGMENT_ITEMS: MutableMap<WeaponRarity, Item> = linkedMapOf()
 	private val ARTIFACT_SPECIAL_ITEMS: MutableMap<String, ArtifactSpecialItem> = linkedMapOf()
-	val TUESHOKAKU: Item = tueshokaku(itemSettings(TUESHOKAKU_ID))
+	private val ROLE_PROOF_ITEMS: MutableMap<WeaponRole, Item> = linkedMapOf()
+	private val ROLE_INSIGHT_ITEMS: MutableMap<WeaponRole, Item> = linkedMapOf()
 	val VERIFY: Item = Item(itemSettings(VERSION_VERIFIER_ID))
 	val SUB_SKILL_DUMMY: Item = SubSkillItem(itemSettings(SUB_SKILL_DUMMY_ID).maxCount(1))
 	val MOON_BRICK_ITEM: Item = Item(itemSettings(MOON_BRICK_ID))
 	val MOON_ALTAR_BLOCK: Block = Block(blockSettings(MOON_ALTAR_ID, Blocks.CHISELED_STONE_BRICKS))
 	val MOON_ALTAR_BLOCK_ITEM: Item = BlockItem(MOON_ALTAR_BLOCK, itemSettings(MOON_ALTAR_ID))
+	val RESONANT_LOCATOR_ITEM: Item = Item(itemSettings(RESONANT_LOCATOR_ID).maxCount(16))
+	val RESONANT_CACHE_BLOCK: Block = Block(blockSettings(RESONANT_CACHE_ID, Blocks.CHEST))
+	val RESONANT_CACHE_BLOCK_ITEM: Item = BlockItem(RESONANT_CACHE_BLOCK, itemSettings(RESONANT_CACHE_ID))
 
 	lateinit var UPGRADE_SCREEN_HANDLER: ScreenHandlerType<UpgradeScreenHandler>
 	lateinit var WEAPON_UPGRADE_SCREEN_HANDLER: ScreenHandlerType<WeaponUpgradeScreenHandler>
@@ -83,9 +146,25 @@ object CreSoraUtilities : ModInitializer {
 
 	override fun onInitialize() {
 		ModDataComponents.initialize()
+
+		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
+		Registry.register(Registries.BLOCK, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK)
+		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
+		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
+		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
+		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
+		Registry.register(Registries.ITEM, RESONANT_LOCATOR_ID, RESONANT_LOCATOR_ITEM)
+		Registry.register(Registries.ITEM, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK_ITEM)
+
 		EquipmentContentRegistry.init()
 		WeaponContentRegistry.init()
+		ArtifactSkillRegistry.init()
 		ArtifactSpecialItemRegistry.init()
+		registerEquipmentItems()
+		registerWeaponRarityFragmentItems()
+		registerWeaponItems()
+		registerArtifactSpecialItems()
+		registerRoleMaterials()
 		ShopContentRegistry.init()
 		MobCombatProfileRegistry.init()
 		DomainRewardProfileRegistry.init()
@@ -195,18 +274,7 @@ object CreSoraUtilities : ModInitializer {
 		WeaponSkillService.init()
 		NaturalRegenService.init()
 		HotbarOverrideService.init()
-		registerEquipmentItems()
-		registerWeaponRarityFragmentItems()
-		registerWeaponItems()
-		registerArtifactSpecialItems()
 		modifyLootTables()
-
-		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
-		Registry.register(Registries.ITEM, TUESHOKAKU_ID, TUESHOKAKU)
-		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
-		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
-		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
-		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
 
 		logger.info("CreSora Utilities initialized!")
 	}
@@ -221,6 +289,14 @@ object CreSoraUtilities : ModInitializer {
 
 	fun artifactSpecialItem(definitionId: String): ArtifactSpecialItem {
 		return ARTIFACT_SPECIAL_ITEMS[definitionId] ?: error("Unknown registered artifact special item: $definitionId")
+	}
+
+	fun getRoleProofItem(role: WeaponRole): Item {
+		return ROLE_PROOF_ITEMS[role] ?: error("Unregistered proof item for role: $role")
+	}
+
+	fun getRoleInsightItem(role: WeaponRole): Item {
+		return ROLE_INSIGHT_ITEMS[role] ?: error("Unregistered insight item for role: $role")
 	}
 
 	private fun itemSettings(id: Identifier): Item.Settings {
@@ -270,6 +346,18 @@ object CreSoraUtilities : ModInitializer {
 			val item = ArtifactSpecialItem(definition.id, itemSettings(itemId))
 			ARTIFACT_SPECIAL_ITEMS[definition.id] = Registry.register(Registries.ITEM, itemId, item)
 			ArtifactSpecialItemSupport.registerItem(item, definition.id)
+		}
+	}
+
+	private fun registerRoleMaterials() {
+		for (role in WeaponRole.entries) {
+			val proofId = Identifier.of(MOD_ID, "${role.id}_proof")
+			val proofItem = Item(itemSettings(proofId))
+			ROLE_PROOF_ITEMS[role] = Registry.register(Registries.ITEM, proofId, proofItem)
+
+			val insightId = Identifier.of(MOD_ID, "${role.id}_insight")
+			val insightItem = Item(itemSettings(insightId))
+			ROLE_INSIGHT_ITEMS[role] = Registry.register(Registries.ITEM, insightId, insightItem)
 		}
 	}
 

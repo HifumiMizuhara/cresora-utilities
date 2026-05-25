@@ -1,5 +1,10 @@
 package hifumi.cresora
 
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.equipment.ArtifactSpecialItemKind
+import hifumi.cresora.equipment.ArtifactSpecialItemSupport
+import hifumi.cresora.equipment.EquipmentStackSupport
+import hifumi.cresora.equipment.EquipmentUpgradeService
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.server.network.ServerPlayerEntity
@@ -12,7 +17,6 @@ object UpgradeLogic {
 
     enum class MaterialType {
         NONE,
-        TUESHOKAKU,
         PENDANT,
         ALPHA_KANATA,
         BETA_KANATA,
@@ -75,20 +79,6 @@ object UpgradeLogic {
             return Preview(MaterialType.NONE, currentLevel, currentLevel, 0, false, "item.cresora.not_enough_credits")
         }
 
-        if (materialStack.isOf(CreSoraUtilities.TUESHOKAKU)) {
-            val materialLevel = tueshokaku.normalizeLevel(materialStack)
-            val denominator = 9 - materialLevel
-            val successRate = 1000 / denominator
-            return Preview(
-                MaterialType.TUESHOKAKU,
-                currentLevel,
-                currentLevel + 1,
-                successRate,
-                true,
-                "screen.cresora.upgrade.ready_tool"
-            )
-        }
-
         if (EquipmentStackSupport.isEquipment(materialStack)) {
             val sacrificeLevel = normalizePendantLevel(materialStack)
             val levelGain = max(1, sacrificeLevel)
@@ -123,20 +113,6 @@ object UpgradeLogic {
         val success = player.random.nextInt(denominator) == 0
 
         return when (preview.materialType) {
-            MaterialType.TUESHOKAKU -> {
-                materialStack.decrement(1)
-                if (success) {
-                    val baseData = EquipmentStackSupport.ensurePendantData(baseStack, player.random)
-                    EquipmentStackSupport.syncPendantData(
-                        baseStack,
-                        EquipmentUpgradeService.applyLevels(baseData, preview.resultLevel - baseData.level, player.random)
-                    )
-                    AttemptResult(true, true, Text.translatable("item.cresora.tuelevelled", preview.currentLevel, preview.resultLevel))
-                } else {
-                    AttemptResult(false, true, Text.translatable("item.cresora.tuelevelfailed").formatted(Formatting.RED))
-                }
-            }
-
             MaterialType.PENDANT -> {
                 materialStack.decrement(1)
                 if (success) {

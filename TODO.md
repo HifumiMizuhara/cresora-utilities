@@ -1,23 +1,45 @@
-# TODO
+## Artifact Compiler (CAC) ブラッシュアップ
+- [x] `ArtifactSkillHandler` を拡張し、より複雑な跨ぎターン状態保持（CWC の transient state と同様）をサポート。 (Completed 2026-05-20)
+- [x] CAC に `add_buff` などの組み込み命令を追加。 (Completed 2026-05-20)
+- [ ] 実際のゲーム内での聖遺物セット効果の動作検証（runClient での目視確認）。
 
+## CWC とシステムのブラッシュアップ
+- [ ] IDE での `execute` ブロックの Kotlin 構文ハイライト表示の改善（低優先度）。
+- [ ] DSLファイル（`.cresora`）内のFQN冗長性の排除と短縮名へのマイグレーション（CWCの自動インポート機能の活用）。
+  - 対象ファイル（FQN使用が多いもの）: `rondo_melody.cresora`, `kyokusui_no_ryusho.cresora`, `gaoshan_liushui.cresora`, `dark_lux.cresora`, `qianqiu_yeluo.cresora` 等
 
-## CWC & System Polish
-- [ ] Improve `execute` block Kotlin syntax highlighting support in IDEs (low priority).
+## コンパイラの改善
+- [x] `execute` ブロック内で完全修飾名を使用する代わりに、シンプルなクラス名で記述できるようにするための自動 `import` 検出またはインポート用の簡易 DSL の追加。 (Completed 2026-05-18)
+- [ ] より安全なコード生成のため、残りの raw `execute` 文字列パススルーを型付き AST ノードに置き換える。
+- [ ] 不正な形式の `.cresora` ファイルや `area_of_effect` ブロックに対するパーサーテストを追加する。
+ 
+## ランタイムの堅牢化のフォローアップ
+- [x] アクティブな武器スキルのスコープを堅牢化し、武器切り替え時に非手持ちの武器ハンドラーがステータスをリークしたり、バフを持ち越したりしないように修正。 (Completed 2026-05-18)
+- [x] P2バグ修正: 武器の切り替え時に `WeaponSkillService` レベルの過渡的なステータス（例: `taoStacks`）をクリアするように修正。 (Completed 2026-05-18)
+- [x] P2バグ修正: `grantShield` において、手持ち武器の ID 指定が省略された場合に動的シールドを自動バインドさせ、武器の切り替え時に動的シールドが確実にクリアされるように修正。 (Completed 2026-05-18)
+- [ ] 非手持ちの武器ハンドラーが関連のない属性計算に影響を与えないようにするため、武器スキルのスコープに関する回帰テストを追加する。
+- [x] CWC が生成したスキルと `WeaponSkillService` 全体で、過渡的な戦闘ステータスのクリーンアップと刈り込み処理を統合。 (Completed 2026-05-18)
+- [ ] デバフおよび masquerade によるリスキル防止処理の切断/再接続テストの追加。
+- [ ] モブによる装備ドロップ注入および宝箱の再接続スケジュール処理に対する回帰テストを追加。
+- [ ] 未サポートの装備 `effectHooks` や、不正な形式の共鳴プールに対するエラー処理テストを追加。
 
-## Compiler Improvements
-- [ ] Add automatic `import` detection or simplified import DSL to avoid long qualified names in `execute` blocks.
-- [ ] Replace remaining raw `execute` string passthroughs with typed AST nodes for safer code generation.
-- [ ] Add parser tests for malformed `.cresora` files and `area_of_effect` blocks.
+## Resonance Hunt (共鳴探索) フォローアップ
+- [x] プレイヤーが CSC で購入できるように、共鳴探索コンパス (`resonant_locator`) を CreSora ショップ (`shop_content.json`) に追加。 (Completed 2026-05-19)
+- [ ] 特定の秘境ステージ (Domain Stages) または毎日の探索ログの確定報酬として `resonant_locator` を設定。
+- [ ] runClient での共鳴探索守護者チャレンジおよび星別アップグレード報酬のゲーム内実機テスト (目視確認)
 
-## Runtime Hardening Follow-up
-- [ ] Add regression tests for weapon-skill scope so non-held weapon handlers cannot bleed into unrelated attribute calculations.
-- [ ] Add disconnect/reconnect coverage for debuffs, Masquerade respawn, and transient combat state.
-- [ ] Add regression coverage for equipment mob loot injection and treasure chest reconnect scheduling.
-- [ ] Add invalid-content tests for unsupported equipment `effectHooks` and malformed resonance pools.
+## 新規コンテンツ
+- [ ] 特定の月相（日食、月食、デスムーン、未知）の特殊効果を詳細に定義。
+- [ ] ブラッドムーンの暫定報酬を、最終的な実装である `血色音符`、`失色之冠`、`血之泪` に置き換える。
+- [ ] `moon_brick` と `moon_altar` の専用テクスチャアセットを追加（現在はバニラの暫定テクスチャ/モデルを使用）。
+- [x] サーバー再起動時にブラッドムーンの戦闘状況（ウェーブ状態、モブ追跡、タイマーなど）を維持できるように、進行中の状態を永続化保存。 (Completed 2026-05-20)
+- [ ] ブラッドムーンのウェーブスポーン、ベッド保護、報酬チェストの所有権、自然スポーン圧力に関する専用の回帰または実機テストを追加。
+- [x] 生成されるスキル（BokuchuMunen）を直接的な体力操作から、真ダメージ（確定ダメージ）源に変更。 (Completed 2026-05-21)
+- [ ] 既存の古い CommandActionNode AOE 解析ロジックを、構造的な AreaOfEffectActionNode にリファクタリング。
+- [ ] 完全な復旧のために `BloodMoonService` に `originalBedStates` を永続化保存。
+- [x] `CreSoraUtilities.onInitialize` で `ArtifactSkillRegistry` を明示的に初期化。 (Completed 2026-05-20)
+- [ ] 新武器「遥かなる少女の決意（★５、特殊）」の実機テスト（ツールチップ表示、会心「決意」バフ、キュン死デバフ攻撃力低下、術ダメージの会心判定の確認）。
+- [ ] 遥かなる少女の決意の独立スタック減少メカニズムの実機テスト（各スタックが40秒後に個別に消失することを確認）。
 
-## New Content
-- [ ] Define detailed effects for special moon phases: Solar Eclipse, Lunar Eclipse, Death Moon, and Unknown.
-- [ ] Replace Blood Moon placeholder rewards with final implementations for `血色音符`, `失色之冠`, and `血之泪`.
-- [ ] Add dedicated visual texture assets for `moon_brick` and `moon_altar` (currently uses vanilla placeholder textures/models).
-- [ ] Add persistence for in-progress Blood Moon battles if sessions need to survive server restart. (Reward chest ownership/seed persistence is now implemented.)
-- [ ] Add dedicated regression or machine-test coverage for Blood Moon wave spawning, bed protection, reward chest ownership, and natural-spawn pressure.
+## 武器突破システム
+- [ ] ドメイン（ダンジョン）報酬やショップの仕組みをリファクタリングし、今回追加したロール専用突破素材（証 / 極意）のゲーム内入手経路（ドロップや販売など）を追加する。

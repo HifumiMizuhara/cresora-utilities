@@ -1,12 +1,14 @@
 package hifumi.cresora.skill
 
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+
 import net.minecraft.entity.LivingEntity
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.ActionResult
+import java.util.UUID
 
 interface WeaponSkillHandler {
     fun activate(
@@ -40,5 +42,13 @@ interface WeaponSkillHandler {
 
     fun getCritDamageBonus(player: ServerPlayerEntity): Double = 0.0
 
+    fun getHealthBonusPercent(player: ServerPlayerEntity): Double = 0.0
+
+    fun getAllDamageBonus(player: ServerPlayerEntity): Double = 0.0
+
     fun getRegenStageBonus(player: ServerPlayerEntity): Int = 0
+
+    fun clearTransientState(playerId: UUID) {}
+
+    fun pruneTransientState(activePlayerIds: Set<UUID>) {}
 }

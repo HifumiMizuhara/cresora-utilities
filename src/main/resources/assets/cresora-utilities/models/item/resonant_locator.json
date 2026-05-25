@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cresora-utilities:item/resonant_locator"
+  }
+}

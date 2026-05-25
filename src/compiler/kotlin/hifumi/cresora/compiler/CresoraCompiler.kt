@@ -110,7 +110,11 @@ class CresoraCompiler(
 
         funSpecs.values.forEach { typeSpec.addFunction(it.build()) }
 
-        FileSpec.builder(packageName, className).addType(typeSpec.build()).build().writeTo(outputDir)
+        FileSpec.builder(packageName, className)
+            .addDefaultImports()
+            .addType(typeSpec.build())
+            .build()
+            .writeTo(outputDir)
     }
 
     private fun generateSubSkillClass(weapon: WeaponDefNode, subSkill: SubSkillNode, packageName: String) {
@@ -145,22 +149,45 @@ class CresoraCompiler(
 
         funSpecs.values.forEach { typeSpec.addFunction(it.build()) }
 
-        FileSpec.builder(packageName, className).addType(typeSpec.build()).build().writeTo(outputDir)
+        FileSpec.builder(packageName, className)
+            .addDefaultImports()
+            .addType(typeSpec.build())
+            .build()
+            .writeTo(outputDir)
     }
 
     private fun setupSkillCommon(typeSpec: TypeSpec.Builder, skill: SkillNode, packageName: String, className: String, funSpecs: MutableMap<String, FunSpec.Builder>) {
         // 1. Generate Buff Data Classes and Maps
         for (buff in skill.buffs) {
             val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
-            val stateClass = TypeSpec.classBuilder(stateClassName)
-                .addModifiers(KModifier.DATA)
-                .primaryConstructor(FunSpec.constructorBuilder()
-                    .addParameter("expireTick", Long::class)
-                    .addParameter("stacks", Int::class)
-                    .build())
-                .addProperty(PropertySpec.builder("expireTick", Long::class).initializer("expireTick").mutable(true).build())
-                .addProperty(PropertySpec.builder("stacks", Int::class).initializer("stacks").mutable(true).build())
-                .build()
+            val stateClass = if (buff.decay == "independent") {
+                TypeSpec.classBuilder(stateClassName)
+                    .addModifiers(KModifier.DATA)
+                    .primaryConstructor(FunSpec.constructorBuilder()
+                        .addParameter(
+                            ParameterSpec.builder("expireTicks", ClassName("kotlin.collections", "MutableList").parameterizedBy(ClassName("kotlin", "Long")))
+                                .defaultValue("mutableListOf()")
+                                .build()
+                        )
+                        .build())
+                    .addProperty(PropertySpec.builder("expireTicks", ClassName("kotlin.collections", "MutableList").parameterizedBy(ClassName("kotlin", "Long"))).initializer("expireTicks").build())
+                    .addProperty(PropertySpec.builder("stacks", Int::class)
+                        .getter(FunSpec.getterBuilder()
+                            .addStatement("return expireTicks.size")
+                            .build())
+                        .build())
+                    .build()
+            } else {
+                TypeSpec.classBuilder(stateClassName)
+                    .addModifiers(KModifier.DATA)
+                    .primaryConstructor(FunSpec.constructorBuilder()
+                        .addParameter("expireTick", Long::class)
+                        .addParameter("stacks", Int::class)
+                        .build())
+                    .addProperty(PropertySpec.builder("expireTick", Long::class).initializer("expireTick").mutable(true).build())
+                    .addProperty(PropertySpec.builder("stacks", Int::class).initializer("stacks").mutable(true).build())
+                    .build()
+            }
             typeSpec.addType(stateClass)
 
             val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
@@ -179,30 +206,66 @@ class CresoraCompiler(
                 FunSpec.builder("onPlayerTick")
                     .addModifiers(KModifier.OVERRIDE)
                     .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
-                    .addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                    .addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                    .addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                    .addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
 
-            onPlayerTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora", "WeaponSkillService"))
+            onPlayerTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
             for (buff in skill.buffs) {
                 val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
                 val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
                 onPlayerTickFun.addCode("\n; ")
-                onPlayerTickFun.beginControlFlow("if ($mapName.containsKey(player.uuid) && now >= $mapName[player.uuid]!!.expireTick)")
-                onPlayerTickFun.addStatement("$mapName.remove(player.uuid)")
-                onPlayerTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
-                    ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.expired",
-                    ClassName("net.minecraft.text", "Text"), buffNameKey)
-                onPlayerTickFun.endControlFlow()
+                if (buff.decay == "independent") {
+                    onPlayerTickFun.addStatement("val state = $mapName[player.uuid]")
+                    onPlayerTickFun.beginControlFlow("if (state != null)")
+                    onPlayerTickFun.addStatement("val removed = state.expireTicks.removeIf { now >= it }")
+                    onPlayerTickFun.beginControlFlow("if (removed && state.expireTicks.isEmpty())")
+                    onPlayerTickFun.addStatement("$mapName.remove(player.uuid)")
+                    onPlayerTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.expired",
+                        ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onPlayerTickFun.endControlFlow()
+                    onPlayerTickFun.endControlFlow()
+                } else {
+                    onPlayerTickFun.beginControlFlow("if ($mapName.containsKey(player.uuid) && now >= $mapName[player.uuid]!!.expireTick)")
+                    onPlayerTickFun.addStatement("$mapName.remove(player.uuid)")
+                    onPlayerTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.expired",
+                        ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onPlayerTickFun.endControlFlow()
+                }
                 onPlayerTickFun.addCode("; \n")
             }
+
+            val clearTransientStateFun = FunSpec.builder("clearTransientState")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("playerId", ClassName("java.util", "UUID"))
+            for (buff in skill.buffs) {
+                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
+                clearTransientStateFun.addStatement("$mapName.remove(playerId)")
+            }
+            typeSpec.addFunction(clearTransientStateFun.build())
+
+            val pruneTransientStateFun = FunSpec.builder("pruneTransientState")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter(
+                    "activePlayerIds",
+                    ClassName("kotlin.collections", "Set").parameterizedBy(ClassName("java.util", "UUID"))
+                )
+            for (buff in skill.buffs) {
+                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
+                pruneTransientStateFun.addStatement("$mapName.keys.removeIf { !activePlayerIds.contains(it) }")
+            }
+            typeSpec.addFunction(pruneTransientStateFun.build())
         }
 
         // 3. Scalar overrides
-        generateScalarOverride(typeSpec, skill, "getAttackDamageScalar", "attack_percent_per_stack", packageName, className)
-        generateScalarOverride(typeSpec, skill, "getArmorScalar", "armor_per_stack", packageName, className)
-        generateScalarOverride(typeSpec, skill, "getCritRateBonus", "crit_rate_per_stack", packageName, className)
-        generateScalarOverride(typeSpec, skill, "getCritDamageBonus", "crit_dmg_per_stack", packageName, className)
+        generateScalarOverride(typeSpec, skill, "getAttackDamageScalar", listOf("attack_percent_per_stack", "atk_percent_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getArmorScalar", listOf("armor_per_stack", "defense_per_stack", "def_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getCritRateBonus", listOf("crit_rate_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getCritDamageBonus", listOf("crit_dmg_per_stack", "crit_damage_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getHealthBonusPercent", listOf("health_percent_per_stack", "hp_percent_per_stack"), packageName, className)
+        generateScalarOverride(typeSpec, skill, "getAllDamageBonus", listOf("all_dmg_percent_per_stack", "all_damage_percent_per_stack", "all_damage_bonus_per_stack", "all_dmg_bonus_per_stack"), packageName, className)
     }
 
     private fun emitAction(
@@ -216,53 +279,31 @@ class CresoraCompiler(
         when (action) {
             is CommandActionNode -> {
                 when (action.commandName) {
-                    "add_buff" -> {
-                        if (skill != null) {
-                            val buffId = action.arguments[0].removeSurrounding("\"")
-                            val amountStr = action.arguments.getOrNull(1) ?: "1"
-                            val buff = skill.buffs.find { it.id == buffId }
-                            if (buff != null) {
-                                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
-                                val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
-                                val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
-                                funSpec.addCode("""
-                                    |; {
-                                    |    val now = %T.currentWorldTime(player)
-                                    |    val state = $className.$mapName.getOrPut(player.uuid) { $className.$stateClassName(0L, 0) }
-                                    |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
-                                    |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
-                                    |    player.sendMessage(%T.translatable("item.cresora.weapon.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
-                                    |}
-                                """.trimMargin(), ClassName("hifumi.cresora", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
-                            } else {
-                                funSpec.addStatement("// Buff $buffId not found")
-                            }
-                        }
-                    }
+                    "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
                     "heal" -> {
                         val amount = action.arguments[0].let { if (it == "skill_value") "%T.healHp(definition, data)" else "$it.toFloat()" }
-                        funSpec.addStatement("player.heal($amount)", ClassName("hifumi.cresora", "WeaponCombatSupport"))
+                        funSpec.addStatement("player.heal($amount)", ClassName("hifumi.cresora.weapon", "WeaponCombatSupport"))
                     }
                     "grant_shield" -> {
                         val amount = action.arguments[0].let { if (it == "skill_value") "%T.shieldHp(definition, data)" else "$it.toFloat()" }
                         val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("(player as %T).cresoraSetShieldHp($amount)", ClassName("hifumi.cresora", "WeaponSkillAccess"), ClassName("hifumi.cresora", "WeaponCombatSupport"))
-                        funSpec.addStatement("(player as %T).cresoraSetShieldExpireTick(%T.currentWorldTime(player) + $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillAccess"), ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("(player as %T).cresoraSetShieldHp($amount)", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"), ClassName("hifumi.cresora.weapon", "WeaponCombatSupport"))
+                        funSpec.addStatement("(player as %T).cresoraSetShieldExpireTick(%T.currentWorldTime(player) + $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"), ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "start_cooldown" -> {
-                        funSpec.addStatement("%T.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"))
-                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("%T.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "apply_mark" -> {
                         val target = action.arguments[0]
                         val markId = action.arguments[1].removeSurrounding("\"")
                         val duration = action.arguments[2].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("%T.applyMark($target, %S, $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"), markId)
+                        funSpec.addStatement("%T.applyMark($target, %S, $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"), markId)
                     }
                     "grant_invulnerability" -> {
                         val target = action.arguments[0]
                         val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("%T.grantInvulnerability($target, $duration * 20L)", ClassName("hifumi.cresora", "WeaponSkillService"))
+                        funSpec.addStatement("%T.grantInvulnerability($target, $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                     }
                     "send_message" -> {
                         val key = action.arguments[0].removeSurrounding("\"")
@@ -280,40 +321,13 @@ class CresoraCompiler(
                             ClassName("net.minecraft.util", "Identifier"),
                             effectId)
                     }
-                    "area_of_effect" -> {
-                        val radius = action.arguments[0]
-                        val subActionsStr = action.arguments.last()
-                        funSpec.addCode("%L", """
-                            |player.world.getNonSpectatingEntities(net.minecraft.entity.LivingEntity::class.java, player.boundingBox.expand($radius.toDouble())).forEach { target ->
-                            |    if (target != player) {
-                            |        // Sub-actions for AOE
-                            |        ${subActionsStr.split(";").joinToString("\n        ") { sub ->
-                                        if (sub.isBlank()) ""
-                                        else if (sub.startsWith("deal_true_damage")) {
-                                            val args = sub.substringAfter("(").substringBefore(")").split(",")
-                                            "target.damage(player.world as net.minecraft.server.world.ServerWorld, player.world.damageSources.magic(), ${args.getOrNull(1)?.trim() ?: "0.0"}.toFloat())"
-                                        } else if (sub.startsWith("ignite")) {
-                                             val args = sub.substringAfter("(").substringBefore(")").split(",")
-                                            "target.setOnFireFor(${args.getOrNull(1)?.trim()?.removeSuffix("s") ?: "5"}.toFloat())"
-                                        } else if (sub.startsWith("apply_mark")) {
-                                            val args = sub.substringAfter("(").substringBefore(")").split(",")
-                                            val t = args[0].trim()
-                                            val m = args[1].trim().removeSurrounding("\"")
-                                            val d = args[2].trim().removeSuffix("s")
-                                            "hifumi.cresora.WeaponSkillService.applyMark($t, \"$m\", $d.toLong() * 20L)"
-                                        } else if (sub.startsWith("grant_invulnerability")) {
-                                            val args = sub.substringAfter("(").substringBefore(")").split(",")
-                                            val t = args[0].trim()
-                                            val d = args[1].trim().removeSuffix("s")
-                                            "hifumi.cresora.WeaponSkillService.grantInvulnerability($t, $d.toLong() * 20L)"
-                                        } else ""
-                                    }}
-                            |    }
-                            |}
-                        """.trimMargin())
-                    }
                     else -> {
-                        funSpec.addStatement("// Action: ${action.commandName}(${action.arguments.joinToString()})")
+                        if (InstructionMapping.isKnown(action.commandName)) {
+                            val expanded = InstructionMapping.expand(action.commandName, action.arguments, CompilerContext.WEAPON)
+                            funSpec.addStatement("%L", expanded)
+                        } else {
+                            funSpec.addStatement("// Action: ${action.commandName}(${action.arguments.joinToString()})")
+                        }
                     }
                 }
             }
@@ -330,7 +344,7 @@ class CresoraCompiler(
             }
             is OpenSkillMenuActionNode -> {
                 val subSkillList = action.subSkillEffectIds.joinToString(", ") { "\"$it\"" }
-                funSpec.addStatement("%T.overrideHotbar(player, definition.id, listOf($subSkillList), ${action.durationSeconds.toLong() * 20L})", ClassName("hifumi.cresora", "HotbarOverrideService"))
+                funSpec.addStatement("%T.overrideHotbar(player, definition.id, listOf($subSkillList), ${action.durationSeconds.toLong() * 20L})", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
             }
             is AreaOfEffectActionNode -> {
                 val radius = action.radius
@@ -358,41 +372,121 @@ class CresoraCompiler(
                 )
             }
             is CloseSkillMenuActionNode -> {
-                funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora", "HotbarOverrideService"))
+                funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
             }
             is ExecuteActionNode -> {
-                var content = action.content
-                content = content.replace("close_skill_menu()", "hifumi.cresora.HotbarOverrideService.restoreHotbar(player)")
-
-                if (skill != null) {
-                    for (buff in skill.buffs) {
-                        val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
-                        val stateClassName = "${buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}State"
-                        content = content.replace(mapName, "$className.$mapName")
-                        content = content.replace(stateClassName, "$className.$stateClassName")
-                    }
-                }
-
                 funSpec.addCode("\n; ")
                 if (eventName == "on_damage_absorbed" || eventName == "on_damage_taken") {
                     funSpec.addCode("return run execute@ {\n")
-                    funSpec.addCode("%L\n", content)
+                    action.statements.forEach { stmt ->
+                        emitAction(stmt, funSpec, skill, packageName, className, eventName)
+                    }
                     funSpec.addCode("amount\n")
                     funSpec.addCode("}\n")
                 } else {
                     funSpec.beginControlFlow("run execute@")
-                    funSpec.addCode("%L\n", content)
+                    action.statements.forEach { stmt ->
+                        emitAction(stmt, funSpec, skill, packageName, className, eventName)
+                    }
                     funSpec.endControlFlow()
                 }
             }
+            is InstructionCallNode -> {
+                when (action.functionName) {
+                    "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
+                    "start_cooldown" -> {
+                        val duration = if (action.arguments.isEmpty()) {
+                            "definition.skill.cooldownSeconds * 20L"
+                        } else {
+                            val arg = action.arguments[0]
+                            val durationSec = arg.removeSuffix("s")
+                            if (durationSec == "skill_duration") {
+                                "definition.skill.durationSeconds * 20L"
+                            } else {
+                                "${durationSec.toLong() * 20L}L"
+                            }
+                        }
+                        funSpec.addStatement("%T.startCooldown(player, definition.id, $duration)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+                    }
+                    "send_message" -> {
+                        val key = action.arguments[0].removeSurrounding("\"")
+                        val color = action.arguments.getOrNull(1)?.removeSurrounding("\"")?.uppercase() ?: "WHITE"
+                        funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.$color), true)",
+                            ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
+                    }
+                    else -> {
+                        val expanded = InstructionMapping.expand(action.functionName, action.arguments, CompilerContext.WEAPON)
+                        funSpec.addStatement("%L", expanded)
+                    }
+                }
+            }
             is ExpressionNode -> {
-                funSpec.addStatement(action.content)
+                var content = action.content
+                if (skill != null) {
+                    for (buff in skill.buffs) {
+                        val mapName = camelCase(buff.id) + "States"
+                        val stateClassName = buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } } + "State"
+                        content = content.replace(Regex("\\b$mapName\\b"), "$className.$mapName")
+                        content = content.replace(Regex("\\b$stateClassName\\b"), "$className.$stateClassName")
+                    }
+                }
+                funSpec.addStatement("%L", content)
+            }
+            else -> {}
+        }
+    }
+
+    private fun emitAddBuff(arguments: List<String>, funSpec: FunSpec.Builder, skill: SkillNode?, className: String) {
+        if (skill != null) {
+            val buffId = arguments[0].removeSurrounding("\"")
+            val amountStr = arguments.getOrNull(1) ?: "1"
+            val buff = skill.buffs.find { it.id == buffId }
+            if (buff != null) {
+                val mapName = camelCase(buff.id) + "States"
+                val stateClassName = buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } } + "State"
+                val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
+                if (buff.decay == "independent") {
+                    funSpec.addCode("""
+                        |run {
+                        |    val now = %T.currentWorldTime(player)
+                        |    val state = $className.$mapName.getOrPut(player.uuid) { $className.$stateClassName() }
+                        |    val amount = $amountStr.toInt()
+                        |    for (i in 0 until amount) {
+                        |        if (state.expireTicks.size < ${buff.maxStacks}) {
+                        |            state.expireTicks.add(now + ${buff.durationSeconds.toInt()} * 20L)
+                        |        }
+                        |    }
+                        |    player.sendMessage(%T.translatable("item.cresora.weapon.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                        |}
+                        |
+                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                } else {
+                    funSpec.addCode("""
+                        |run {
+                        |    val now = %T.currentWorldTime(player)
+                        |    val state = $className.$mapName.getOrPut(player.uuid) { $className.$stateClassName(0L, 0) }
+                        |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
+                        |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
+                        |    player.sendMessage(%T.translatable("item.cresora.weapon.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                        |}
+                        |
+                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                }
+            } else {
+                funSpec.addStatement("// Buff $buffId not found")
             }
         }
     }
 
-    private fun generateScalarOverride(typeSpec: TypeSpec.Builder, skill: SkillNode, methodName: String, statKey: String, packageName: String, className: String) {
-        val buffsWithStat = skill.buffs.filter { it.stats.containsKey(statKey) }
+    private fun camelCase(id: String): String {
+        val parts = id.split("_")
+        if (parts.isEmpty()) return ""
+        return parts[0] + parts.drop(1).joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }
+    }
+
+    private fun generateScalarOverride(typeSpec: TypeSpec.Builder, skill: SkillNode, methodName: String, statKeys: List<String>, packageName: String, className: String) {
+        val buffsWithStat = skill.buffs.filter { b -> statKeys.any { b.stats.containsKey(it) } }
         if (buffsWithStat.isNotEmpty()) {
             val funSpec = FunSpec.builder(methodName)
                 .addModifiers(KModifier.OVERRIDE)
@@ -401,8 +495,12 @@ class CresoraCompiler(
 
             funSpec.addStatement("var total = 0.0")
             for (buff in buffsWithStat) {
-                val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
-                funSpec.addStatement("total += $mapName[player.uuid]?.let { it.stacks * ${buff.stats[statKey]} } ?: 0.0")
+                val mapName = camelCase(buff.id) + "States"
+                for (statKey in statKeys) {
+                    if (buff.stats.containsKey(statKey)) {
+                        funSpec.addStatement("total += $mapName[player.uuid]?.let { it.stacks * ${buff.stats[statKey]} } ?: 0.0")
+                    }
+                }
             }
             funSpec.addStatement("return total")
             typeSpec.addFunction(funSpec.build())
@@ -423,9 +521,9 @@ class CresoraCompiler(
         when (eventName) {
             "on_activate" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
-                builder.addParameter("access", ClassName("hifumi.cresora", "WeaponSkillAccess"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
+                builder.addParameter("access", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"))
                 builder.returns(ClassName("net.minecraft.util", "ActionResult"))
             }
             "on_damage_dealt" -> {
@@ -433,32 +531,32 @@ class CresoraCompiler(
                 builder.addParameter("target", ClassName("net.minecraft.entity", "LivingEntity"))
                 builder.addParameter("amount", Float::class)
                 builder.addParameter("isTrueDamage", Boolean::class)
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
             "on_player_tick" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
             "on_damage_absorbed" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
                 builder.addParameter("amount", Float::class)
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
                 builder.returns(Float::class)
             }
             "on_damage_taken" -> {
                 builder.addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
                 builder.addParameter("amount", Float::class)
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
                 builder.returns(Float::class)
             }
             "on_tick" -> {
                 builder.addParameter("server", ClassName("net.minecraft.server", "MinecraftServer"))
-                builder.addParameter("definition", ClassName("hifumi.cresora", "WeaponDefinition"))
-                builder.addParameter("data", ClassName("hifumi.cresora", "WeaponData"))
+                builder.addParameter("definition", ClassName("hifumi.cresora.weapon", "WeaponDefinition"))
+                builder.addParameter("data", ClassName("hifumi.cresora.weapon", "WeaponData"))
             }
         }
     }
@@ -476,7 +574,11 @@ class CresoraCompiler(
             weaponObj.addProperty("totalAttackSpeed", weapon.stats.totalAttackSpeed)
             weaponObj.addProperty("maxBaseLevel", weapon.stats.maxBaseLevel)
             weaponObj.addProperty("maxSkillLevel", weapon.stats.maxSkillLevel)
+            weaponObj.addProperty("critRateBonusPercent", weapon.stats.critRateBonusPercent)
+            weaponObj.addProperty("maxAllDamageBonusPercent", weapon.stats.maxAllDamageBonusPercent)
+            weaponObj.addProperty("hpBonusPercent", weapon.stats.hpBonusPercent)
             weaponObj.addProperty("damageType", weapon.damageType)
+            weaponObj.addProperty("role", weapon.role)
             weapon.customModelData?.let { weaponObj.addProperty("custom_model_data", it) }
 
             val skillObj = JsonObject()
@@ -655,12 +757,17 @@ class CresoraCompiler(
             val modelJson = JsonObject()
             modelJson.addProperty("parent", "minecraft:item/handheld")
             val textures = JsonObject()
-            val texturePath = weapon.texture ?: weapon.baseItem.let {
-                if (it.contains(":")) {
-                    val parts = it.split(":")
-                    "${parts[0]}:item/${parts[1]}"
-                } else {
-                    "minecraft:item/$it"
+            val customTextureFile = File(assetsDir, "textures/item/${weapon.id}.png")
+            val texturePath = weapon.texture ?: if (customTextureFile.exists()) {
+                "cresora-utilities:item/${weapon.id}"
+            } else {
+                weapon.baseItem.let {
+                    if (it.contains(":")) {
+                        val parts = it.split(":")
+                        "${parts[0]}:item/${parts[1]}"
+                    } else {
+                        "minecraft:item/$it"
+                    }
                 }
             }
             textures.addProperty("layer0", texturePath)
@@ -672,7 +779,13 @@ class CresoraCompiler(
             val fragmentModelJson = JsonObject()
             fragmentModelJson.addProperty("parent", "minecraft:item/generated")
             val fragmentTextures = JsonObject()
-            fragmentTextures.addProperty("layer0", "minecraft:item/prismarine_shard")
+            val customFragmentTextureFile = File(assetsDir, "textures/item/${weapon.id}_fragment.png")
+            val fragmentTexturePath = if (customFragmentTextureFile.exists()) {
+                "cresora-utilities:item/${weapon.id}_fragment"
+            } else {
+                "minecraft:item/prismarine_shard"
+            }
+            fragmentTextures.addProperty("layer0", fragmentTexturePath)
             fragmentModelJson.add("textures", fragmentTextures)
             fragmentModelFile.writeText(gson.toJson(fragmentModelJson))
         }
@@ -695,27 +808,19 @@ class CresoraCompiler(
             caseModel.addProperty("type", "minecraft:model")
             val modelPath = if (subSkill.icon.contains(":")) {
                 val parts = subSkill.icon.split(":")
-                if (parts[0] == "minecraft") {
-                    // For Minecraft, referring to the model of a block/item usually works better
-                    // if we point directly to the item definition's intended model.
-                    // In 1.21, "minecraft:lightning_rod" might just work if we use it correctly.
-                    // However, to be safe, we keep the item/ suffix for items but detect blocks.
-                    "${parts[0]}:item/${parts[1]}"
+                if (parts[1] == "lightning_rod" || parts[1] == "blue_ice") {
+                    "${parts[0]}:block/${parts[1]}"
                 } else {
                     "${parts[0]}:item/${parts[1]}"
                 }
             } else {
-                "minecraft:item/${subSkill.icon}"
+                if (subSkill.icon == "lightning_rod" || subSkill.icon == "blue_ice") {
+                    "minecraft:block/${subSkill.icon}"
+                } else {
+                    "minecraft:item/${subSkill.icon}"
+                }
             }
-            // Fix for fallback missing texture too
-            if (subSkill.icon == "minecraft:lightning_rod") {
-                 // Special case for blocks that don't have a simple item model path
-                 caseModel.addProperty("model", "minecraft:lightning_rod")
-            } else if (subSkill.icon == "minecraft:blue_ice") {
-                 caseModel.addProperty("model", "minecraft:blue_ice")
-            } else {
-                 caseModel.addProperty("model", modelPath)
-            }
+            caseModel.addProperty("model", modelPath)
             case.add("model", caseModel)
             cases.add(case)
         }
@@ -728,5 +833,30 @@ class CresoraCompiler(
 
         subSkillRoot.add("model", subSkillModel)
         subSkillDummyFile.writeText(gson.toJson(subSkillRoot))
+    }
+
+    private fun FileSpec.Builder.addDefaultImports(): FileSpec.Builder {
+        return this
+            .addImport("net.minecraft.text", "Text")
+            .addImport("net.minecraft.util", "Identifier")
+            .addImport("net.minecraft.util", "Formatting")
+            .addImport("net.minecraft.util", "ActionResult")
+            .addImport("net.minecraft.server.world", "ServerWorld")
+            .addImport("net.minecraft.server.network", "ServerPlayerEntity")
+            .addImport("net.minecraft.entity", "LivingEntity")
+            .addImport("net.minecraft.entity.effect", "StatusEffectInstance")
+            .addImport("net.minecraft.entity.effect", "StatusEffects")
+            .addImport("net.minecraft.registry", "Registries")
+            .addImport("net.minecraft.particle", "ParticleTypes")
+            .addImport("hifumi.cresora.weapon", "WeaponSkillService")
+            .addImport("hifumi.cresora.debuff", "CresoraDebuffService")
+            .addImport("hifumi.cresora.credits", "CreditsService")
+            .addImport("hifumi.cresora.weapon", "HotbarOverrideService")
+            .addImport("hifumi.cresora.weapon", "WeaponCombatSupport")
+            .addImport("hifumi.cresora.weapon", "WeaponSkillAccess")
+            .addImport("hifumi.cresora.weapon", "WeaponDefinition")
+            .addImport("hifumi.cresora.weapon", "WeaponData")
+            .addImport("hifumi.cresora.adventurerank", "AdventureRankMobAccess")
+            .addImport("hifumi.cresora.adventurerank", "AdventureRankService")
     }
 }

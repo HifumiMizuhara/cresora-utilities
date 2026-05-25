@@ -3,9 +3,15 @@ package hifumi.cresora.compiler
 enum class TokenType {
     IDENTIFIER, NUMBER, STRING,
     LEFT_BRACE, RIGHT_BRACE, COLON, COMMA, LEFT_PAREN, RIGHT_PAREN,
-    DOT, OPERATOR,
+    LEFT_BRACKET, RIGHT_BRACKET,
+    DOT, OPERATOR, SEMICOLON,
     KEYWORD_WEAPON, KEYWORD_STATS, KEYWORD_SKILL, KEYWORD_BUFF, KEYWORD_TRANSLATIONS,
     KEYWORD_SUB_SKILL, KEYWORD_ICON, KEYWORD_DICTIONARY, KEYWORD_TEXTURE,
+    KEYWORD_ARTIFACT, KEYWORD_SET,
+    KEYWORD_MOVEMENT, KEYWORD_PHASE, KEYWORD_PRE_BATTLE, KEYWORD_BATTLE, KEYWORD_POST_BATTLE,
+    KEYWORD_DIALOGUE, KEYWORD_COMBAT_HINTS, KEYWORD_GRANTED_WEAPONS, KEYWORD_BATTLE_OBJECTIVE,
+    KEYWORD_WAVE, KEYWORD_SPAWNS, KEYWORD_SPAWN, KEYWORD_MODIFIERS, KEYWORD_REWARDS,
+    KEYWORD_RESONANCE_CURRENCIES,
     EOF
 }
 
@@ -26,7 +32,24 @@ class Lexer(private val source: String) {
         "sub_skill" to TokenType.KEYWORD_SUB_SKILL,
         "icon" to TokenType.KEYWORD_ICON,
         "dictionary" to TokenType.KEYWORD_DICTIONARY,
-        "texture" to TokenType.KEYWORD_TEXTURE
+        "texture" to TokenType.KEYWORD_TEXTURE,
+        "artifact" to TokenType.KEYWORD_ARTIFACT,
+        "set" to TokenType.KEYWORD_SET,
+        "movement" to TokenType.KEYWORD_MOVEMENT,
+        "phase" to TokenType.KEYWORD_PHASE,
+        "pre_battle" to TokenType.KEYWORD_PRE_BATTLE,
+        "battle" to TokenType.KEYWORD_BATTLE,
+        "post_battle" to TokenType.KEYWORD_POST_BATTLE,
+        "dialogue" to TokenType.KEYWORD_DIALOGUE,
+        "combat_hints" to TokenType.KEYWORD_COMBAT_HINTS,
+        "granted_weapons" to TokenType.KEYWORD_GRANTED_WEAPONS,
+        "battle_objective" to TokenType.KEYWORD_BATTLE_OBJECTIVE,
+        "wave" to TokenType.KEYWORD_WAVE,
+        "spawns" to TokenType.KEYWORD_SPAWNS,
+        "spawn" to TokenType.KEYWORD_SPAWN,
+        "modifiers" to TokenType.KEYWORD_MODIFIERS,
+        "rewards" to TokenType.KEYWORD_REWARDS,
+        "resonance_currencies" to TokenType.KEYWORD_RESONANCE_CURRENCIES
     )
 
     fun scanTokens(): List<Token> {
@@ -46,8 +69,10 @@ class Lexer(private val source: String) {
             ',' -> addToken(TokenType.COMMA)
             '(' -> addToken(TokenType.LEFT_PAREN)
             ')' -> addToken(TokenType.RIGHT_PAREN)
+            '[' -> addToken(TokenType.LEFT_BRACKET)
+            ']' -> addToken(TokenType.RIGHT_BRACKET)
             '.' -> addToken(TokenType.DOT)
-            ';' -> addToken(TokenType.OPERATOR)
+            ';' -> addToken(TokenType.SEMICOLON)
             '?' -> if (match(':')) addToken(TokenType.OPERATOR, "?:") else if (match('.')) addToken(TokenType.OPERATOR, "?.") else addToken(TokenType.OPERATOR)
             '-' -> if (match('>')) addToken(TokenType.OPERATOR, "->") else addToken(TokenType.OPERATOR)
             ':' -> if (match(':')) addToken(TokenType.OPERATOR, "::") else addToken(TokenType.COLON)
@@ -100,6 +125,9 @@ class Lexer(private val source: String) {
         if (peek() == '.' && peekNext().isDigit()) {
             advance()
             while (peek().isDigit()) advance()
+        }
+        if (peek() == 'L' || peek() == 'f' || peek() == 'd' || peek() == 'F' || peek() == 'D') {
+            advance()
         }
         addToken(TokenType.NUMBER)
     }

@@ -1,11 +1,12 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.AdventureRankRewardClassifier;
-import hifumi.cresora.AdventureRankRewardSource;
-import hifumi.cresora.AdventureRankService;
-import hifumi.cresora.CreditsRewardClassifier;
-import hifumi.cresora.CreditsRewardSource;
-import hifumi.cresora.CreditsService;
+import hifumi.cresora.adventurerank.AdventureRankRewardClassifier;
+import hifumi.cresora.adventurerank.AdventureRankRewardSource;
+import hifumi.cresora.adventurerank.AdventureRankService;
+import hifumi.cresora.credits.CreditsRewardClassifier;
+import hifumi.cresora.credits.CreditsRewardSource;
+import hifumi.cresora.credits.CreditsService;
+
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;

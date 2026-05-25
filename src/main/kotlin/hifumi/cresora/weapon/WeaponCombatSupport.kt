@@ -1,0 +1,114 @@
+package hifumi.cresora.weapon
+object WeaponCombatSupport {
+    private const val PLAYER_BASE_ATTACK_DAMAGE = 1.0
+    private const val PLAYER_BASE_ATTACK_SPEED = 4.0
+
+    fun attackDamage(definition: WeaponDefinition, data: WeaponData): Double {
+        val curve = definition.attackCurve
+        val raw = if (curve.isEmpty()) {
+            definition.baseAttackDamage + (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel
+        } else {
+            val level = data.baseLevel.coerceIn(1, definition.maxBaseLevel)
+            if (level <= curve.first().level) {
+                curve.first().attackDamage
+            } else {
+                var calculated = curve.last().attackDamage
+                for (index in 1 until curve.size) {
+                    val previous = curve[index - 1]
+                    val next = curve[index]
+                    if (level > next.level) {
+                        continue
+                    }
+                    val span = (next.level - previous.level).coerceAtLeast(1)
+                    val progress = (level - previous.level).toDouble() / span.toDouble()
+                    calculated = previous.attackDamage + (next.attackDamage - previous.attackDamage) * progress
+                    break
+                }
+                calculated
+            }
+        }
+        return raw * (1.0 + WeaponUpgradeService.BREAKTHROUGH_ATTACK_FACTOR * data.breakthrough)
+    }
+
+    fun attackDamageModifier(definition: WeaponDefinition, data: WeaponData): Double {
+        return attackDamage(definition, data) - PLAYER_BASE_ATTACK_DAMAGE
+    }
+
+    fun attackSpeedModifier(definition: WeaponDefinition): Double {
+        return definition.totalAttackSpeed - PLAYER_BASE_ATTACK_SPEED
+    }
+
+    fun critRateBonusPercent(definition: WeaponDefinition, data: WeaponData? = null): Double {
+        val baseCrit = definition.critRateBonusPercent
+        val btBonus = when (data?.breakthrough) {
+            1 -> WeaponUpgradeService.BREAKTHROUGH_1_CRIT_RATE_BONUS
+            2 -> WeaponUpgradeService.BREAKTHROUGH_2_CRIT_RATE_BONUS
+            else -> 0.0
+        }
+        return baseCrit + btBonus
+    }
+
+    fun totalCritRateBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition, data: WeaponData? = null): Double {
+        return critRateBonusPercent(definition, data) + WeaponSkillService.critRateBonusPercent(player, definition.id)
+    }
+
+    fun totalCritDamageBonusPercent(player: net.minecraft.server.network.ServerPlayerEntity, definition: WeaponDefinition): Double {
+        return WeaponSkillService.critDamageBonusPercent(player, definition.id)
+    }
+
+    fun allDamageBonusPercent(definition: WeaponDefinition, data: WeaponData): Double {
+        val maxBonus = definition.maxAllDamageBonusPercent.coerceAtLeast(0.0)
+        val normalBonus = if (maxBonus <= 0.0 || definition.maxBaseLevel <= 1) {
+            0.0
+        } else {
+            val progress = (data.baseLevel.coerceIn(1, definition.maxBaseLevel) - 1).toDouble() / (definition.maxBaseLevel - 1).toDouble()
+            maxBonus * progress.coerceIn(0.0, 1.0)
+        }
+        val btBonus = if (data.breakthrough == 2) WeaponUpgradeService.BREAKTHROUGH_2_ALL_DAMAGE_BONUS else 0.0
+        return normalBonus + btBonus
+    }
+
+    fun skillValueHearts(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.baseValue + definition.skill.valuePerLevel * data.skillLevel
+    }
+
+    fun secondarySkillValueHearts(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.secondaryBaseValue + definition.skill.secondaryValuePerLevel * data.skillLevel
+    }
+
+    fun skillValuePercent(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.baseValue + definition.skill.valuePerLevel * data.skillLevel
+    }
+
+    fun secondarySkillValuePercent(definition: WeaponDefinition, data: WeaponData): Double {
+        return definition.skill.secondaryBaseValue + definition.skill.secondaryValuePerLevel * data.skillLevel
+    }
+
+    fun skillValueHp(definition: WeaponDefinition, data: WeaponData): Float {
+        return (skillValueHearts(definition, data) * 2.0).toFloat()
+    }
+
+    fun secondarySkillValueHp(definition: WeaponDefinition, data: WeaponData): Float {
+        return (secondarySkillValueHearts(definition, data) * 2.0).toFloat()
+    }
+
+    fun shieldHearts(definition: WeaponDefinition, data: WeaponData): Double {
+        return skillValueHearts(definition, data)
+    }
+
+    fun shieldHp(definition: WeaponDefinition, data: WeaponData): Float {
+        return skillValueHp(definition, data)
+    }
+
+    fun healHearts(definition: WeaponDefinition, data: WeaponData): Double {
+        return skillValueHearts(definition, data)
+    }
+
+    fun healHp(definition: WeaponDefinition, data: WeaponData): Float {
+        return skillValueHp(definition, data)
+    }
+
+    fun currentHpTrueDamageRatio(definition: WeaponDefinition, data: WeaponData): Double {
+        return (skillValuePercent(definition, data) / 100.0).coerceAtLeast(0.0)
+    }
+}

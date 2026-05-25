@@ -1,6 +1,9 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-10 (Blood Moon stabilization sweep 反映)
+最終更新: 2026-05-25
+
+このドキュメントは、Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジストリスキーマ、およびコアサービスの仕様書です。
+各機能の開発履歴や完了したタスクのログについては、[WORK_DONE.md](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/WORK_DONE.md) を参照してください。
 
 ## 1. 結論
 
@@ -186,6 +189,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `StatEntry.kt`
 - `CombatDamageType.kt`
 - `WeaponRarity.kt`
+- `WeaponRole.kt`
 
 `StatType`:
 
@@ -208,6 +212,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - 現行の実戦表示は `PHYSICAL_RESISTANCE` / `ARCANE_RESISTANCE` 側が本流
 - `CombatDamageType` は `PHYSICAL` と `ARCANE` の 2 系統
 - `WeaponRarity` は `TWO_STAR` から `FIVE_STAR`
+- `WeaponRole` は `VANGUARD` (先鋒), `GUARD` (前衛), `DEFENDER` (重装), `SNIPER` (狙撃), `CASTER` (術師), `MEDIC` (医療), `SUPPORTER` (補助), `SPECIALIST` (特殊), `CATALYST` (法器) の 9 種類
 
 ### 4.2 EquipmentData
 
@@ -241,6 +246,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `rarity: WeaponRarity`
 - `baseLevel: Int`
 - `skillLevel: Int`
+- `breakthrough: Int` (精錬レベル 0..2)
 
 公開メソッド:
 
@@ -329,6 +335,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `critRateBonusPercent`
 - `maxAllDamageBonusPercent`
 - `damageType`
+- `role`
 - `attackCurve`
 - `customModelData` (Optional)
 - `skill`
@@ -781,6 +788,25 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - 報酬は 100k CSC、5-star artifact set、`blood_note`、20% `lossless_crown`、50% `blood_tear`、および現在 rank の必要 XP 上限 50% 分の adventure XP
 - reward chest ownership / reward seed は persistent state へ保存し、server restart 後も復元できる
 
+
+
+### 7.1.3 MoonAltarService
+
+ファイル:
+
+- [MoonAltarService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/bloodmoon/MoonAltarService.kt)
+
+責務:
+
+- `moon_altar`（月相の祭壇）ブロックとの右クリックインタラクションの処理
+- 祭壇への `blood_note`（血色の書き置き）投入による、翌夜の「血月（Blood Moon）」確定予約のスケジュール
+
+主 API / 仕様:
+
+- `UseBlockCallback` を経由してプレイヤーと `moon_altar` ブロックのやり取りを処理します。
+- `tryDropMoonBrick(player, hostile)`: 敵対モブ（hostile）を倒した際に、2% の確率で祭壇クラフト素材 `moon_brick` をドロップさせます。
+- 投入された予約状態は `MoonPhaseService` の永続状態 `forcedBloodMoonDay` に保存され、日付条件が満たされた際に優先的に血月が引き起こされます。
+
 ### 7.2 CreditsService
 
 ファイル:
@@ -871,42 +897,51 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ファイル:
 
-- `WeaponUpgradeService.kt`
+- [WeaponUpgradeService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponUpgradeService.kt)
 
 責務:
 
-- 武器強化コスト計算
+- 武器のレベル強化およびスキル強化コストの計算
+- 限界突破（精錬/突破）およびロール専用突破素材（T1 証 / T2 極意）の必要コスト計算、上限チェック
 
 主 API:
 
-- `baseUpgradeCost(definition, currentLevel)`
-- `skillUpgradeCost(definition, currentLevel)`
-- `skillArtifactCost(definition, currentLevel)`
+- `baseUpgradeCost(definition, currentLevel)`: 武器基本レベルアップに必要な CSC コストの取得。
+- `skillUpgradeCost(definition, currentLevel)`: 武器スキルレベルアップに必要な CSC コストの取得。
+- `skillArtifactCost(definition, currentLevel)`: 武器スキルレベルアップに必要な聖遺物（アーティファクト）素材の取得。
+- `breakthroughRoleMaterialCost(rarity: WeaponRarity, targetBreakthrough: Int): Int`: 限界突破時のロール専用素材（T1 証 / T2 極意）の必要数の計算（2星 = 1個, 3星 = 2個, 4星 = 4個, 5星 = 8個）。
+- 突破/精錬レベルに応じた制限：
+  - 精錬（突破）段階 `breakthrough` (0..2) に応じ、レベル上限およびスキル上限を設定：
+    - 精錬0段階: レベル上限 = 最大レベルの50%、スキル上限 = 3
+    - 精錬1段階: レベル上限 = 最大レベルの75%、スキル上限 = 7
+    - 精錬2段階: レベル上限 = 最大レベルの100%、スキル上限 = 10
 
 ### 7.7 WeaponCombatSupport
 
 ファイル:
 
-- `WeaponCombatSupport.kt`
+- [WeaponCombatSupport.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponCombatSupport.kt)
 
 責務:
 
-- 武器攻撃力 / 速度 / 会心率 bonus / 全ダメ bonus / スキル値算出
+- 武器のステータス（攻撃力、速度、会心率、全ダメージボーナスなど）およびスキル値（シールド量、回復量など）の計算
 
 主 API:
 
-- `attackDamage(definition, data)`
+- `attackDamage(definition, data)`: 基礎攻撃力およびレベルスケーリングを考慮した実数値の計算。
 - `attackDamageModifier(definition, data)`
 - `attackSpeedModifier(definition)`
 - `critRateBonusPercent(definition)`
-- `allDamageBonusPercent(definition, data)`
-- `skillValueHearts(definition, data)`
-- `secondarySkillValueHearts(definition, data)`
-- `skillValuePercent(definition, data)`
-- `secondarySkillValuePercent(definition, data)`
+- `allDamageBonusPercent(definition, data)`: 武器および精錬レベルによる全ダメージボーナス%の計算。
+- `skillValueHearts(definition, data)` / `secondarySkillValueHearts(definition, data)`
+- `skillValuePercent(definition, data)` / `secondarySkillValuePercent(definition, data)`
 - `shieldHp(definition, data)`
 - `healHp(definition, data)`
 - `currentHpTrueDamageRatio(definition, data)`
+- 精錬（突破）による戦闘属性ボーナスの適用：
+  - 精錬0段階: 100% 属性
+  - 精錬1段階: 115% 属性、会心率 +5%
+  - 精錬2段階: 130% 属性、会心率 +10%、全ダメージボーナス +10%
 
 ### 7.8 EquipmentPlayerSupport
 
@@ -947,10 +982,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ファイル:
 
-- `WeaponSkillService.kt`
-- `skill/WeaponSkillHandler.kt`
-- `skill/WeaponSkillRegistry.kt`
-- `skill/*.kt` (各スキル実装)
+- [WeaponSkillService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponSkillService.kt)
+- [WeaponSkillHandler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/skill/WeaponSkillHandler.kt)
+- [WeaponSkillRegistry.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/skill/WeaponSkillRegistry.kt)
 
 設計思想:
 
@@ -961,12 +995,15 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - スキルの共通クールダウン管理 (BossBar 表示)
   - **重要**: クールダウンは「残りティック数」で管理されるようになり、デバフ等による動的な速度変更に対応しています。
 - 汎用シールド (Shield) および一時ガード (Temporary Guard) のライフサイクル管理
-  - `grantShield(player, amount, duration, weaponId)`: スクリプトから安全にシールドを付与するための標準インターフェース。
+  - `grantShield(player, amount, duration, weaponId)`: スクリプトから安全にシールドを付与するための標準インターフェース。`weaponId` が未指定（`null`）の場合、現在メインハンドに持っている武器 ID を自動で割り当てます。
 - `applySoulBreak(target, stacks, durationTicks)`: 破魂（Soul Break）スタックを付与。物理耐性と防御力を減少させます。
 - `getSoulBreakStacks(target)`: 現在の破魂スタック数を取得。
-- `WeaponSkillRegistry` を介した各ハンドラへのイベント（Tick, Damage 等）のディスパッチ
-  - いまは「装備中の武器 + そのサブスキル」だけを走査します。全登録ハンドラを毎 tick 回す設計はやめました。
-- `clearTransientState(player)`: 切断時に武器由来の一時状態を掃除します。
+- `dealTrueDamage(player, target, amount)`: 確定ダメージ (True Damage) の一元管理。内部で `isDealingTrueDamage` スレッドローカルフラグを設定し、モブ防御力や物理/術耐性、および各種被ダメージスケーリングをバイパスしてダメージを適用。再帰的な攻撃・ダメージループを防止するため、`isTrueDamage` フラグをハンドラーの `onDamageDealt` メソッドへ伝播します。
+- `WeaponSkillRegistry` を介した各ハンドラへのイベント（Tick, Damage 等）のディスパッチ。
+- 武器のアクティブスロット制限（属性リーク防止）：
+  - 武器の属性ボーナス（会心率、全ダメージボーナスなど）を取得する際、メインハンドに持っている武器（または `HotbarOverrideService` で一時的に指定された武器）と一致していることを厳密に検証するチェック (`lastHeldWeaponIdByPlayer` によるトラッキング）。
+  - 武器切り替え（または武器を外した際）の検知時に、古い武器の一時的な戦闘バフを破棄するため、ハンドラーの `clearTransientState(player.uuid)` を自動的に起動します。
+- `clearTransientState(player)`: 切断時や武器切り替え時に武器由来の一時状態を即時掃除します。
 
 `WeaponSkillHandler` インターフェース:
 
@@ -977,12 +1014,14 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `onDamageAbsorbed(...)`: 被ダメージ吸収時の特殊処理
 - `onDamageDealt(...)`: 攻撃命中時の追加効果（Dark/Lux 付与、追撃等）
 - `onDamageTaken(...)`: 被弾時の反撃・軽減処理
+- `clearTransientState(playerId: UUID)`: プレイヤー切断・武器切り替え時の一時状態（バフスタック等）の削除用。
+- `pruneTransientState(activePlayerIds: Set<UUID>)`: 非アクティブになったプレイヤーのデータを安全に刈り込むためのデフォルト空メソッド。`WeaponSkillService` のティックループ内で毎ティック呼び出されます。
 
 `WeaponSkillRegistry`:
 
 - `effectId` (JSONの `skill.effectId` に対応) とハンドラを紐付けます。
 - `CompiledWeaponSkillRegistry` (CWC 生成) により、DSL 定義されたスキルが自動的に登録されます。
-- CWC 生成の `registerSubSkill(parentEffectId, subSkillEffectId)` により、メインスキルとサブスキルの親子関係も登録します。`WeaponSkillService` は装備中武器のメインスキルに加え、その配下のサブスキル `onTick` / `onPlayerTick` も毎 tick 呼びます。
+- CWC 生成の `registerSubSkill(parentEffectId, subSkillEffectId)` により、メインスキルとサブスキルの親子関係も登録します。`WeaponSkillService` は装備中武器のメインスキルに加え、その配下のサブスキル `onTick` / `onPlayerTick` も毎ティック呼び出します。
 - スキル ID から `WeaponDefinition` を逆引きする `getDefinition(id)` ユーティリティにより、文脈に応じたデータ処理が可能です。
 
 `HotbarOverrideService`:
@@ -1098,27 +1137,36 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ファイル:
 
-- `TreasureChestService.kt`
+- [TreasureChestService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/treasure/TreasureChestService.kt)
+- [TreasureChestPersistentState.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/treasure/TreasureChestPersistentState.kt)
 
 責務:
 
-- 周辺ランダム宝箱生成
-- 開封時の CSC / Chord Progression 付与
-- 永続状態の同期
+- プレイヤーが能動的に探索・発見を行う「共鳴探索 (Resonance Hunt)」システムの管理
+- 共鳴探索宝箱のライフサイクル（スポーン、消滅、開封報酬）および守護者チャレンジの処理
+- 宝箱の永続状態の NBT シリアライズ同期
 
-主 API:
+主 API / 構成要素:
 
-- `init()`
+- **共鳴探索コンパス (Resonant Locator)**: 右クリックで使用する能動レーダーアイテム。安全なスポーンポイント（溶岩・奈落・岩盤等の回避）を探索し、共鳴宝箱を設置します。使用時に 12秒間のクールダウン を適用。
+- **共鳴の宝箱 (Resonant Cache)**: クレソラ専用の新規カスタムブロック。出現から 10分間 の有効期限（TTL）を持ち、他プレイヤーからの窃盗を防止する厳格な所有者チェックを備えます。
+- **ガイドトレイル演出**: 宝箱出現時にプレイヤーから宝箱の座標に向けて `END_ROD` 粒子の高精度ビームを描画。
+- **守護者チャレンジ (Guardian Challenge) システム**:
+  - 所有者プレイヤーが宝箱の周囲 6ブロック 以内に接近した瞬間に自動的に戦闘チャレンジが開始されます。
+  - **難易度スケーリング**:
+    - 3星チャレンジ: 通常モブ 3体
+    - 4星チャレンジ: 通常モブ 2体 ＋ エリートモブ 1体
+    - 5星チャレンジ: 通常モブ 2体 ＋ エリートモブ 2体（内1体はウィザースケルトン）
+  - **ステータススケーリング**: `AdventureRankService.applyMobScaling` に基づき、出現させたプレイヤーの冒険ランクに応じて動的にスケール。エリートモブはさらに高い倍率（HP 2.5倍、防御 2.0倍）が適用されます。
+  - **フロー表示**: 宝箱の頭上 (`y + 1.25` の座標) に `DisplayEntity.TextDisplayEntity` を生成し、リアルタイムに進捗を表示します。
+  - **失敗およびリセット**: プレイヤーが死亡するか、宝箱から 32ブロック 以上離脱した場合にチャレンジは即座に失敗となり、守護者およびテキストは自動で消滅しリセットされます。
+  - **報酬設計**:
+    - 守護者討伐時: 討伐ごとに CSC（通常モブ 40 / エリートモブ 100）を獲得し、ゴールドナゲットをドロップ。
+    - 宝箱開封時: チャレンジクリア後に 50% の確率で対応するレア度（3〜5星）の聖遺物（レベル0〜4）、または 50% の確率で対応するレア度の武器欠片をドロップします。
 
 注記:
 
-- 宝箱本体は persistent state で残ります。
-- 一方でプレイヤーごとの再出現スケジュールは transient state なので、切断時に破棄されます。
-
-注記:
-
-- 外向け関数は少ない
-- 実質は server tick と `UseBlockCallback` 駆動
+- 宝箱本体、所有者UUID、出現座標、有効期限（`expireTime`）などの情報は `TreasureChestPersistentState` を通じて完全に NBT へシリアライズされ、サーバー再起動後も復元されます。
 
 ### 7.16 NaturalRegenService
 
@@ -1140,16 +1188,16 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 ファイル:
 
-- `CresoraDebuff.kt`
-- `CresoraDebuffRegistry.kt`
-- `CresoraDebuffService.kt`
+- [CresoraDebuff.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuff.kt)
+- [CresoraDebuffRegistry.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuffRegistry.kt)
+- [CresoraDebuffService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuffService.kt)
 
 責務:
 
 - プレイヤーに対するデバフ（負の状態異常）の管理
 - エリートモブ攻撃時のデバフ付与判定（現在35%）
 - 攻撃力・被ダメージ・CT速度・回復可否への倍率適用
-- `clearTransientState(player)` による切断時のデバフ破棄
+- `clearTransientState(player)` による切断時および武器切り替え時のデバフ破棄
 
 実装済みデバフ:
 
@@ -1159,6 +1207,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - **燃焼 (BURN)**: 継続的な火炎ダメージ
 - **CT延長 (COOLDOWN_PENALTY)**: 武器スキルのクールダウン解消速度が50%に低下
 - **回復阻害 (HEAL_BLOCK)**: 自然回復を完全に停止
+- **キュン死 (kyundeath)**: 会心（クリティカル）攻撃時に確率で付与され、対象の与ダメージを 20% 低下。モブのネームタグ末尾にハートマーク `[❤]` がレンダリングされる。
 
 ### 7.18 CombatStatSupport
 
@@ -1294,7 +1343,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 1. `src/main/cresora/` に `*.cresora` ファイルを作成し、定義とスクリプトを記述
 2. モデル・アイテム定義（`assets`側）・翻訳を追加
-3. `./gradlew generateWeapons` を実行してコードと JSON を生成
+3. `./gradlew compileAssets` を実行してコードと JSON を生成
 4. 必要なら `ResonanceContentRegistry` や秘境報酬にも接続
 
 新しいストーリー:
@@ -1336,9 +1385,11 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 CWC はコンパイルのたびに出力先（`generated` パッケージおよび `cwc_weapon_content.json`）を完全にクリアしてから再生成するため、常に最新のスクリプト内容が正確に反映されます。既存の `weapon_content.json` は手動定義用として保持され、ゲーム実行時に自動的にマージされます。
 
-#### CWC 2.0 強化点 (2026-04-12 反映)
+#### CWC 2.0 強化点
+- **自動インポート機能**: 生成される Kotlin スキルクラスに、Minecraft やクレソラ関連の常用クラス（`Text`, `LivingEntity`, `ServerWorld`, `ParticleTypes`, `WeaponSkillService`, `AdventureRankService` など）を自動的にインポート。これにより、`execute` ブロック内で完全修飾名を使わずに簡潔に記述できるようになりました。
 - **ソース抽出 (`execute` ブロック)**: トークン再結合ではなく、元のソースコードから直接オフセットを切り出す方式を採用。これにより `as?`, `?.`, `!!` や改行、コメントのフォーマットが 100% 維持されます。
 - **実行ラベル (`execute@run`)**: `execute` ブロックが `run execute@ { ... }` にラップされて生成されるため、スクリプト内で `return@execute` を使用した早期リターンが可能です。
+- **独立した減衰時間 (`decay: independent`)**: バフ定義ブロックに `decay: independent` を指定可能。指定時、バフスタックごとに個別の失効時刻を記録する `expireTicks: MutableList<Long>` を持つ内部状態クラス `*State` が自動生成されます。
 - **AOE 構文の修正**: `area_of_effect` 内での `ignite` 等のパラメータが 1.21.7 のレジストリ API に適合するように自動変換されます。
 - **翻訳ブロック (`translations`)**: スクリプト内に `en_us`, `ja_jp`, `zh_cn`, `lzh` の各キーと値を直接記述可能。ビルド時に `lang/*.json` へ自動的にマージされるため、外部ファイルの編集が不要になりました。
 - **動的メッセージ出力**: `execute` ブロック内で `Text.translatable` を用いて、スタック数や回復量などを動的に埋め込んだメッセージ演出を簡単に実装できるようになりました。
@@ -1372,3 +1423,40 @@ weapon "Name" {
 - **ホットバー展開**: `open_skill_menu` で指定したサブスキルがホットバー（0〜8スロット）に並びます。元のアイテムは自動的に退避され、スキル使用後または時間切れで復元されます。
 - **サブスキル定義**: `sub_skill` ブロックでアイコンと挙動を定義します。これらは独立したスキルハンドラとして生成されます。
 - **入力拒否**: unknown top-level token、unknown `sub_skill` field、unknown skill/buff field、未対応 block action は parse error になります。黙って読み飛ばす仕様ではありません。
+
+## 13. Artifact Compiler (CAC)
+`.artifact` ファイルを `src/main/cresora/` に配置することで、ビルド時に以下の要素が自動生成されます。
+
+- **Kotlin コード**: `hifumi.cresora.equipment.generated.ArtifactSkill_...` (ハンドラ本体、[ArtifactSkillHandler](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/equipment/ArtifactSkillRegistry.kt) 実装)
+- **JSON データ**: `cac_artifact_content.json` (自動生成聖遺物専用の定義ファイル)
+- **登録処理**: `CompiledArtifactRegistry` (聖遺物スキルレジストリへの自動登録)
+
+#### CAC 仕様と拡張機能
+- **動的ステータス補正**: バフ等の過渡状態を表現するため、`ArtifactSkillHandler` が以下のメソッドを提供し、[EquipmentPlayerSupport.getAggregatedStats](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/equipment/EquipmentPlayerSupport.kt) で自動的に集約されます。
+  - `getAttackDamageScalar(player)`: 攻撃力倍率補正
+  - `getArmorScalar(player)`: 防御力倍率補正
+  - `getCritRateBonus(player)`: 会心率補正 (％)
+  - `getCritDamageBonus(player)`: 会心ダメージ補正 (％)
+- **独立した減衰時間 (`decay: independent`)**:
+  - `buff` 定義ブロックに `decay: independent` を指定することで、バフスタックごとに個別の残り持続時間 (Ticks) をカウントし、失効させる仕組み。
+  - コンパイルされる `State` 状態クラスがスタックごとの失効時刻を記録する `expireTicks: MutableList<Long>` を持ち、毎ティック自動でクレンジングされます。
+- **共通組み込み命令**: `log()`, `apply_mark()`, `spawn_particles()`, `add_buff()` をサポート。
+- **生ソースコード抽出**: `execute` 内の複雑な Kotlin ロジックを、トークン再構成ではなく原始ソースコードから直接抽出することで構文エラーを防ぎます。
+
+
+## 14. Movement Compiler (CMC)
+メインストーリーおよびクエスト会話・戦闘等のゲーム進行を定義する `.movement` ファイルからアセットをコンパイルします。
+
+#### CMC 仕様と構成
+- **DSL ファイル形式**: `.movement`
+- **メタデータ**: チャプター ID、並び順 (`sort_order`)、タイトル、解放ランク、前提チャプター、秘境ID等を記述。
+- **フェーズ設計**:
+  - `phase pre_battle`: 戦闘前の会話フェーズをダイアログ (`dialogue`) で定義。
+  - `phase battle`: クリア条件 (`battle_objective`)、出現する敵ウェーブ (`wave`)、敵の耐性・被ダメージなどのモディファイア (`modifiers`) を構造化。
+  - `phase post_battle`: 戦闘後の会話フェーズを定義。
+  - `rewards`: CSC や共鳴通貨（代理弦など）のクリア報酬を定義。
+  - `translations`: 各ロケール (`ja_jp`, `en_us`, `zh_cn`, `lzh`) ごとに、作中で参照される `speaker_id` や `text_id` の対訳テキストを直接記述。
+- **生成アセット**:
+  - **JSON (Content)**: `src/main/resources/data/cresora-utilities/cresora/story_content.json` にシリアライズ。
+  - **JSON (Translations)**: `src/main/resources/data/cresora-utilities/cresora/story_texts.json` へ自動マージ。
+- **ビルドタスク**: `GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets` で CWC/CAC とともに自動実行されます。

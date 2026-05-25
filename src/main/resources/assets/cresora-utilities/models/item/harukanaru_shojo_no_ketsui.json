@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "cresora-utilities:item/harukanaru_shojo_no_ketsui"
+  }
+}

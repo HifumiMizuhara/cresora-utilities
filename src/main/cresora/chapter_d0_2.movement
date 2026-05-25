@@ -1,0 +1,28 @@
+movement "D0-2" {
+    id: "D0-2"
+    group_id: "0"
+    sort_order: 30
+    title_text_id: "story.cresora.chapter.d0_2.title"
+    linked_domain_id: "hinagata_archive"
+    unlock_rank: 1
+    prerequisite_chapter_id: "0-1"
+
+    rewards {
+        credits: 0
+    }
+
+    translations {
+        ja_jp {
+            "story.cresora.chapter.d0_2.title": "雛形の書庫"
+        }
+        en_us {
+            "story.cresora.chapter.d0_2.title": "Hinagata Archive"
+        }
+        zh_cn {
+            "story.cresora.chapter.d0_2.title": "雏形书库"
+        }
+        lzh {
+            "story.cresora.chapter.d0_2.title": "雛形書庫"
+        }
+    }
+}

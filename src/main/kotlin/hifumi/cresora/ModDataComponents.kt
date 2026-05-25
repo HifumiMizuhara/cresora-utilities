@@ -1,5 +1,7 @@
 package hifumi.cresora
 
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.equipment.EquipmentData
 import com.mojang.serialization.Codec
 import net.minecraft.component.ComponentType
 import net.minecraft.network.codec.PacketCodecs

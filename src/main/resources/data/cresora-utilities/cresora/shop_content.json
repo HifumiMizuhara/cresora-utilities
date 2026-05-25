@@ -55,6 +55,13 @@
       "count": 4,
       "price": 120000,
       "visible": true
+    },
+    {
+      "id": "resonant_locator",
+      "itemId": "cresora-utilities:resonant_locator",
+      "count": 1,
+      "price": 50000,
+      "visible": true
     }
   ]
 }

@@ -1,0 +1,203 @@
+movement "0-1" {
+    id: "0-1"
+    sort_order: 10
+    title_text_id: "story.cresora.chapter.0_1.title"
+    domain_reward_ids: ["credit_drill"]
+    unlock_rank: 1
+    prerequisite_chapter_id: "0-0"
+
+    phase pre_battle {
+        dialogue("story.cresora.chapter.0_1.speaker.unknown", "story.cresora.chapter.0_1.pre_0")
+        dialogue("story.cresora.chapter.0_1.speaker.unknown", "story.cresora.chapter.0_1.pre_1")
+        dialogue("story.cresora.chapter.0_1.pre_2")
+        dialogue("story.cresora.chapter.0_1.speaker.player", "story.cresora.chapter.0_1.pre_3")
+        dialogue("story.cresora.chapter.0_1.pre_4")
+        dialogue("story.cresora.chapter.0_1.speaker.unknown", "story.cresora.chapter.0_1.pre_5")
+        dialogue("story.cresora.chapter.0_1.pre_6")
+        dialogue("story.cresora.chapter.0_1.pre_7")
+        dialogue("story.cresora.chapter.0_1.speaker.unknown", "story.cresora.chapter.0_1.pre_8")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.pre_9")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.pre_10")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.pre_11")
+        dialogue("story.cresora.chapter.0_1.pre_12")
+        dialogue("story.cresora.chapter.0_1.pre_13")
+    }
+
+    phase battle {
+        combat_hints ["story.cresora.chapter.0_1.hint_0", "story.cresora.chapter.0_1.hint_1", "story.cresora.chapter.0_1.hint_2"]
+        granted_weapons [weapon("lakeside_stride", FIVE_STAR, base_level: 60, skill_level: 10), weapon("rondo_melody", TWO_STAR, base_level: 60, skill_level: 10)]
+        wave 50 {
+            spawns [spawn("minecraft:zombie")]
+        }
+    }
+
+    phase post_battle {
+        dialogue("story.cresora.chapter.0_1.speaker.player", "story.cresora.chapter.0_1.post_0")
+        dialogue("story.cresora.chapter.0_1.speaker.player", "story.cresora.chapter.0_1.post_1")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.post_2")
+        dialogue("story.cresora.chapter.0_1.post_3")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.post_4")
+        dialogue("story.cresora.chapter.0_1.speaker.player", "story.cresora.chapter.0_1.post_5")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.post_6")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.post_7")
+        dialogue("story.cresora.chapter.0_1.post_8")
+        dialogue("story.cresora.chapter.0_1.speaker.player", "story.cresora.chapter.0_1.post_9")
+        dialogue("story.cresora.chapter.0_1.speaker.lumine", "story.cresora.chapter.0_1.post_10")
+        dialogue("story.cresora.chapter.0_1.speaker.player", "story.cresora.chapter.0_1.post_11")
+    }
+
+    rewards {
+        credits: 3250
+        resonance_currencies {
+            substitute_chord: 200
+            chord_progression: 100
+        }
+    }
+
+    translations {
+        ja_jp {
+            "story.cresora.chapter.0_1.title": "チューナーの憶測"
+            "story.cresora.chapter.0_1a.title": "信用試練場"
+            "story.cresora.chapter.0_1.speaker.unknown": "？？？"
+            "story.cresora.chapter.0_1.speaker.player": "Player"
+            "story.cresora.chapter.0_1.speaker.lumine": "Lumine"
+            "story.cresora.chapter.0_1.pre_0": "川のせせらぎ。そして、虫の鳴き声。"
+            "story.cresora.chapter.0_1.pre_1": "見てごらん、この独特な『残響』を。"
+            "story.cresora.chapter.0_1.pre_2": "ぼんやりした意識がだんだんと覚める。美しいけれど、どこか悲しい顔をしている少女が、自分を見つめていた。"
+            "story.cresora.chapter.0_1.pre_3": "あなたは誰だ？"
+            "story.cresora.chapter.0_1.pre_4": "見渡す限り、麗しき景色で埋め尽くされた川の水辺だった。こんなにも美しい景色は、これまで一回も見たことがなかった。"
+            "story.cresora.chapter.0_1.pre_5": "ここはどこなのか、見覚えもないようだね。"
+            "story.cresora.chapter.0_1.pre_6": "確かにそうだ。これまで何回も■■■"
+            "story.cresora.chapter.0_1.pre_7": "なぜか考えがまとまらない。一つわかるのは、ここは「現実世界」じゃない空間だ。なぜなら、■■■"
+            "story.cresora.chapter.0_1.pre_8": "時間はもうあまり多くはないね。私はLumine、このCreSoraという世界での『チューナー』よ。"
+            "story.cresora.chapter.0_1.pre_9": "この世界に姿を現したのは、きっとそれなりの原因があるはずよ。私たち「チューナー」は、あなたのような道を迷った「独奏者《ソリスト》」の案内役を果たしているの。"
+            "story.cresora.chapter.0_1.pre_10": "話ばかりしてもわかってくれないからね。一番手っ取り早い方法で、CreSoraの『ルール』を見せるわ。"
+            "story.cresora.chapter.0_1.pre_11": "さあ、ついてきて、『ソリスト』。あなたの演奏が、いずれCreSoraの『謎』を解けることを願って。"
+            "story.cresora.chapter.0_1.pre_12": "嘗て奏者有り。其の音律、絶えざること縷の如し。"
+            "story.cresora.chapter.0_1.pre_13": "其は旅に出た。其の旅が、いずれ其れ自身の「ためらい」を紐解くことを願わん。"
+            "story.cresora.chapter.0_1.hint_0": "チュートリアル武器を一時配布しました。戦闘終了後に回収されます。"
+            "story.cresora.chapter.0_1.hint_1": "メインハンドに持って右クリックすると、『音律エコースキル』を発動できます。"
+            "story.cresora.chapter.0_1.hint_2": "『湖畔を歩む』はキャラクター「Lumine」の★5「メジャースケール武器」です。『円舞曲のメロディ』はシールドの★2「無主のスケール」武器です。"
+            "story.cresora.chapter.0_1.post_0": "エコーウェポン（武器）、そして『残響』。"
+            "story.cresora.chapter.0_1.post_1": "どれも目新しいものばかりだったが、意外と妙に身にしみる。"
+            "story.cresora.chapter.0_1.post_2": "それは...CreSoraの『音律エコー』に親和性が高かったかもしれないね。"
+            "story.cresora.chapter.0_1.post_3": "少女は話し終わると、急に「あっ」って唸っては、一瞬の表情の変化を見せた。"
+            "story.cresora.chapter.0_1.post_4": "もしくは...■■■）"
+            "story.cresora.chapter.0_1.post_5": "！！ もしかして...!"
+            "story.cresora.chapter.0_1.post_6": "あ、なんでもないわ。念の為、それは忘れてください。何の根拠もない憶測でしかないわ。『ソリスト』さん。そして..."
+            "story.cresora.chapter.0_1.post_7": "たとえこれが本当に真実でも、それはあなたの手で解き明かすべき。ネタバレは、よくないですよ。"
+            "story.cresora.chapter.0_1.post_8": "スッ。さきほどのパニック。驚愕。それにあの「憶測」。すべてはきれいに脳から消し去ったような感じだった。まるで、存在すらしていなかったように。"
+            "story.cresora.chapter.0_1.post_9": "これも、『音律エコー』の力..."
+            "story.cresora.chapter.0_1.post_10": "後ほどわかる。これはすべて『ソリスト』さんのためですよ。"
+            "story.cresora.chapter.0_1.post_11": "『チューナー』は、そんなに『音律エコー』の権限が強かったのか。でもなぜ、私の記憶をいじる...？私は本当に、チューナーを信用すべきだろうか。この世界は、一体何なんだ。"
+        }
+        en_us {
+            "story.cresora.chapter.0_1.title": "The Tuner's Speculation"
+            "story.cresora.chapter.0_1a.title": "Credit Drill"
+            "story.cresora.chapter.0_1.speaker.unknown": "???"
+            "story.cresora.chapter.0_1.speaker.player": "<Player>"
+            "story.cresora.chapter.0_1.speaker.lumine": "Lumine"
+            "story.cresora.chapter.0_1.pre_0": "The murmur of the river. And the song of insects."
+            "story.cresora.chapter.0_1.pre_1": "Look closely at this peculiar 'Echo.'"
+            "story.cresora.chapter.0_1.pre_2": "Your hazy consciousness gradually clears. A girl, beautiful yet wearing a strangely sorrowful expression, is staring at you."
+            "story.cresora.chapter.0_1.pre_3": "Who are you?"
+            "story.cresora.chapter.0_1.pre_4": "As far as the eye could see, it was a riverside wrapped in exquisite scenery. You had never seen a landscape this beautiful before."
+            "story.cresora.chapter.0_1.pre_5": "So you do not know where this is. It seems unfamiliar to you."
+            "story.cresora.chapter.0_1.pre_6": "That was true. Even though ■■■ "
+            "story.cresora.chapter.0_1.pre_7": "For some reason your thoughts refuse to settle. One thing alone is clear: this is not the 'real world.' Because, ■■■"
+            "story.cresora.chapter.0_1.pre_8": "There is not much time. I am Lumine, a 'Tuner' in this world called CreSora."
+            "story.cresora.chapter.0_1.pre_9": "There must be a reason you appeared in this world. We 'Tuners' guide wandering 'Soloists' such as you."
+            "story.cresora.chapter.0_1.pre_10": "Words alone will not make you understand. The quickest way is to show you the 'rules' of CreSora directly."
+            "story.cresora.chapter.0_1.pre_11": "Come, then, Soloist. I hope your performance will one day unravel the 'mystery' of CreSora."
+            "story.cresora.chapter.0_1.pre_12": "Once there was a performer. Their music endured like an unbroken thread."
+            "story.cresora.chapter.0_1.pre_13": "And so they set out on a journey. May that journey one day untangle their own hesitation."
+            "story.cresora.chapter.0_1.hint_0": "Temporary tutorial weapons have been issued. They will be reclaimed after the battle ends."
+            "story.cresora.chapter.0_1.hint_1": "Hold one in your main hand and right-click to activate its Music Echo skill."
+            "story.cresora.chapter.0_1.hint_2": "'Stride by the Lakeside' is the character Lumine's 'Major scale weapon', while 'Melody of the Rondo' is suited for shielding."
+            "story.cresora.chapter.0_1.post_0": "Echo Weapons... and 'Echoes.'"
+            "story.cresora.chapter.0_1.post_1": "All of them were unfamiliar, and yet they sank into me with unsettling ease."
+            "story.cresora.chapter.0_1.post_2": "That may mean... you have high affinity with CreSora's 'Music Echo.'"
+            "story.cresora.chapter.0_1.post_3": "The girl finished speaking, then suddenly let out a small gasp and her expression changed for an instant."
+            "story.cresora.chapter.0_1.post_4": "Or perhaps... ■■■ "
+            "story.cresora.chapter.0_1.post_5": "!! Could it be...!?"
+            "story.cresora.chapter.0_1.post_6": "Ah, it is nothing. Just in case, please forget that. It is only speculation without any proof, Soloist. And..."
+            "story.cresora.chapter.0_1.post_7": "Even if it truly is the truth, it is something you must uncover with your own hands. Spoilers are in poor taste."
+            "story.cresora.chapter.0_1.post_8": "Then, in a sweep, the panic from moments ago, the shock, even that 'speculation,' all seemed cleanly erased from your mind, as if none of it had ever existed."
+            "story.cresora.chapter.0_1.post_9": "This too... is the power of 'Music Echo'...?"
+            "story.cresora.chapter.0_1.post_10": "You will understand later. All of this is for your sake, Soloist."
+            "story.cresora.chapter.0_1.post_11": "Does a Tuner really wield that much authority over Music Echo? Then why alter my memories...? Should I really trust the Tuners? What is this world, truly?"
+        }
+        zh_cn {
+            "story.cresora.chapter.0_1.title": "调律者的臆测"
+            "story.cresora.chapter.0_1a.title": "信用试炼场"
+            "story.cresora.chapter.0_1.speaker.unknown": "？？？"
+            "story.cresora.chapter.0_1.speaker.player": "Player"
+            "story.cresora.chapter.0_1.speaker.lumine": "流明"
+            "story.cresora.chapter.0_1.pre_0": "溪流潺潺，还有虫鸣。"
+            "story.cresora.chapter.0_1.pre_1": "看吧，这道独特的“残响”。"
+            "story.cresora.chapter.0_1.pre_2": "朦胧的意识渐渐苏醒。一个美丽却带着几分忧伤神情的少女，正注视着你。"
+            "story.cresora.chapter.0_1.pre_3": "你是谁？"
+            "story.cresora.chapter.0_1.pre_4": "放眼望去，是被绮丽风景填满的河畔。如此美丽的景色，你此前从未见过。"
+            "story.cresora.chapter.0_1.pre_5": "这里是哪里，你似乎一点印象也没有呢。"
+            "story.cresora.chapter.0_1.pre_6": "确实如此。可明明■■■。"
+            "story.cresora.chapter.0_1.pre_7": "不知为何，思绪始终无法理清。唯一能确定的是，这里不是“现实世界”。因为，■■■"
+            "story.cresora.chapter.0_1.pre_8": "时间已经不多了。我是Lumine，是这个名为CreSora的世界中的“调律者”。"
+            "story.cresora.chapter.0_1.pre_9": "你会在这个世界显现，一定有相应的原因。我们“调律者”负责为像你这样迷失道路的“独奏者《Soloist》”引路。"
+            "story.cresora.chapter.0_1.pre_10": "光靠说是不会让你明白的。最直接的方法，就是让你亲眼看看CreSora的“规则”。"
+            "story.cresora.chapter.0_1.pre_11": "来吧，跟上我吧，“独奏者”。愿你的演奏终有一日能解开CreSora的“谜团”。"
+            "story.cresora.chapter.0_1.pre_12": "昔有奏者，其音律绵延不绝，如丝如缕。"
+            "story.cresora.chapter.0_1.pre_13": "于是其踏上旅途，愿那场旅途终有一日能解开其自身的“迟疑”。"
+            "story.cresora.chapter.0_1.hint_0": "已临时发放教程武器。战斗结束后会自动回收。"
+            "story.cresora.chapter.0_1.hint_1": "将武器持于主手并右键，即可发动其“音律回响技能”。"
+            "story.cresora.chapter.0_1.hint_2": "“行于湖畔”是角色「流明」的五星「MS音阶」，“圆舞曲的旋律”则是偏向护盾防护的「无主音阶」武器。"
+            "story.cresora.chapter.0_1.post_0": "回响武器，还有“残响”。"
+            "story.cresora.chapter.0_1.post_1": "明明全都是陌生的东西，却又意外地令人感到熟悉。"
+            "story.cresora.chapter.0_1.post_2": "那或许说明……你与CreSora的“音律回响”有很高的亲和性。"
+            "story.cresora.chapter.0_1.post_3": "少女话音刚落，忽然轻轻“啊”了一声，神情在一瞬间发生了变化。"
+            "story.cresora.chapter.0_1.post_4": "又或者……■■■"
+            "story.cresora.chapter.0_1.post_5": "！！ 难道说……！？"
+            "story.cresora.chapter.0_1.post_6": "啊，没什么。保险起见，请把那句话忘掉吧。那终究只是毫无根据的臆测而已，“独奏者”。以及……"
+            "story.cresora.chapter.0_1.post_7": "就算那真的是事实，也该由你亲手去解明。剧透，可不是什么好事。"
+            "story.cresora.chapter.0_1.post_8": "下一瞬，方才的慌乱、惊愕，以及那句“臆测”，仿佛都被从脑海中抹得干干净净，如同从未存在过一般。"
+            "story.cresora.chapter.0_1.post_9": "这也是……“音律回响”的力量吗……"
+            "story.cresora.chapter.0_1.post_10": "之后你会明白的。这一切，都是为了“独奏者”你自己。"
+            "story.cresora.chapter.0_1.post_11": "“调律者”竟拥有这么强的“音律回响”权限吗。可为什么，要动我的记忆……？我真的该相信调律者吗？这个世界，到底是什么。"
+        }
+        lzh {
+            "story.cresora.chapter.0_1.title": "調律者之臆測"
+            "story.cresora.chapter.0_1a.title": "信用試鍊場"
+            "story.cresora.chapter.0_1.speaker.unknown": "？？？"
+            "story.cresora.chapter.0_1.speaker.player": "Player"
+            "story.cresora.chapter.0_1.speaker.lumine": "流明"
+            "story.cresora.chapter.0_1.pre_0": "川流潺潺，蟲鳴唧唧。"
+            "story.cresora.chapter.0_1.pre_1": "試觀此獨異之「殘響」。"
+            "story.cresora.chapter.0_1.pre_2": "昏昏之識漸蘇。一少女姝而含悲，正凝視於汝。"
+            "story.cresora.chapter.0_1.pre_3": "汝為誰？"
+            "story.cresora.chapter.0_1.pre_4": "四顧所及，盡為綺景所覆之河濱。如此麗景，前此未嘗一見。"
+            "story.cresora.chapter.0_1.pre_5": "此間何所，汝似全無所識也。"
+            "story.cresora.chapter.0_1.pre_6": "誠然如是。然■■■。"
+            "story.cresora.chapter.0_1.pre_7": "不知何故，思緒紛然，不可成理。惟知此處非「現實世界」。所以然者，■■■"
+            "story.cresora.chapter.0_1.pre_8": "時已無多。我名流明，乃此CreSora世界之「調律者」。"
+            "story.cresora.chapter.0_1.pre_9": "汝既現於此世，必有其故。我輩「調律者」，職在導引如汝般迷途之「獨奏者《Soloist》」。"
+            "story.cresora.chapter.0_1.pre_10": "徒以言辭，汝終未能悟。最快之法，莫若直示CreSora之「規則」。"
+            "story.cresora.chapter.0_1.pre_11": "來罷，隨我行，「獨奏者」。願汝之演奏，終有一日得解CreSora之「謎」。"
+            "story.cresora.chapter.0_1.pre_12": "昔有奏者，其音律綿綿不絕，如縷如絲。"
+            "story.cresora.chapter.0_1.pre_13": "於是其出而遠遊，願其旅終能解其自身之「躊躇」。"
+            "story.cresora.chapter.0_1.hint_0": "權授教習之兵，戰畢即當回收。"
+            "story.cresora.chapter.0_1.hint_1": "執之於主手而右擊，則可發其「音律回響之技」。"
+            "story.cresora.chapter.0_1.hint_2": "「行乎湖畔」長於烈擊，「圓舞曲之律」宜於持盾。"
+            "story.cresora.chapter.0_1.post_0": "回響之兵，與夫「殘響」。"
+            "story.cresora.chapter.0_1.post_1": "諸物皆新，而意外令人深有所感。"
+            "story.cresora.chapter.0_1.post_2": "是或示汝與CreSora之「音律回響」親和甚高。"
+            "story.cresora.chapter.0_1.post_3": "少女言畢，忽低呼一聲，其容色一瞬而變。"
+            "story.cresora.chapter.0_1.post_4": "抑或……■■■"
+            "story.cresora.chapter.0_1.post_5": "！！ 莫非……！？"
+            "story.cresora.chapter.0_1.post_6": "啊，無他。為慎故，請忘此言。此不過無據之臆測耳，「獨奏者」君。且……"
+            "story.cresora.chapter.0_1.post_7": "縱其果真，亦當由汝親手發明之。先泄其底，非善事也。"
+            "story.cresora.chapter.0_1.post_8": "須臾之間，方才之驚惶、震愕，與彼「臆測」，皆若自腦中泯然盡去，如未嘗有焉。"
+            "story.cresora.chapter.0_1.post_9": "此亦「音律回響」之力乎……"
+            "story.cresora.chapter.0_1.post_10": "後當自知之。凡此一切，皆為「獨奏者」汝也。"
+            "story.cresora.chapter.0_1.post_11": "「調律者」於「音律回響」之權，竟強若此乎。然何以改吾之憶……？吾果可盡信調律者乎？此世界，竟何所是。"
+        }
+    }
+}

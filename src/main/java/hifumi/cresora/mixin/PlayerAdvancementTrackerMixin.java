@@ -1,6 +1,7 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.CreditsService;
+import hifumi.cresora.credits.CreditsService;
+
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.advancement.PlayerAdvancementTracker;

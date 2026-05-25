@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "cresora-utilities:block/resonant_cache" }
+  }
+}

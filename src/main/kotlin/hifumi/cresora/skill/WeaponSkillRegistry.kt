@@ -1,7 +1,8 @@
 package hifumi.cresora.skill
 
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponContentRegistry
+import hifumi.cresora.weapon.WeaponContentRegistry
+import hifumi.cresora.weapon.WeaponDefinition
+
 import hifumi.cresora.skill.generated.CompiledWeaponSkillRegistry
 
 object WeaponSkillRegistry {

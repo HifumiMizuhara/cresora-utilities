@@ -1,0 +1,44 @@
+artifact "Hinagata" {
+    id: "hinagata";
+    
+    set 2 {
+        stats {
+            atk_percent: 18.0;
+        }
+    }
+    
+    set 4 {
+        stats {
+            atk_percent: 20.0;
+            crit_dmg: 20.0;
+        }
+        
+        buff "hinagata_stacks" {
+            max_stacks: 10;
+            duration: 5s;
+            stats {
+                atk_percent_per_stack: 2.0;
+            }
+        }
+        
+        on_attack_dealt {
+            execute {
+                apply_mark(target, "hinagata_curse", 100);
+                add_buff("hinagata_stacks", 1);
+                send_localized_message("message.cresora.hinagata.curse", "gold");
+            }
+        }
+    }
+
+    translations {
+        en_us {
+            "message.cresora.hinagata.curse": "Applied Hinagata curse!";
+        }
+        ja_jp {
+            "message.cresora.hinagata.curse": "雛形の呪いを付与しました！";
+        }
+        zh_cn {
+            "message.cresora.hinagata.curse": "已施加雏形之咒！";
+        }
+    }
+}

@@ -3,6 +3,7 @@ weapon "Cadenza Allegro" {
     rarity: "4_star"
     base_item: "minecraft:wooden_sword"
     damage_type: physical
+    role: specialist
     stats {
         base_damage: 8.5
         damage_per_level: 0.2
@@ -28,7 +29,7 @@ weapon "Cadenza Allegro" {
                 val targets = world.getOtherEntities(player, player.boundingBox.expand(radius)) { entity ->
                     val hostile = entity as? net.minecraft.entity.mob.HostileEntity ?: return@getOtherEntities false;
                     if (!hostile.isAlive) return@getOtherEntities false;
-                    val mobAccess = hostile as? hifumi.cresora.AdventureRankMobAccess;
+                    val mobAccess = hostile as? hifumi.cresora.adventurerank.AdventureRankMobAccess;
                     mobAccess?.cresoraIsEliteMob() != true
                 }.mapNotNull { it as? net.minecraft.entity.mob.HostileEntity }.sortedBy { it.squaredDistanceTo(player) }.take(n);
 
@@ -36,13 +37,13 @@ weapon "Cadenza Allegro" {
                 for (target in targets) {
                     val sheep = net.minecraft.entity.EntityType.SHEEP.spawn(world, null, target.blockPos, net.minecraft.entity.SpawnReason.COMMAND, true, false) ?: continue;
                     sheep!!.refreshPositionAndAngles(target.x, target.y, target.z, target.yaw, target.pitch);
-                    hifumi.cresora.BaaMimicService.markTransformedSheep(sheep!!, target);
+                    hifumi.cresora.combat.BaaMimicService.markTransformedSheep(sheep!!, target);
                     val maxHealthAttr = sheep!!.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.MAX_HEALTH);
                     if (maxHealthAttr != null) {
                         maxHealthAttr.baseValue = maxPlayerHp.toDouble();
                         sheep!!.health = maxPlayerHp;
                     }
-                    hifumi.cresora.AdventureRankService.refreshMobDisplay(sheep!!);
+                    hifumi.cresora.adventurerank.AdventureRankService.refreshMobDisplay(sheep!!);
                     target.discard();
                     transformedCount++;
                 }

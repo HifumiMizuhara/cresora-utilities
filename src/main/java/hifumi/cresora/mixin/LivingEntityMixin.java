@@ -1,17 +1,19 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.AdventureRankMobAccess;
-import hifumi.cresora.AdventureRankService;
-import hifumi.cresora.CombatDamageType;
-import hifumi.cresora.CombatDamageTypeSupport;
-import hifumi.cresora.CresoraDebuffService;
-import hifumi.cresora.EquipmentEffectHookService;
-import hifumi.cresora.MasqueradeService;
-import hifumi.cresora.MobCombatProfileRegistry;
-import hifumi.cresora.MusicEchoContentRegistry;
-import hifumi.cresora.NaturalRegenService;
-import hifumi.cresora.StoryService;
-import hifumi.cresora.WeaponSkillService;
+import hifumi.cresora.adventurerank.AdventureRankMobAccess;
+import hifumi.cresora.adventurerank.AdventureRankService;
+import hifumi.cresora.combat.BaaMimicService;
+import hifumi.cresora.combat.CombatDamageType;
+import hifumi.cresora.combat.CombatDamageTypeSupport;
+import hifumi.cresora.combat.MobCombatProfileRegistry;
+import hifumi.cresora.combat.NaturalRegenService;
+import hifumi.cresora.debuff.CresoraDebuffService;
+import hifumi.cresora.equipment.EquipmentEffectHookService;
+import hifumi.cresora.masquerade.MasqueradeService;
+import hifumi.cresora.musicecho.MusicEchoContentRegistry;
+import hifumi.cresora.story.StoryService;
+import hifumi.cresora.weapon.WeaponSkillService;
+
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.HostileEntity;
@@ -40,6 +42,14 @@ public class LivingEntityMixin {
 
     @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
     private float cresora$applyCombatScaling(float amount, net.minecraft.server.world.ServerWorld world, DamageSource source) {
+        if (WeaponSkillService.isDealingTrueDamage()) {
+            return amount;
+        }
+        if (source.getAttacker() instanceof LivingEntity attacker) {
+            if (WeaponSkillService.hasMark(attacker, "kyundeath")) {
+                amount = amount * 0.8f;
+            }
+        }
         if ((Object) this instanceof MobEntity) {
             amount = (float) (amount * MusicEchoContentRegistry.INSTANCE.mobDamageTakenMultiplier());
         }
@@ -113,7 +123,11 @@ public class LivingEntityMixin {
                 WeaponSkillService.INSTANCE.onAttackDealt(serverPlayer, hostile, damageDone);
             }
         }
-        AdventureRankService.INSTANCE.showMobDamage(hostile, source, damageDone);
+        if (WeaponSkillService.isDealingTrueDamage() && source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+            AdventureRankService.INSTANCE.showMobTrueDamage(hostile, serverPlayer, damageDone);
+        } else {
+            AdventureRankService.INSTANCE.showMobDamage(hostile, source, damageDone);
+        }
         AdventureRankService.INSTANCE.refreshMobDisplay(hostile);
     }
 
@@ -126,7 +140,7 @@ public class LivingEntityMixin {
         if (!((Object) this instanceof SheepEntity sheep)) {
             return;
         }
-        if (hifumi.cresora.BaaMimicService.INSTANCE.handleMimicSheepDeath(sheep, source)) {
+        if (BaaMimicService.INSTANCE.handleMimicSheepDeath(sheep, source)) {
             ci.cancel();
         }
     }
@@ -139,7 +153,7 @@ public class LivingEntityMixin {
         if (!((Object) this instanceof SheepEntity sheep)) {
             return;
         }
-        if (hifumi.cresora.BaaMimicService.INSTANCE.isMimicSheep(sheep)) {
+        if (BaaMimicService.INSTANCE.isMimicSheep(sheep)) {
             return;
         }
         if (!(source.getAttacker() instanceof ServerPlayerEntity player)) {

@@ -1,5 +1,10 @@
 package hifumi.cresora
 
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.equipment.ArtifactSpecialItemKind
+import hifumi.cresora.equipment.ArtifactSpecialItemSupport
+import hifumi.cresora.equipment.ArtifactUiFlow
+import hifumi.cresora.equipment.EquipmentStackSupport
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -49,8 +54,7 @@ class UpgradeScreenHandler(
         })
         addSlot(object : Slot(upgradeInventory, MATERIAL_SLOT, 76, 30) {
             override fun canInsert(stack: ItemStack): Boolean {
-                return stack.isOf(CreSoraUtilities.TUESHOKAKU) ||
-                    EquipmentStackSupport.isEquipment(stack) ||
+                return EquipmentStackSupport.isEquipment(stack) ||
                     ArtifactSpecialItemSupport.isSpecialItem(stack)
             }
 
@@ -106,8 +110,7 @@ class UpgradeScreenHandler(
         } else {
             val targetIndex = when {
                 EquipmentStackSupport.isEquipment(originalStack) && !slots[TARGET_SLOT].hasStack() -> TARGET_SLOT
-                (originalStack.isOf(CreSoraUtilities.TUESHOKAKU) ||
-                    EquipmentStackSupport.isEquipment(originalStack) ||
+                (EquipmentStackSupport.isEquipment(originalStack) ||
                     ArtifactSpecialItemSupport.isSpecialItem(originalStack)) -> MATERIAL_SLOT
                 else -> return ItemStack.EMPTY
             }

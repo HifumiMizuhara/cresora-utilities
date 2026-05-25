@@ -8,12 +8,27 @@ data class WeaponDefNode(
     val rarity: String,
     val baseItem: String,
     val damageType: String,
+    val role: String = "guard",
     val stats: StatsNode,
     val skill: SkillNode?,
     val translations: Map<String, Map<String, String>> = emptyMap(),
     val subSkills: List<SubSkillNode> = emptyList(),
     val customModelData: Int? = null,
     val texture: String? = null
+) : ASTNode()
+
+data class ArtifactDefNode(
+    val name: String,
+    val id: String,
+    val bonuses: List<ArtifactBonusNode>,
+    val translations: Map<String, Map<String, String>> = emptyMap()
+) : ASTNode()
+
+data class ArtifactBonusNode(
+    val requiredPieces: Int,
+    val stats: Map<String, Double> = emptyMap(),
+    val handlers: List<SkillHandlerNode> = emptyList(),
+    val buffs: List<BuffNode> = emptyList()
 ) : ASTNode()
 
 data class DictionaryDefNode(
@@ -35,7 +50,8 @@ data class StatsNode(
     val maxBaseLevel: Int,
     val maxSkillLevel: Int,
     val critRateBonusPercent: Double = 0.0,
-    val maxAllDamageBonusPercent: Double = 0.0
+    val maxAllDamageBonusPercent: Double = 0.0,
+    val hpBonusPercent: Double = 0.0
 ) : ASTNode()
 
 data class SkillNode(
@@ -55,7 +71,8 @@ data class BuffNode(
     val translationKey: String?,
     val maxStacks: Int,
     val durationSeconds: Double,
-    val stats: Map<String, Double>
+    val stats: Map<String, Double>,
+    val decay: String = "refresh"
 ) : ASTNode()
 
 data class SkillHandlerNode(
@@ -72,6 +89,11 @@ sealed class ActionNode : ASTNode()
 
 data class CommandActionNode(
     val commandName: String,
+    val arguments: List<String>
+) : ActionNode()
+
+data class InstructionCallNode(
+    val functionName: String,
     val arguments: List<String>
 ) : ActionNode()
 
@@ -93,5 +115,66 @@ data class OpenSkillMenuActionNode(
 object CloseSkillMenuActionNode : ActionNode()
 
 data class ExecuteActionNode(
-    val content: String
+    val statements: List<ActionNode>
 ) : ActionNode()
+
+data class MovementDefNode(
+    val name: String,
+    val id: String,
+    val displayName: String,
+    val groupId: String?,
+    val sortOrder: Int,
+    val titleTextId: String?,
+    val linkedDomainId: String?,
+    val domainRewardIds: List<String>,
+    val unlockRank: Int,
+    val prerequisiteChapterId: String?,
+    val preBattleStory: List<DialogueLineNode>,
+    val combatHints: List<String>,
+    val grantedWeapons: List<GrantedWeaponNode>,
+    val battleObjective: BattleObjectiveNode,
+    val battleWaves: List<BattleWaveNode>,
+    val postBattleStory: List<DialogueLineNode>,
+    val rewards: RewardsNode,
+    val translations: Map<String, Map<String, String>>
+) : ASTNode()
+
+data class DialogueLineNode(
+    val speakerId: String?,
+    val textId: String
+) : ASTNode()
+
+data class GrantedWeaponNode(
+    val weaponId: String,
+    val rarity: String,
+    val baseLevel: Int,
+    val skillLevel: Int,
+    val removeOnExit: Boolean
+) : ASTNode()
+
+data class BattleObjectiveNode(
+    val type: String,
+    val durationSeconds: Int
+) : ASTNode()
+
+data class BattleWaveNode(
+    val enemyRank: Int,
+    val spawnDelayTicks: Int,
+    val spawns: List<SpawnNode>,
+    val modifiers: ModifiersNode
+) : ASTNode()
+
+data class SpawnNode(
+    val entityTypeId: String,
+    val count: Int
+) : ASTNode()
+
+data class ModifiersNode(
+    val damageReductionPercent: Double,
+    val trueDamageImmune: Boolean
+) : ASTNode()
+
+data class RewardsNode(
+    val credits: Int,
+    val resonanceCurrencies: Map<String, Int>
+) : ASTNode()

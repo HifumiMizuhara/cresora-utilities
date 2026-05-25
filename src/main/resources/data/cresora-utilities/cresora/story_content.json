@@ -5,7 +5,10 @@
       "displayName": "0-0",
       "sortOrder": 0,
       "titleTextId": "story.cresora.chapter.0_0.title",
-      "domainRewardIds": ["rondo_forge", "masquerade_soiree"],
+      "domainRewardIds": [
+        "rondo_forge",
+        "masquerade_soiree"
+      ],
       "unlockRank": 1,
       "preBattleStory": [
         {
@@ -50,7 +53,9 @@
       "displayName": "0-1",
       "sortOrder": 10,
       "titleTextId": "story.cresora.chapter.0_1.title",
-      "domainRewardIds": ["credit_drill"],
+      "domainRewardIds": [
+        "credit_drill"
+      ],
       "unlockRank": 1,
       "prerequisiteChapterId": "0-0",
       "preBattleStory": [
@@ -215,11 +220,6 @@
       "linkedDomainId": "lakeside_sanctum",
       "unlockRank": 1,
       "prerequisiteChapterId": "0-1",
-      "preBattleStory": [],
-      "combatHints": [],
-      "grantedWeapons": [],
-      "battle": [],
-      "postBattleStory": [],
       "rewards": {
         "credits": 0,
         "resonanceCurrencies": []
@@ -234,11 +234,6 @@
       "linkedDomainId": "hinagata_archive",
       "unlockRank": 1,
       "prerequisiteChapterId": "0-1",
-      "preBattleStory": [],
-      "combatHints": [],
-      "grantedWeapons": [],
-      "battle": [],
-      "postBattleStory": [],
       "rewards": {
         "credits": 0,
         "resonanceCurrencies": []
@@ -252,24 +247,62 @@
       "unlockRank": 1,
       "prerequisiteChapterId": "0-1",
       "preBattleStory": [
-        { "textId": "story.cresora.chapter.0_2.pre_0" },
-        { "textId": "story.cresora.chapter.0_2.pre_1" },
-        { "textId": "story.cresora.chapter.0_2.pre_2" },
-        { "textId": "story.cresora.chapter.0_2.pre_3" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_4" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.pre_5" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_6" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_7" },
-        { "textId": "story.cresora.chapter.0_2.pre_8" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.pre_9" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.oldman", "textId": "story.cresora.chapter.0_2.pre_10" },
-        { "textId": "story.cresora.chapter.0_2.pre_11" },
-        { "textId": "story.cresora.chapter.0_2.pre_12" }
+        {
+          "textId": "story.cresora.chapter.0_2.pre_0"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.pre_1"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.pre_2"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.pre_3"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.oldman",
+          "textId": "story.cresora.chapter.0_2.pre_4"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.player",
+          "textId": "story.cresora.chapter.0_2.pre_5"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.oldman",
+          "textId": "story.cresora.chapter.0_2.pre_6"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.oldman",
+          "textId": "story.cresora.chapter.0_2.pre_7"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.pre_8"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.player",
+          "textId": "story.cresora.chapter.0_2.pre_9"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.oldman",
+          "textId": "story.cresora.chapter.0_2.pre_10"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.pre_11"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.pre_12"
+        }
       ],
       "combatHints": [
-        { "textId": "story.cresora.chapter.0_2.hint_0" },
-        { "textId": "story.cresora.chapter.0_2.hint_1" },
-        { "textId": "story.cresora.chapter.0_2.hint_2" }
+        {
+          "textId": "story.cresora.chapter.0_2.hint_0"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.hint_1"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.hint_2"
+        }
       ],
       "grantedWeapons": [
         {
@@ -301,16 +334,42 @@
         }
       ],
       "postBattleStory": [
-        { "textId": "story.cresora.chapter.0_2.post_0" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_1" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.post_2" },
-        { "textId": "story.cresora.chapter.0_2.post_3" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_4" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.player", "textId": "story.cresora.chapter.0_2.post_5" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_6" },
-        { "speakerId": "story.cresora.chapter.0_2.speaker.lumine", "textId": "story.cresora.chapter.0_2.post_7" },
-        { "textId": "story.cresora.chapter.0_2.post_8" },
-        { "textId": "story.cresora.chapter.0_2.post_9" }
+        {
+          "textId": "story.cresora.chapter.0_2.post_0"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.lumine",
+          "textId": "story.cresora.chapter.0_2.post_1"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.player",
+          "textId": "story.cresora.chapter.0_2.post_2"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.post_3"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.lumine",
+          "textId": "story.cresora.chapter.0_2.post_4"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.player",
+          "textId": "story.cresora.chapter.0_2.post_5"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.lumine",
+          "textId": "story.cresora.chapter.0_2.post_6"
+        },
+        {
+          "speakerId": "story.cresora.chapter.0_2.speaker.lumine",
+          "textId": "story.cresora.chapter.0_2.post_7"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.post_8"
+        },
+        {
+          "textId": "story.cresora.chapter.0_2.post_9"
+        }
       ],
       "rewards": {
         "credits": 0,

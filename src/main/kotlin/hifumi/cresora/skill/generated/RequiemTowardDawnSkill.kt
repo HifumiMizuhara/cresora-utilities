@@ -1,12 +1,27 @@
 package hifumi.cresora.skill.generated
 
-import hifumi.cresora.WeaponData
-import hifumi.cresora.WeaponDefinition
-import hifumi.cresora.WeaponSkillAccess
-import hifumi.cresora.WeaponSkillService
+import hifumi.cresora.adventurerank.AdventureRankMobAccess
+import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.weapon.HotbarOverrideService
+import hifumi.cresora.weapon.WeaponCombatSupport
+import hifumi.cresora.weapon.WeaponData
+import hifumi.cresora.weapon.WeaponDefinition
+import hifumi.cresora.weapon.WeaponSkillAccess
+import hifumi.cresora.weapon.WeaponSkillService
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 public object RequiemTowardDawnSkill : WeaponSkillHandler {
   override fun activate(
@@ -20,31 +35,27 @@ public object RequiemTowardDawnSkill : WeaponSkillHandler {
 
 
     ; run execute@ {
-      val radius = definition.skill.radiusMeters;
-                      val duration = definition.skill.durationSeconds * 20L;
-                     
-          player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.FIRE_RESISTANCE,
-          duration.toInt(), 0));
+      val radius = definition.skill.radiusMeters
+      val duration = definition.skill.durationSeconds * 20L
+      player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.FIRE_RESISTANCE,
+          duration.toInt(), 0))
+      val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute
+      val targets = world.getOtherEntities(player, player.boundingBox.expand(radius)) { it is
+          net.minecraft.entity.LivingEntity && it.isAlive }
+      for (target in targets) {
+                              target.setOnFireFor(5.0f);
+                          }
 
-                      val world = player.world as? net.minecraft.server.world.ServerWorld ?:
-          return@execute;
-                      val targets = world.getOtherEntities(player,
-          player.boundingBox.expand(radius)) { it is net.minecraft.entity.LivingEntity && it.isAlive
-          };
-                      for (target in targets) {
-                          target.setOnFireFor(5.0f);
-                      }
-
-                      player.sendMessage(
-                          net.minecraft.text.Text.translatable(
-                              "item.cresora.weapon.skill.flame_aura_activated",
-                              net.minecraft.text.Text.translatable(definition.translationKey()),
-                              targets.size,
-                              5,
-                              definition.skill.durationSeconds
-                          ).formatted(net.minecraft.util.Formatting.GOLD),
-                          true
-                      );
+                          player.sendMessage(
+                              net.minecraft.text.Text.translatable(
+                                  "item.cresora.weapon.skill.flame_aura_activated",
+                                  net.minecraft.text.Text.translatable(definition.translationKey()),
+                                  targets.size,
+                                  5,
+                                  definition.skill.durationSeconds
+                              ).formatted(net.minecraft.util.Formatting.GOLD),
+                              true
+                          )
     }
 
 

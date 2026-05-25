@@ -1,0 +1,64 @@
+movement "0-0" {
+    id: "0-0"
+    sort_order: 0
+    title_text_id: "story.cresora.chapter.0_0.title"
+    domain_reward_ids: ["rondo_forge", "masquerade_soiree"]
+    unlock_rank: 1
+
+    phase pre_battle {
+        dialogue("story.cresora.chapter.0_0.speaker", "story.cresora.chapter.0_0.pre_0")
+    }
+
+    phase battle {
+        wave 2 {
+            spawns [spawn("minecraft:zombie")]
+        }
+    }
+
+    phase post_battle {
+        dialogue("story.cresora.chapter.0_0.speaker", "story.cresora.chapter.0_0.post_0")
+    }
+
+    rewards {
+        credits: 3450
+        resonance_currencies {
+            substitute_chord: 100
+            chord_progression: 100
+        }
+    }
+
+    translations {
+        ja_jp {
+            "story.cresora.chapter.0_0.title": "微かな囁き"
+            "story.cresora.chapter.0_0a.title": "円舞曲の鍛房"
+            "story.cresora.chapter.0_0b.title": "仮面舞踏への回廊"
+            "story.cresora.chapter.0_0.speaker": "???"
+            "story.cresora.chapter.0_0.pre_0": "覚えておけ、■■■■。どんなことがあろうと、『希望』は絶対に見失わないように。"
+            "story.cresora.chapter.0_0.post_0": "たとえ『■■』を切り裂くような...苦痛に遭っても。"
+        }
+        en_us {
+            "story.cresora.chapter.0_0.title": "A Faint Whisper"
+            "story.cresora.chapter.0_0a.title": "Rondo Forge"
+            "story.cresora.chapter.0_0b.title": "Masquerade Passage"
+            "story.cresora.chapter.0_0.speaker": "???"
+            "story.cresora.chapter.0_0.pre_0": "Remember this, ■■■■. No matter what happens, never lose sight of 'hope.'"
+            "story.cresora.chapter.0_0.post_0": "Even if you are struck by pain sharp enough to tear through '■■' itself."
+        }
+        zh_cn {
+            "story.cresora.chapter.0_0.title": "微弱的低语"
+            "story.cresora.chapter.0_0a.title": "圆舞曲锻房"
+            "story.cresora.chapter.0_0b.title": "通往假面舞会的回廊"
+            "story.cresora.chapter.0_0.speaker": "？？？"
+            "story.cresora.chapter.0_0.pre_0": "记住，■■■■。无论发生什么，都绝对不要失去对“希望”的注视。"
+            "story.cresora.chapter.0_0.post_0": "即便遭遇仿佛要将“■■”撕裂般的……苦痛。"
+        }
+        lzh {
+            "story.cresora.chapter.0_0.title": "微微之私語"
+            "story.cresora.chapter.0_0a.title": "圓舞鍛房"
+            "story.cresora.chapter.0_0b.title": "假面舞廊"
+            "story.cresora.chapter.0_0.speaker": "？？？"
+            "story.cresora.chapter.0_0.pre_0": "汝其識之，■■■■。無論何事，毋失其所望者。"
+            "story.cresora.chapter.0_0.post_0": "縱遭若將「■■」裂之之苦，亦當如是。"
+        }
+    }
+}

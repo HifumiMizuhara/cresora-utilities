@@ -84,6 +84,14 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
+	if (name == "compileJava" || name == "compileClientJava") {
+		if (it.classpath != null) {
+			it.classpath += files(new File(project.buildDir, "classes/kotlin/main"))
+			it.classpath += files(new File(project.buildDir, "classes/kotlin/client"))
+		} else {
+			it.classpath = files(new File(project.buildDir, "classes/kotlin/main"), new File(project.buildDir, "classes/kotlin/client"))
+		}
+	}
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -104,7 +112,7 @@ dependencies {
 	compilerImplementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 
-task generateWeapons(type: JavaExec) {
+task compileAssets(type: JavaExec) {
     group = "cresora"
     mainClass = "hifumi.cresora.compiler.MainKt"
     classpath = sourceSets.compiler.runtimeClasspath
@@ -112,7 +120,15 @@ task generateWeapons(type: JavaExec) {
     errorOutput = System.err
 }
 
-compileKotlin.dependsOn generateWeapons
+compileKotlin.dependsOn compileAssets
+
+task generateWeapons {
+    dependsOn compileAssets
+    doLast {
+        logger.warn("Task 'generateWeapons' is deprecated. Please use 'compileAssets' instead.")
+    }
+}
+
 
 tasks.named("runServer") {
 	standardInput = System.in
