@@ -63,13 +63,15 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
   ) {
     val now = WeaponSkillService.currentWorldTime(player)
 
-    ; val state = ketsuiStates[player.uuid]
-    if (state != null) {
-      val removed = state.expireTicks.removeIf { now >= it }
-      if (removed && state.expireTicks.isEmpty()) {
-        ketsuiStates.remove(player.uuid)
-        player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.expired",
-            Text.translatable("item.cresora.weapon.skill.buff.ketsui.name")), true)
+    ; run {
+      val state = ketsuiStates[player.uuid]
+      if (state != null) {
+        val removed = state.expireTicks.removeIf { now >= it }
+        if (removed && state.expireTicks.isEmpty()) {
+          ketsuiStates.remove(player.uuid)
+          player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.expired",
+              Text.translatable("item.cresora.weapon.skill.buff.ketsui.name")), true)
+        }
       }
     }
     ; 

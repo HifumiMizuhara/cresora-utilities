@@ -163,6 +163,7 @@ class ArtifactCompiler(
                 val mapName = camelCase(buff.id) + "States"
                 val buffNameKey = buff.translationKey ?: "item.cresora.artifact.skill.buff.${buff.id}.name"
                 if (buff.decay == "independent") {
+                    onTickFun.beginControlFlow("run")
                     onTickFun.addStatement("val state = $mapName[player.uuid]")
                     onTickFun.beginControlFlow("if (state != null)")
                     onTickFun.addStatement("val removed = state.expireTicks.removeIf { now >= it }")
@@ -171,6 +172,7 @@ class ArtifactCompiler(
                     onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
                         ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onTickFun.endControlFlow()
                     onTickFun.endControlFlow()
                     onTickFun.endControlFlow()
                 } else {

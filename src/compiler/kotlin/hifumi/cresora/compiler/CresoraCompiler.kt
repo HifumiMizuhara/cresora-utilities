@@ -216,6 +216,7 @@ class CresoraCompiler(
                 val buffNameKey = buff.translationKey ?: "item.cresora.weapon.skill.buff.${buff.id}.name"
                 onPlayerTickFun.addCode("\n; ")
                 if (buff.decay == "independent") {
+                    onPlayerTickFun.beginControlFlow("run")
                     onPlayerTickFun.addStatement("val state = $mapName[player.uuid]")
                     onPlayerTickFun.beginControlFlow("if (state != null)")
                     onPlayerTickFun.addStatement("val removed = state.expireTicks.removeIf { now >= it }")
@@ -224,6 +225,7 @@ class CresoraCompiler(
                     onPlayerTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
                         ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.expired",
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onPlayerTickFun.endControlFlow()
                     onPlayerTickFun.endControlFlow()
                     onPlayerTickFun.endControlFlow()
                 } else {

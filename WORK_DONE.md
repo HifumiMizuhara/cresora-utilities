@@ -1,5 +1,13 @@
 # WORK_DONE
 
+## 编译器独立衰减机制变量命名冲突漏洞修复 (2026-05-26)
+- [x] 修复 CWC/CAC 代码生成命名冲突问题：
+  - 修改了 [CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt) 和 [ArtifactCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/ArtifactCompiler.kt) 中生成独立衰减检测逻辑的部分。
+  - 将 `onPlayerTick` 与 `onTick` 里的检测删除逻辑使用 `run { ... }` 包裹，隔离局部变量 `state` 与 `removed` 的作用域，避免在同一方法内存在多个独立衰减 Buff 时产生命名冲突（`Conflicting declarations` 编译报错）。
+- [x] 验证与编译：
+  - 运行 `compileAssets` 资产编译，新生成的 Kotlin 代码在 `run` 闭包下完美运作。
+  - 运行 `classes` 全量代码编译顺利通过，未引入任何编译报错或回归。
+
 ## 《遥远少女的决意》独立层数失效机制改修 (2026-05-25)
 - [x] CWC/CAC 编译器 DSL 扩展与改修：
   - 在 `AST.kt` 和 `Parser.kt` 中的 `BuffNode` 定义中新增了可选字段 `decay: String = "refresh"`，支持在 DSL 中声明 `decay: independent`（独立层数失效）。
