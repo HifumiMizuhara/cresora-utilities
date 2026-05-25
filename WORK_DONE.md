@@ -1,5 +1,31 @@
 # WORK_DONE
 
+## 《遥远少女的决意》独立层数失效机制改修 (2026-05-25)
+- [x] CWC/CAC 编译器 DSL 扩展与改修：
+  - 在 `AST.kt` 和 `Parser.kt` 中的 `BuffNode` 定义中新增了可选字段 `decay: String = "refresh"`，支持在 DSL 中声明 `decay: independent`（独立层数失效）。
+  - 在 [CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt) 与 [ArtifactCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/ArtifactCompiler.kt) 中更新了 `setupSkillCommon` / `setupArtifactCommon` 逻辑：当声明为 `independent` 时，自动生成以 `expireTicks: MutableList<Long>` 组成的 `State` 状态类，并通过 custom getter 动态计算 `stacks` 属性为 `expireTicks.size`。
+  - 改写了 CWC/CAC 的 `onPlayerTick` 和 `emitAddBuff` 逻辑，在独立失效模式下逐层添加和更新每层巴夫的时间戳，并在 `onPlayerTick` 循环中自动删除已过期的层数，在全部层数失效后清除该玩家巴夫状态并发送失效提示。
+- [x] 《遥远少女的决意》DSL 配置改修：
+  - 修改了 [harukanaru_shojo_no_ketsui.cresora](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/cresora/harukanaru_shojo_no_ketsui.cresora)，在 `buff "ketsui"` 中声明 `decay: independent`。
+  - 更新了其 `on_damage_dealt` 会心判定中的 `execute` 代码块逻辑：通过 `KetsuiState()` 默认构造器初始化状态类，并在层数未满时将各层独立的 `expireTick`（当前时间 + 40秒）追加到 `expireTicks` 中。
+- [x] 验证与编译：
+  - 运行 `compileAssets` 资产编译，确认生成的 Kotlin 代码符合预期，无任何解析或语法报错。
+  - 运行 `classes` 任务确保全量代码编译成功，无任何编译报错或回归。
+
+## 《遥远少女的决意》自定义贴图与碎片贴图实装 (2026-05-25)
+- [x] 武器自定义贴图生成与实装：
+  - 基于《遥远少女的决意》的浪漫与决绝设定，生成了带有粉紫色彩和爱心装饰的精美魔法剑图像，利用 Python 剔除黑色背景，旋转 45 度顺时针，并处理为 32x32 分辨率的高质量 Minecraft 像素风 PNG 贴图。
+  - 将生成的贴图保存至项目路径 `src/main/resources/assets/cresora-utilities/textures/item/harukanaru_shojo_no_ketsui.png`。
+- [x] 武器碎片自定义贴图生成与实装：
+  - 生成了与之契合的粉紫色爱心形状的闪耀晶体碎片贴图，处理为 16x16 分辨率的 PNG 贴图。
+  - 将生成的贴图保存至项目路径 `src/main/resources/assets/cresora-utilities/textures/item/harukanaru_shojo_no_ketsui_fragment.png`。
+- [x] 编译器アセット生成邏輯改修：
+  - 修改了 [CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt)，将其原本强行硬编码所有武器碎片模型为 `minecraft:item/prismarine_shard` 的逻辑，改为自动检测 `textures/item/<weapon_id>_fragment.png` 是否存在。如果存在，则自动映射为自定义材质 `cresora-utilities:item/<weapon_id>_fragment`，否则回退到バニラ的 `prismarine_shard`。
+  - 这一改修使得本武器及其他现有武器（如マスカレードの欠片等）的自定义碎片贴图能在游戏中正常加载生效。
+- [x] 验证与编译：
+  - 运行 `compileAssets` 资产编译，确认 `harukanaru_shojo_no_ketsui.json` 和 `harukanaru_shojo_no_ketsui_fragment.json` 自动更新并正确指向了自定义材质贴图。
+  - 运行 `classes` 任务确保全量代码编译成功，无任何编译报错或回归。
+
 ## 新武器「遥かなる少女の決意・★５」とCWC HPステータス拡張の追加 (2026-05-25)
 - [x] CWC (Cresora Weapon Compiler) にHPパーセンテージステータスを拡張：
   - [AST.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/AST.kt) および [Parser.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/Parser.kt) を拡張し、DSLの `stats` ブロックで `hp_bonus: 10.0` のようにHPパーセンテージを指定できるよう改修。

@@ -313,6 +313,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var maxStacks = 1
         var duration = 0.0
         val stats = mutableMapOf<String, Double>()
+        var decay = "refresh"
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             val token = advance()
@@ -331,6 +332,12 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     consume(TokenType.COLON, "Expect ':'")
                     duration = parseTime()
                 }
+                "decay" -> {
+                    consume(TokenType.COLON, "Expect ':'")
+                    val valueToken = advance()
+                    val decayVal = if (valueToken.type == TokenType.STRING) valueToken.lexeme else valueToken.lexeme
+                    decay = decayVal
+                }
                 "stats" -> {
                     consume(TokenType.LEFT_BRACE, "Expect '{' for stats")
                     while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
@@ -346,7 +353,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 else -> throw RuntimeException("Unknown buff field '$field'")
             }
         }
-        return BuffNode(id, translationKey, maxStacks, duration, stats)
+        return BuffNode(id, translationKey, maxStacks, duration, stats, decay)
     }
 
     private fun translations(): MutableMap<String, Map<String, String>> {

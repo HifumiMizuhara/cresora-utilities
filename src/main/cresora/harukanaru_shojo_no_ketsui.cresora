@@ -21,6 +21,7 @@ weapon "Resolve of the Distant Girl" {
         buff "ketsui" {
             max_stacks: 100
             duration: 40s
+            decay: independent
             stats {
                 crit_dmg_per_stack: 2.0
                 all_dmg_percent_per_stack: 2.0
@@ -66,9 +67,10 @@ weapon "Resolve of the Distant Girl" {
             execute {
                 if (hifumi.cresora.combat.CombatFeedbackService.hasPendingCrit(player)) {
                     val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
-                    val state = ketsuiStates.getOrPut(player.uuid) { KetsuiState(0L, 0) };
-                    state.expireTick = now + 40 * 20L;
-                    state.stacks = (state.stacks + 1).coerceAtMost(100);
+                    val state = ketsuiStates.getOrPut(player.uuid) { KetsuiState() };
+                    if (state.expireTicks.size < 100) {
+                        state.expireTicks.add(now + 40 * 20L);
+                    }
                     player.sendMessage(
                         net.minecraft.text.Text.translatable(
                             "item.cresora.weapon.skill.buff.ketsui.gained",

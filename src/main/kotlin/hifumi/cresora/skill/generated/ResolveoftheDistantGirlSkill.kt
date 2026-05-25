@@ -17,6 +17,7 @@ import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
+import kotlin.collections.MutableList
 import kotlin.collections.MutableMap
 import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
@@ -62,10 +63,14 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
   ) {
     val now = WeaponSkillService.currentWorldTime(player)
 
-    ; if (ketsuiStates.containsKey(player.uuid) && now >= ketsuiStates[player.uuid]!!.expireTick) {
-      ketsuiStates.remove(player.uuid)
-      player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.expired",
-          Text.translatable("item.cresora.weapon.skill.buff.ketsui.name")), true)
+    ; val state = ketsuiStates[player.uuid]
+    if (state != null) {
+      val removed = state.expireTicks.removeIf { now >= it }
+      if (removed && state.expireTicks.isEmpty()) {
+        ketsuiStates.remove(player.uuid)
+        player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.expired",
+            Text.translatable("item.cresora.weapon.skill.buff.ketsui.name")), true)
+      }
     }
     ; 
 
@@ -168,9 +173,10 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
               hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
                               val state =
               ResolveoftheDistantGirlSkill.ketsuiStates.getOrPut(player.uuid) {
-              ResolveoftheDistantGirlSkill.KetsuiState(0L, 0) };
-                              state.expireTick = now + 40 * 20L;
-                              state.stacks = (state.stacks + 1).coerceAtMost(100);
+              ResolveoftheDistantGirlSkill.KetsuiState() };
+                              if (state.expireTicks.size < 100) {
+                                  state.expireTicks.add(now + 40 * 20L);
+                              }
                               player.sendMessage(
                                   net.minecraft.text.Text.translatable(
                                       "item.cresora.weapon.skill.buff.ketsui.gained",
@@ -186,7 +192,9 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
   }
 
   public data class KetsuiState(
-    public var expireTick: Long,
-    public var stacks: Int,
-  )
+    public val expireTicks: MutableList<Long> = mutableListOf(),
+  ) {
+    public val stacks: Int
+      get() = expireTicks.size
+  }
 }

@@ -110,15 +110,34 @@ class ArtifactCompiler(
         // 1. Generate Buff Data Classes and Maps
         for (buff in bonus.buffs) {
             val stateClassName = buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } } + "State"
-            val stateClass = TypeSpec.classBuilder(stateClassName)
-                .addModifiers(KModifier.DATA)
-                .primaryConstructor(FunSpec.constructorBuilder()
-                    .addParameter("expireTick", Long::class)
-                    .addParameter("stacks", Int::class)
-                    .build())
-                .addProperty(PropertySpec.builder("expireTick", Long::class).initializer("expireTick").mutable(true).build())
-                .addProperty(PropertySpec.builder("stacks", Int::class).initializer("stacks").mutable(true).build())
-                .build()
+            val stateClass = if (buff.decay == "independent") {
+                TypeSpec.classBuilder(stateClassName)
+                    .addModifiers(KModifier.DATA)
+                    .primaryConstructor(FunSpec.constructorBuilder()
+                        .addParameter(
+                            ParameterSpec.builder("expireTicks", ClassName("kotlin.collections", "MutableList").parameterizedBy(ClassName("kotlin", "Long")))
+                                .defaultValue("mutableListOf()")
+                                .build()
+                        )
+                        .build())
+                    .addProperty(PropertySpec.builder("expireTicks", ClassName("kotlin.collections", "MutableList").parameterizedBy(ClassName("kotlin", "Long"))).initializer("expireTicks").build())
+                    .addProperty(PropertySpec.builder("stacks", Int::class)
+                        .getter(FunSpec.getterBuilder()
+                            .addStatement("return expireTicks.size")
+                            .build())
+                        .build())
+                    .build()
+            } else {
+                TypeSpec.classBuilder(stateClassName)
+                    .addModifiers(KModifier.DATA)
+                    .primaryConstructor(FunSpec.constructorBuilder()
+                        .addParameter("expireTick", Long::class)
+                        .addParameter("stacks", Int::class)
+                        .build())
+                    .addProperty(PropertySpec.builder("expireTick", Long::class).initializer("expireTick").mutable(true).build())
+                    .addProperty(PropertySpec.builder("stacks", Int::class).initializer("stacks").mutable(true).build())
+                    .build()
+            }
             typeSpec.addType(stateClass)
             
             val mapName = camelCase(buff.id) + "States"
@@ -143,12 +162,25 @@ class ArtifactCompiler(
             for (buff in bonus.buffs) {
                 val mapName = camelCase(buff.id) + "States"
                 val buffNameKey = buff.translationKey ?: "item.cresora.artifact.skill.buff.${buff.id}.name"
-                onTickFun.beginControlFlow("if ($mapName.containsKey(player.uuid) && now >= $mapName[player.uuid]!!.expireTick)")
-                onTickFun.addStatement("$mapName.remove(player.uuid)")
-                onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
-                    ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
-                    ClassName("net.minecraft.text", "Text"), buffNameKey)
-                onTickFun.endControlFlow()
+                if (buff.decay == "independent") {
+                    onTickFun.addStatement("val state = $mapName[player.uuid]")
+                    onTickFun.beginControlFlow("if (state != null)")
+                    onTickFun.addStatement("val removed = state.expireTicks.removeIf { now >= it }")
+                    onTickFun.beginControlFlow("if (removed && state.expireTicks.isEmpty())")
+                    onTickFun.addStatement("$mapName.remove(player.uuid)")
+                    onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
+                        ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onTickFun.endControlFlow()
+                    onTickFun.endControlFlow()
+                } else {
+                    onTickFun.beginControlFlow("if ($mapName.containsKey(player.uuid) && now >= $mapName[player.uuid]!!.expireTick)")
+                    onTickFun.addStatement("$mapName.remove(player.uuid)")
+                    onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
+                        ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onTickFun.endControlFlow()
+                }
             }
 
             val clearTransientStateFun = FunSpec.builder("clearTransientState")
@@ -281,16 +313,33 @@ class ArtifactCompiler(
                 val mapName = camelCase(buff.id) + "States"
                 val stateClassName = buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } } + "State"
                 val buffNameKey = buff.translationKey ?: "item.cresora.artifact.skill.buff.${buff.id}.name"
-                funSpec.addCode("""
-                    |run {
-                    |    val now = %T.currentWorldTime(player)
-                    |    val state = this.$mapName.getOrPut(player.uuid) { $stateClassName(0L, 0) }
-                    |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
-                    |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
-                    |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
-                    |}
-                    |
-                """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                if (buff.decay == "independent") {
+                    funSpec.addCode("""
+                        |run {
+                        |    val now = %T.currentWorldTime(player)
+                        |    val state = this.$mapName.getOrPut(player.uuid) { $stateClassName() }
+                        |    val amount = $amountStr.toInt()
+                        |    for (i in 0 until amount) {
+                        |        if (state.expireTicks.size < ${buff.maxStacks}) {
+                        |            state.expireTicks.add(now + ${buff.durationSeconds.toInt()} * 20L)
+                        |        }
+                        |    }
+                        |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                        |}
+                        |
+                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                } else {
+                    funSpec.addCode("""
+                        |run {
+                        |    val now = %T.currentWorldTime(player)
+                        |    val state = this.$mapName.getOrPut(player.uuid) { $stateClassName(0L, 0) }
+                        |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
+                        |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
+                        |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                        |}
+                        |
+                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                }
             } else {
                 funSpec.addStatement("// Buff $buffId not found")
             }

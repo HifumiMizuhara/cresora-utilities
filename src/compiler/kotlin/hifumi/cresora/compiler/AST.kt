@@ -71,7 +71,8 @@ data class BuffNode(
     val translationKey: String?,
     val maxStacks: Int,
     val durationSeconds: Double,
-    val stats: Map<String, Double>
+    val stats: Map<String, Double>,
+    val decay: String = "refresh"
 ) : ASTNode()
 
 data class SkillHandlerNode(
