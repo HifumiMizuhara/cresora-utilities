@@ -12,6 +12,7 @@ import hifumi.cresora.resonance.ResonanceService;
 import hifumi.cresora.story.StoryProgressAccess;
 import hifumi.cresora.story.StoryProgressService;
 import hifumi.cresora.weapon.WeaponSkillAccess;
+import java.util.Map;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.storage.ReadView;
@@ -53,6 +54,9 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
 
     @Unique
     private String cresora$skillCooldownWeaponId = null;
+
+    @Unique
+    private final Map<String, Double> cresora$cooldowns = new java.util.LinkedHashMap<>();
 
     @Unique
     private int cresora$limitedPityPulls = 0;
@@ -113,6 +117,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         view.putInt(MasqueradeProgressService.INSTANCE.playerAttemptCountKey(), this.cresora$masqueradeAttemptCount);
         view.putInt(MasqueradeProgressService.INSTANCE.playerTotalClearedWavesKey(), this.cresora$masqueradeTotalClearedWaves);
         view.putString(MasqueradeProgressService.INSTANCE.playerArchiveKey(), this.cresora$masqueradeArchiveRaw);
+        view.putString("cresora_weapon_cooldowns", hifumi.cresora.weapon.WeaponSkillService.INSTANCE.serializeCooldowns(this.cresora$cooldowns));
     }
 
     @Inject(method = "readCustomData", at = @At("TAIL"))
@@ -135,6 +140,9 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$masqueradeAttemptCount = view.getInt(MasqueradeProgressService.INSTANCE.playerAttemptCountKey(), 0);
         this.cresora$masqueradeTotalClearedWaves = view.getInt(MasqueradeProgressService.INSTANCE.playerTotalClearedWavesKey(), 0);
         this.cresora$masqueradeArchiveRaw = view.getString(MasqueradeProgressService.INSTANCE.playerArchiveKey(), "");
+        String serializedCooldowns = view.getString("cresora_weapon_cooldowns", "");
+        this.cresora$cooldowns.clear();
+        this.cresora$cooldowns.putAll(hifumi.cresora.weapon.WeaponSkillService.INSTANCE.deserializeCooldowns(serializedCooldowns));
     }
 
     @Override
@@ -215,6 +223,11 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetSkillCooldownWeaponId(String value) {
         this.cresora$skillCooldownWeaponId = value;
+    }
+
+    @Override
+    public Map<String, Double> cresoraGetCooldowns() {
+        return this.cresora$cooldowns;
     }
 
     @Override

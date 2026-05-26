@@ -1,5 +1,16 @@
 # WORK_DONE
 
+## サーバー脱退・再参加時の武器CTリセット不具合の修正 (2026-05-26)
+- [x] 武器スキルクールダウン（CT）の永続化実装：
+  - 武器スキルのクールダウン（CT）の管理方法を、静的メモリ上のマップ `cooldownsByPlayer` から、プレイヤーエンティティ自身に紐づく動的なマップ `cresora$cooldowns` へ移行。
+  - [WeaponSkillAccess.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponSkillAccess.kt) に `cresoraGetCooldowns()` メソッドを追加し、`DUMMY` オブジェクトを含め実装。
+  - [ServerPlayerEntityMixin.java](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/java/hifumi/cresora/mixin/ServerPlayerEntityMixin.java) に `@Unique` な `cresora$cooldowns` フィールドを追加。
+  - `writeCustomData` において `WeaponSkillService.serializeCooldowns()` を介して cooldowns を文字列（例: `dark_lux:240.0`）にシリアライズし、NBTへ `cresora_weapon_cooldowns` キーとして保存。
+  - `readCustomData` において NBT から `cresora_weapon_cooldowns` の文字列を読み込み、`WeaponSkillService.deserializeCooldowns()` で復元してマップに格納。
+  - [WeaponSkillService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponSkillService.kt) の `cooldownsByPlayer` フィールドを削除し、すべてのクールダウン読み書き処理をプレイヤーエンティティの `cresoraGetCooldowns()` に委譲。また、シリアライズ用の静的ヘルパー関数を追加し、ログアウト時の自動クリーンアップ処理（メモリリーク対策用の `pruneOfflineState`）から `cooldownsByPlayer` の削除処理を廃止（プレイヤーオブジェクトと共に自然にガベージコレクションされるため）。
+- [x] 動作検証・コンパイル成功の確認：
+  - `classes` コンパイルを実行し、Kotlin/Java の全コードがエラーや警告なくビルド成功することを確認。
+
 ## 编译器独立衰减机制变量命名冲突漏洞修复 (2026-05-26)
 - [x] 修复 CWC/CAC 代码生成命名冲突问题：
   - 修改了 [CresoraCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/CresoraCompiler.kt) 和 [ArtifactCompiler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/compiler/kotlin/hifumi/cresora/compiler/ArtifactCompiler.kt) 中生成独立衰减检测逻辑的部分。

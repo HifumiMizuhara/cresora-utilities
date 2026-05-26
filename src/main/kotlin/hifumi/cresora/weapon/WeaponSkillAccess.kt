@@ -10,6 +10,7 @@ interface WeaponSkillAccess {
     fun cresoraSetSkillCooldownExpireTick(value: Long)
     fun cresoraGetSkillCooldownWeaponId(): String?
     fun cresoraSetSkillCooldownWeaponId(value: String?)
+    fun cresoraGetCooldowns(): MutableMap<String, Double>
 
     object DUMMY : WeaponSkillAccess {
         override fun cresoraGetShieldHp(): Float = 0.0f
@@ -22,5 +23,6 @@ interface WeaponSkillAccess {
         override fun cresoraSetSkillCooldownExpireTick(value: Long) {}
         override fun cresoraGetSkillCooldownWeaponId(): String? = null
         override fun cresoraSetSkillCooldownWeaponId(value: String?) {}
+        override fun cresoraGetCooldowns(): MutableMap<String, Double> = mutableMapOf()
     }
 }

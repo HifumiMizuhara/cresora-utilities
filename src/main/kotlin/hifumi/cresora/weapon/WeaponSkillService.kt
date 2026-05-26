@@ -51,7 +51,30 @@ object WeaponSkillService {
     const val ENTANGLEMENT_RESISTANCE_REDUCTION = 0.50
 
     private val cooldownBars: MutableMap<UUID, MutableMap<String, ServerBossBar>> = mutableMapOf()
-    private val cooldownsByPlayer: MutableMap<UUID, MutableMap<String, Double>> = mutableMapOf()
+
+    @JvmStatic
+    fun serializeCooldowns(cooldowns: Map<String, Double>): String {
+        return cooldowns.entries.joinToString(",") { "${it.key}:${it.value}" }
+    }
+
+    @JvmStatic
+    fun deserializeCooldowns(serialized: String): Map<String, Double> {
+        val map = LinkedHashMap<String, Double>()
+        if (serialized.isEmpty()) return map
+        val parts = serialized.split(",")
+        for (part in parts) {
+            val subparts = part.split(":")
+            if (subparts.size == 2) {
+                val weaponId = subparts[0]
+                val ticks = subparts[1].toDoubleOrNull()
+                if (ticks != null && ticks > 0.0) {
+                    map[weaponId] = ticks
+                }
+            }
+        }
+        return map
+    }
+
     private val temporaryGuardHpByPlayer: MutableMap<UUID, Float> = mutableMapOf()
     private val temporaryGuardExpireTickByPlayer: MutableMap<UUID, Long> = mutableMapOf()
     private val targetMarks: MutableMap<UUID, MutableMap<String, Long>> = mutableMapOf()
@@ -207,7 +230,8 @@ object WeaponSkillService {
     }
 
     private fun tickCooldowns(player: ServerPlayerEntity) {
-        val cooldowns = cooldownsByPlayer[player.uuid] ?: return
+        val cooldowns = (player as? WeaponSkillAccess)?.cresoraGetCooldowns() ?: return
+        if (cooldowns.isEmpty()) return
         val multiplier = CresoraDebuffService.getCooldownMultiplier(player)
         val iterator = cooldowns.entries.iterator()
         while (iterator.hasNext()) {
@@ -466,7 +490,7 @@ object WeaponSkillService {
     }
 
     fun startCooldown(player: ServerPlayerEntity, weaponId: String, durationTicks: Long) {
-        cooldownsByPlayer.getOrPut(player.uuid) { linkedMapOf() }[weaponId] = durationTicks.toDouble()
+        (player as? WeaponSkillAccess)?.cresoraGetCooldowns()?.put(weaponId, durationTicks.toDouble())
     }
 
     fun clearShield(player: ServerPlayerEntity) {
@@ -485,11 +509,11 @@ object WeaponSkillService {
     }
 
     fun getRemainingCooldownTicks(player: ServerPlayerEntity, weaponId: String): Double {
-        return cooldownsByPlayer[player.uuid]?.get(weaponId) ?: 0.0
+        return (player as? WeaponSkillAccess)?.cresoraGetCooldowns()?.get(weaponId) ?: 0.0
     }
 
     fun isCoolingDown(player: ServerPlayerEntity, weaponId: String): Boolean {
-        val remaining = cooldownsByPlayer[player.uuid]?.get(weaponId) ?: return false
+        val remaining = (player as? WeaponSkillAccess)?.cresoraGetCooldowns()?.get(weaponId) ?: return false
         return remaining > 0.0
     }
 
@@ -563,7 +587,7 @@ object WeaponSkillService {
     }
 
     private fun updateCooldownFeedback(player: ServerPlayerEntity) {
-        val cooldowns = cooldownsByPlayer[player.uuid]
+        val cooldowns = (player as? WeaponSkillAccess)?.cresoraGetCooldowns()
         if (cooldowns.isNullOrEmpty()) {
             removeCooldownBars(player)
             return
@@ -599,7 +623,6 @@ object WeaponSkillService {
             }
         }
         if (cooldowns.isEmpty()) {
-            cooldownsByPlayer.remove(player.uuid)
             removeCooldownBars(player)
         }
     }
@@ -627,7 +650,6 @@ object WeaponSkillService {
     }
 
     fun clearTransientState(player: ServerPlayerEntity) {
-        cooldownsByPlayer.remove(player.uuid)
         clearTemporaryGuard(player)
         clearShield(player)
         removeCooldownBars(player)
@@ -649,7 +671,6 @@ object WeaponSkillService {
                 bossBar.players.toList().forEach(bossBar::removePlayer)
             }
         }
-        cooldownsByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardHpByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         temporaryGuardExpireTickByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         lastHeldWeaponIdByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
