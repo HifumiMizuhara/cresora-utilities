@@ -4,6 +4,7 @@ import hifumi.cresora.weapon.WeaponData
 import hifumi.cresora.equipment.EquipmentData
 import com.mojang.serialization.Codec
 import net.minecraft.component.ComponentType
+import net.minecraft.item.ItemStack
 import net.minecraft.network.codec.PacketCodecs
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
@@ -62,6 +63,15 @@ object ModDataComponents {
         ComponentType.builder<String>()
             .codec(Codec.STRING)
             .packetCodec(PacketCodecs.STRING)
+            .build()
+    )
+
+    val WEAPON_ARTIFACTS: ComponentType<List<ItemStack>> = Registry.register(
+        Registries.DATA_COMPONENT_TYPE,
+        Identifier.of(CreSoraUtilities.MOD_ID, "weapon_artifacts"),
+        ComponentType.builder<List<ItemStack>>()
+            .codec(ItemStack.OPTIONAL_CODEC.listOf())
+            .packetCodec(ItemStack.OPTIONAL_PACKET_CODEC.collect(PacketCodecs.toList()))
             .build()
     )
 

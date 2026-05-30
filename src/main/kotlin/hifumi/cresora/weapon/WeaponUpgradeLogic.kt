@@ -60,7 +60,7 @@ object WeaponUpgradeLogic {
 
         if (data.baseLevel >= currentCap) {
             if (data.breakthrough >= 2) {
-                return BasePreview(data.baseLevel, data.baseLevel, currentAttack, currentAttack, 0, 0, 0, 0, false, "screen.cresora.weapon_upgrade.max_breakthrough")
+                return BasePreview(data.baseLevel, data.baseLevel, currentAttack, currentAttack, 0, 0, 0, 0, false, "screen.cresora.weapon_upgrade.max_base")
             }
             val targetBt = data.breakthrough + 1
             val resultAttack = WeaponCombatSupport.attackDamage(definition, data.copy(baseLevel = 1, breakthrough = targetBt).normalized(definition))
@@ -178,6 +178,9 @@ object WeaponUpgradeLogic {
         val definition = WeaponStackSupport.getDefinition(stack)
             ?: return DismantlePreview(0, false, "screen.cresora.weapon_upgrade.need_weapon")
         val data = WeaponStackSupport.ensureWeaponData(stack)
+        if (WeaponStackSupport.hasAnyEquippedArtifact(stack)) {
+            return DismantlePreview(0, false, "screen.cresora.weapon_upgrade.cannot_dismantle_has_artifacts")
+        }
         if (stack.isEmpty || WeaponStackSupport.fragmentItem(definition.id) == null) {
             return DismantlePreview(0, false, "screen.cresora.weapon_upgrade.cannot_dismantle")
         }

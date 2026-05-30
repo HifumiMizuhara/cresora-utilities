@@ -179,4 +179,23 @@ object WeaponStackSupport {
         legacyFragmentItemsByRarity[definition.craft.craftedRarity]?.let(accepted::addAll)
         return accepted
     }
+
+    fun getEquippedArtifacts(stack: ItemStack): List<ItemStack> {
+        val component = stack.get(ModDataComponents.WEAPON_ARTIFACTS)
+        if (component != null && component.size == 4) return component
+        return List(4) { ItemStack.EMPTY }
+    }
+
+    fun setEquippedArtifacts(stack: ItemStack, artifacts: List<ItemStack>) {
+        val normalized = if (artifacts.size == 4) artifacts else {
+            val list = artifacts.toMutableList()
+            while (list.size < 4) list.add(ItemStack.EMPTY)
+            list.take(4)
+        }
+        stack.set(ModDataComponents.WEAPON_ARTIFACTS, normalized)
+    }
+
+    fun hasAnyEquippedArtifact(stack: ItemStack): Boolean {
+        return getEquippedArtifacts(stack).any { !it.isEmpty }
+    }
 }

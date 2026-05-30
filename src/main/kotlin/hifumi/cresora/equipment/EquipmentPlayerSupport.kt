@@ -3,6 +3,7 @@ import hifumi.cresora.StatType
 import hifumi.cresora.masquerade.MasqueradeService
 import dev.emi.trinkets.api.TrinketsApi
 import hifumi.cresora.equipment.ArtifactSkillRegistry
+import hifumi.cresora.weapon.WeaponStackSupport
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import java.util.EnumMap
@@ -28,7 +29,15 @@ object EquipmentPlayerSupport {
     }
 
     fun getActiveSetBonuses(player: PlayerEntity): List<ActiveSetBonus> {
-        return getActiveSetBonuses(getEquippedEquipmentData(player))
+        val trinketBonuses = getActiveSetBonuses(getEquippedEquipmentData(player))
+        val heldWeapon = player.mainHandStack
+        if (WeaponStackSupport.isWeapon(heldWeapon)) {
+            val weaponArtifacts = WeaponStackSupport.getEquippedArtifacts(heldWeapon)
+            val weaponEquippedData = weaponArtifacts.mapNotNull { EquipmentStackSupport.getEquipmentData(it) }
+            val weaponBonuses = getActiveSetBonuses(weaponEquippedData)
+            return trinketBonuses + weaponBonuses
+        }
+        return trinketBonuses
     }
 
     fun getActiveSetSummaries(player: PlayerEntity): List<ActiveSetSummary> {
@@ -46,15 +55,31 @@ object EquipmentPlayerSupport {
     @JvmStatic
     fun getAggregatedStats(player: PlayerEntity): Map<StatType, Double> {
         val totals = EnumMap<StatType, Double>(StatType::class.java)
-        val equippedData = getEquippedEquipmentData(player)
-        for (data in equippedData) {
+        
+        // 1. Trinkets
+        val trinketData = getEquippedEquipmentData(player)
+        for (data in trinketData) {
             val aggregated = EquipmentStatCalculator.aggregate(data)
             for ((type, value) in aggregated) {
                 totals[type] = (totals[type] ?: 0.0) + value
             }
         }
 
-        for (activeSetBonus in getActiveSetBonuses(equippedData)) {
+        // 2. Weapon Artifacts
+        val heldWeapon = player.mainHandStack
+        if (WeaponStackSupport.isWeapon(heldWeapon)) {
+            val weaponArtifacts = WeaponStackSupport.getEquippedArtifacts(heldWeapon)
+            val weaponData = weaponArtifacts.mapNotNull { EquipmentStackSupport.getEquipmentData(it) }
+            for (data in weaponData) {
+                val aggregated = EquipmentStatCalculator.aggregate(data)
+                for ((type, value) in aggregated) {
+                    totals[type] = (totals[type] ?: 0.0) + value
+                }
+            }
+        }
+
+        // 3. Set Bonuses
+        for (activeSetBonus in getActiveSetBonuses(player)) {
             for (bonus in activeSetBonus.bonus.stats) {
                 totals[bonus.type] = (totals[bonus.type] ?: 0.0) + bonus.value
             }
@@ -80,6 +105,7 @@ object EquipmentPlayerSupport {
                 }
             }
         }
+
         for ((type, value) in MasqueradeService.getAggregatedSupportStats(player)) {
             totals[type] = (totals[type] ?: 0.0) + value
         }

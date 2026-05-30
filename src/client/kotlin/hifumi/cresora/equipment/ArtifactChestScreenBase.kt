@@ -35,8 +35,8 @@ abstract class ArtifactChestScreenBase<T : ScreenHandler>(
     }
 
     override fun drawForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawText(textRenderer, title, titleX, titleY, 0x404040, false)
-        context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX, playerInventoryTitleY, 0x404040, false)
+        context.drawText(textRenderer, title, titleX, titleY, 0xFF404040.toInt(), false)
+        context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX, playerInventoryTitleY, 0xFF404040.toInt(), false)
         drawExtraForeground(context, mouseX, mouseY)
     }
 

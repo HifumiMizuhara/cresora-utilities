@@ -35,6 +35,10 @@ class WeaponUpgradeScreenHandler(
         private const val PROPERTY_DISMANTLE_CONFIRM = 4
         private const val PROPERTY_ROLE_MATERIALS_OWNED = 5
         private const val PROPERTY_ROLE_MATERIALS_REQUIRED = 6
+
+        private const val ARTIFACT_SLOT_START = 1
+        private const val ARTIFACT_SLOT_COUNT = 4
+        private const val PLAYER_SLOT_START = 5
     }
 
     private val weaponInventory: Inventory = object : SimpleInventory(CUSTOM_SLOT_COUNT) {
@@ -43,15 +47,35 @@ class WeaponUpgradeScreenHandler(
             onContentChanged(this)
         }
     }
+    private val artifactInventory: Inventory = object : SimpleInventory(4) {
+        override fun markDirty() {
+            super.markDirty()
+            onContentChanged(this)
+        }
+    }
     private val properties: PropertyDelegate = ArrayPropertyDelegate(7)
     private var dismantleConfirmClicks: Int = 0
+    private var isSyncing = false
 
     init {
-        addSlot(object : Slot(weaponInventory, WEAPON_SLOT, 44, 32) {
+        addSlot(object : Slot(weaponInventory, WEAPON_SLOT, 79, 26) {
             override fun canInsert(stack: ItemStack): Boolean = WeaponStackSupport.isWeapon(stack)
             override fun getMaxItemCount(): Int = 1
             override fun getBackgroundSprite(): Identifier? = null
         })
+        // 4 Weapon Artifact slots
+        for (i in 0 until ARTIFACT_SLOT_COUNT) {
+            addSlot(object : Slot(artifactInventory, i, -2000, -2000) {
+                override fun canInsert(stack: ItemStack): Boolean {
+                    val weaponStack = weaponInventory.getStack(WEAPON_SLOT)
+                    if (!WeaponStackSupport.isWeapon(weaponStack)) {
+                        return false
+                    }
+                    return hifumi.cresora.equipment.EquipmentStackSupport.getEquipmentData(stack) != null
+                }
+                override fun getMaxItemCount(): Int = 1
+            })
+        }
         addProperties(properties)
         addPlayerSlots(playerInventory)
         if (!initialWeapon.isEmpty) {
@@ -62,6 +86,7 @@ class WeaponUpgradeScreenHandler(
                 tryMoveSelectedWeapon()
             }
         }
+        syncFromWeapon()
         refreshProperties()
     }
 
@@ -73,8 +98,46 @@ class WeaponUpgradeScreenHandler(
         super.sendContentUpdates()
     }
 
+    fun syncFromWeapon() {
+        if (isSyncing) return
+        isSyncing = true
+        try {
+            val weaponStack = slots[WEAPON_SLOT].stack
+            if (WeaponStackSupport.isWeapon(weaponStack)) {
+                val artifacts = WeaponStackSupport.getEquippedArtifacts(weaponStack)
+                for (i in 0 until 4) {
+                    artifactInventory.setStack(i, artifacts.getOrElse(i) { ItemStack.EMPTY }.copy())
+                }
+            } else {
+                artifactInventory.clear()
+            }
+        } finally {
+            isSyncing = false
+        }
+    }
+
+    fun syncToWeapon() {
+        if (isSyncing) return
+        isSyncing = true
+        try {
+            val weaponStack = slots[WEAPON_SLOT].stack
+            if (WeaponStackSupport.isWeapon(weaponStack)) {
+                val list = List(4) { i -> artifactInventory.getStack(i).copy() }
+                WeaponStackSupport.setEquippedArtifacts(weaponStack, list)
+                slots[WEAPON_SLOT].markDirty()
+            }
+        } finally {
+            isSyncing = false
+        }
+    }
+
     override fun onContentChanged(inventory: Inventory) {
         super.onContentChanged(inventory)
+        if (inventory == weaponInventory) {
+            syncFromWeapon()
+        } else if (inventory == artifactInventory) {
+            syncToWeapon()
+        }
         resetDismantleConfirmation()
     }
 
@@ -85,16 +148,40 @@ class WeaponUpgradeScreenHandler(
         }
         val original = slot.stack
         val moved = original.copy()
-        if (slotIndex < CUSTOM_SLOT_COUNT) {
-            if (!insertItem(original, CUSTOM_SLOT_COUNT, slots.size, true)) {
+        
+        val playerSlotEnd = slots.size
+        
+        if (slotIndex == WEAPON_SLOT) {
+            if (!insertItem(original, PLAYER_SLOT_START, playerSlotEnd, true)) {
+                return ItemStack.EMPTY
+            }
+        } else if (slotIndex in ARTIFACT_SLOT_START until ARTIFACT_SLOT_START + ARTIFACT_SLOT_COUNT) {
+            if (!insertItem(original, PLAYER_SLOT_START, playerSlotEnd, true)) {
                 return ItemStack.EMPTY
             }
         } else {
-            if (!WeaponStackSupport.isWeapon(original) || slots[WEAPON_SLOT].hasStack()) {
-                return ItemStack.EMPTY
-            }
-            if (!insertItem(original, WEAPON_SLOT, WEAPON_SLOT + 1, false)) {
-                return ItemStack.EMPTY
+            val isWeaponItem = WeaponStackSupport.isWeapon(original)
+            val isArtifactItem = hifumi.cresora.equipment.EquipmentStackSupport.getEquipmentData(original) != null
+            
+            if (isWeaponItem && !slots[WEAPON_SLOT].hasStack()) {
+                if (!insertItem(original, WEAPON_SLOT, WEAPON_SLOT + 1, false)) {
+                    return ItemStack.EMPTY
+                }
+            } else if (isArtifactItem && slots[WEAPON_SLOT].hasStack()) {
+                if (!insertItem(original, ARTIFACT_SLOT_START, ARTIFACT_SLOT_START + ARTIFACT_SLOT_COUNT, false)) {
+                    return ItemStack.EMPTY
+                }
+            } else {
+                val hotbarStart = playerSlotEnd - 9
+                if (slotIndex < hotbarStart) {
+                    if (!insertItem(original, hotbarStart, playerSlotEnd, false)) {
+                        return ItemStack.EMPTY
+                    }
+                } else {
+                    if (!insertItem(original, PLAYER_SLOT_START, hotbarStart, false)) {
+                        return ItemStack.EMPTY
+                    }
+                }
             }
         }
         if (original.isEmpty) {
@@ -143,10 +230,20 @@ class WeaponUpgradeScreenHandler(
         if (player.world.isClient) {
             return
         }
+        val weaponStack = weaponInventory.getStack(WEAPON_SLOT)
+        val hasWeapon = WeaponStackSupport.isWeapon(weaponStack)
         for (slotIndex in 0 until CUSTOM_SLOT_COUNT) {
             val stack = weaponInventory.removeStack(slotIndex)
             if (!stack.isEmpty) {
                 playerInventory.offerOrDrop(stack)
+            }
+        }
+        if (!hasWeapon) {
+            for (i in 0 until ARTIFACT_SLOT_COUNT) {
+                val stack = artifactInventory.removeStack(i)
+                if (!stack.isEmpty) {
+                    playerInventory.offerOrDrop(stack)
+                }
             }
         }
     }
