@@ -1,4 +1,165 @@
 # WORK_DONE
+ 
+## 地脈噴湧システム（Ley Line Overflow）の不具合・セキュリティ修正 (2026-05-30)
+- [x] 次元跨ぎの消去バグの修正: `PendingLeyLine` に `worldKey: RegistryKey<World>` を保持させ、タイムアウト時にキーを設置した対象次元のブロックのみを安全に `Blocks.AIR` に置換するように修正。
+- [x] 重複開始の防止: `LeyLineService.startEvent` において、同一座標ですでにアクティブなセッションが存在する場合は開始処理をエラー終了させ、妖魔モブの重複生成・残留を防ぐチェックを追加。
+- [x] ブロック置換の安全性担保: `LeyLineService.startEvent` で、開始しようとしている座標のブロックがまだ `LEY_LINE_OVERFLOW_BLOCK` であることを検証し、他プレイヤーのブロックを上書き消去してしまうグリフ脆弱性を排除。
+- [x] UI操作距離の制限: `LeyLineSelectionScreenHandler.canUse` をオーバーライドし、プレイヤーと地脈噴湧ブロックの距離が8メートル以内（平方距離 <= 64.0）であることをサーバーサイドで検証する距離制限を追加。
+- [x] 多言語翻訳の追加: 新たに追加されたエラー状態（`screen.cresora.leyline.already_started`, `screen.cresora.leyline.invalid_block`）の翻訳キーを4ヶ国語（en_us, ja_jp, zh_cn, lzh）すべてに適用。また、日本語と文言（LZH）で欠落していた地脈関連すべての翻訳データを拡充・新規追加。
+- [x] ビルド検証: `./gradlew classes` による Kotlin/Java コードのコンパイルが正常に完了することを確認。
+
+## Antigravity カスタムスキル「code-review-skill」の導入 (2026-05-30)
+- [x] Antigravity ワークスペースレベルのスキル配置：
+  - `code-review-skill` 倉庫を `.agents/skills/code-review-skill` に配置し、ネストした `.git` フォルダを削除。
+  - プロジェクトに携わる AI エージェントが自動的にロードして使用できるように、正しい Workspace 固有の Skill 配置スキーム（`.agents/skills/`）を確立。
+  - 各種言語別コードレビューガイド（Java, Kotlin, Rust等）への参照リンクが相対パスでポータブルに機能することを確認。
+- [x] 不要なフォルダと設定のクリーンアップ：
+  - 一時的な `.claude` フォルダおよびワークフロー定義をすべて物理削除し、`.gitignore` も元通りクリーンアップ。
+
+## 地脈噴湧（地脉喷涌 - Ley Line Overflow）システムの実装 (2026-05-30)
+- [x] 地脈噴湧の元素定義とアイテム・ブロック追加 (`LeyLineElement.kt` / `LeyLineKeyItem.kt` / `LeyLineOverflowBlock.kt`)：
+
+  - 日・月・火・水・木・金・土の7つの元素を定義し、それぞれに対応する地脈の鍵アイテムと地脈噴湧ブロックを新規実装。
+  - 右クリック使用時にプレイヤー前方の床面等へブロックを設置。
+- [x] イベント開始選択UI（GUI）と難易度制御 (`LeyLineSelectionScreenHandler.kt` / `LeyLineSelectionScreen.kt`)：
+  - 設置された地脈噴湧ブロック右クリックで難易度選択（T1〜T4、冒険ランク制限あり）画面を表示。
+  - 各元素や難易度に応じた報酬/コストプレビューと、アンロック可否ルールを実装。
+- [x] 戦闘セッション進行とタイマー/離脱失敗ロジック (`LeyLineService.kt` / `LeyLineHooks.kt`)：
+  - 鍵の設置から50秒以内にイベントが開始されない、またはイベント開始前に破壊された場合は、配置者インベントリ（溢れた場合はワールド）に鍵を安全に返却。
+  - 開始後は10x10の戦闘領域を構築し、元素に対応したパーティクル境界を毎秒描画。
+  - 領域内に生存プレイヤーが10秒間誰も居なくなった場合はイベント失敗となり、モンスターを消去（鍵は返却されない）。
+- [x] モンスターのウェーブ生成と精英怪（エリート）の統合：
+  - 各ウェーブごとに通常モンスター4体＋精英怪1体をスポーン。全モブに発光（`GLOWING`）効果を適用。
+  - 精英怪には `FieldMobPackService.markExplicit(mob, true)` を適用してモデルサイズを 18% 拡大し、`AdventureRankService.applyMobScaling` でエリートステータス補正を適用。
+- [x] ドロップ確率設定と討伐報酬・チェストUI連携 (`AdventureRankHooks.kt`)：
+  - 敵対モブ死亡時に 5% の確率でランダムな元素の地脈の鍵を直接インベントリ（またはドロップ）へ付与するフックを追加。
+  - 討伐成功時に各元素/ティアに応じた報酬（木：3★武器破片、火/水：4★武器破片、金：5★武器破片、日/月：聖遺物[雛形/幼なじみ]、土：大量のクレジット＋冒険ランクXP）を配布し、チェストUIプレビュー（`ArtifactUiFlow.openDomainReward`）を表示。
+- [x] ビルド検証およびアセットコンパイル：
+  - `./gradlew compileAssets` および `./gradlew classes` によるコンパイルが警告やエラーなく成功することを確認。
+
+## 武器強化画面の聖遺物ロスト防止および Git 管理の修正 (2026-05-30)
+- [x] 武器未装着時の聖遺物ロスト防止と挿入制限の強化 (`WeaponUpgradeScreenHandler.kt`)：
+  - 武器スロットが空の際、アーティファクト（聖遺物）スロットへ手動でアイテムを挿入できないように `canInsert` に判定を追加（`WeaponStackSupport.isWeapon(weaponInventory.getStack(WEAPON_SLOT))` による検証）。
+  - 武器強化画面を閉じる際（`onClosed`）、武器がスロットに配置されていない場合のみ、`artifactInventory` 内に残存している聖遺物実体を `playerInventory.offerOrDrop` でプレイヤーに安全に返却するロジックを追加。武器が配置されている場合は複製防止のため重複返却をスキップ（聖遺物は武器データに保存されます）。
+- [x] 変数シャドーイングの解消と定数化 (`WeaponUpgradeScreenHandler.kt`)：
+  - `quickMove`（ショートカット移動）内のローカル定数 `WEAPON_SLOT`, `ARTIFACT_SLOT_START`, `ARTIFACT_SLOT_COUNT`, `PLAYER_SLOT_START` が引き起こしていた変数シャドーイングおよび命名規則警告を解消。
+  - これらの定数を `companion object` に集約・定義して参照するようにリファクタリング。
+- [x] Git追跡対象からの `.class` ファイル除外とクリーンアップ (`.gitignore`)：
+  - 間違えて追跡対象になっていた Minecraft 本体の逆コンパイルクラスディレクトリである `net/` をワークツリーから物理的に削除し、Git キャッシュから完全に除外。
+  - 今後クラスファイルが混入しないように `.gitignore` に `/net/` ルールを追加。
+- [x] 設計仕様ドキュメントの更新とTODOの追加 (`cresora_document.md` / `TODO.md`)：
+  - `cresora_document.md` において、Trinkets と武器に装着した聖遺物のセット効果（`pieceCount`）が独立して集計・二重発動すること、およびステータス加算がすべて累積的である挙動が明示的な設計仕様であることを追記。
+  - `TODO.md` に、幼なじみセットの4セット効果がハードコードされている暫定実装状況を記録し、将来的に DSL 側で任意セット効果を記述できるようにコンパイラ（CAC）を拡張するロードマップを追加。
+- [x] ビルド検証：
+  - `./gradlew classes` による Java/Kotlin コード全体のコンパイルが警告やエラーなく成功することを確認。
+
+## 武器圣遗物装备系统 (Weapon Artifact Equipment System) (2026-05-29)
+- [x] 武器圣遗物数据序列化与持久化：
+  - 在 [ModDataComponents.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/ModDataComponents.kt) 中注册了 `cresora-utilities:weapon_artifacts` 数据组件，使用 `ItemStack.OPTIONAL_CODEC` 的列表序列化最多 4 个圣遗物的物品栏堆叠。
+  - 在 [WeaponStackSupport.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponStackSupport.kt) 中实现了 `getEquippedArtifacts`、`setEquippedArtifacts` 和 `hasAnyEquippedArtifact` 等管理函数，支持对武器 ItemStack 上装配 of 圣遗物进行便捷的读取、写入及检查。
+- [x] 属性与套装效果的动态叠加计算：
+  - 修改了 [EquipmentPlayerSupport.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/equipment/EquipmentPlayerSupport.kt) 中的 `getActiveSetBonuses(player)` 和 `getAggregatedStats(player)`：
+    - 当玩家主手持有本武器时，自动提取武器上的圣遗物并聚合其全部属性（如生命值、防御力、攻击力、暴击等），加成给玩家的综合属性。
+    - 将身上的饰品（Trinkets）圣遗物和武器装配的圣遗物分别进行套装件数计算，触发各自的 2/4 件套效果（作为两个独立来源），使其完全可以效果叠加（例如触发两次 2 件套效果），仅在武器被主手持有时生效。
+- [x] 武器升级界面（WeaponUpgradeScreen）及交互逻辑升级：
+  - 在 [WeaponUpgradeScreenHandler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreenHandler.kt) 中添加了独立的 `artifactInventory`（4槽位），实现了将其与主手武器 Slot 中武器堆叠的数据同步（SyncFromWeapon / SyncToWeapon）。
+  - 更新了容器的 `quickMove`（快捷移动）逻辑，支持圣遗物在玩家背包和武器圣遗物槽位之间的无缝转移。
+  - 修改了 [WeaponUpgradeLogic.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponUpgradeLogic.kt)，当武器装配有任何圣遗物时，分解（Dismantle）操作将被完全锁定，并在 UI 上显示“已装配 (锁定)”，保护玩家资产。
+- [x] 客户端渲染与多语言本地化：
+  - 在 [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) 中新增了 `Tab.ARTIFACTS` 标签页和对应的标签按钮。当切换至该标签页时，右侧信息面板以 2x2 网格渲染 4 个圣遗物插槽，其他标签页下将槽位移出屏幕范围防止交互。
+  - 在 [CresoraWeaponItem.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/CresoraWeaponItem.kt) 的 `appendTooltip` 中添加了装配圣遗物的展示信息，在武器悬浮提示上直观显示已装配圣遗物的名称与等级。
+  - 为 4 种语言翻译文件（en_us, ja_jp, lzh, zh_cn）补充了对应的界面标签、说明文案及锁定提示的翻译词条。
+- [x] ビルドおよびアセットコンパイル検証：
+  - 成功执行 `./gradlew classes` 编译验证，确认所有自动生成代码、Java/Kotlin 逻辑及 Mixin 整合均编译无误。
+- [x] 跨文件圣遗物引用校验延迟修复：
+  - 修复了 `EquipmentContentRegistry` 在加载 `equipment_content.json` 时因无法识别由 DSL 动态编译出的 `osananajimi` 套装（在 `cac_artifact_content.json` 中定义）而导致客户端启动崩溃的问题。
+  - 将 `applyBundle` 中的槽位、套装及掉落引用的交叉完整性校验逻辑移动至独立方法 `validateConsolidatedContent` 中，并在 `init()` 的所有资源加载合并完成后统一执行校验。
+
+## Claude Codeのアップデート (2026-05-29)
+- [x] Claude Codeのバージョンアップ実行:
+  - `claude install latest` コマンドを実行し、Claude Codeを最新バージョン（`2.1.156`）にアップデート。
+  - `claude --version` により、バージョンが `2.1.156` に正常に更新されたことを確認。
+
+## 会心バッファのクリアおよび独立スタック衰減UXの改善 (2026-05-28)
+- [x] 未消化の確定会心（Pending Crit）バッファのリセット処理実装 (`LivingEntityMixin.java`)：
+  - `LivingEntityMixin.java` の `cresora$showMobDamage` において、ダメージ判定が失敗（`!cir.getReturnValueZ()`）または最終与ダメージが0以下（`damageDone <= 0.0F`）の場合、攻撃者であるプレイヤーの `CombatFeedbackService` に残存する `pendingCrits` バッファを即時クリアするように改修。これにより、攻撃が失敗/無効化された後の次発で意図しない会心ダメージメッセージが表示されるUXバグを根本解決。
+- [x] 独立衰減スタック（衰減タイプ：`independent`）の段階的減衰時の通知ロジック追加 (`CresoraCompiler.kt` / `ArtifactCompiler.kt`)：
+  - CWC（武器コンパイラ）および CAC（聖遺物コンパイラ）を改修。毎秒 of バフタイマー判定処理において、一部のスタックが時間経過で衰減しつつ、まだ残りスタックが存続している場合（`else if (removed)` の場合）に、最新のスタック数をプレイヤーにリアルタイム通知するメッセージ送信処理を追加。
+- [x] 表示スタック数解決用のヘルパー追加 (`WeaponSkillService.kt` / `EquipmentEffectHookService.kt`)：
+  - `WeaponSkillService.kt` および `EquipmentEffectHookService.kt` に、表示上のスタック数を取得する `getDisplayStacks(player, buffId, rawStacks)` ヘルパーメソッドを定義。
+  - 「決意（ketsui）」バフかつ「幼馴染4セット」および「遥かなる少女の決意」のセットシナジーが有効な場合に、減衰通知時にも正しく `+5` の表示用オフセットが適用されるように統合。
+- [x] アセット・全コードコンパイルの成功：
+  - `./gradlew compileAssets` によるDSLのコンパイルを無事成功させ、自動生成コード（`ResolveoftheDistantGirlSkill.kt` や `ArtifactSkillHinagata4pcOnAttackDealt.kt` など）が新ロジックに基づいて正しく生成されていることを検証。
+  - `./gradlew classes` による Java/Kotlin コードの全量ビルドを成功させ、ビルド不整合がないことを確認。
+
+## 聖遺物追加「幼なじみ」の追加 (2026-05-27)
+- [x] 新規聖遺物DSL定義 (`osananajimi.artifact`)：
+  - セットIDを `"osananajimi"`、2セット効果として会心ダメージ+10% (`crit_dmg: 10.0`) を定義。
+  - 各国語（ja_jp, en_us, zh_cn, lzh）に対応するセット名および各スロット部位（ステッキ：約束、帽子：麦わら帽子、眼鏡：内緒話、鎧：思い出、ブーツ：足跡）の翻訳データをDSL内に定義。
+- [x] 装備データへの登録 (`equipment_content.json`)：
+  - 「幼なじみ」シリーズの各部位（`osananajimi_wand`, `osananajimi_hat`, `osananajimi_glasses`, `osananajimi_armor`, `osananajimi_boots`）のアイテム定義を追加。雛形セットと同様のスロット候補およびレアリティ割合を設定。
+- [x] 4セット効果「決意」+5層バフの動的加算実装 (`WeaponSkillService.kt` / `harukanaru_shojo_no_ketsui.cresora`)：
+  - `WeaponSkillService.kt` にて、プレイヤーが「幼なじみ4セット」かつ「遥かなる少女の決意」武器を所持している場合、会心ダメージおよび全ダメージバフの計算ロジックに動的に+10.0%（5層分の「決意」バフ）を加算する処理を実装。
+  - `harukanaru_shojo_no_ketsui.cresora` の `on_damage_dealt`（会心時）の「決意」獲得メッセージにおいて、4セット効果が有効な場合は表示上のスタック数に+5を加算して表示するよう改修（最大上限100を超えた105層までの表示に対応）。
+- [x] アセット・全コードコンパイルの成功：
+  - `compileAssets` および `classes` コンパイルを実行し、DSLから翻訳キー等の自動マージ、及びJava/Kotlinのビルドがエラーや不整合なく正常に完了することを確認。
+
+## 新武器「遥かなる少年の想い」の追加 (2026-05-27)
+- [x] 新星5武器のDSL定義 (`harukanaru_shonen_no_omoi.cresora`)：
+  - Netherite Swordをベースアイテム、Arcaneをデフォルト攻撃属性、Specialistをロールとする星5武器を実装。
+  - 常時発動する基礎ステータスバフ `passive_stats` (会心ダメージ+10%, 全ダメージボーナス+10%) を定義。
+  - パッシブスキル「少女は何処へ」を `on_player_tick` 内に実装：
+    - インベントリ内に「遥かなる少女の決意」を所持している場合は、デバフ「嘆き」を解除し、専用バフ `shojo_resolve` (会心ダメージ+60%, 全ダメボーナス+25%, 会心率+5%) を付与。
+    - 未所持の場合は、装備者に「嘆き」状態（ATK -50%, DEF +100%, 10秒毎に50%確率で3ハートの重複不可・無期限シールド獲得）を付与。
+  - アクティブスキル「重き想い」を `on_activate` 内に実装：
+    - パターンA（嘆き状態）：クールダウンを10sに上書きし、武器Lv依存（`10 + (weapon_level - 1) * 0.5` ハート）の無期限シールドを獲得（嘆き解除で消滅）。
+    - パターンB（非嘆き状態）：クールダウン35sで、周囲8m以内の最大5体の敵に強力な術ダメージ（`Player ATK * (3.0 + skill_level * 0.5)`）を与える。
+- [x] ダメージ属性の動的変換処理の追加：
+  - [CombatDamageTypeSupport.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/combat/CombatDamageTypeSupport.kt) の `playerAttackDamageType` を改修し、プレイヤーが「嘆き(nageki)」マークを持つ場合は、攻撃属性を強制的に `CombatDamageType.ARCANE` に変更して術ダメージに変換するロジックを実装。
+- [x] アセット・全コードコンパイルの成功：
+  - `./gradlew compileAssets` でDSLをコンパイルし、[ThoughtsoftheDistantBoySkill.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/skill/generated/ThoughtsoftheDistantBoySkill.kt) などの Kotlin レジストリクラス、翻訳キー、モデル、JSON 等が正常に自動生成されたことを確認。
+  - `./gradlew classes` による Java/Kotlin コードの全量コンパイルを無事成功させ、デグレードや不整合がないことを検証。
+
+## 武器画面パネルの文字表示バグ修正 (Weapon Screen Panel Opaque Text Color Fix) (2026-05-27)
+- [x] 透明色の描画不具合の解消:
+  - [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) および [ArtifactChestScreenBase.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/equipment/ArtifactChestScreenBase.kt) 内のテキスト描画色（`0x2F1D0D`, `0x5F503D` 等）において、アルファチャンネル（透明度）が `0x00`（透明）になっていたため、最新の Minecraft 1.20+ / 1.21+ レンダラーで文字が不可视になり、「面板 (Status)」および「技能说明 (Skill Description)」タブが完全に空白になっていたバグを修正。
+  - すべての色リテラルを `0xFF` プレフィックスの 32 ビット不透明色（例: `0xFF2F1D0D.toInt()`）へ書き換え、表示を正常化。
+- [x] 動作検証・コンパイル成功の確認:
+  - `./gradlew classes clientClasses` によるコンパイルチェックを行い、Kotlin/Java の全コードが正常にビルド・完了することを確認。
+
+## 武器強化画面のバグ修正と多言語表示の改善 (Weapon Upgrade Screen & Skill Description Fixes) (2026-05-26)
+- [x] 空スロット時のUI動作改善:
+  - 武器がスロットに配置されていない場合、[WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) においてタブ切り替えボタンおよび強化/分解ボタンを非表示化。
+  - 右側の情報パネル中央に、「左側に武器を置いてください」（各言語に対応: `screen.cresora.weapon_upgrade.need_weapon_info`）というヘルプメッセージを表示するようレイアウトを調整。
+- [x] コンパイル武器スキルの表示名解決の修正:
+  - CWCで生成されたカスタム武器のスキル名が `item.cresora-utilities.<weapon_id>.skill` というキーで定義されているため、従来の固定された接頭辞 `item.cresora.weapon.skill.<effect_id>` 以外のキーでも `Language.getInstance().hasTranslation` を使って動的に検証・解決するように [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) と [CresoraWeaponItem.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/CresoraWeaponItem.kt) の両方を改修。
+- [x] スキル詳細説明の表示改善:
+  - スキル説明のキー `item.cresora-utilities.<weapon_id>.skill.desc` や `item.cresora.weapon.skill.<effect_id>.desc` を動的に検索して解決・描画する処理を [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) と [CresoraWeaponItem.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/CresoraWeaponItem.kt) のツールチップ部分に実装。これにより、カスタム武器のスキル詳細説明が画面上で空欄になる問題を解消。
+- [x] 多言語翻訳の追加（文言/LZH等）:
+  - `rougan_kenpo`（琅玕劍法）および `harukanaru_shojo_no_ketsui`（少女之凝視）のスキル説明、空スロット用ヘルプメッセージ等の翻訳データを [lzh.json](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/resources/assets/cresora-utilities/lang/lzh.json) に追加。
+- [x] 動作検証・コンパイル成功の確認:
+  - `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` を実行し、アセット再コンパイルおよびソースコンパイルが正常にビルド・完了することを確認。
+
+## 武器パネルの不具合修正 (Weapon Upgrade Panel Bug Fixes) (2026-05-26)
+- [x] インベントリスロットの表示バグの修正：
+  - [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) に `drawInventorySlots` メソッドを追加し、プレイヤーのインベントリの 36 個のスロット全てに枠線（slot frame）を描画するように修正。これにより、アイテムが枠線なしに浮いているように見える表示上の問題を解消。
+- [x] 強化ボタンのステータス表示バグの修正：
+  - 武器の限界突破（突破）が最大（breakthrough >= 2）かつ基礎レベルが最大値に達した際、ベース強化ボタンが誤って `"精炼等级已满"`（`max_breakthrough`）を表示していた問題を、 `"基础等级已满"`（`max_base`）を返すように [WeaponUpgradeLogic.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponUpgradeLogic.kt) を修正して解決。
+
+## 武器パネルの拡張 (Unified Weapon Panel) (2026-05-26)
+- [x] 一元的なタブ付き武器パネルの実装：
+  - 武器強化画面 [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt) の横幅を `176` から `312` に拡張。
+  - クライアント側でのタブ管理ステート（`Tab.STATUS`, `Tab.UPGRADE`, `Tab.SKILL`）および切り替え用のタブボタンを画面右側上部（x+176〜, y+18〜）に配置。
+  - **ステータスタブ**: 基礎攻撃力、会心率、全ダメージバフ、HPボーナス、ダメージ属性、攻撃速度、適合ロール、品級（レア度）を一覧で表示。
+  - **強化・精錬タブ**: 従来のベース強化（レベルアップ・限界突破）、スキル強化、および分解（Dismantle）コントロールを集約して表示。
+  - **スキル説明タブ**: 武器スキルの詳細説明、現在のスキルレベル、および次のレベル時のパラメータ値プレビューを表示。
+  - 左側エリアを武器のショーケース（x+7〜x+169, y+18〜y+78）に変更し、武器スロットを中央（x+79, y+26）に配置。下部に武器名、レア度（★マーク）、所持クレジット（CSC）を常に表示するようレイアウトを改修。
+- [x] 画面ハンドラーの調整：
+  - [WeaponUpgradeScreenHandler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreenHandler.kt) 内の武器スロット座標を `44, 32` から `79, 26` に変更し、新ショーケースの中央と一致するように改修。
+- [x] 多言語対応：
+  - 英日中の4言語（en_us, ja_jp, lzh, zh_cn）に新タブテキストおよびステータス項目ラベル等の翻訳を追加。
+- [x] 動作検証・コンパイル成功 of verification：
+  - Gradle を使用して `compileAssets` および `classes` を正常にビルド・コンパイルできることを確認。
 
 ## サーバー脱退・再参加時の武器CTリセット不具合の修正 (2026-05-26)
 - [x] 武器スキルクールダウン（CT）の永続化実装：
@@ -844,3 +1005,25 @@ Merged improvements into development branch, bumped release version to 1.4.0, an
 - `GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets classes --console=plain` passed.
 - `GRADLE_USER_HOME=.gradle-user ./gradlew build --console=plain` successfully packaged `cresora-utilities-1.4.0.jar` and `cresora-utilities-1.4.0-sources.jar`.
 - Created annotated git tag `1.4.0` pointing to the release commit on `dev`.
+
+## Real-Device Gameplay Smoke Test (2026-05-26)
+
+- **Invoked workflow `/jikki-tesuto`**:
+  - Compiled and verified code successfully.
+  - Developed and launched `run/run_test_env.py` to start both the Minecraft Fabric dev server and player client in the background.
+  - Set up a thread to monitor console output, wait for player join events, and automatically grant OP status to joining players.
+
+## Fix Weapon Upgrade Screen Crash on Right-Click (2026-05-29)
+
+Resolved a client-side JVM `IllegalAccessError` that caused the game to crash when opening the weapon upgrade screen (by right-clicking a weapon).
+
+### Accomplishments
+- **Added Access Widener**:
+  - Created a new Fabric Access Widener configuration file `src/main/resources/cresora-utilities.accesswidener`.
+  - Added rules to make `net.minecraft.screen.slot.Slot.x` and `net.minecraft.screen.slot.Slot.y` fields mutable. This allows the client-side upgrade GUI `WeaponUpgradeScreen` to dynamically modify these coordinate fields when toggling the visibility of slots inside different tabs (specifically status/upgrade/skill/artifacts tabs) without raising JVM security errors.
+- **Registered Access Widener**:
+  - Registered the access widener inside `fabric.mod.json` under the `"accessWidener": "cresora-utilities.accesswidener"` property so Fabric Loader applies the transformation at runtime and Loom applies it during development compilation.
+
+### Verification
+- Ran clean build: `GRADLE_USER_HOME=.gradle-user ./gradlew clean compileKotlin compileClientKotlin --console=plain` which successfully processed resources, applied the access widener, and compiled both main and client Kotlin/Java classes.
+

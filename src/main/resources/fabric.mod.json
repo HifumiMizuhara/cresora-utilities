@@ -9,6 +9,7 @@
 	],
 	"icon": "assets/cresora-utilities/icon.png",
 	"environment": "*",
+	"accessWidener": "cresora-utilities.accesswidener",
 	"entrypoints": {
 		"fabric-datagen": [
 			"hifumi.cresora.Datagen"

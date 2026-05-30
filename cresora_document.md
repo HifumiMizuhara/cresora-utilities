@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-25
+最終更新: 2026-05-30
 
 このドキュメントは、Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジストリスキーマ、およびコアサービスの仕様書です。
 各機能の開発履歴や完了したタスクのログについては、[WORK_DONE.md](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/WORK_DONE.md) を参照してください。
@@ -139,6 +139,9 @@
   - 一時貸与武器の回収識別子
 - `MASQUERADE_SESSION_ID: ComponentType<String>`
   - マスカレード持込武器の識別子
+- `WEAPON_ARTIFACTS: ComponentType<List<ItemStack>>`
+  - id: `cresora-utilities:weapon_artifacts`
+  - 武器に装着された4つの聖遺物（ItemStack）のリスト
 
 ### 3.2 Player / Mob access interface
 
@@ -633,6 +636,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `createWeaponStack(definition, rarity, baseLevel, skillLevel)`
 - `countFragments(player, definition)`
 - `removeFragments(player, definition, amount)`
+- `getEquippedArtifacts(stack)`: 武器に装着されている4つの聖遺物スタックを取得します。
+- `setEquippedArtifacts(stack, artifacts)`: 武器の聖遺物装着状態を更新します。
+- `hasAnyEquippedArtifact(stack)`: 武器に何らかの聖遺物が装着されているかどうかを判定します。
 
 重要仕様:
 
@@ -807,6 +813,31 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `tryDropMoonBrick(player, hostile)`: 敵対モブ（hostile）を倒した際に、2% の確率で祭壇クラフト素材 `moon_brick` をドロップさせます。
 - 投入された予約状態は `MoonPhaseService` の永続状態 `forcedBloodMoonDay` に保存され、日付条件が満たされた際に優先的に血月が引き起こされます。
 
+### 7.1.4 LeyLineService
+
+ファイル:
+
+- [LeyLineService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/leyline/LeyLineService.kt)
+- [LeyLineHooks.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/leyline/LeyLineHooks.kt)
+
+責務:
+
+- 7つの元素（日、月、火、水、木、金、土）の「地脉喷涌 (Ley Line Overflow)」イベントのライフサイクルおよび戦闘処理の管理
+- プレイヤーインベントリ内へのキー返却（タイムアウト時・破壊時）の調整
+- 挑戦領域の境界パーティクル描画と、プレイヤー不在による自動失敗判定（10秒）の制御
+- 各元素に応じた難易度（T1-T4、冒険ランク依存）のモブウェーブ（精英怪含む）のスポーンとステータス補正の適用
+- 討伐成功時の聖遗物、武器の欠片、およびクレジット・冒険ランクXP等の報酬生成とチェストUIの表示
+
+主 API / 仕様:
+
+- `placeLeyLine(world, pos, player, element)`: 地点に特定元素の地脉噴湧ブロックを配置し、50秒の有効期限タイマー（過ぎると自動でブロックが消滅し、配置者にキーが返却される）を開始します。
+- `onBlockRemoved(world, pos)`: イベント開始前にブロックが破壊された場合、配置者にキーを返却します。
+- `startEvent(player, pos, element, tier)`: プレイヤーの冒険ランク要件を確認し、イベントを開始します。ブロックを消去し、10x10の戦闘セッション（`LeyLineEventSession`）を登録します。
+- `tick(server)`: 有効期限タイマーおよび進行中の戦闘セッション（プレイヤーの境界内チェック、境界パーティクルの再生、各ウェーブのモンスター死亡監視、成功時の報酬配布等）を毎ティック処理します。
+- `damageMultiplier(attacker)`: スポーンしたイベントモンスター（`mobRuntime`に登録されたUUID）の攻撃ダメージ倍率を取得します。
+- **エリートモブの統合**: スポーンした精英怪（1ウェーブにつき1体）に対し、`FieldMobPackService.markExplicit(mob, true)` を呼び出してモデルサイズを 18% 拡大し、`AdventureRankService.applyMobScaling` でエリートステータス補正を適用します。また、全モブに `GLOWING`（発光）ステータス効果を付与します。
+- **報酬分配**: 討伐成功時に `generateRewards` で報酬を算出し、プレイヤーへアイテム/クレジット/XPを付与します。最終的な報酬プレビューとして `ArtifactUiFlow.openDomainReward` を呼び出し、チェストUIを表示します。
+
 ### 7.2 CreditsService
 
 ファイル:
@@ -916,6 +947,27 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
     - 精錬1段階: レベル上限 = 最大レベルの75%、スキル上限 = 7
     - 精錬2段階: レベル上限 = 最大レベルの100%、スキル上限 = 10
 
+### 7.6.1 WeaponUpgradeScreen (武器パネルの一元化)
+
+ファイル:
+
+- [WeaponUpgradeScreen.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/client/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreen.kt)
+- [WeaponUpgradeScreenHandler.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/weapon/WeaponUpgradeScreenHandler.kt)
+
+責務:
+
+- 武器のステータス閲覧、強化（レベル・精錬）、スキル説明を1つのパネルにまとめた一元的なGUIの描画とクライアント側の動作管理。
+- 画面サイズを横に拡張（`backgroundWidth` = 312）し、右側にタブ機能付きの情報パネル（ステータス、強化、スキル説明）を配置。
+- 左側には武器スロット（スロット座標を `79, 26` に中央寄せ）と基本情報を配置した武器ショーケースをレンダリング。
+
+1. **STATUS (ステータス)**: 攻撃力、会心率、全ダメージバフ、HPボーナス、攻撃速度、ダメージ属性、適合ロール、品級（レア度）を一覧表示。
+2. **UPGRADE (強化・精錬)**: ベース強化（レベル・精錬突破）、スキル強化、および分解の各種操作ボタンと必要材料・CSCを表示。
+3. **SKILL (スキル説明)**: 武器スキルの詳細説明テキスト（自動折り返し描画）および次レベルへのステータス・クールダウン（CT）プレビューを表示。
+4. **ARTIFACTS (聖遺物)**: 武器に装着する聖遺物の管理画面。4つの聖遺物スロット（2x2グリッド）が表示され、プレイヤーは聖遺物を装備・着脱可能。
+
+分解制限:
+- 武器に何らかの聖遺物が装着されている場合、分解（Dismantle）アクションは無効化され、警告メッセージ `screen.cresora.weapon_upgrade.cannot_dismantle_has_artifacts` が表示されます。
+
 ### 7.7 WeaponCombatSupport
 
 ファイル:
@@ -951,16 +1003,27 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 責務:
 
-- Trinkets 装備から `EquipmentData` を集約
+- Trinkets 装備および主手に持っている武器の装着聖遺物から `EquipmentData` を集約
 - セット効果解決
 - プレイヤー総ステータス算出
 
 主 API:
 
 - `getEquippedEquipmentData(player)`
-- `getActiveSetBonuses(player)`
+- `getActiveSetBonuses(player)`: Trinketsと主手の武器の装着聖遺物の両方からセット効果を解決し、独立したソースとして結合して返します（設計仕様：同一セットがTrinkets側に4個、武器側に4個装備された場合、それぞれ独立したpieceCountとして集計されて両方の系統のボーナスが同時に発動します。武器スロットは独立した追加装備枠として機能します）。
 - `getActiveSetSummaries(player)`
-- `getAggregatedStats(player)`
+- `getAggregatedStats(player)`: Trinketsの装備に加えて、主手に持っている武器に装着されている聖遺物の属性ボーナス（フラット値およびパーセント値）も加算してプレイヤーの総ステータスを算出します（設計仕様：ステータス計算において、「Trinkets」「武器装着の聖遺物」「セットボーナス」の3つのソースはすべて加算されて効果を発揮し、武器を持ち替えるなどのアクションによって能動的に適用されるセット効果やステータスが切り替わります）。
+
+### 7.8.1 EquipmentEffectHookService
+
+ファイル:
+
+- `EquipmentEffectHookService.kt`
+
+責務:
+
+- 聖遺物の効果（セットボーナスのエフェクトフック）をトリガー条件（攻撃時、ダメージ受傷時、キック時等）に応じてディスパッチするサービスです。
+- `getDisplayStacks(player, buffId, rawStacks)`: 表示上のスタック数を取得します（将来の拡張用）。
 
 ### 7.9 EquipmentAttributeService / WeaponAttributeService
 
@@ -1004,6 +1067,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
   - 武器の属性ボーナス（会心率、全ダメージボーナスなど）を取得する際、メインハンドに持っている武器（または `HotbarOverrideService` で一時的に指定された武器）と一致していることを厳密に検証するチェック (`lastHeldWeaponIdByPlayer` によるトラッキング）。
   - 武器切り替え（または武器を外した際）の検知時に、古い武器の一時的な戦闘バフを破棄するため、ハンドラーの `clearTransientState(player.uuid)` を自動的に起動します。
 - `clearTransientState(player)`: 切断時や武器切り替え時に武器由来の一時状態を即時掃除します。
+- `getDisplayStacks(player, buffId, rawStacks)`: 表示上のスタック数を取得します。幼馴染4セット効果かつ「遥かなる少女の決意」を装備中、決意バフ（`ketsui`）に対して表示上 `+5` の加算オフセットを自動で計算して返します。
 
 `WeaponSkillHandler` インターフェース:
 
@@ -1208,6 +1272,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - **CT延長 (COOLDOWN_PENALTY)**: 武器スキルのクールダウン解消速度が50%に低下
 - **回復阻害 (HEAL_BLOCK)**: 自然回復を完全に停止
 - **キュン死 (kyundeath)**: 会心（クリティカル）攻撃時に確率で付与され、対象の与ダメージを 20% 低下。モブのネームタグ末尾にハートマーク `[❤]` がレンダリングされる。
+- **嘆き (nageki)**: 装備者が「遥かなる少女の決意」をインベントリに所持していない時に付与される負のマーク。攻撃力-50%、防御力+100%、与える非確定ダメージの術ダメージ変換、10秒毎に50%の確率で3ハート（6.0 HP）の無期限シールド（重複不可）を獲得。
 
 ### 7.18 CombatStatSupport
 
@@ -1442,6 +1507,12 @@ weapon "Name" {
   - コンパイルされる `State` 状態クラスがスタックごとの失効時刻を記録する `expireTicks: MutableList<Long>` を持ち、毎ティック自動でクレンジングされます。
 - **共通組み込み命令**: `log()`, `apply_mark()`, `spawn_particles()`, `add_buff()` をサポート。
 - **生ソースコード抽出**: `execute` 内の複雑な Kotlin ロジックを、トークン再構成ではなく原始ソースコードから直接抽出することで構文エラーを防ぎます。
+
+#### 聖遺物・武器相互作用のカスタムロジック（特記事項）
+- **「幼なじみ」と「遥かなる少女の決意」のシナジー**:
+  - `osananajimi` 4セット効果が有効で、かつインベントリに「遥かなる少女の決意」(`harukanaru_shojo_no_ketsui`) が存在する場合、`WeaponSkillService` レベルの計算処理（`critDamageBonusPercent` / `allDamageBonusPercent`）において、動的に「決意」+5層分のバフ（会心ダメージ+10.0%、全ダメージ+10.0%）が自動で加算されます。
+  - この効果は「決意」の通常の上限値100層の影響を受けず、最大105層まで重複・加算されます。また、会心時の「決意」獲得時のメッセージにおいても、この+5層分を加算したスタック数が表示されます。
+
 
 
 ## 14. Movement Compiler (CMC)
