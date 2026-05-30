@@ -36,6 +36,27 @@
           ]
         }
       ]
+    },
+    {
+      "id": "osananajimi",
+      "translationKey": "item.cresora-utilities.equipment.set.osananajimi",
+      "bonuses": [
+        {
+          "requiredPieces": 2,
+          "stats": [
+            {
+              "type": "crit_dmg",
+              "value": 10.0
+            }
+          ],
+          "effectHooks": []
+        },
+        {
+          "requiredPieces": 4,
+          "stats": [],
+          "effectHooks": []
+        }
+      ]
     }
   ],
   "equipmentDefinitions": [],

@@ -5,6 +5,7 @@ import hifumi.cresora.adventurerank.AdventureRankService;
 import hifumi.cresora.combat.BaaMimicService;
 import hifumi.cresora.combat.CombatDamageType;
 import hifumi.cresora.combat.CombatDamageTypeSupport;
+import hifumi.cresora.combat.CombatFeedbackService;
 import hifumi.cresora.combat.MobCombatProfileRegistry;
 import hifumi.cresora.combat.NaturalRegenService;
 import hifumi.cresora.debuff.CresoraDebuffService;
@@ -95,11 +96,17 @@ public class LivingEntityMixin {
     @Inject(method = "damage", at = @At("RETURN"))
     private void cresora$showMobDamage(net.minecraft.server.world.ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValueZ()) {
+            if (source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+                CombatFeedbackService.INSTANCE.clearTransientState(serverPlayer);
+            }
             return;
         }
         LivingEntity entity = (LivingEntity) (Object) this;
         float damageDone = Math.max(0.0F, this.cresora$preDamageHealth - entity.getHealth());
         if (damageDone <= 0.0F) {
+            if (source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+                CombatFeedbackService.INSTANCE.clearTransientState(serverPlayer);
+            }
             return;
         }
         if (entity instanceof PlayerEntity player) {

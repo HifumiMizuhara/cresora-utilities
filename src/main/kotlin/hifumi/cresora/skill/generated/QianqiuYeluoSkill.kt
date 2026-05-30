@@ -182,7 +182,8 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
         state.expireTick = now + 300 * 20L
         state.stacks = (state.stacks + 1).coerceAtMost(40)
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.qiucan_stack.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.qiucan_stack.name"), state.stacks), true)
+        Text.translatable("item.cresora.weapon.skill.buff.qiucan_stack.name"),
+        WeaponSkillService.getDisplayStacks(player, "qiucan_stack", state.stacks)), true)
     }
 
     HotbarOverrideService.overrideHotbar(player, definition.id, listOf("danrai", "zansou",

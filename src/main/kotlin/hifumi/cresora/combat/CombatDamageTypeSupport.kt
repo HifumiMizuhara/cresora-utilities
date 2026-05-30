@@ -17,6 +17,9 @@ object CombatDamageTypeSupport {
 
     @JvmStatic
     fun playerAttackDamageType(player: PlayerEntity): CombatDamageType {
+        if (player is net.minecraft.server.network.ServerPlayerEntity && hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "nageki")) {
+            return CombatDamageType.ARCANE
+        }
         return weaponDamageType(WeaponStackSupport.getDefinition(player.mainHandStack))
     }
 

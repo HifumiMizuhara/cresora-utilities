@@ -27,6 +27,7 @@ public object CompiledWeaponSkillRegistry {
     registry.register("bokuchu_munen", BokuchuMunenSkill)
     registry.register("flame_aura", RequiemTowardDawnSkill)
     registry.register("harukanaru_shojo_no_ketsui", ResolveoftheDistantGirlSkill)
+    registry.register("harukanaru_shonen_no_omoi", ThoughtsoftheDistantBoySkill)
     registry.register("snow_frost", ColdMistCoilingSnowSkill)
     registry.register("current_hp_true_damage", StridebytheLakesideSkill)
   }

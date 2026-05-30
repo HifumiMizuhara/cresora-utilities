@@ -1,0 +1,47 @@
+artifact "Childhood Friend" {
+    id: "osananajimi";
+    
+    set 2 {
+        stats {
+            crit_dmg: 10.0;
+        }
+    }
+    
+    set 4 {
+    }
+
+    translations {
+        en_us {
+            "item.cresora-utilities.equipment.set.osananajimi": "Childhood Friend";
+            "item.cresora-utilities.osananajimi_wand": "Childhood Friend's Promise";
+            "item.cresora-utilities.osananajimi_hat": "Childhood Straw Hat";
+            "item.cresora-utilities.osananajimi_glasses": "Childhood Friend's Secret";
+            "item.cresora-utilities.osananajimi_armor": "Childhood Friend's Memory";
+            "item.cresora-utilities.osananajimi_boots": "Childhood Friend's Footprints";
+        }
+        ja_jp {
+            "item.cresora-utilities.equipment.set.osananajimi": "幼なじみ";
+            "item.cresora-utilities.osananajimi_wand": "幼なじみの約束";
+            "item.cresora-utilities.osananajimi_hat": "幼なじみの麦わら帽子";
+            "item.cresora-utilities.osananajimi_glasses": "幼なじみの内緒話";
+            "item.cresora-utilities.osananajimi_armor": "幼なじみの思い出";
+            "item.cresora-utilities.osananajimi_boots": "幼なじみの足跡";
+        }
+        zh_cn {
+            "item.cresora-utilities.equipment.set.osananajimi": "青梅竹马";
+            "item.cresora-utilities.osananajimi_wand": "青梅竹马的约定";
+            "item.cresora-utilities.osananajimi_hat": "青梅竹马的草帽";
+            "item.cresora-utilities.osananajimi_glasses": "青梅竹马的悄悄话";
+            "item.cresora-utilities.osananajimi_armor": "青梅竹马的回忆";
+            "item.cresora-utilities.osananajimi_boots": "青梅竹马的足迹";
+        }
+        lzh {
+            "item.cresora-utilities.equipment.set.osananajimi": "青梅竹馬";
+            "item.cresora-utilities.osananajimi_wand": "青梅竹馬的約定";
+            "item.cresora-utilities.osananajimi_hat": "青梅竹馬的草帽";
+            "item.cresora-utilities.osananajimi_glasses": "青梅竹馬的悄悄話";
+            "item.cresora-utilities.osananajimi_armor": "青梅竹馬的回憶";
+            "item.cresora-utilities.osananajimi_boots": "青梅竹馬的足跡";
+        }
+    }
+}

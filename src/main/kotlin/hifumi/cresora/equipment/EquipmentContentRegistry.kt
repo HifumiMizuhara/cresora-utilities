@@ -136,6 +136,8 @@ object EquipmentContentRegistry {
             .onFailure { throwable ->
                 logger.warn("Failed to load CAC artifact content from {}: {}", CAC_CONTENT_RESOURCE, throwable.message)
             }
+
+        validateConsolidatedContent()
     }
 
     fun requireSlot(id: String): EquipmentSlotType {
@@ -214,31 +216,30 @@ object EquipmentContentRegistry {
         require(definitionMap.size == bundle.equipmentDefinitions.size) { "Duplicate equipment definition ids found in content bundle" }
         require(dropProfileMap.size == bundle.dropProfiles.size) { "Duplicate equipment drop profile ids found in content bundle" }
 
-        for (definition in definitionMap.values) {
-            require(slotMap.containsKey(definition.slotTypeId)) { "Unknown slot '${definition.slotTypeId}' referenced by equipment '${definition.id}'" }
-            require(setMap.containsKey(definition.setId)) { "Unknown set '${definition.setId}' referenced by equipment '${definition.id}'" }
-        }
-        for (set in setMap.values) {
-            // Validation removed to support DSL-generated effect hooks
-        }
-        for (loot in bundle.mobLoot) {
-            loot.artifactLoot?.let { artifact ->
-                require(dropProfileMap.containsKey(artifact.dropProfileId)) {
-                    "Unknown drop profile '${artifact.dropProfileId}' referenced by mob loot '${loot.entityTypeId}'"
-                }
-                for (equipmentId in artifact.equipmentIds) {
-                    require(definitionMap.containsKey(equipmentId)) {
-                        "Unknown equipment id '$equipmentId' referenced by mob loot '${loot.entityTypeId}'"
-                    }
-                }
-            }
-        }
-
         slots = slots + slotMap
         sets = sets + setMap
         equipmentDefinitions = equipmentDefinitions + definitionMap
         dropProfiles = dropProfiles + dropProfileMap
         mobLoot = mobLoot + bundle.mobLoot
+    }
+
+    private fun validateConsolidatedContent() {
+        for (definition in equipmentDefinitions.values) {
+            require(slots.containsKey(definition.slotTypeId)) { "Unknown slot '${definition.slotTypeId}' referenced by equipment '${definition.id}'" }
+            require(sets.containsKey(definition.setId)) { "Unknown set '${definition.setId}' referenced by equipment '${definition.id}'" }
+        }
+        for (loot in mobLoot) {
+            loot.artifactLoot?.let { artifact ->
+                require(dropProfiles.containsKey(artifact.dropProfileId)) {
+                    "Unknown drop profile '${artifact.dropProfileId}' referenced by mob loot '${loot.entityTypeId}'"
+                }
+                for (equipmentId in artifact.equipmentIds) {
+                    require(equipmentDefinitions.containsKey(equipmentId)) {
+                        "Unknown equipment id '$equipmentId' referenced by mob loot '${loot.entityTypeId}'"
+                    }
+                }
+            }
+        }
     }
 
     private fun artifactItems(rule: EquipmentArtifactLootRule): List<Item> {

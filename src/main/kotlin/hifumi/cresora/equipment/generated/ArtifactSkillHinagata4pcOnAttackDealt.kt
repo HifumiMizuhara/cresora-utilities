@@ -63,8 +63,8 @@ public class ArtifactSkillHinagata4pcOnAttackDealt : ArtifactSkillHandler {
         state.stacks = (state.stacks + 1).coerceAtMost(10)
        
         player.sendMessage(Text.translatable("item.cresora.artifact.skill.buff.hinagata_stacks.gained",
-        Text.translatable("item.cresora.artifact.skill.buff.hinagata_stacks.name"), state.stacks),
-        true)
+        Text.translatable("item.cresora.artifact.skill.buff.hinagata_stacks.name"),
+        EquipmentEffectHookService.getDisplayStacks(player, "hinagata_stacks", state.stacks)), true)
     }
     player.sendMessage(Text.translatable("message.cresora.hinagata.curse").formatted(Formatting.GOLD),
         true)

@@ -40,7 +40,8 @@ public object DanraiSkill : WeaponSkillHandler {
         state.expireTick = now + 40 * 20L
         state.stacks = (state.stacks + 1).coerceAtMost(1)
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.passive_state.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.passive_state.name"), state.stacks), true)
+        Text.translatable("item.cresora.weapon.skill.buff.passive_state.name"),
+        WeaponSkillService.getDisplayStacks(player, "passive_state", state.stacks)), true)
     }
 
     run {
@@ -50,8 +51,8 @@ public object DanraiSkill : WeaponSkillHandler {
         state.expireTick = now + 40 * 20L
         state.stacks = (state.stacks + 1).coerceAtMost(1)
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.jingtian_state.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.jingtian_state.name"), state.stacks),
-        true)
+        Text.translatable("item.cresora.weapon.skill.buff.jingtian_state.name"),
+        WeaponSkillService.getDisplayStacks(player, "jingtian_state", state.stacks)), true)
     }
 
     HotbarOverrideService.restoreHotbar(player)

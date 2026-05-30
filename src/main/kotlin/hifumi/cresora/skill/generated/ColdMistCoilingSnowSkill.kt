@@ -82,7 +82,8 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
         state.expireTick = now + 10 * 20L
         state.stacks = (state.stacks + 1).coerceAtMost(5)
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.snow_mist.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.snow_mist.name"), state.stacks), true)
+        Text.translatable("item.cresora.weapon.skill.buff.snow_mist.name"),
+        WeaponSkillService.getDisplayStacks(player, "snow_mist", state.stacks)), true)
     }
 
     player.sendMessage(Text.translatable("item.cresora.weapon.skill.snow_frost_activated.generic").formatted(Formatting.AQUA),

@@ -46,7 +46,8 @@ public object ZansouSkill : WeaponSkillHandler {
         state.expireTick = now + 40 * 20L
         state.stacks = (state.stacks + 1).coerceAtMost(1)
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.passive_state.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.passive_state.name"), state.stacks), true)
+        Text.translatable("item.cresora.weapon.skill.buff.passive_state.name"),
+        WeaponSkillService.getDisplayStacks(player, "passive_state", state.stacks)), true)
     }
 
     run {
@@ -56,7 +57,8 @@ public object ZansouSkill : WeaponSkillHandler {
         state.expireTick = now + 50 * 20L
         state.stacks = (state.stacks + 1).coerceAtMost(1)
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.zansou_mode.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.zansou_mode.name"), state.stacks), true)
+        Text.translatable("item.cresora.weapon.skill.buff.zansou_mode.name"),
+        WeaponSkillService.getDisplayStacks(player, "zansou_mode", state.stacks)), true)
     }
 
 

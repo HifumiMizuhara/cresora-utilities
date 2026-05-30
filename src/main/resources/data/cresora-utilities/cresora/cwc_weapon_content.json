@@ -916,6 +916,54 @@
       }
     },
     {
+      "id": "harukanaru_shonen_no_omoi",
+      "baseItemId": "minecraft:netherite_sword",
+      "baseAttackDamage": 10.0,
+      "attackDamagePerLevel": 0.0,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 60,
+      "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
+      "damageType": "arcane",
+      "role": "specialist",
+      "skill": {
+        "effectId": "harukanaru_shonen_no_omoi",
+        "durationSeconds": 5,
+        "cooldownSeconds": 35,
+        "baseValue": 10.0,
+        "valuePerLevel": 0.0,
+        "radiusMeters": 8.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "harukanaru_shonen_no_omoi_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "5_star",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    },
+    {
       "id": "hanwu_juanxue",
       "baseItemId": "minecraft:diamond_sword",
       "baseAttackDamage": 8.0,

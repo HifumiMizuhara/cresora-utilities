@@ -71,6 +71,10 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
           ketsuiStates.remove(player.uuid)
           player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.expired",
               Text.translatable("item.cresora.weapon.skill.buff.ketsui.name")), true)
+        } else if (removed) {
+          player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.gained",
+              Text.translatable("item.cresora.weapon.skill.buff.ketsui.name"),
+              WeaponSkillService.getDisplayStacks(player, "ketsui", state.stacks)), true)
         }
       }
     }
@@ -179,12 +183,15 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
                               if (state.expireTicks.size < 100) {
                                   state.expireTicks.add(now + 40 * 20L);
                               }
+                              val displayStacks = state.stacks + if
+              (hifumi.cresora.equipment.EquipmentPlayerSupport.getActiveSetBonuses(player).any {
+              it.set.id == "osananajimi" && it.pieceCount >= 4 }) 5 else 0;
                               player.sendMessage(
                                   net.minecraft.text.Text.translatable(
                                       "item.cresora.weapon.skill.buff.ketsui.gained",
                                      
               net.minecraft.text.Text.translatable("item.cresora.weapon.skill.buff.ketsui.name"),
-                                      state.stacks
+                                      displayStacks
                                   ),
                                   true
                               );

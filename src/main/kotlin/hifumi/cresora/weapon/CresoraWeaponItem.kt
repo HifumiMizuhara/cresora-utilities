@@ -89,6 +89,21 @@ class CresoraWeaponItem(
         if (resolved.id == "cadenza_allegro") {
             textConsumer.accept(Text.translatable("item.cresora.weapon.passive.cadenza_allegro").formatted(Formatting.BLUE))
         }
+        val artifacts = WeaponStackSupport.getEquippedArtifacts(stack)
+        if (artifacts.any { !it.isEmpty }) {
+            textConsumer.accept(Text.translatable("item.cresora.weapon.equipped_artifacts.title").formatted(Formatting.GOLD))
+            for (art in artifacts) {
+                if (!art.isEmpty) {
+                    val artData = hifumi.cresora.equipment.EquipmentStackSupport.getEquipmentData(art)
+                    val levelStr = if (artData != null) " (Lv. ${artData.level})" else ""
+                    textConsumer.accept(
+                        Text.literal("- ")
+                            .append(art.name)
+                            .append(Text.literal(levelStr).formatted(Formatting.GRAY))
+                    )
+                }
+            }
+        }
         textConsumer.accept(Text.translatable("item.cresora.weapon.sneak_upgrade").formatted(Formatting.DARK_GREEN))
         super.appendTooltip(stack, context, displayComponent, textConsumer, type)
     }
@@ -116,7 +131,23 @@ class CresoraWeaponItem(
     }
 
     private fun buildSkillTooltipLine(definition: WeaponDefinition, data: WeaponData): Text {
-        val effectName = Text.translatable("item.cresora.weapon.skill.${definition.skill.effectId}")
+        val skillNameKey = if (net.minecraft.util.Language.getInstance().hasTranslation("item.cresora-utilities.${definition.id}.skill")) {
+            "item.cresora-utilities.${definition.id}.skill"
+        } else {
+            "item.cresora.weapon.skill.${definition.skill.effectId}"
+        }
+        val effectName = Text.translatable(skillNameKey)
+
+        val descKey1 = "item.cresora-utilities.${definition.id}.skill.desc"
+        val descKey2 = "item.cresora.weapon.skill.${definition.skill.effectId}.desc"
+        val lang = net.minecraft.util.Language.getInstance()
+        if (lang.hasTranslation(descKey1)) {
+            return Text.translatable(descKey1)
+        }
+        if (lang.hasTranslation(descKey2)) {
+            return Text.translatable(descKey2)
+        }
+
         val heartValue = formatNumber(WeaponCombatSupport.skillValueHearts(definition, data))
         val secondaryHeartValue = formatNumber(WeaponCombatSupport.secondarySkillValueHearts(definition, data))
         val percentValue = formatNumber(WeaponCombatSupport.skillValuePercent(definition, data))

@@ -172,6 +172,11 @@ class ArtifactCompiler(
                     onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
                         ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
+                    onTickFun.nextControlFlow("else if (removed)")
+                    onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S), %T.getDisplayStacks(player, %S, state.stacks)), true)",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.gained",
+                        ClassName("net.minecraft.text", "Text"), buffNameKey,
+                        ClassName("hifumi.cresora.equipment", "EquipmentEffectHookService"), buff.id)
                     onTickFun.endControlFlow()
                     onTickFun.endControlFlow()
                     onTickFun.endControlFlow()
@@ -326,10 +331,10 @@ class ArtifactCompiler(
                         |            state.expireTicks.add(now + ${buff.durationSeconds.toInt()} * 20L)
                         |        }
                         |    }
-                        |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                        |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), %T.getDisplayStacks(player, "${buff.id}", state.stacks)), true)
                         |}
                         |
-                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"), ClassName("hifumi.cresora.equipment", "EquipmentEffectHookService"))
                 } else {
                     funSpec.addCode("""
                         |run {
@@ -337,10 +342,10 @@ class ArtifactCompiler(
                         |    val state = this.$mapName.getOrPut(player.uuid) { $stateClassName(0L, 0) }
                         |    state.expireTick = now + ${buff.durationSeconds.toInt()} * 20L
                         |    state.stacks = (state.stacks + $amountStr).coerceAtMost(${buff.maxStacks})
-                        |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), state.stacks), true)
+                        |    player.sendMessage(%T.translatable("item.cresora.artifact.skill.buff.${buff.id}.gained", %T.translatable("$buffNameKey"), %T.getDisplayStacks(player, "${buff.id}", state.stacks)), true)
                         |}
                         |
-                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"))
+                    """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"), ClassName("hifumi.cresora.equipment", "EquipmentEffectHookService"))
                 }
             } else {
                 funSpec.addStatement("// Buff $buffId not found")

@@ -205,8 +205,8 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
         state.stacks = (state.stacks + 1).coerceAtMost(1)
        
         player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.pavilion_active.gained",
-        Text.translatable("item.cresora.weapon.skill.buff.pavilion_active.name"), state.stacks),
-        true)
+        Text.translatable("item.cresora.weapon.skill.buff.pavilion_active.name"),
+        WeaponSkillService.getDisplayStacks(player, "pavilion_active", state.stacks)), true)
     }
 
     player.sendMessage(Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic").formatted(Formatting.LIGHT_PURPLE),

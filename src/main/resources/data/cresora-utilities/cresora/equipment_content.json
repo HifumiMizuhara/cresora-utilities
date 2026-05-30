@@ -230,6 +230,66 @@
         "4_star": 35.0,
         "5_star": 15.0
       }
+    },
+    {
+      "id": "osananajimi_wand",
+      "slotTypeId": "wand",
+      "setId": "osananajimi",
+      "baseItemId": "minecraft:stick",
+      "opensUpgradeScreen": true,
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "osananajimi_hat",
+      "slotTypeId": "hat",
+      "setId": "osananajimi",
+      "baseItemId": "minecraft:chainmail_helmet",
+      "opensUpgradeScreen": true,
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "osananajimi_glasses",
+      "slotTypeId": "glasses",
+      "setId": "osananajimi",
+      "baseItemId": "minecraft:spyglass",
+      "opensUpgradeScreen": true,
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "osananajimi_armor",
+      "slotTypeId": "armor",
+      "setId": "osananajimi",
+      "baseItemId": "minecraft:iron_chestplate",
+      "opensUpgradeScreen": true,
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
+    },
+    {
+      "id": "osananajimi_boots",
+      "slotTypeId": "boots",
+      "setId": "osananajimi",
+      "baseItemId": "minecraft:iron_boots",
+      "opensUpgradeScreen": true,
+      "rarityWeights": {
+        "3_star": 50.0,
+        "4_star": 35.0,
+        "5_star": 15.0
+      }
     }
   ],
   "dropProfiles": [

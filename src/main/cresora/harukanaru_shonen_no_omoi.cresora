@@ -1,0 +1,184 @@
+weapon "Thoughts of the Distant Boy" {
+    id: "harukanaru_shonen_no_omoi"
+    rarity: "5_star"
+    base_item: "minecraft:netherite_sword"
+    damage_type: arcane
+    role: specialist
+    stats {
+        base_damage: 10.0
+        damage_per_level: 0.0
+        speed: 1.6
+        max_base_level: 60
+        max_skill_level: 10
+    }
+    skill "Heavy Thoughts" {
+        effect_id: "harukanaru_shonen_no_omoi"
+        cooldown: 35s
+        duration: 5s
+        base_value: 10.0
+        value_per_level: 0.0
+        radius: 8.0
+
+        buff "passive_stats" {
+            max_stacks: 1
+            duration: 9999s
+            stats {
+                crit_dmg_per_stack: 10.0
+                all_dmg_percent_per_stack: 10.0
+            }
+        }
+
+        buff "shojo_resolve" {
+            max_stacks: 1
+            duration: 9999s
+            stats {
+                crit_dmg_per_stack: 60.0
+                all_dmg_percent_per_stack: 25.0
+                crit_rate_per_stack: 5.0
+            }
+        }
+
+        on_activate {
+            execute {
+                val isGriefActive = hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "nageki");
+                if (isGriefActive) {
+                    // Pattern A
+                    hifumi.cresora.weapon.WeaponSkillService.startCooldown(player, definition.id, 200L);
+                    hifumi.cresora.weapon.WeaponSkillService.showCooldownBar(player, definition);
+                    
+                    val shieldHearts = 10.0 + (data.baseLevel - 1) * 0.5;
+                    hifumi.cresora.weapon.WeaponSkillService.grantShield(player, (shieldHearts * 2.0).toFloat(), 99999999L, definition.id);
+                    
+                    player.sendMessage(
+                        net.minecraft.text.Text.translatable(
+                            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a",
+                            hifumi.cresora.weapon.WeaponSkillService.formatNumber(shieldHearts)
+                        ).formatted(net.minecraft.util.Formatting.AQUA),
+                        true
+                    );
+                } else {
+                    // Pattern B
+                    hifumi.cresora.weapon.WeaponSkillService.startCooldown(player, definition.id, 700L);
+                    hifumi.cresora.weapon.WeaponSkillService.showCooldownBar(player, definition);
+                    
+                    val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                    val range = definition.skill.radiusMeters;
+                    val targets = world.getOtherEntities(player, player.boundingBox.expand(range)) {
+                        it is net.minecraft.entity.LivingEntity &&
+                        it.isAlive &&
+                        it !is net.minecraft.entity.player.PlayerEntity
+                    }
+                    .filterIsInstance<net.minecraft.entity.LivingEntity>()
+                    .sortedBy { it.squaredDistanceTo(player) }
+                    .take(5);
+
+                    val playerAtk = player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.ATTACK_DAMAGE);
+                    val damageAmount = (playerAtk * (3.0 + data.skillLevel * 0.5)).toFloat();
+
+                    targets.forEach { target ->
+                        target.damage(
+                            world,
+                            world.damageSources.indirectMagic(player, player),
+                            damageAmount
+                        );
+                        world.spawnParticles(
+                            net.minecraft.particle.ParticleTypes.CRIT,
+                            target.x, target.y + 1.0, target.z,
+                            5, 0.3, 0.3, 0.3, 0.1
+                        );
+                    }
+
+                    player.sendMessage(
+                        net.minecraft.text.Text.translatable(
+                            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b",
+                            targets.size,
+                            hifumi.cresora.weapon.WeaponSkillService.formatNumber(damageAmount.toDouble())
+                        ).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
+                        true
+                    );
+                }
+            }
+        }
+
+        on_player_tick {
+            execute {
+                val passiveState = passiveStatsStates.getOrPut(player.uuid) { PassiveStatsState(0L, 0) };
+                passiveState.expireTick = now + 100 * 20L;
+                passiveState.stacks = 1;
+
+                val hasShojo = hifumi.cresora.weapon.WeaponSkillService.hasWeaponInInventory(player, "harukanaru_shojo_no_ketsui");
+                if (hasShojo) {
+                    if (hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "nageki")) {
+                        hifumi.cresora.weapon.WeaponSkillService.removeMark(player, "nageki");
+                        val access = player as? hifumi.cresora.weapon.WeaponSkillAccess;
+                        if (access != null && access.cresoraGetShieldWeaponId() == definition.id) {
+                            hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
+                        }
+                    }
+                    
+                    val resolveState = shojoResolveStates.getOrPut(player.uuid) { ShojoResolveState(0L, 0) };
+                    resolveState.expireTick = now + 100 * 20L;
+                    resolveState.stacks = 1;
+                } else {
+                    hifumi.cresora.weapon.WeaponSkillService.applyMark(player, "nageki", 10L);
+                    shojoResolveStates.remove(player.uuid);
+
+                    if (now % 200L == 0L) {
+                        val access = player as? hifumi.cresora.weapon.WeaponSkillAccess;
+                        if (access != null) {
+                            val currentShield = access.cresoraGetShieldHp();
+                            if (currentShield < 6.0f) {
+                                if (player.random.nextDouble() < 0.5) {
+                                    hifumi.cresora.weapon.WeaponSkillService.grantShield(player, 6.0f, 99999999L, definition.id);
+                                    player.sendMessage(
+                                        net.minecraft.text.Text.translatable("item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained")
+                                            .formatted(net.minecraft.util.Formatting.BLUE),
+                                        true
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    translations {
+        en_us {
+            name: "Thoughts of the Distant Boy"
+            skill_name: "Heavy Thoughts"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "Heavy Thoughts (Pattern A): Gained a %s-heart shield."
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "Heavy Thoughts (Pattern B): Struck %s enemies for %s arcane damage!"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "Passive: Grief granted a 3-heart shield!"
+            "item.cresora.weapon.skill.buff.passive_stats.name": "Boy's Thoughts"
+            "item.cresora.weapon.skill.buff.shojo_resolve.name": "Resolve of the Couple"
+        }
+        ja_jp {
+            name: "遥かなる少年の想い"
+            skill_name: "重き想い"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重き想い（パターンA）: %sハートのシールドを獲得しました。"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重き想い（パターンB）: %s体の敵に%sの術ダメージを与えました！"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "パッシブ: 嘆きの効果により3ハートのシールドを獲得しました！"
+            "item.cresora.weapon.skill.buff.passive_stats.name": "少年の想い"
+            "item.cresora.weapon.skill.buff.shojo_resolve.name": "二人の決意"
+        }
+        zh_cn {
+            name: "遥远少年的思念"
+            skill_name: "沉重思念"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "沉重思念（模式A）：获得 %s 颗心的护盾。"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "沉重思念（模式B）：对 %s 个目标造成了 %s 点术能伤害！"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "被动：叹息的效果使你获得了 3 颗心的护盾！"
+            "item.cresora.weapon.skill.buff.passive_stats.name": "少年的思念"
+            "item.cresora.weapon.skill.buff.shojo_resolve.name": "双向奔赴"
+        }
+        lzh {
+            name: "遙遠少年之思"
+            skill_name: "重思"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重思（其一）：得 %s 心之盾。"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重思（其二）：施術傷於 %s 敵（傷：%s）！"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "被動：因歎息之故，得三心之盾！"
+            "item.cresora.weapon.skill.buff.passive_stats.name": "少年之思"
+            "item.cresora.weapon.skill.buff.shojo_resolve.name": "二心合一"
+        }
+    }
+}

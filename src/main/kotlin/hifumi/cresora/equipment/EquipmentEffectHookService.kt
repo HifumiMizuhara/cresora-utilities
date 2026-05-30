@@ -64,4 +64,9 @@ object EquipmentEffectHookService {
     }
 
     // dispatch function removed in favor of explicit calls for type safety
+
+    // 表示上のスタック数を取得（将来の拡張用）
+    fun getDisplayStacks(player: ServerPlayerEntity, buffId: String, rawStacks: Int): Int {
+        return rawStacks
+    }
 }
