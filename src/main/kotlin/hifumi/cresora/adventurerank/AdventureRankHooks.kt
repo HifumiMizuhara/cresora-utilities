@@ -1,4 +1,5 @@
 package hifumi.cresora.adventurerank
+import hifumi.cresora.CreSoraUtilities
 import hifumi.cresora.bloodmoon.MoonAltarService
 import hifumi.cresora.combat.CombatMobDisplayService
 import hifumi.cresora.combat.FieldMobPackService
@@ -31,6 +32,14 @@ object AdventureRankHooks {
                     ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
                     MoonAltarService.tryDropMoonBrick(killer, entity)
                     EquipmentEffectHookService.onKill(killer, entity)
+                    if (killer.random.nextDouble() < 0.05) {
+                        val element = hifumi.cresora.leyline.LeyLineElement.entries[killer.random.nextInt(hifumi.cresora.leyline.LeyLineElement.entries.size)]
+                        val keyItem = CreSoraUtilities.LEY_LINE_KEYS[element]
+                        if (keyItem != null) {
+                            killer.inventory.offerOrDrop(net.minecraft.item.ItemStack(keyItem))
+                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.leyline.key_dropped", net.minecraft.text.Text.translatable(element.translationKeyId)), false)
+                        }
+                    }
                 }
                 is MobEntity -> {
                     CreditsService.addFriendlyKillReward(killer, entity)

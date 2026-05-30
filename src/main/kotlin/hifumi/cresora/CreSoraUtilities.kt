@@ -57,6 +57,11 @@ import hifumi.cresora.weapon.WeaponSkillMaterialScreenHandler
 import hifumi.cresora.weapon.WeaponSkillService
 import hifumi.cresora.weapon.WeaponStackSupport
 import hifumi.cresora.weapon.WeaponUpgradeScreenHandler
+import hifumi.cresora.leyline.LeyLineElement
+import hifumi.cresora.leyline.LeyLineKeyItem
+import hifumi.cresora.leyline.LeyLineOverflowBlock
+import hifumi.cresora.leyline.LeyLineSelectionScreenHandler
+import hifumi.cresora.leyline.LeyLineHooks
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
@@ -126,6 +131,12 @@ object CreSoraUtilities : ModInitializer {
 	val RESONANT_LOCATOR_ITEM: Item = Item(itemSettings(RESONANT_LOCATOR_ID).maxCount(16))
 	val RESONANT_CACHE_BLOCK: Block = Block(blockSettings(RESONANT_CACHE_ID, Blocks.CHEST))
 	val RESONANT_CACHE_BLOCK_ITEM: Item = BlockItem(RESONANT_CACHE_BLOCK, itemSettings(RESONANT_CACHE_ID))
+	private val LEY_LINE_OVERFLOW_ID = Identifier.of(MOD_ID, "ley_line_overflow")
+	val LEY_LINE_OVERFLOW_BLOCK: Block = LeyLineOverflowBlock(blockSettings(LEY_LINE_OVERFLOW_ID, Blocks.STONE))
+	val LEY_LINE_OVERFLOW_BLOCK_ITEM: Item = BlockItem(LEY_LINE_OVERFLOW_BLOCK, itemSettings(LEY_LINE_OVERFLOW_ID))
+	val LEY_LINE_KEYS: Map<LeyLineElement, LeyLineKeyItem> = LeyLineElement.entries.associateWith { element ->
+		LeyLineKeyItem(element, itemSettings(Identifier.of(MOD_ID, "${element.id}_key")))
+	}
 
 	lateinit var UPGRADE_SCREEN_HANDLER: ScreenHandlerType<UpgradeScreenHandler>
 	lateinit var WEAPON_UPGRADE_SCREEN_HANDLER: ScreenHandlerType<WeaponUpgradeScreenHandler>
@@ -142,6 +153,7 @@ object CreSoraUtilities : ModInitializer {
 	lateinit var ARTIFACT_BETA_SCREEN_HANDLER: ScreenHandlerType<ArtifactBetaScreenHandler>
 	lateinit var RESONANCE_SCREEN_HANDLER: ScreenHandlerType<ResonanceScreenHandler>
 	lateinit var RESONANCE_RESULT_SCREEN_HANDLER: ScreenHandlerType<ResonanceResultScreenHandler>
+	lateinit var LEY_LINE_SELECTION_SCREEN_HANDLER: ScreenHandlerType<LeyLineSelectionScreenHandler>
 	lateinit var SET_LEVEL_LOOT_FUNCTION: LootFunctionType<SetLevelLootFunction>
 
 	override fun onInitialize() {
@@ -149,12 +161,17 @@ object CreSoraUtilities : ModInitializer {
 
 		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
 		Registry.register(Registries.BLOCK, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK)
+		Registry.register(Registries.BLOCK, LEY_LINE_OVERFLOW_ID, LEY_LINE_OVERFLOW_BLOCK)
 		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
 		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
 		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
 		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
 		Registry.register(Registries.ITEM, RESONANT_LOCATOR_ID, RESONANT_LOCATOR_ITEM)
 		Registry.register(Registries.ITEM, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK_ITEM)
+		Registry.register(Registries.ITEM, LEY_LINE_OVERFLOW_ID, LEY_LINE_OVERFLOW_BLOCK_ITEM)
+		for ((element, keyItem) in LEY_LINE_KEYS) {
+			Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "${element.id}_key"), keyItem)
+		}
 
 		EquipmentContentRegistry.init()
 		WeaponContentRegistry.init()
@@ -250,6 +267,11 @@ object CreSoraUtilities : ModInitializer {
 			Identifier.of(MOD_ID, "resonance_result"),
 			ScreenHandlerType(::ResonanceResultScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
+		LEY_LINE_SELECTION_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "ley_line_selection"),
+			ScreenHandlerType(::LeyLineSelectionScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
 		SET_LEVEL_LOOT_FUNCTION = Registry.register(
 			Registries.LOOT_FUNCTION_TYPE,
 			Identifier.of(MOD_ID, "set_level"),
@@ -274,6 +296,7 @@ object CreSoraUtilities : ModInitializer {
 		WeaponSkillService.init()
 		NaturalRegenService.init()
 		HotbarOverrideService.init()
+		LeyLineHooks.init()
 		modifyLootTables()
 
 		logger.info("CreSora Utilities initialized!")

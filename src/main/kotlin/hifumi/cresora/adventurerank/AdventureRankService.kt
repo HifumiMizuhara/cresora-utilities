@@ -234,17 +234,19 @@ object AdventureRankService {
         val domainMultiplier = DomainService.damageMultiplier(attacker)
         val masqueradeMultiplier = MasqueradeService.damageMultiplier(attacker)
         val bloodMoonMultiplier = BloodMoonService.damageMultiplier(attacker)
+        val leyLineMultiplier = hifumi.cresora.leyline.LeyLineService.damageMultiplier(attacker)
         val world = hostile.world as? ServerWorld ?: return 1.0
         val moonMultiplier = MoonPhaseService.damageMultiplier(world.server ?: return 1.0)
         if (storedRank <= 0) {
-            return domainMultiplier * masqueradeMultiplier * bloodMoonMultiplier * moonMultiplier
+            return domainMultiplier * masqueradeMultiplier * bloodMoonMultiplier * moonMultiplier * leyLineMultiplier
         }
         return AdventureRankProfile.damageMultiplier(hostile.type, storedRank) *
             FieldMobPackService.eliteDamageScalar(hostile) *
             domainMultiplier *
             masqueradeMultiplier *
             bloodMoonMultiplier *
-            moonMultiplier
+            moonMultiplier *
+            leyLineMultiplier
     }
 
     fun mobRank(entity: HostileEntity): Int {

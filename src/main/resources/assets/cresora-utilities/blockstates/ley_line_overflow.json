@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "element=sun": { "model": "minecraft:block/yellow_concrete" },
+    "element=moon": { "model": "minecraft:block/gray_concrete" },
+    "element=fire": { "model": "minecraft:block/red_concrete" },
+    "element=water": { "model": "minecraft:block/blue_concrete" },
+    "element=wood": { "model": "minecraft:block/brown_concrete" },
+    "element=gold": { "model": "minecraft:block/gold_block" },
+    "element=earth": { "model": "minecraft:block/yellow_terracotta" }
+  }
+}

@@ -2,6 +2,7 @@ package hifumi.cresora
 
 import hifumi.cresora.domain.DomainRewardScreen
 import hifumi.cresora.domain.DomainSelectionScreen
+import hifumi.cresora.domain.LeyLineSelectionScreen
 import hifumi.cresora.equipment.ArtifactAlphaScreen
 import hifumi.cresora.equipment.ArtifactBetaScreen
 import hifumi.cresora.equipment.ArtifactShopScreen
@@ -25,6 +26,7 @@ object CreSoraUtilitiesClient : ClientModInitializer {
 		HandledScreens.register(CreSoraUtilities.WEAPON_SKILL_MATERIAL_SCREEN_HANDLER, ::WeaponSkillMaterialScreen)
 		HandledScreens.register(CreSoraUtilities.CRESORA_MENU_SCREEN_HANDLER, ::CresoraMenuScreen)
 		HandledScreens.register(CreSoraUtilities.DOMAIN_SELECTION_SCREEN_HANDLER, ::DomainSelectionScreen)
+		HandledScreens.register(CreSoraUtilities.LEY_LINE_SELECTION_SCREEN_HANDLER, ::LeyLineSelectionScreen)
 		HandledScreens.register(CreSoraUtilities.DOMAIN_REWARD_SCREEN_HANDLER, ::DomainRewardScreen)
 		HandledScreens.register(CreSoraUtilities.STORY_CHAPTER_SELECTION_SCREEN_HANDLER, ::StoryChapterSelectionScreen)
 		HandledScreens.register(CreSoraUtilities.STORY_STAGE_SELECTION_SCREEN_HANDLER, ::StoryStageSelectionScreen)
