@@ -2,6 +2,7 @@ package hifumi.cresora.equipment
 import hifumi.cresora.StatType
 import hifumi.cresora.adventurerank.AdventureRankService
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -84,7 +85,7 @@ object ArtifactSpecialUpgradeService {
         return baseStack
     }
 
-    fun tryDropSpecialItems(player: ServerPlayerEntity, hostile: HostileEntity) {
+    fun tryDropSpecialItems(player: ServerPlayerEntity, hostile: MobEntity) {
         tryDropSpecialItems(player, AdventureRankService.mobLevel(hostile))
     }
 

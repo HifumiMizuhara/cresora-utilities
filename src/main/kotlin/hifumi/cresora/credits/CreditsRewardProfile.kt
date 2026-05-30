@@ -32,7 +32,7 @@ object CreditsRewardProfile {
     private const val ARTIFACT_PICKUP_REWARD = 350
     private const val UPGRADE_MATERIAL_PICKUP_REWARD = 120
 
-    fun hostileKill(entity: HostileEntity): Int {
+    fun hostileKill(entity: MobEntity): Int {
         val level = AdventureRankService.mobLevel(entity).coerceAtLeast(1)
         val reward = when (HostileRewardFamilies.classify(entity.type)) {
             HostileRewardFamily.SURVIVOR -> SURVIVOR_BASE + level * SURVIVOR_PER_LEVEL

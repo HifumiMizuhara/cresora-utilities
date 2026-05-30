@@ -56,6 +56,7 @@ class LeyLineSelectionScreenHandler(
     }
 
     override fun canUse(player: PlayerEntity): Boolean {
+        if (player.world.isClient) return true
         val pos = getBlockPos()
         return player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
     }

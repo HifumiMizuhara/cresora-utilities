@@ -478,6 +478,7 @@
   "message.cresora.leyline.started": "地脈挑戦が開始されました！エリア内にモブがスポーンします。挑戦エリアから離れないでください。",
   "message.cresora.leyline.wave_started": "地脈ウェーブ %d/%d (モンスターランク %d) 進行中！",
   "message.cresora.leyline.failed_leave": "地脈挑戦失敗：エリア内に生存しているプレイヤーがいません！",
+  "message.cresora.leyline.leave_warning": "警告：挑戦エリアに戻ってください！残り時間：%d秒",
   "message.cresora.leyline.cleared": "地脈噴湧挑戦成功！",
   "screen.cresora.leyline.selection_title": "地脈ティア選択",
   "screen.cresora.leyline.tier_title": "地脈挑戦 - ティア %d",

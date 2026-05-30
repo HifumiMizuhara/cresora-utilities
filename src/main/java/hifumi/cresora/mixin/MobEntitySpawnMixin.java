@@ -25,9 +25,10 @@ public abstract class MobEntitySpawnMixin {
         EntityData entityData,
         CallbackInfoReturnable<EntityData> cir
     ) {
-        if (!((Object) this instanceof HostileEntity hostile)) {
+        if (!((Object) this instanceof net.minecraft.entity.mob.Monster || (Object) this instanceof HostileEntity)) {
             return;
         }
+        MobEntity hostile = (MobEntity) (Object) this;
         if (!(world instanceof ServerWorld serverWorld)) {
             return;
         }

@@ -1,5 +1,12 @@
 # WORK_DONE
  
+## Antigravity カスタムスキル「code-review-skill」の完全英語化 (2026-05-30)
+- [x] カスタムスキルの完全英語化:
+  - `.agents/skills/code-review-skill` 内のすべてのファイルから中国語のコメントやテキストを排除し、すべて自然でプロフェッショナルな英語へ翻訳・置換。
+  - 対象ファイル: `SKILL.md`, `README.md`, `CONTRIBUTING.md`, `index.html` および `reference/` 内の全17種の詳細言語/フレームワーク別レビューガイド。
+  - `index.html` を英語版である `index.en.html` の内容で完全に置き換え。
+  - スキル内の中国語テキストが完全にゼロになったことを Python スキャンで検証・確認。
+
 ## 地脈噴湧システム（Ley Line Overflow）の不具合・セキュリティ修正 (2026-05-30)
 - [x] 次元跨ぎの消去バグの修正: `PendingLeyLine` に `worldKey: RegistryKey<World>` を保持させ、タイムアウト時にキーを設置した対象次元のブロックのみを安全に `Blocks.AIR` に置換するように修正。
 - [x] 重複開始の防止: `LeyLineService.startEvent` において、同一座標ですでにアクティブなセッションが存在する場合は開始処理をエラー終了させ、妖魔モブの重複生成・残留を防ぐチェックを追加。
@@ -1026,4 +1033,53 @@ Resolved a client-side JVM `IllegalAccessError` that caused the game to crash wh
 
 ### Verification
 - Ran clean build: `GRADLE_USER_HOME=.gradle-user ./gradlew clean compileKotlin compileClientKotlin --console=plain` which successfully processed resources, applied the access widener, and compiled both main and client Kotlin/Java classes.
+
+## Real-Device Gameplay Smoke Test (2026-05-30)
+
+- **Invoked workflow `/jikki-tesuto`**:
+  - Successfully compiled assets and mod classes.
+  - Launched both the Minecraft Fabric development server (`task-12`) and player client (`task-14`) concurrently in the background.
+  - Verified that the client connected successfully to the local server (`localhost:25565`).
+  - Checked the player join event for `Player96` and verified that they successfully connected and have operator (OP) status.
+  - Verified gameplay actions via log audits:
+    - Checked creative mode switch.
+    - Verified giving mod items/weapons to `Player96`, specifically `Cadenza Allegro` (得意羊羊狂想曲) and `Resolve of the Distant Girl` (遥远少女的决意).
+    - Verified Ley Line Key (日之钥) acquisition and block activation trigger: `"地脉已激活。若50秒内未开始挑战，钥匙将返还。"`.
+    - Verified spawning, combat, and Elite Mob scaling: successfully spawned wave mobs (including an Elite Ravager `Lv 2 Ravager HP 3.4 / 130.2 [Elite]`), and verified combat progression and eventual challenge failure on timeout/exit.
+
+## Ley Line Challenge QoL Improvements (2026-05-30)
+
+Implemented player warning countdowns and monster boundary controls for Ley Line challenges.
+
+### Accomplishments
+- **Player Warning Countdown**:
+  - Modified `LeyLineService.kt` to send a 10-second warning countdown via the Action Bar overlay when a player leaves the Ley Line challenge boundaries.
+  - Added warnings targeting both the placer and any other players within a 40-block radius.
+- **Monster Boundary Teleportation**:
+  - Tracked initial spawn positions of mobs inside `LeyLineEventSession`.
+  - Added tick checks to identify if any active mob has wandered outside the expanded boundary box (`Box.expand(5.0, 3.0, 5.0)`).
+  - Teleported straying mobs back to their initial positions using `requestTeleport`, reset velocity, halted active pathfinding/navigation, and reset combat targets to ensure they return to battle.
+- **Localization**:
+  - Added translation key `message.cresora.leyline.leave_warning` to English, Chinese, Japanese, and Classical Chinese language files.
+
+### Verification
+- Compiled and verified with `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`.
+
+## Ley Line & Combat System QoL & Bug Fixes (2026-05-30)
+
+Addressed several critical bugs in the Ley Line Overflow system and core combat scaling.
+
+### Accomplishments
+- **Client-Side Coordinate Truncation Bug Fix**:
+  - Bypassed client-side distance checks in `LeyLineSelectionScreenHandler.canUse` (`if (player.world.isClient) return true`). This prevents the GUI from immediately closing itself on the client when a block is placed beyond coordinates `[-32768, 32767]` due to 16-bit property truncation, while maintaining full-precision 32-bit security checks on the server.
+- **Mob Teleport Containment Buffer**:
+  - Used a larger containment check box (`Box(session.pos).expand(8.0, 4.0, 8.0)`) for mob out-of-bounds checks, while keeping the player boundary at `expand(5.0, 3.0, 5.0)`. This provides a 3-block buffer to allow mobs some maneuvering space during combat at the edges, preventing constant teleport resets.
+- **Slime, Magma Cube, and Phantom Scaling & Tracking Fixes**:
+  - Changed all casting and parameter type hierarchies from `HostileEntity` to `MobEntity` in service classes (`LeyLineService`, `AdventureRankService`, `FieldMobPackService`, `DomainService`, `StoryService`, `MasqueradeService`, `CresoraDebuffService`).
+  - In `MobEntityMixin` and `LivingEntityMixin` Java files, updated type checks to target `net.minecraft.entity.mob.Monster` (alongside `HostileEntity`).
+  - This ensures that Slimes, Magma Cubes, and Phantoms are correctly tracked in active event/challenge sessions, receive proper Adventure Rank and damage/health scaling, and display combat feedback (e.g. damage indicators) properly when hit.
+
+### Verification
+- Ran full clean compile using `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain` which successfully completed without any errors.
+
 

@@ -741,6 +741,7 @@
   "message.cresora.leyline.started": "Ley Line challenge started! Mobs will spawn in the area, please do not leave the challenge area.",
   "message.cresora.leyline.wave_started": "Ley Line wave %d/%d (Monster Rank %d) in progress!",
   "message.cresora.leyline.failed_leave": "Ley Line challenge failed: no alive players in challenge area!",
+  "message.cresora.leyline.leave_warning": "Warning: Please return to the challenge area! Time remaining: %d second(s)",
   "message.cresora.leyline.cleared": "Ley Line Overflow challenge successful!",
   "screen.cresora.leyline.selection_title": "Select Ley Line Tier",
   "screen.cresora.leyline.tier_title": "Ley Line Challenge - Tier %d",

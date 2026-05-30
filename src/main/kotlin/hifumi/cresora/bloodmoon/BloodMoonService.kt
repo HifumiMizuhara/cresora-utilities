@@ -32,6 +32,7 @@ import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.boss.WitherEntity
 import net.minecraft.entity.decoration.DisplayEntity
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -319,7 +320,7 @@ object BloodMoonService {
         return 1.0 + session.battleStacks() * 0.03
     }
 
-    fun maybeDuplicateNaturalSpawn(hostile: HostileEntity, world: ServerWorld, spawnReason: SpawnReason) {
+    fun maybeDuplicateNaturalSpawn(hostile: MobEntity, world: ServerWorld, spawnReason: SpawnReason) {
         if (spawnReason != SpawnReason.NATURAL && spawnReason != SpawnReason.CHUNK_GENERATION) {
             return
         }
@@ -337,13 +338,13 @@ object BloodMoonService {
             SpawnReason.EVENT,
             true,
             false
-        ) as? HostileEntity ?: return
+        ) as? MobEntity ?: return
         val rank = AdventureRankService.mobRank(hostile)
         val duplicateAccess = duplicate as? AdventureRankMobAccess ?: return
         duplicateAccess.cresoraSetMobAdventureRank(rank)
-        FieldMobPackService.markExplicit(duplicate, (hostile as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true)
-        AdventureRankService.applyMobScaling(duplicate, rank)
-        duplicate.target = hostile.target
+        FieldMobPackService.markExplicit(duplicate as MobEntity, (hostile as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true)
+        AdventureRankService.applyMobScaling(duplicate as MobEntity, rank)
+        (duplicate as MobEntity).setTarget(hostile.getTarget())
     }
 
     private fun onUseBlock(

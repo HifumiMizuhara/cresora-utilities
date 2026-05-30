@@ -54,7 +54,7 @@ public class LivingEntityMixin {
         if ((Object) this instanceof MobEntity) {
             amount = (float) (amount * MusicEchoContentRegistry.INSTANCE.mobDamageTakenMultiplier());
         }
-        if ((Object) this instanceof HostileEntity hostile) {
+        if ((Object) this instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || (Object) this instanceof HostileEntity)) {
             amount = (float) (amount * MasqueradeService.INSTANCE.damageTakenMultiplier(hostile));
             amount = (float) (amount * StoryService.INSTANCE.damageTakenMultiplier(hostile));
             CombatDamageType damageType = CombatDamageTypeSupport.damageSourceType(source);
@@ -113,7 +113,7 @@ public class LivingEntityMixin {
             EquipmentEffectHookService.INSTANCE.onDamageTaken(player, source, damageDone);
             if (player instanceof ServerPlayerEntity serverPlayer) {
                 AdventureRankService.INSTANCE.showPlayerDamageFeedback(serverPlayer, source, damageDone);
-                if (source.getAttacker() instanceof HostileEntity hostile && hostile instanceof AdventureRankMobAccess access) {
+                if (source.getAttacker() instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity) && hostile instanceof AdventureRankMobAccess access) {
                     if (access.cresoraIsEliteMob()) {
                         CresoraDebuffService.INSTANCE.onEliteHit(serverPlayer, hostile);
                     }
@@ -121,7 +121,7 @@ public class LivingEntityMixin {
             }
             return;
         }
-        if (!(entity instanceof HostileEntity hostile)) {
+        if (!(entity instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity))) {
             return;
         }
         if (source.getAttacker() instanceof PlayerEntity player) {

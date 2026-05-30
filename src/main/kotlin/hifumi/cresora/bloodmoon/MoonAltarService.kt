@@ -4,6 +4,7 @@ import hifumi.cresora.equipment.ArtifactSpecialItemKind
 import hifumi.cresora.equipment.ArtifactSpecialItemSupport
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.server.network.ServerPlayerEntity
@@ -24,7 +25,7 @@ object MoonAltarService {
         })
     }
 
-    fun tryDropMoonBrick(player: ServerPlayerEntity, hostile: HostileEntity) {
+    fun tryDropMoonBrick(player: ServerPlayerEntity, hostile: MobEntity) {
         if (player.random.nextDouble() >= MOON_BRICK_DROP_CHANCE) {
             return
         }

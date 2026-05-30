@@ -12,6 +12,7 @@ import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
@@ -123,12 +124,12 @@ object AdventureRankService {
         newAccess.cresoraSetAdventureRankXp(oldAccess.cresoraGetAdventureRankXp())
     }
 
-    fun hostileKillXp(entity: HostileEntity): Int {
+    fun hostileKillXp(entity: MobEntity): Int {
         val rank = (entity as? AdventureRankMobAccess)?.cresoraGetMobAdventureRank() ?: AdventureRankProgression.MIN_RANK
         return AdventureRankProfile.killXp(entity.type, rank)
     }
 
-    fun getOrAssignMobRank(entity: HostileEntity, world: ServerWorld): Int {
+    fun getOrAssignMobRank(entity: MobEntity, world: ServerWorld): Int {
         val access = entity as? AdventureRankMobAccess ?: return AdventureRankProgression.MIN_RANK
         val existing = access.cresoraGetMobAdventureRank()
         if (existing > 0) {
@@ -140,12 +141,12 @@ object AdventureRankService {
         return assigned
     }
 
-    fun applyMobScaling(entity: HostileEntity, rank: Int) {
+    fun applyMobScaling(entity: MobEntity, rank: Int) {
         applyMobScaling(entity, rank, 1.0, 1.0, 1.0)
     }
 
     fun applyMobScaling(
-        entity: HostileEntity,
+        entity: MobEntity,
         rank: Int,
         healthScalar: Double,
         defenseScalar: Double,
@@ -228,7 +229,7 @@ object AdventureRankService {
     }
 
     fun damageMultiplier(attacker: Entity?): Double {
-        val hostile = attacker as? HostileEntity ?: return 1.0
+        val hostile = attacker as? MobEntity ?: return 1.0
         val access = hostile as? AdventureRankMobAccess ?: return 1.0
         val storedRank = access.cresoraGetMobAdventureRank()
         val domainMultiplier = DomainService.damageMultiplier(attacker)
@@ -249,12 +250,12 @@ object AdventureRankService {
             leyLineMultiplier
     }
 
-    fun mobRank(entity: HostileEntity): Int {
+    fun mobRank(entity: MobEntity): Int {
         val access = entity as? AdventureRankMobAccess ?: return AdventureRankProgression.MIN_RANK
         return AdventureRankProgression.sanitizeRank(access.cresoraGetMobAdventureRank())
     }
 
-    fun mobLevel(entity: HostileEntity): Int {
+    fun mobLevel(entity: MobEntity): Int {
         val world = entity.world as? ServerWorld ?: return mobRank(entity)
         val server = world.server ?: return mobRank(entity)
         return mobRank(entity) + MoonPhaseService.levelBonus(server)
@@ -309,7 +310,7 @@ object AdventureRankService {
         return nearestRank
     }
 
-    private fun rollNearbyFieldRank(entity: HostileEntity, world: ServerWorld, x: Double, y: Double, z: Double): Int {
+    private fun rollNearbyFieldRank(entity: MobEntity, world: ServerWorld, x: Double, y: Double, z: Double): Int {
         val anchorRank = findNearestNearbyRank(world, x, y, z)
         val variance = FIELD_MOB_RANK_VARIANCE.coerceAtLeast(0)
         if (variance == 0) {

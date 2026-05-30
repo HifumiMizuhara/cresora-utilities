@@ -3,6 +3,7 @@ import hifumi.cresora.InventoryGate
 import hifumi.cresora.ModDataComponents
 import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.combat.FieldMobPackService
 import hifumi.cresora.combat.ArenaManager
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.domain.DomainCombatProfile
@@ -18,6 +19,7 @@ import hifumi.cresora.weapon.WeaponStackSupport
 import net.minecraft.block.Blocks
 import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
 import net.minecraft.server.MinecraftServer
@@ -91,11 +93,11 @@ object StoryService {
 
     fun hasActiveSession(player: ServerPlayerEntity): Boolean = sessionsByPlayer.containsKey(player.uuid)
 
-    fun damageTakenMultiplier(hostile: HostileEntity): Double {
+    fun damageTakenMultiplier(hostile: MobEntity): Double {
         return mobRuntime[hostile.uuid]?.damageTakenMultiplier ?: 1.0
     }
 
-    fun allowsTrueDamage(hostile: HostileEntity): Boolean {
+    fun allowsTrueDamage(hostile: MobEntity): Boolean {
         return !(mobRuntime[hostile.uuid]?.trueDamageImmune ?: false)
     }
 
@@ -307,7 +309,7 @@ object StoryService {
                 session.phase = StoryPhase.POST_STORY
                 resetPhaseState(session, world.time + 20L)
                 for (mobUuid in session.activeMobUuids.toList()) {
-                    (world.getEntity(mobUuid) as? HostileEntity)?.discard()
+                    world.getEntity(mobUuid)?.discard()
                     mobRuntime.remove(mobUuid)
                 }
                 session.activeMobUuids.clear()
@@ -346,11 +348,12 @@ object StoryService {
                     session.arenaCenter.y + 1.0,
                     session.arenaCenter.z + 0.5 + randomOffset(world.random, index * 31 + offsetIndex + 7)
                 )
-                val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
+                val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? MobEntity ?: return@repeat
                 val access = hostile as? AdventureRankMobAccess ?: return@repeat
                 access.cresoraSetMobAdventureRank(wave.enemyRank)
                 AdventureRankService.applyMobScaling(hostile, wave.enemyRank)
                 hostile.target = player
+                FieldMobPackService.markExplicit(hostile, false)
                 mobRuntime[hostile.uuid] = StoryRuntimeMob(
                     session.id,
                     (1.0 - wave.modifiers.damageReductionPercent / 100.0).coerceAtLeast(0.0),
@@ -439,7 +442,7 @@ object StoryService {
     private fun cleanupSession(server: MinecraftServer, session: StorySession, player: ServerPlayerEntity?) {
         val world = ArenaManager.getDomainWorld(server) ?: return
         for (mobUuid in session.activeMobUuids) {
-            (world.getEntity(mobUuid) as? HostileEntity)?.discard()
+            world.getEntity(mobUuid)?.discard()
             mobRuntime.remove(mobUuid)
         }
         session.activeMobUuids.clear()
@@ -452,7 +455,7 @@ object StoryService {
         val iterator = session.activeMobUuids.iterator()
         while (iterator.hasNext()) {
             val mobUuid = iterator.next()
-            val entity = world.getEntity(mobUuid) as? HostileEntity
+            val entity = world.getEntity(mobUuid) as? MobEntity
             if (entity == null || entity.isRemoved || !entity.isAlive) {
                 mobRuntime.remove(mobUuid)
                 iterator.remove()

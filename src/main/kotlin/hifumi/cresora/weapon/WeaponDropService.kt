@@ -5,15 +5,16 @@ import hifumi.cresora.combat.HostileRewardFamily
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 
 object WeaponDropService {
-    fun onHostileKilled(player: ServerPlayerEntity, hostile: HostileEntity) {
+    fun onHostileKilled(player: ServerPlayerEntity, hostile: MobEntity) {
         emulateHostileKilled(player, hostile)
     }
 
-    fun emulateHostileKilled(player: ServerPlayerEntity, hostile: HostileEntity) {
+    fun emulateHostileKilled(player: ServerPlayerEntity, hostile: MobEntity) {
         val world = hostile.world as? ServerWorld ?: return
         emulateDrops(world, hostile.type, AdventureRankService.mobLevel(hostile), hostile.x, hostile.y, hostile.z)
     }

@@ -45,9 +45,10 @@ public class MobEntityMixin implements AdventureRankMobAccess {
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void cresora$refreshMobDisplay(CallbackInfo ci) {
-        if (!((Object)this instanceof HostileEntity hostile)) {
+        if (!((Object)this instanceof net.minecraft.entity.mob.Monster)) {
             return;
         }
+        MobEntity hostile = (MobEntity) (Object) this;
         if (hostile.getWorld().isClient()) {
             return;
         }

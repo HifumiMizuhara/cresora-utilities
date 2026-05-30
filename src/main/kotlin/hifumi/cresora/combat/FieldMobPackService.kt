@@ -5,6 +5,7 @@ import hifumi.cresora.adventurerank.AdventureRankService
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -43,7 +44,7 @@ object FieldMobPackService {
 
     fun packIdKey(): String = PACK_ID_KEY
 
-    fun initializeOnSpawn(hostile: HostileEntity, world: ServerWorld, spawnReason: SpawnReason) {
+    fun initializeOnSpawn(hostile: MobEntity, world: ServerWorld, spawnReason: SpawnReason) {
         val queuedMember = pendingPackMember.get()
         if (queuedMember != null) {
             pendingPackMember.remove()
@@ -75,7 +76,7 @@ object FieldMobPackService {
         }
     }
 
-    fun ensureClassification(hostile: HostileEntity) {
+    fun ensureClassification(hostile: MobEntity) {
         val access = hostile as? AdventureRankMobAccess ?: return
         val normalizedPackId = access.cresoraGetMobPackId().trim()
         if (normalizedPackId != access.cresoraGetMobPackId()) {
@@ -84,22 +85,22 @@ object FieldMobPackService {
         syncCommandTags(hostile)
     }
 
-    fun markExplicit(hostile: HostileEntity, elite: Boolean) {
+    fun markExplicit(hostile: MobEntity, elite: Boolean) {
         val access = hostile as? AdventureRankMobAccess ?: return
         access.cresoraSetEliteMob(elite)
         access.cresoraSetMobPackId("")
         syncCommandTags(hostile)
     }
 
-    fun eliteHealthScalar(hostile: HostileEntity): Double = if (isFieldElite(hostile)) ELITE_HEALTH_SCALAR else 1.0
+    fun eliteHealthScalar(hostile: MobEntity): Double = if (isFieldElite(hostile)) ELITE_HEALTH_SCALAR else 1.0
 
-    fun eliteDefenseScalar(hostile: HostileEntity): Double = if (isFieldElite(hostile)) ELITE_DEFENSE_SCALAR else 1.0
+    fun eliteDefenseScalar(hostile: MobEntity): Double = if (isFieldElite(hostile)) ELITE_DEFENSE_SCALAR else 1.0
 
-    fun eliteToughnessScalar(hostile: HostileEntity): Double = if (isFieldElite(hostile)) ELITE_TOUGHNESS_SCALAR else 1.0
+    fun eliteToughnessScalar(hostile: MobEntity): Double = if (isFieldElite(hostile)) ELITE_TOUGHNESS_SCALAR else 1.0
 
-    fun eliteDamageScalar(hostile: HostileEntity): Double = if (isFieldElite(hostile)) ELITE_DAMAGE_SCALAR else 1.0
+    fun eliteDamageScalar(hostile: MobEntity): Double = if (isFieldElite(hostile)) ELITE_DAMAGE_SCALAR else 1.0
 
-    fun classificationTag(entity: HostileEntity): Text {
+    fun classificationTag(entity: MobEntity): Text {
         val access = entity as? AdventureRankMobAccess ?: return Text.empty()
         return when {
             access.cresoraIsEliteMob() -> Text.translatable("status.cresora.mob.elite").formatted(Formatting.GOLD)
@@ -108,17 +109,17 @@ object FieldMobPackService {
         }
     }
 
-    private fun hasClassification(entity: HostileEntity): Boolean {
+    private fun hasClassification(entity: MobEntity): Boolean {
         val access = entity as? AdventureRankMobAccess ?: return false
         return access.cresoraIsEliteMob() || access.cresoraGetMobPackId().isNotBlank() || entity.commandTags.contains(NORMAL_COMMAND_TAG)
     }
 
-    private fun isFieldElite(entity: HostileEntity): Boolean {
+    private fun isFieldElite(entity: MobEntity): Boolean {
         val access = entity as? AdventureRankMobAccess ?: return false
         return access.cresoraIsEliteMob() && access.cresoraGetMobPackId().isNotBlank()
     }
 
-    private fun classify(hostile: HostileEntity, rank: Int, elite: Boolean, packId: String) {
+    private fun classify(hostile: MobEntity, rank: Int, elite: Boolean, packId: String) {
         val access = hostile as? AdventureRankMobAccess ?: return
         access.cresoraSetMobAdventureRank(AdventureRankProgression.sanitizeRank(rank))
         access.cresoraSetEliteMob(elite)
@@ -126,7 +127,7 @@ object FieldMobPackService {
         syncCommandTags(hostile)
     }
 
-    private fun syncCommandTags(hostile: HostileEntity) {
+    private fun syncCommandTags(hostile: MobEntity) {
         val access = hostile as? AdventureRankMobAccess ?: return
         hostile.removeCommandTag(NORMAL_COMMAND_TAG)
         hostile.removeCommandTag(ELITE_COMMAND_TAG)
@@ -157,7 +158,7 @@ object FieldMobPackService {
     }
 
     private fun spawnAdditionalPackMember(
-        leader: HostileEntity,
+        leader: MobEntity,
         world: ServerWorld,
         spawnReason: SpawnReason,
         packId: String,
@@ -173,7 +174,7 @@ object FieldMobPackService {
             val yOffset = if (attempt < 3) 0 else world.random.nextBetween(-1, 1)
             val spawnPos = BlockPos.ofFloored(leader.x + offsetX, leader.y + yOffset, leader.z + offsetZ)
             pendingPackMember.set(PendingPackMember(packId, rank, elite))
-            val spawned = leader.type.spawn(world, null, spawnPos, spawnReason, true, false) as? HostileEntity
+            val spawned = leader.type.spawn(world, null, spawnPos, spawnReason, true, false) as? MobEntity
             if (spawned != null) {
                 spawned.target = leader.target
                 return

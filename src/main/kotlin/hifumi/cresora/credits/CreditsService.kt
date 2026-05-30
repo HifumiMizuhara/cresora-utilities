@@ -69,7 +69,7 @@ object CreditsService {
         return addCredits(player, CreditsRewardProfile.pickupReward(source, count))
     }
 
-    fun addHostileKillReward(player: ServerPlayerEntity, entity: HostileEntity): Int {
+    fun addHostileKillReward(player: ServerPlayerEntity, entity: MobEntity): Int {
         return addCredits(player, CreditsRewardProfile.hostileKill(entity))
     }
 

@@ -730,6 +730,7 @@
   "message.cresora.leyline.started": "已启动地脉挑战！挑战范围内将刷新怪物，请不要离开挑战范围。",
   "message.cresora.leyline.wave_started": "正在进行第 %d/%d 波地脉挑战（怪物星级: %d）",
   "message.cresora.leyline.failed_leave": "地脉挑战失败：挑战区域内无存活玩家！",
+  "message.cresora.leyline.leave_warning": "警告：请尽快返回挑战区域！剩余时间：%d 秒",
   "message.cresora.leyline.cleared": "地脉喷涌挑战成功！",
   "screen.cresora.leyline.selection_title": "选择地脉层级",
   "screen.cresora.leyline.tier_title": "地脉挑战 - 第 %d 阶",

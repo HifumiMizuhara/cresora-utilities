@@ -8,6 +8,8 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.decoration.DisplayEntity
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -47,10 +49,10 @@ object CombatMobDisplayService {
         val isMimic = (entity as? net.minecraft.entity.passive.SheepEntity)?.let(BaaMimicService::isMimicSheep) ?: false
         val rank = when {
             isMimic -> BaaMimicService.originalRank(entity as net.minecraft.entity.passive.SheepEntity)
-            entity is HostileEntity -> AdventureRankService.mobLevel(entity)
+            entity is MobEntity && (entity is Monster || entity is HostileEntity) -> AdventureRankService.mobLevel(entity)
             else -> 1
         }
-        val classificationTag = (entity as? HostileEntity)?.let { FieldMobPackService.classificationTag(it) } ?: Text.empty()
+        val classificationTag = (entity as? MobEntity)?.let { if (it is Monster || it is HostileEntity) FieldMobPackService.classificationTag(it) else Text.empty() } ?: Text.empty()
         val statusSuffix = getStatusSuffix(entity)
         
         val baseLabel = Text.translatable(
@@ -121,14 +123,14 @@ object CombatMobDisplayService {
             return
         }
         val damageType = CombatDamageTypeSupport.damageSourceType(source)
-        val resistancePercent = if (target is HostileEntity) {
+        val resistancePercent = if (target is MobEntity && (target is Monster || target is HostileEntity)) {
             MobCombatProfileRegistry.resistancePercent(target.type, damageType)
         } else {
             0.0
         }
         spawnDamageDisplay(world, target, damage, damageType, false)
         val attacker = source.attacker as? ServerPlayerEntity
-        val hostileTarget = target as? HostileEntity
+        val hostileTarget = if (target is MobEntity && (target is Monster || target is HostileEntity)) target else null
         if (attacker != null && hostileTarget != null) {
             showOutgoingDamage(attacker, damage, damageType, resistancePercent, false)
         }

@@ -22,6 +22,7 @@ import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.RegistryKey
@@ -32,6 +33,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -58,6 +60,7 @@ private class LeyLineEventSession(
     val worldKey: RegistryKey<World>
 ) {
     val spawnedMobUuids = mutableSetOf<UUID>()
+    val mobInitialPositions = mutableMapOf<UUID, BlockPos>()
     var wave = 1
     var wavePreparing = true
     var nextSpawnTick = 0L
@@ -199,12 +202,32 @@ object LeyLineService {
                 }
             } else {
                 session.ticksWithoutPlayers++
+                if (session.ticksWithoutPlayers % 20 == 0) {
+                    val remainingSeconds = 10 - (session.ticksWithoutPlayers / 20)
+                    if (remainingSeconds > 0) {
+                        val warningText = Text.translatable("message.cresora.leyline.leave_warning", remainingSeconds)
+                        // Warn placer
+                        val placer = server.playerManager.getPlayer(session.placerUuid)
+                        if (placer != null && placer.world == world) {
+                            placer.sendMessage(warningText, true)
+                        }
+                        // Warn other players within 40 blocks
+                        val playersToWarn = world.getPlayers {
+                            it.isAlive && it.uuid != session.placerUuid &&
+                            it.squaredDistanceTo(session.pos.x + 0.5, session.pos.y + 0.5, session.pos.z + 0.5) < 1600.0
+                        }
+                        for (p in playersToWarn) {
+                            p.sendMessage(warningText, true)
+                        }
+                    }
+                }
                 if (session.ticksWithoutPlayers >= 200) { // 10 seconds empty
                     sessionIterator.remove()
                     // Discard remaining mobs
                     for (mobUuid in session.spawnedMobUuids) {
-                        (world.getEntity(mobUuid) as? HostileEntity)?.discard()
+                        world.getEntity(mobUuid)?.discard()
                         mobRuntime.remove(mobUuid)
+                        session.mobInitialPositions.remove(mobUuid)
                     }
                     val placer = server.playerManager.getPlayer(session.placerUuid)
                     placer?.sendMessage(Text.translatable("message.cresora.leyline.failed_leave"), false)
@@ -224,7 +247,29 @@ object LeyLineService {
                     val entity = world.getEntity(uuid)
                     if (entity == null || !entity.isAlive || entity.isRemoved) {
                         mobRuntime.remove(uuid)
+                        session.mobInitialPositions.remove(uuid)
                         mobIterator.remove()
+                    } else {
+                        // Teleport mobs back if they wander out of bounds
+                        val mobBox = Box(session.pos).expand(8.0, 4.0, 8.0)
+                        if (!mobBox.contains(entity.x, entity.y, entity.z)) {
+                            val initialPos = session.mobInitialPositions[uuid]
+                            if (initialPos != null) {
+                                (entity as? MobEntity)?.let { hostile ->
+                                    hostile.requestTeleport(
+                                        initialPos.x + 0.5,
+                                        initialPos.y.toDouble(),
+                                        initialPos.z + 0.5
+                                    )
+                                    hostile.setVelocity(Vec3d.ZERO)
+                                    hostile.navigation.stop()
+                                    val target = nearbyPlayers.firstOrNull() ?: server.playerManager.getPlayer(session.placerUuid)
+                                    if (target != null) {
+                                        hostile.target = target
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -292,7 +337,7 @@ object LeyLineService {
                 session.pos.y.toDouble() + 0.5,
                 session.pos.z + 0.5 + Math.sin(angle) * offsetVal
             )
-            val hostile = type.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
+            val hostile = type.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? MobEntity ?: return@repeat
             val access = hostile as? AdventureRankMobAccess ?: return@repeat
             access.cresoraSetMobAdventureRank(spawnRank)
             FieldMobPackService.markExplicit(hostile, false)
@@ -300,6 +345,7 @@ object LeyLineService {
             hostile.addStatusEffect(StatusEffectInstance(StatusEffects.GLOWING, 12000, 0, false, false))
             hostile.target = target
             session.spawnedMobUuids += hostile.uuid
+            session.mobInitialPositions[hostile.uuid] = spawnPos
             mobRuntime[hostile.uuid] = normalScaling.damageScalar
         }
 
@@ -307,7 +353,7 @@ object LeyLineService {
         val eliteScaling = DomainCombatProfile.scaling(spawnRank, true)
         val eliteType = getEliteMobType(session.element, random)
         val eliteSpawnPos = BlockPos.ofFloored(session.pos.x + 0.5, session.pos.y.toDouble() + 0.5, session.pos.z + 0.5)
-        val eliteHostile = eliteType.spawn(world, null, eliteSpawnPos, SpawnReason.EVENT, true, false) as? HostileEntity
+        val eliteHostile = eliteType.spawn(world, null, eliteSpawnPos, SpawnReason.EVENT, true, false) as? MobEntity
         if (eliteHostile != null) {
             val access = eliteHostile as? AdventureRankMobAccess
             if (access != null) {
@@ -318,6 +364,7 @@ object LeyLineService {
                 eliteHostile.setPersistent()
                 eliteHostile.target = target
                 session.spawnedMobUuids += eliteHostile.uuid
+                session.mobInitialPositions[eliteHostile.uuid] = eliteSpawnPos
                 mobRuntime[eliteHostile.uuid] = eliteScaling.damageScalar
             }
         }

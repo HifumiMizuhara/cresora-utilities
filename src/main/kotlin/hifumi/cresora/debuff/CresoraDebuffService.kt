@@ -1,15 +1,18 @@
 package hifumi.cresora.debuff
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.TypeFilter
 import net.minecraft.util.Identifier
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object CresoraDebuffService {
     private val activeDebuffs = ConcurrentHashMap<UUID, MutableMap<Identifier, Int>>()
+
 
     fun addDebuff(player: ServerPlayerEntity, debuff: CresoraDebuff, durationTicks: Int) {
         val playerDebuffs = activeDebuffs.computeIfAbsent(player.uuid) { mutableMapOf() }
@@ -82,7 +85,7 @@ object CresoraDebuffService {
         }
     }
 
-    fun onEliteHit(player: ServerPlayerEntity, elite: HostileEntity) {
+    fun onEliteHit(player: ServerPlayerEntity, elite: MobEntity) {
         val world = player.world as? ServerWorld ?: return
         if (world.random.nextDouble() > 0.35) return // 35% chance to apply a debuff
         

@@ -25,6 +25,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.SpawnReason
 import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
@@ -224,7 +225,7 @@ object DomainService {
         return runtime.damageMultiplier
     }
 
-    fun isDomainMob(entity: HostileEntity): Boolean = mobRuntime.containsKey(entity.uuid)
+    fun isDomainMob(entity: MobEntity): Boolean = mobRuntime.containsKey(entity.uuid)
 
     private fun tickSession(server: MinecraftServer, session: DomainSession) {
         val player = server.playerManager.getPlayer(session.playerUuid)
@@ -283,7 +284,7 @@ object DomainService {
                 session.arenaCenter.y + 1.0,
                 session.arenaCenter.z + 0.5 + randomOffset(world.random, index + 13)
             )
-            val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? HostileEntity ?: return@repeat
+            val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? MobEntity ?: return@repeat
             val access = hostile as? AdventureRankMobAccess ?: return@repeat
             access.cresoraSetMobAdventureRank(spawnRank)
             FieldMobPackService.markExplicit(hostile, wave.elite)
@@ -357,7 +358,7 @@ object DomainService {
     private fun cleanupSession(server: MinecraftServer, session: DomainSession) {
         val world = ArenaManager.getDomainWorld(server) ?: return
         for (mobUuid in session.activeMobUuids) {
-            (world.getEntity(mobUuid) as? HostileEntity)?.discard()
+            world.getEntity(mobUuid)?.discard()
             mobRuntime.remove(mobUuid)
         }
         session.activeMobUuids.clear()
@@ -369,7 +370,7 @@ object DomainService {
         val iterator = session.activeMobUuids.iterator()
         while (iterator.hasNext()) {
             val mobUuid = iterator.next()
-            val entity = world.getEntity(mobUuid) as? HostileEntity
+            val entity = world.getEntity(mobUuid) as? MobEntity
             if (entity == null || entity.isRemoved || !entity.isAlive) {
                 mobRuntime.remove(mobUuid)
                 iterator.remove()

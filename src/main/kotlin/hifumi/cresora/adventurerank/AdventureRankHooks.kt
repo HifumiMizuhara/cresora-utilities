@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.mob.Monster
 import net.minecraft.server.network.ServerPlayerEntity
 
 object AdventureRankHooks {
@@ -25,33 +26,36 @@ object AdventureRankHooks {
         ServerLivingEntityEvents.AFTER_DEATH.register(ServerLivingEntityEvents.AfterDeath { entity, damageSource ->
             val killer = damageSource.attacker as? ServerPlayerEntity ?: return@AfterDeath
             when (entity) {
-                is HostileEntity -> {
-                    AdventureRankService.addXp(killer, AdventureRankService.hostileKillXp(entity))
-                    CreditsService.addHostileKillReward(killer, entity)
-                    WeaponDropService.onHostileKilled(killer, entity)
-                    ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
-                    MoonAltarService.tryDropMoonBrick(killer, entity)
-                    EquipmentEffectHookService.onKill(killer, entity)
-                    if (killer.random.nextDouble() < 0.05) {
-                        val element = hifumi.cresora.leyline.LeyLineElement.entries[killer.random.nextInt(hifumi.cresora.leyline.LeyLineElement.entries.size)]
-                        val keyItem = CreSoraUtilities.LEY_LINE_KEYS[element]
-                        if (keyItem != null) {
-                            killer.inventory.offerOrDrop(net.minecraft.item.ItemStack(keyItem))
-                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.leyline.key_dropped", net.minecraft.text.Text.translatable(element.translationKeyId)), false)
-                        }
-                    }
-                }
                 is MobEntity -> {
-                    CreditsService.addFriendlyKillReward(killer, entity)
+                    if (entity is Monster || entity is HostileEntity) {
+                        AdventureRankService.addXp(killer, AdventureRankService.hostileKillXp(entity))
+                        CreditsService.addHostileKillReward(killer, entity)
+                        WeaponDropService.onHostileKilled(killer, entity)
+                        ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
+                        MoonAltarService.tryDropMoonBrick(killer, entity)
+                        EquipmentEffectHookService.onKill(killer, entity)
+                        if (killer.random.nextDouble() < 0.05) {
+                            val element = hifumi.cresora.leyline.LeyLineElement.entries[killer.random.nextInt(hifumi.cresora.leyline.LeyLineElement.entries.size)]
+                            val keyItem = CreSoraUtilities.LEY_LINE_KEYS[element]
+                            if (keyItem != null) {
+                                killer.inventory.offerOrDrop(net.minecraft.item.ItemStack(keyItem))
+                                killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.leyline.key_dropped", net.minecraft.text.Text.translatable(element.translationKeyId)), false)
+                            }
+                        }
+                    } else {
+                        CreditsService.addFriendlyKillReward(killer, entity)
+                    }
                 }
             }
         })
 
         ServerEntityEvents.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, world ->
-            val hostile = entity as? HostileEntity ?: return@Load
-            val rank = AdventureRankService.getOrAssignMobRank(hostile, world)
-            FieldMobPackService.ensureClassification(hostile)
-            AdventureRankService.applyMobScaling(hostile, rank)
+            val hostile = entity as? MobEntity ?: return@Load
+            if (hostile is Monster || hostile is HostileEntity) {
+                val rank = AdventureRankService.getOrAssignMobRank(hostile, world)
+                FieldMobPackService.ensureClassification(hostile)
+                AdventureRankService.applyMobScaling(hostile, rank)
+            }
         })
 
         ServerPlayerEvents.COPY_FROM.register(ServerPlayerEvents.CopyFrom { oldPlayer, newPlayer, _ ->
