@@ -305,7 +305,9 @@ class ArtifactCompiler(
                         content = content.replace(Regex("\\b$stateClassName\\b"), "$className.$stateClassName")
                     }
                 }
-                funSpec.addStatement("%L", content)
+                content = InstructionMapping.expandAll(content, CompilerContext.ARTIFACT)
+                val nonWrappingContent = content.replace(' ', '·')
+                funSpec.addCode("%L\n", nonWrappingContent)
             }
             else -> {}
         }

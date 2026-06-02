@@ -12,12 +12,12 @@ import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
-import kotlin.collections.MutableMap
 import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -32,22 +32,23 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 
 public object QianqiuYeluoSkill : WeaponSkillHandler {
-  public val passiveStateStates: MutableMap<UUID, QianqiuYeluoSkill.PassiveStateState> =
-      mutableMapOf()
+  public val passiveStateStates: ConcurrentHashMap<UUID, QianqiuYeluoSkill.PassiveStateState> =
+      ConcurrentHashMap()
 
-  public val qiucanStackStates: MutableMap<UUID, QianqiuYeluoSkill.QiucanStackState> =
-      mutableMapOf()
+  public val qiucanStackStates: ConcurrentHashMap<UUID, QianqiuYeluoSkill.QiucanStackState> =
+      ConcurrentHashMap()
 
-  public val jingtianStateStates: MutableMap<UUID, QianqiuYeluoSkill.JingtianStateState> =
-      mutableMapOf()
+  public val jingtianStateStates: ConcurrentHashMap<UUID, QianqiuYeluoSkill.JingtianStateState> =
+      ConcurrentHashMap()
 
-  public val zansouModeStates: MutableMap<UUID, QianqiuYeluoSkill.ZansouModeState> = mutableMapOf()
+  public val zansouModeStates: ConcurrentHashMap<UUID, QianqiuYeluoSkill.ZansouModeState> =
+      ConcurrentHashMap()
 
   public val yorakuManchishoActiveStates:
-      MutableMap<UUID, QianqiuYeluoSkill.YorakuManchishoActiveState> = mutableMapOf()
+      ConcurrentHashMap<UUID, QianqiuYeluoSkill.YorakuManchishoActiveState> = ConcurrentHashMap()
 
-  public val yorakuPowerStates: MutableMap<UUID, QianqiuYeluoSkill.YorakuPowerState> =
-      mutableMapOf()
+  public val yorakuPowerStates: ConcurrentHashMap<UUID, QianqiuYeluoSkill.YorakuPowerState> =
+      ConcurrentHashMap()
 
   override fun clearTransientState(playerId: UUID) {
     passiveStateStates.remove(playerId)
@@ -136,35 +137,27 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
 
     ; run execute@ {
       val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
-                          val passive = QianqiuYeluoSkill.passiveStateStates.get(player.uuid)
-                          if (passive != null) {
-                              if (!hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-              "zansou_mode")) {
-                                  if (now % 40L == 0L && player.health / player.maxHealth > 0.30f) {
-                                      val damage = player.maxHealth * 0.02f
-                                      player.damage(player.world, (player.world as?
-              net.minecraft.server.world.ServerWorld)?.damageSources?.magic() ?:
-              player.damageSources.magic(), damage)
-                                  }
-                              }
-                              if (passive.expireTick - now <= 1L) {
-                                  player.heal(player.maxHealth * 0.30f)
-                                 
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.passive_healed").formatted(net.minecraft.util.Formatting.GREEN),
-              true)
+      val passive = QianqiuYeluoSkill.passiveStateStates.get(player.uuid)
+      if (passive != null) {
+                          if (!hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "zansou_mode")) {
+                              if (now % 40L == 0L && player.health / player.maxHealth > 0.30f) {
+                                  val damage = player.maxHealth * 0.02f
+                                  player.damage(player.world, (player.world as? net.minecraft.server.world.ServerWorld)?.damageSources?.magic() ?: player.damageSources.magic(), damage)
                               }
                           }
-                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-              "yoraku_manchisho_active")) {
-                              val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid)
-                              if (state == null || state.stacks <= 0) {
-                                  QianqiuYeluoSkill.yorakuManchishoActiveStates.remove(player.uuid)
-                                  QianqiuYeluoSkill.yorakuPowerStates.remove(player.uuid)
-                                 
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_ended").formatted(net.minecraft.util.Formatting.GRAY),
-              true)
-                              }
+                          if (passive.expireTick - now <= 1L) {
+                              player.heal(player.maxHealth * 0.30f)
+                              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.passive_healed").formatted(net.minecraft.util.Formatting.GREEN), true)
                           }
+                      }
+      if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "yoraku_manchisho_active")) {
+                          val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid)
+                          if (state == null || state.stacks <= 0) {
+                              QianqiuYeluoSkill.yorakuManchishoActiveStates.remove(player.uuid)
+                              QianqiuYeluoSkill.yorakuPowerStates.remove(player.uuid)
+                              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_ended").formatted(net.minecraft.util.Formatting.GRAY), true)
+                          }
+                      }
     }
 
   }
@@ -202,18 +195,15 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
 
     ; return run execute@ {
     var finalAmount = amount
-                        if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-            "passive_state")) {
-                            finalAmount *= 0.40f
+    if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "passive_state")) {
+                        finalAmount *= 0.40f
+                    }
+    if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "yoraku_manchisho_active")) {
+                        if (finalAmount >= player.health) {
+                            finalAmount = (player.health - 1.0f).coerceAtLeast(0.0f)
                         }
-                        if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-            "yoraku_manchisho_active")) {
-                            if (finalAmount >= player.health) {
-                                finalAmount = (player.health - 1.0f).coerceAtLeast(0.0f)
-                            }
-                        }
-                        return@execute finalAmount
-    amount
+                    }
+    return@execute finalAmount
     }
 
   }
@@ -229,67 +219,43 @@ public object QianqiuYeluoSkill : WeaponSkillHandler {
 
     ; run execute@ {
       if (isTrueDamage) return@execute
-                          val world = player.world as? net.minecraft.server.world.ServerWorld ?:
-              return@execute
-
-                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-              "passive_state")) {
-                              val missingHp = (player.maxHealth - player.health).coerceAtLeast(0.0f)
-                              val boost = (missingHp / 2.0f * 0.01f).coerceAtMost(0.20f)
-                              if (boost > 0) {
-                                  target.damage(world, world.damageSources.magic(), amount * boost)
+      val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute
+      if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "passive_state")) {
+                          val missingHp = (player.maxHealth - player.health).coerceAtLeast(0.0f)
+                          val boost = (missingHp / 2.0f * 0.01f).coerceAtMost(0.20f)
+                          if (boost > 0) {
+                              target.damage(world, world.damageSources.magic(), amount * boost)
+                          }
+                      }
+      if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "jingtian_state")) {
+                          val zansouBoost = if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "zansou_mode")) 1.5f else 1.0f
+                          target.damage(world, world.damageSources.magic(), (amount * 0.15f) * zansouBoost)
+                          if (world.random.nextDouble() < 0.30) {
+                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "root", 120L)
+                              target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 120, 255, false, false, true))
+                          }
+                      }
+      if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "zansou_mode")) {
+                          hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "lux", 200L)
+                      }
+      if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "yoraku_manchisho_active")) {
+                          val aoeRange = 4.5
+                          val baseDamage = hifumi.cresora.weapon.WeaponCombatSupport.attackDamage(definition, data).toFloat()
+                          world.getEntitiesByClass(net.minecraft.entity.LivingEntity::class.java, player.boundingBox.expand(aoeRange)) { it.isAlive && it != player }
+                              .forEach { entity ->
+                                   entity.damage(world, world.damageSources.magic(), baseDamage * 1.5f)
                               }
-                          }
 
-                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-              "jingtian_state")) {
-                              val zansouBoost = if
-              (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player, "zansou_mode")) 1.5f else
-              1.0f
-                              target.damage(world, world.damageSources.magic(), (amount * 0.15f) *
-              zansouBoost)
-                              if (world.random.nextDouble() < 0.30) {
-                                  hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "root",
-              120L)
-                                 
-              target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS,
-              120, 255, false, false, true))
-                              }
+                          val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid)
+                          if (state != null && state.stacks >= 4) {
+                              state.stacks -= 4
+                              player.heal(player.maxHealth * 0.04f)
+                              val powerState = QianqiuYeluoSkill.yorakuPowerStates.getOrPut(player.uuid) { QianqiuYeluoSkill.YorakuPowerState(0L, 0) }
+                              powerState.expireTick = world.time + 300L
+                              powerState.stacks = (powerState.stacks + 4).coerceAtMost(100)
+                              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_hit", state.stacks, powerState.stacks).formatted(net.minecraft.util.Formatting.GOLD), true)
                           }
-
-                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-              "zansou_mode")) {
-                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "lux",
-              200L)
-                          }
-
-                          if (hifumi.cresora.weapon.WeaponSkillService.hasStatus(player,
-              "yoraku_manchisho_active")) {
-                              val aoeRange = 4.5
-                              val baseDamage =
-              hifumi.cresora.weapon.WeaponCombatSupport.attackDamage(definition, data).toFloat()
-                             
-              world.getEntitiesByClass(net.minecraft.entity.LivingEntity::class.java,
-              player.boundingBox.expand(aoeRange)) { it.isAlive && it != player }
-                                  .forEach { entity ->
-                                       entity.damage(world, world.damageSources.magic(), baseDamage
-              * 1.5f)
-                                  }
-
-                              val state = QianqiuYeluoSkill.qiucanStackStates.get(player.uuid)
-                              if (state != null && state.stacks >= 4) {
-                                  state.stacks -= 4
-                                  player.heal(player.maxHealth * 0.04f)
-                                  val powerState =
-              QianqiuYeluoSkill.yorakuPowerStates.getOrPut(player.uuid) {
-              QianqiuYeluoSkill.YorakuPowerState(0L, 0) }
-                                  powerState.expireTick = world.time + 300L
-                                  powerState.stacks = (powerState.stacks + 4).coerceAtMost(100)
-                                 
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.qianqiu_yeluo.yoraku_hit",
-              state.stacks, powerState.stacks).formatted(net.minecraft.util.Formatting.GOLD), true)
-                              }
-                          }
+                      }
     }
 
   }

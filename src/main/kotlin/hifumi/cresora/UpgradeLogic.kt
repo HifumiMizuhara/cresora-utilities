@@ -105,16 +105,14 @@ object UpgradeLogic {
             return AttemptResult(false, false, Text.translatable(preview.messageKey ?: "screen.cresora.upgrade.invalid_material").formatted(Formatting.RED))
         }
 
-        if (!CreditsService.spendCredits(serverPlayer, CSC_COST)) {
-            return AttemptResult(false, false, Text.translatable("item.cresora.not_enough_credits").formatted(Formatting.RED))
-        }
-
-        val denominator = 1000 / preview.successRatePermille
-        val success = player.random.nextInt(denominator) == 0
-
         return when (preview.materialType) {
             MaterialType.PENDANT -> {
+                if (!CreditsService.spendCredits(serverPlayer, CSC_COST)) {
+                    return AttemptResult(false, false, Text.translatable("item.cresora.not_enough_credits").formatted(Formatting.RED))
+                }
                 materialStack.decrement(1)
+                val denominator = 1000 / preview.successRatePermille
+                val success = player.random.nextInt(denominator) == 0
                 if (success) {
                     val baseData = EquipmentStackSupport.ensurePendantData(baseStack, player.random)
                     EquipmentStackSupport.syncPendantData(

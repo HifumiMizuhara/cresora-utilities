@@ -28,7 +28,7 @@ data class WeaponData(
             baseLevel = baseLevel.coerceIn(1, maxBase),
             skillLevel = skillLevel.coerceIn(1, maxSkill),
             breakthrough = bt
-        ).normalized()
+        )
     }
 
     companion object {

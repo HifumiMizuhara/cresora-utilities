@@ -65,9 +65,8 @@ public object ZansouSkill : WeaponSkillHandler {
     ; run execute@ {
       val jt = QianqiuYeluoSkill.jingtianStateStates.get(player.uuid)
       if (jt != null) {
-                              jt.expireTick =
-              hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
-                          }
+                          jt.expireTick = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player) + 40 * 20L;
+                      }
     }
 
     HotbarOverrideService.restoreHotbar(player)

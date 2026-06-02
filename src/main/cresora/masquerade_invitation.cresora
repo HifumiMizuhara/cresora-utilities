@@ -39,14 +39,14 @@ weapon "Masquerade Invitation" {
         }
         zh_cn {
             name: "通往假面舞会的邀约"
-            skill_name: "癒やしへの招待状"
-            "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 起動！"
+            skill_name: "治愈邀请函"
+            "item.cresora.weapon.skill.heal_activated.generic": "至福之愈 启动！"
             "item.cresora.weapon.skill.heal_activated": "%s 已发动。恢复 %s 心。"
         }
         lzh {
             name: "假面盛筵之邀"
-            skill_name: "癒やしへの招待状"
-            "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 啓矣！"
+            skill_name: "治愈邀请函"
+            "item.cresora.weapon.skill.heal_activated.generic": "至福之愈 啓矣！"
             "item.cresora.weapon.skill.heal_activated": "%s 已發。療 %s 心。"
         }
     }

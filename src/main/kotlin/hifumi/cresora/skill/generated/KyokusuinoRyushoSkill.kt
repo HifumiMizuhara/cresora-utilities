@@ -12,12 +12,12 @@ import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
-import kotlin.collections.MutableMap
 import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -32,17 +32,17 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 
 public object KyokusuinoRyushoSkill : WeaponSkillHandler {
-  public val raiseACupStates: MutableMap<UUID, KyokusuinoRyushoSkill.RaiseACupState> =
-      mutableMapOf()
+  public val raiseACupStates: ConcurrentHashMap<UUID, KyokusuinoRyushoSkill.RaiseACupState> =
+      ConcurrentHashMap()
 
-  public val recitePoetryStates: MutableMap<UUID, KyokusuinoRyushoSkill.RecitePoetryState> =
-      mutableMapOf()
+  public val recitePoetryStates: ConcurrentHashMap<UUID, KyokusuinoRyushoSkill.RecitePoetryState> =
+      ConcurrentHashMap()
 
-  public val zhiPierceStates: MutableMap<UUID, KyokusuinoRyushoSkill.ZhiPierceState> =
-      mutableMapOf()
+  public val zhiPierceStates: ConcurrentHashMap<UUID, KyokusuinoRyushoSkill.ZhiPierceState> =
+      ConcurrentHashMap()
 
-  public val pavilionActiveStates: MutableMap<UUID, KyokusuinoRyushoSkill.PavilionActiveState> =
-      mutableMapOf()
+  public val pavilionActiveStates:
+      ConcurrentHashMap<UUID, KyokusuinoRyushoSkill.PavilionActiveState> = ConcurrentHashMap()
 
   override fun clearTransientState(playerId: UUID) {
     raiseACupStates.remove(playerId)
@@ -119,71 +119,44 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
       val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
       val state = KyokusuinoRyushoSkill.pavilionActiveStates.get(player.uuid)
       if (state != null && now < state.expireTick) {
-                              // Pulse every 2 seconds (40 ticks)
-                              if (now % 40L == 0L) {
-                                  val world = player.world;
-                                  val roll = world.random.nextInt(4);
-                                  when (roll) {
-                                      0 -> { // Raise a Cup
-                                          // Add raise_a_cup and zhi_pierce
-                                          val rState =
-              KyokusuinoRyushoSkill.raiseACupStates.getOrPut(player.uuid) {
-              KyokusuinoRyushoSkill.RaiseACupState(0L, 0) };
-                                          rState.expireTick = now + 16 * 20L;
-                                          rState.stacks = (rState.stacks + 1).coerceAtMost(20);
+                          // Pulse every 2 seconds (40 ticks)
+                          if (now % 40L == 0L) {
+                              val world = player.world;
+                              val roll = world.random.nextInt(4);
+                              when (roll) {
+                                  0 -> { // Raise a Cup
+                                      // Add raise_a_cup and zhi_pierce
+                                      val rState = KyokusuinoRyushoSkill.raiseACupStates.getOrPut(player.uuid) { KyokusuinoRyushoSkill.RaiseACupState(0L, 0) };
+                                      rState.expireTick = now + 16 * 20L;
+                                      rState.stacks = (rState.stacks + 1).coerceAtMost(20);
 
-                                          val zState =
-              KyokusuinoRyushoSkill.zhiPierceStates.getOrPut(player.uuid) {
-              KyokusuinoRyushoSkill.ZhiPierceState(0L, 0) };
-                                          zState.expireTick = now + 16 * 20L;
-                                          zState.stacks = (zState.stacks + 1).coerceAtMost(20);
+                                      val zState = KyokusuinoRyushoSkill.zhiPierceStates.getOrPut(player.uuid) { KyokusuinoRyushoSkill.ZhiPierceState(0L, 0) };
+                                      zState.expireTick = now + 16 * 20L;
+                                      zState.stacks = (zState.stacks + 1).coerceAtMost(20);
 
-                                         
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup",
-              rState.stacks, hifumi.cresora.weapon.WeaponSkillService.formatNumber(rState.stacks *
-              10.0), hifumi.cresora.weapon.WeaponSkillService.formatNumber(rState.stacks * 15.0),
-              zState.stacks, hifumi.cresora.weapon.WeaponSkillService.formatNumber(zState.stacks *
-              1.0)).formatted(net.minecraft.util.Formatting.RED), true);
-                                      }
-                                      1 -> { // Recite Poetry
-                                          val pState =
-              KyokusuinoRyushoSkill.recitePoetryStates.getOrPut(player.uuid) {
-              KyokusuinoRyushoSkill.RecitePoetryState(0L, 0) };
-                                          pState.expireTick = now + 16 * 20L;
-                                          pState.stacks = (pState.stacks + 1).coerceAtMost(20);
-                                         
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry",
-              pState.stacks, hifumi.cresora.weapon.WeaponSkillService.formatNumber(pState.stacks *
-              20.0), pState.stacks * 2).formatted(net.minecraft.util.Formatting.BLUE), true);
-                                      }
-                                      2 -> { // Place a Stone (Shield)
-                                          val amount = 7.0f;
-                                          val duration = 16L;
-                                          (player as
-              hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp((player as
-              hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp() + amount);
-                                          (player as
-              hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldExpireTick(now + duration *
-              20L);
-                                         
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone",
-              1, hifumi.cresora.weapon.WeaponSkillService.formatNumber(amount /
-              2.0)).formatted(net.minecraft.util.Formatting.AQUA), true);
-                                      }
-                                      3 -> { // Ink Brush (Invulnerability + Heal)
-                                         
-              hifumi.cresora.weapon.WeaponSkillService.grantInvulnerability(player, 40L); // 2s
-                                         
-              hifumi.cresora.weapon.WeaponSkillService.healNearbyAllies(player, 5.0, 8.0f);
-                                         
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush",
-              1, hifumi.cresora.weapon.WeaponSkillService.formatNumber(4.0),
-              hifumi.cresora.weapon.WeaponSkillService.formatNumber(2.0)).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
-              true);
-                                      }
+                                      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup", rState.stacks, hifumi.cresora.weapon.WeaponSkillService.formatNumber(rState.stacks * 10.0), hifumi.cresora.weapon.WeaponSkillService.formatNumber(rState.stacks * 15.0), zState.stacks, hifumi.cresora.weapon.WeaponSkillService.formatNumber(zState.stacks * 1.0)).formatted(net.minecraft.util.Formatting.RED), true);
+                                  }
+                                  1 -> { // Recite Poetry
+                                      val pState = KyokusuinoRyushoSkill.recitePoetryStates.getOrPut(player.uuid) { KyokusuinoRyushoSkill.RecitePoetryState(0L, 0) };
+                                      pState.expireTick = now + 16 * 20L;
+                                      pState.stacks = (pState.stacks + 1).coerceAtMost(20);
+                                      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry", pState.stacks, hifumi.cresora.weapon.WeaponSkillService.formatNumber(pState.stacks * 20.0), pState.stacks * 2).formatted(net.minecraft.util.Formatting.BLUE), true);
+                                  }
+                                  2 -> { // Place a Stone (Shield)
+                                      val amount = 7.0f;
+                                      val duration = 16L;
+                                      (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp((player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp() + amount);
+                                      (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldExpireTick(now + duration * 20L);
+                                      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.place_a_stone", 1, hifumi.cresora.weapon.WeaponSkillService.formatNumber(amount / 2.0)).formatted(net.minecraft.util.Formatting.AQUA), true);
+                                  }
+                                  3 -> { // Ink Brush (Invulnerability + Heal)
+                                      hifumi.cresora.weapon.WeaponSkillService.grantInvulnerability(player, 40L); // 2s
+                                      hifumi.cresora.weapon.WeaponSkillService.healNearbyAllies(player, 5.0, 8.0f);
+                                      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.ink_brush", 1, hifumi.cresora.weapon.WeaponSkillService.formatNumber(4.0), hifumi.cresora.weapon.WeaponSkillService.formatNumber(2.0)).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
                                   }
                               }
                           }
+                      }
     }
 
   }
@@ -225,11 +198,9 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
 
     ; return run execute@ {
     if (hifumi.cresora.weapon.WeaponSkillService.isInvulnerable(player)) {
-                           
-            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable").formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
-            true);
-                            return@execute 0.0f;
-                        }
+                        player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.orchid_pavilion_echo.invulnerable").formatted(net.minecraft.util.Formatting.LIGHT_PURPLE), true);
+                        return@execute 0.0f;
+                    }
     amount
     }
 
@@ -247,16 +218,11 @@ public object KyokusuinoRyushoSkill : WeaponSkillHandler {
     ; run execute@ {
       val zState = KyokusuinoRyushoSkill.zhiPierceStates.get(player.uuid)
       if (zState != null && zState.stacks > 0) {
-                              val damage = zState.stacks * 2.0f;
-                              if (target is net.minecraft.entity.mob.HostileEntity) {
-                                  target.health = (target.health - damage).coerceAtLeast(0.001f);
-                                 
-              hifumi.cresora.adventurerank.AdventureRankService.showMobTrueDamage(target, player,
-              damage);
-                                 
-              hifumi.cresora.adventurerank.AdventureRankService.refreshMobDisplay(target);
-                              }
+                          val damage = zState.stacks * 2.0f;
+                          if (target is net.minecraft.entity.mob.HostileEntity) {
+                              hifumi.cresora.weapon.WeaponSkillService.dealTrueDamage(player, target, damage.toFloat());
                           }
+                      }
     }
 
   }

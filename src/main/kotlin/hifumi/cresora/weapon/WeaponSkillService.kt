@@ -356,13 +356,24 @@ object WeaponSkillService {
     // Held-weapon scoped dynamic attack modifier. This does not aggregate passive bonuses from unequipped weapons.
     fun attackDamageScalar(player: ServerPlayerEntity): Double {
         val definition = activeWeaponContext(player)?.first ?: return 0.0
-        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getAttackDamageScalar(player) }
+        var scalar = runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getAttackDamageScalar(player) }
+        if (definition.id == "hanwu_juanxue" && isSnowEnvironment(player)) {
+            scalar += 0.5
+        }
+        if (hasMark(player, "nageki")) {
+            scalar -= 0.5
+        }
+        return scalar
     }
 
     // Held-weapon scoped dynamic armor modifier. This does not aggregate passive bonuses from unequipped weapons.
     fun armorScalar(player: ServerPlayerEntity): Double {
         val definition = activeWeaponContext(player)?.first ?: return 0.0
-        return runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getArmorScalar(player) }
+        var scalar = runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getArmorScalar(player) }
+        if (hasMark(player, "nageki")) {
+            scalar += 1.0
+        }
+        return scalar
     }
 
     fun healthScalar(player: ServerPlayerEntity): Double {
@@ -440,9 +451,10 @@ object WeaponSkillService {
 
     @JvmStatic
     fun getArcaneResistanceOffset(target: LivingEntity): Double {
-        if (hasMark(target, "entanglement")) return ENTANGLEMENT_RESISTANCE_REDUCTION
-        if (hasMark(target, "lux")) return DARK_LUX_RESISTANCE_REDUCTION
-        return 0.0
+        var offset = 0.0
+        if (hasMark(target, "entanglement")) offset += ENTANGLEMENT_RESISTANCE_REDUCTION
+        if (hasMark(target, "lux")) offset += DARK_LUX_RESISTANCE_REDUCTION
+        return offset
     }
 
     @JvmStatic
@@ -683,6 +695,10 @@ object WeaponSkillService {
         temporaryGuardExpireTickByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         lastHeldWeaponIdByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         taoStacks.keys.removeIf { !onlinePlayerIds.contains(it) }
+        soulBreakStacks.keys.removeIf { !onlinePlayerIds.contains(it) }
+        soulBreakExpireTick.keys.removeIf { !onlinePlayerIds.contains(it) }
+        targetMarks.keys.removeIf { !onlinePlayerIds.contains(it) }
+        invulnerabilityTicks.keys.removeIf { !onlinePlayerIds.contains(it) }
     }
 
     private inline fun runWeaponHandlers(

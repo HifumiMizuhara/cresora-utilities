@@ -95,7 +95,12 @@ object WeaponDropService {
             }
             val baseLevel = (mobLevel * definition.drops.directDropBaseLevelMultiplier).toInt()
                 .coerceIn(1, definition.maxBaseLevel)
-            val stack = WeaponStackSupport.createWeaponStack(definition, tier.rarity, baseLevel, 1)
+            val breakthrough = when {
+                baseLevel <= definition.maxBaseLevel / 2 -> 0
+                baseLevel <= (definition.maxBaseLevel * 3) / 4 -> 1
+                else -> 2
+            }
+            val stack = WeaponStackSupport.createWeaponStack(definition, tier.rarity, baseLevel, 1, breakthrough)
             spawnDrop(world, x, y, z, stack)
             return
         }

@@ -110,9 +110,7 @@ weapon "Kyokusui no Ryusho" {
                 if (zState != null && zState.stacks > 0) {
                     val damage = zState.stacks * 2.0f;
                     if (target is net.minecraft.entity.mob.HostileEntity) {
-                        target.health = (target.health - damage).coerceAtLeast(0.001f);
-                        hifumi.cresora.adventurerank.AdventureRankService.showMobTrueDamage(target, player, damage);
-                        hifumi.cresora.adventurerank.AdventureRankService.refreshMobDisplay(target);
+                        deal_true_damage(damage);
                     }
                 }
             }

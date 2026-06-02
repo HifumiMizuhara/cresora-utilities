@@ -58,7 +58,7 @@ weapon "Stride by the Lakeside" {
         en_us {
             name: "Stride by the Lakeside"
             skill_name: "Lakeside Stride"
-            "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s Activated! Dealt %s hearts total true damage to %s targets."
+            "item.cresora.weapon.skill.current_hp_true_damage_activated": "%1$s Activated! Dealt %3$s hearts total true damage to %2$s targets."
         }
         ja_jp {
             name: "湖畔を歩む"

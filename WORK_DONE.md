@@ -1,5 +1,28 @@
 # WORK_DONE
- 
+
+## コンパイラ・ビルドエラー及びDSLマクロ展開の修正 (2026-05-31)
+- [x] DSL式ノード（`ExpressionNode`）内のマクロ展開のサポート:
+  - `InstructionMapping` に `expandAll` と `splitArguments` を実装。
+  - `CresoraCompiler` および `ArtifactCompiler` の `ExpressionNode` 生成において、`deal_true_damage` などのDSL特有の命令を検出し、自動的に対応する Kotlin コードへ展開する機能を追加。
+  - レシーバーがドットで指定されている場合（例: `player.heal` や `target.deal_true_damage`）は、Kotlin 標準/独自メソッドの呼び出しとして解釈し、マクロ展開を行わないようにチェックを追加。
+- [x] KotlinPoetの行折り返しによる構文エラーの解消:
+  - `ExpressionNode` で生成されるコード内のスペースを KotlinPoet の改行抑止文字 `·` に置換することで、長い数式（例: `60 * 20L`）が勝手に改行されて Kotlin 構文エラー（`* 20L` の spread operator 誤認）になる問題を防止。
+- [x] ビルド検証:
+  - `./gradlew compileAssets` によるアセット再生成、および `./gradlew classes` によるプロジェクト全体のビルドが正常にパスすることを確認。
+
+## 武器の想定機能バグ・翻訳不具合の修正 (2026-05-31)
+- [x] 「遥かなる少年の想い」(`harukanaru_shonen_no_omoi`) の嘆き（`nageki`）状態の修正:
+  - `WeaponSkillService.kt` の `attackDamageScalar` および `armorScalar` において、プレイヤーが `nageki` マークを付与されている場合に「攻击力-50% (scalar -= 0.5)」、「防御力+100% (scalar += 1.0)」を適用するように実装。
+  - `harukanaru_shonen_no_omoi.cresora` に `"item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc"` を追加し、4言語すべてで詳細なスキル被動・能動のテキスト説明を追加。
+- [x] 「寒雾卷雪」(`hanwu_juanxue`) の雪地被動被バフの修正:
+  - `WeaponSkillService.kt` の `attackDamageScalar` において、所持武器が「寒雾卷雪」であり、かつ `isSnowEnvironment`（雪地環境）である場合に「攻击力+50% (scalar += 0.5)」を適用するように実装し、今まで懸空していた判定を機能化。
+- [x] 「行于湖畔」(`lakeside_stride`) の英文翻訳の占位符修正:
+  - `lakeside_stride.cresora` の `en_us` 翻訳ブロックにおいて、`hitCount` と `totalDamage` の引数順序の不整合（数字とダメージが逆に表示されるバグ）を解決するため、索引式占位符 `%1$s`, `%2$s`, `%3$s` に修正。
+- [x] 「通往假面舞会的邀约」(`masquerade_invitation`) の翻訳項残留日文の修正:
+  - `masquerade_invitation.cresora` 内の `zh_cn` と `lzh` において、`ja_jp` から複製した際の残留である `"癒やしへの招待状"` や `"至福の癒やし"` などの日文テキストを、それぞれ正しい中国語（`"治愈邀请函"`/`"至福之愈"`) に修正。
+- [x] ビルド検証:
+  - `./gradlew compileAssets` と `./gradlew classes` によるコンパイルチェックをクリアし、正常な動作と型安全性を確認。
+
 ## Antigravity カスタムスキル「code-review-skill」の完全英語化 (2026-05-30)
 - [x] カスタムスキルの完全英語化:
   - `.agents/skills/code-review-skill` 内のすべてのファイルから中国語のコメントやテキストを排除し、すべて自然でプロフェッショナルな英語へ翻訳・置換。

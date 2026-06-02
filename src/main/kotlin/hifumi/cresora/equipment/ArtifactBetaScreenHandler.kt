@@ -110,11 +110,12 @@ class ArtifactBetaScreenHandler(
     private fun executeBeta(player: PlayerEntity) {
         val serverPlayer = player as? ServerPlayerEntity ?: return
         val result = ArtifactSpecialUpgradeService.performBetaReforge(serverPlayer, baseStack, materialStack, selectedStats.toList()) ?: return
+        val remainingMaterial = materialStack.copy()
         completed = true
         baseStack = ItemStack.EMPTY
         materialStack = ItemStack.EMPTY
         selectedStats.clear()
-        ArtifactUiFlow.openUpgradeScreen(serverPlayer, result, ItemStack.EMPTY)
+        ArtifactUiFlow.openUpgradeScreen(serverPlayer, result, remainingMaterial)
     }
 
     private fun refreshOptions() {

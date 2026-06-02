@@ -37,12 +37,8 @@ public object RondoMelodySkill : WeaponSkillHandler {
 
     ; run execute@ {
       val value = hifumi.cresora.weapon.WeaponCombatSupport.skillValueHp(definition, data)
-      hifumi.cresora.weapon.WeaponSkillService.grantShield(player, value,
-          definition.skill.durationSeconds * 20L)
-      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.activated",
-          net.minecraft.text.Text.translatable(definition.translationKey()),
-          hifumi.cresora.weapon.WeaponSkillService.formatNumber(value /
-          2.0)).formatted(net.minecraft.util.Formatting.AQUA), true)
+      hifumi.cresora.weapon.WeaponSkillService.grantShield(player, value, definition.skill.durationSeconds * 20L)
+      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.activated", net.minecraft.text.Text.translatable(definition.translationKey()), hifumi.cresora.weapon.WeaponSkillService.formatNumber(value / 2.0)).formatted(net.minecraft.util.Formatting.AQUA), true)
     }
 
 
@@ -72,30 +68,19 @@ public object RondoMelodySkill : WeaponSkillHandler {
     hifumi.cresora.weapon.WeaponSkillService.clearExpiredShield(player)
     val remainingShield = (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp()
     if (remainingShield > 0.0f) {
-                             var remainingAmount = amount;
-                             if (remainingAmount <= remainingShield) {
-                                 (player as
-            hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp(remainingShield -
-            remainingAmount);
-                                 if ((player as
-            hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp() <= 0.0f)
-            hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
-                                
-            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.blocked",
-            hifumi.cresora.weapon.WeaponSkillService.formatNumber(remainingAmount /
-            2.0.toDouble())).formatted(net.minecraft.util.Formatting.AQUA), true);
-                                 return@execute 0.0f;
-                             }
-                             (player as
-            hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp(0.0f);
-                             hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
-                            
-            player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.broken").formatted(net.minecraft.util.Formatting.RED),
-            true);
-                             return@execute remainingAmount - remainingShield;
+                         var remainingAmount = amount;
+                         if (remainingAmount <= remainingShield) {
+                             (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp(remainingShield - remainingAmount);
+                             if ((player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp() <= 0.0f) hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
+                             player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.blocked", hifumi.cresora.weapon.WeaponSkillService.formatNumber(remainingAmount / 2.0.toDouble())).formatted(net.minecraft.util.Formatting.AQUA), true);
+                             return@execute 0.0f;
                          }
-                         return@execute amount
-    amount
+                         (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp(0.0f);
+                         hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
+                         player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.broken").formatted(net.minecraft.util.Formatting.RED), true);
+                         return@execute remainingAmount - remainingShield;
+                     }
+    return@execute amount
     }
 
   }

@@ -12,11 +12,11 @@ import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.Boolean
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
-import kotlin.collections.MutableMap
 import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -31,10 +31,11 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 
 public object TanbokuChokuuSkill : WeaponSkillHandler {
-  public val zansoActiveStates: MutableMap<UUID, TanbokuChokuuSkill.ZansoActiveState> =
-      mutableMapOf()
+  public val zansoActiveStates: ConcurrentHashMap<UUID, TanbokuChokuuSkill.ZansoActiveState> =
+      ConcurrentHashMap()
 
-  public val munenSeqStates: MutableMap<UUID, TanbokuChokuuSkill.MunenSeqState> = mutableMapOf()
+  public val munenSeqStates: ConcurrentHashMap<UUID, TanbokuChokuuSkill.MunenSeqState> =
+      ConcurrentHashMap()
 
   override fun clearTransientState(playerId: UUID) {
     zansoActiveStates.remove(playerId)
@@ -79,8 +80,7 @@ public object TanbokuChokuuSkill : WeaponSkillHandler {
 
     ; run execute@ {
       WeaponSkillService.addTao(player, 1)
-      player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained",
-          WeaponSkillService.getTao(player)).formatted(Formatting.GOLD), true)
+      player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.tao_gained", WeaponSkillService.getTao(player)).formatted(Formatting.GOLD), true)
     }
 
     HotbarOverrideService.overrideHotbar(player, definition.id, listOf("danro", "zanso",
@@ -102,15 +102,12 @@ public object TanbokuChokuuSkill : WeaponSkillHandler {
     ; run execute@ {
       val stacks = WeaponSkillService.getSoulBreakStacks(target)
       if (stacks > 0 && !isTrueDamage) {
-                              val boost = amount * (stacks * 0.04f);
-                              target.damage(player.world, player.world.damageSources.magic(),
-              boost);
-                              if (player.world.time % 20L == 0L) {
-                                  
-              player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break",
-              stacks, stacks * 5, stacks * 4).formatted(Formatting.GRAY), true);
-                              }
+                          val boost = amount * (stacks * 0.04f);
+                          target.damage(player.world, player.world.damageSources.magic(), boost);
+                          if (player.world.time % 20L == 0L) {
+                               player.sendMessage(Text.translatable("item.cresora.weapon.tanboku_chokuu.soul_break", stacks, stacks * 5, stacks * 4).formatted(Formatting.GRAY), true);
                           }
+                      }
     }
 
   }

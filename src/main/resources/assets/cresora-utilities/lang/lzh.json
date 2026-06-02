@@ -595,8 +595,8 @@
   "item.cresora-utilities.azure_blade": "蒼之刃",
   "item.cresora-utilities.cadenza_allegro.skill": "咩咩擬態",
   "item.cresora.weapon.skill.baa_mimic_activated.generic": "咩咩擬態 啓矣！",
-  "item.cresora-utilities.masquerade_invitation.skill": "癒やしへの招待状",
-  "item.cresora.weapon.skill.heal_activated.generic": "至福の癒やし 啓矣！",
+  "item.cresora-utilities.masquerade_invitation.skill": "治愈邀请函",
+  "item.cresora.weapon.skill.heal_activated.generic": "至福之愈 啓矣！",
   "item.cresora-utilities.requiem_toward_dawn.skill": "火焰",
   "item.cresora.weapon.skill.flame_aura_activated.generic": "火焰 啓矣！",
   "tag.item.cresora-utilities.adventure_rank_upgrade_materials": "冒險等第強化之材",
@@ -731,5 +731,6 @@
   "screen.cresora.leyline.locked": "未啓：冒險等階不足！",
   "screen.cresora.leyline.click_to_start": "撃以啓事",
   "screen.cresora.leyline.already_started": "此處地脉挑戰既開。",
-  "screen.cresora.leyline.invalid_block": "地脉噴湧之磚毀或變。"
+  "screen.cresora.leyline.invalid_block": "地脉噴湧之磚毀或變。",
+  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "重思：得被動增益（會心傷與全傷加一成）。若囊中有「遙遠少女之決意」，則升為「二心合一」（會心傷加六成、全傷加兩成半、會心率加半成）；否則入「歎息」之境（攻減半，防禦加倍，傷化術能，十秒內概率得盾）。主動釋放：【其一（歎息）】得重盾；【其二（普通）】擊周遭五敵，施大術能傷。"
 }

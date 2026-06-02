@@ -455,7 +455,7 @@
   "item.cresora.weapon.skill.buff.shojo_resolve.name": "二人の決意",
   "item.cresora.weapon.skill.buff.shojo_resolve.gained": "効果獲得: %s (%s 層)",
   "item.cresora.weapon.skill.buff.shojo_resolve.expired": "効果終了: %s",
-  "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重き想い（パターンA）: %sハートのシールドを獲得しました。",
+  "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重き想い（パターンA）: %sハート of シールドを獲得しました。",
   "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重き想い（パターンB）: %s体の敵に%sの術ダメージを与えました！",
   "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "パッシブ: 嘆きの効果により3ハートのシールドを獲得しました！",
   "item.cresora-utilities.equipment.set.osananajimi": "幼なじみ",
@@ -493,5 +493,6 @@
   "screen.cresora.leyline.locked": "未開放：冒険ランクが不足しています！",
   "screen.cresora.leyline.click_to_start": "クリックして挑戦を開始",
   "screen.cresora.leyline.already_started": "ここでは既に地脈噴湧挑戦が開始されています。",
-  "screen.cresora.leyline.invalid_block": "地脈噴湧ブロックが破壊されたか、変更されました。"
+  "screen.cresora.leyline.invalid_block": "地脈噴湧ブロックが破壊されたか、変更されました。",
+  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "重き想い：パッシブ効果（会心ダメージ・与ダメージ+10%）を獲得。インベントリに「遥かなる少女の決意」がある場合、効果が「二人の決意」（会心ダメージ+60%、与ダメージ+25%、会心率+5%）に強化される。ない場合、「嘆き」状態（攻击力-50%、防御力+100%、術ダメージ変換、10秒毎に確率でシールド獲得）になる。アクティブ：【パターンA（「嘆き」状態）】強力なシールドを獲得。【パターンB（通常）】周囲の最大5体の敵に強力な術ダメージを与える。"
 }

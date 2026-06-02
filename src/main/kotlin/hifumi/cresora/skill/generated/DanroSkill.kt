@@ -36,18 +36,14 @@ public object DanroSkill : WeaponSkillHandler {
       val dir = player.rotationVecClient.multiply(1.0, 0.0, 1.0).normalize()
       val hitBox = player.boundingBox.stretch(dir.multiply(5.0)).expand(1.0)
       world.getOtherEntities(player, hitBox) { it is LivingEntity && it.isAlive }
-                              .forEach { entity ->
-                                  val target = entity as LivingEntity;
-                                  val damage = WeaponCombatSupport.attackDamage(definition,
-              data).toFloat();
-                                  target.damage(world, world.damageSources.playerAttack(player),
-              damage);
-                                  WeaponSkillService.applySoulBreak(target, 1, 200L);
-                                  world.spawnParticles(ParticleTypes.CRIT, target.x, target.y + 1,
-              target.z, 5, 0.2, 0.2, 0.2, 0.1);
-                              }
-
-                          WeaponSkillService.addTao(player, 1)
+                          .forEach { entity ->
+                              val target = entity as LivingEntity;
+                              val damage = WeaponCombatSupport.attackDamage(definition, data).toFloat();
+                              target.damage(world, world.damageSources.playerAttack(player), damage);
+                              WeaponSkillService.applySoulBreak(target, 1, 200L);
+                              world.spawnParticles(ParticleTypes.CRIT, target.x, target.y + 1, target.z, 5, 0.2, 0.2, 0.2, 0.1);
+                          }
+      WeaponSkillService.addTao(player, 1)
       WeaponSkillService.startCooldown(player, "tanboku_chokuu", 60L)
     }
 

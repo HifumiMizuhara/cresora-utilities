@@ -91,7 +91,7 @@
   "item.cresora.weapon.skill.cooldown_progress": "%s CD %ss",
   "item.cresora.weapon.skill.activated": "%s Activated! Shield %s hearts.",
   "item.cresora.weapon.skill.heal_activated": "%s Activated! Restored %s hearts.",
-  "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s Activated! Dealt %s hearts total true damage to %s targets.",
+  "item.cresora.weapon.skill.current_hp_true_damage_activated": "%1$s Activated! Dealt %3$s hearts total true damage to %2$s targets.",
   "item.cresora.weapon.skill.flame_aura_activated": "%s Activated! Ignited %s targets for %s sec, gained fire resistance for %s sec.",
   "item.cresora.weapon.skill.snow_frost_activated": "%s activated. For %s seconds, attacks inflict Frost. Frost damage caps at %s hearts per second.",
   "item.cresora.weapon.skill.snow_mist_stack": "Snow Mist %s | CRIT DMG +%s%%",
@@ -756,5 +756,6 @@
   "screen.cresora.leyline.locked": "LOCKED: Rank too low!",
   "screen.cresora.leyline.click_to_start": "Click to start challenge",
   "screen.cresora.leyline.already_started": "A Ley Line Overflow challenge is already active here.",
-  "screen.cresora.leyline.invalid_block": "The Ley Line Overflow block has been broken or altered."
+  "screen.cresora.leyline.invalid_block": "The Ley Line Overflow block has been broken or altered.",
+  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "Heavy Thoughts: Grants passive stats (+10% CRIT DMG/DMG bonus). If 'Resolve of the Distant Girl' is in inventory, upgrades stats to (+60% CRIT DMG, +25% DMG bonus, +5% CRIT Rate). Otherwise, inflicts Grief (ATK -50%, DEF +100%, converts damage to arcane, grants shields periodically). Active: Pattern A (Grief active) grants a massive shield. Pattern B (Grief inactive) strikes up to 5 enemies dealing arcane damage."
 }

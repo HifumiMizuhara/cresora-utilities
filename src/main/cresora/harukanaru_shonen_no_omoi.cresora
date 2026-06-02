@@ -147,6 +147,7 @@ weapon "Thoughts of the Distant Boy" {
         en_us {
             name: "Thoughts of the Distant Boy"
             skill_name: "Heavy Thoughts"
+            "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "Heavy Thoughts: Grants passive stats (+10% CRIT DMG/DMG bonus). If 'Resolve of the Distant Girl' is in inventory, upgrades stats to (+60% CRIT DMG, +25% DMG bonus, +5% CRIT Rate). Otherwise, inflicts Grief (ATK -50%, DEF +100%, converts damage to arcane, grants shields periodically). Active: Pattern A (Grief active) grants a massive shield. Pattern B (Grief inactive) strikes up to 5 enemies dealing arcane damage."
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "Heavy Thoughts (Pattern A): Gained a %s-heart shield."
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "Heavy Thoughts (Pattern B): Struck %s enemies for %s arcane damage!"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "Passive: Grief granted a 3-heart shield!"
@@ -156,7 +157,8 @@ weapon "Thoughts of the Distant Boy" {
         ja_jp {
             name: "遥かなる少年の想い"
             skill_name: "重き想い"
-            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重き想い（パターンA）: %sハートのシールドを獲得しました。"
+            "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "重き想い：パッシブ効果（会心ダメージ・与ダメージ+10%）を獲得。インベントリに「遥かなる少女の決意」がある場合、効果が「二人の決意」（会心ダメージ+60%、与ダメージ+25%、会心率+5%）に強化される。ない場合、「嘆き」状態（攻击力-50%、防御力+100%、術ダメージ変換、10秒毎に確率でシールド獲得）になる。アクティブ：【パターンA（「嘆き」状態）】強力なシールドを獲得。【パターンB（通常）】周囲の最大5体の敵に強力な術ダメージを与える。"
+            "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重き想い（パターンA）: %sハート of シールドを獲得しました。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重き想い（パターンB）: %s体の敵に%sの術ダメージを与えました！"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "パッシブ: 嘆きの効果により3ハートのシールドを獲得しました！"
             "item.cresora.weapon.skill.buff.passive_stats.name": "少年の想い"
@@ -165,6 +167,7 @@ weapon "Thoughts of the Distant Boy" {
         zh_cn {
             name: "遥远少年的思念"
             skill_name: "沉重思念"
+            "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "沉重思念：获得被动加成（暴击伤害/全伤害+10%）。若背包中持有「遥远少女的决意」，则升级为「双向奔赴」（暴击伤害+60%、全伤害+25%、暴击率+5%）；否则陷入「叹息」状态（攻击力-50%、防御力+100%、非确定伤害转为术能伤害、每10秒概率获得护盾）。主动释放：【模式A（叹息状态）】获得大量护盾；【模式B（普通状态）】对周围最多5个敌人造成大量术能伤害。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "沉重思念（模式A）：获得 %s 颗心的护盾。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "沉重思念（模式B）：对 %s 个目标造成了 %s 点术能伤害！"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "被动：叹息的效果使你获得了 3 颗心的护盾！"
@@ -174,6 +177,7 @@ weapon "Thoughts of the Distant Boy" {
         lzh {
             name: "遙遠少年之思"
             skill_name: "重思"
+            "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "重思：得被動增益（會心傷與全傷加一成）。若囊中有「遙遠少女之決意」，則升為「二心合一」（會心傷加六成、全傷加兩成半、會心率加半成）；否則入「歎息」之境（攻減半，防禦加倍，傷化術能，十秒內概率得盾）。主動釋放：【其一（歎息）】得重盾；【其二（普通）】擊周遭五敵，施大術能傷。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重思（其一）：得 %s 心之盾。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重思（其二）：施術傷於 %s 敵（傷：%s）！"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained": "被動：因歎息之故，得三心之盾！"

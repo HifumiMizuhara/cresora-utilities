@@ -503,7 +503,21 @@ class Parser(private val source: String, private val tokens: List<Token>) {
             var braceCount = 0
             while (!isAtEnd()) {
                 if (braceCount == 0 && (check(TokenType.SEMICOLON) || check(TokenType.RIGHT_BRACE))) break
-                
+
+                if (braceCount == 0 && peek().line > lastToken.line) {
+                    val nextType = peek().type
+                    val lastType = lastToken.type
+                    val isContinuation = nextType == TokenType.OPERATOR || nextType == TokenType.DOT || nextType == TokenType.COMMA ||
+                            nextType == TokenType.RIGHT_PAREN || nextType == TokenType.RIGHT_BRACKET || nextType == TokenType.RIGHT_BRACE ||
+                            lastType == TokenType.OPERATOR || lastType == TokenType.DOT || lastType == TokenType.COMMA ||
+                            lastType == TokenType.LEFT_PAREN || lastType == TokenType.LEFT_BRACKET || lastType == TokenType.LEFT_BRACE ||
+                            lastToken.lexeme == "else" || lastToken.lexeme == "in" || lastToken.lexeme == "is" ||
+                            peek().lexeme == "else" || peek().lexeme == "in" || peek().lexeme == "is"
+                    if (!isContinuation) {
+                        break
+                    }
+                }
+
                 val t = advance()
                 if (t.type == TokenType.LEFT_BRACE) braceCount++
                 else if (t.type == TokenType.RIGHT_BRACE) braceCount--

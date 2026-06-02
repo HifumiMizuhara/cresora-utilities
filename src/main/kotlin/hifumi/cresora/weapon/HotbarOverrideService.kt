@@ -129,6 +129,26 @@ object HotbarOverrideService {
     private fun restoreSession(player: ServerPlayerEntity, sendMessage: Boolean): Boolean {
         val session = sessions.remove(player.uuid) ?: return false
 
+        // 1. Clean up any sub-skill dummy items in the entire inventory to prevent leaking
+        for (i in 0 until player.inventory.size()) {
+            val stack = player.inventory.getStack(i)
+            if (stack.item == CreSoraUtilities.SUB_SKILL_DUMMY) {
+                player.inventory.setStack(i, ItemStack.EMPTY)
+            }
+        }
+
+        // 2. Salvage non-dummy, non-empty items that the player picked up into the hotbar during the override
+        for (i in 0 until 9) {
+            val currentStack = player.inventory.getStack(i)
+            if (!currentStack.isEmpty) {
+                if (!player.inventory.insertStack(currentStack)) {
+                    player.dropItem(currentStack, false)
+                }
+                player.inventory.setStack(i, ItemStack.EMPTY)
+            }
+        }
+
+        // 3. Restore original hotbar snapshot
         for (i in 0 until 9) {
             player.inventory.setStack(i, session.originalHotbar[i])
         }

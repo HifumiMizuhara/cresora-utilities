@@ -91,10 +91,11 @@ class ArtifactAlphaScreenHandler(
         val targetDefinition = currentCandidates().getOrNull(slotIndex) ?: return
         val result = ArtifactSpecialUpgradeService.performAlphaSelection(serverPlayer, baseStack, materialStack, targetDefinition.id) ?: return
 
+        val remainingMaterial = materialStack.copy()
         completed = true
         baseStack = ItemStack.EMPTY
         materialStack = ItemStack.EMPTY
-        ArtifactUiFlow.openUpgradeScreen(serverPlayer, result, ItemStack.EMPTY)
+        ArtifactUiFlow.openUpgradeScreen(serverPlayer, result, remainingMaterial)
     }
 
     private fun refreshOptions() {

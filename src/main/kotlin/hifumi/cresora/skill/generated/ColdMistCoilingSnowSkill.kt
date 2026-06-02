@@ -12,12 +12,12 @@ import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
-import kotlin.collections.MutableMap
 import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -33,8 +33,8 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 
 public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
-  public val snowMistStates: MutableMap<UUID, ColdMistCoilingSnowSkill.SnowMistState> =
-      mutableMapOf()
+  public val snowMistStates: ConcurrentHashMap<UUID, ColdMistCoilingSnowSkill.SnowMistState> =
+      ConcurrentHashMap()
 
   override fun clearTransientState(playerId: UUID) {
     snowMistStates.remove(playerId)
@@ -106,20 +106,14 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
       val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
       val state = ColdMistCoilingSnowSkill.snowMistStates.get(player.uuid)
       if (state != null && now < state.expireTick) {
-                              if (state.stacks < 5) {
-                                  state.stacks += 1;
-                                 
-              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.snow_mist_stack",
-              state.stacks, state.stacks * 10.0).formatted(net.minecraft.util.Formatting.AQUA),
-              true);
-                              }
-                              // Apply frost mark to target (using the new generic mark system)
-                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "frost",
-              200L);
-                             
-              target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS,
-              200, 1, false, true, true));
+                          if (state.stacks < 5) {
+                              state.stacks += 1;
+                              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.snow_mist_stack", state.stacks, state.stacks * 10.0).formatted(net.minecraft.util.Formatting.AQUA), true);
                           }
+                          // Apply frost mark to target (using the new generic mark system)
+                          hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "frost", 200L);
+                          target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 200, 1, false, true, true));
+                      }
     }
 
   }
@@ -132,20 +126,17 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
 
     ; run execute@ {
       server.worlds.forEach { world ->
-                              world.iterateEntities().forEach { entity ->
-                                  if (entity is net.minecraft.entity.LivingEntity &&
-              hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, "frost")) {
-                                      val now = world.time;
-                                      // Simple frost damage slowness and freeze
-                                     
-              entity.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS,
-              40, 1, false, true, true));
-                                      if (now % 20L == 0L) {
-                                           entity.damage(world, world.damageSources.freeze(), 2.0f);
-                                      }
+                          world.iterateEntities().forEach { entity ->
+                              if (entity is net.minecraft.entity.LivingEntity && hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, "frost")) {
+                                  val now = world.time;
+                                  // Simple frost damage slowness and freeze
+                                  entity.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 40, 1, false, true, true));
+                                  if (now % 20L == 0L) {
+                                       entity.damage(world, world.damageSources.freeze(), 2.0f);
                                   }
                               }
                           }
+                      }
     }
 
   }

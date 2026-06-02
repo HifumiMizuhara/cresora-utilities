@@ -90,7 +90,7 @@ class Lexer(private val source: String) {
                     else -> addToken(TokenType.OPERATOR)
                 }
             }
-            '+' , '*' -> addToken(TokenType.OPERATOR)
+            '+', '*', '%' -> addToken(TokenType.OPERATOR)
             ' ', '\r', '\t' -> {}
             '\n' -> line++
             '"' -> string()
@@ -100,7 +100,7 @@ class Lexer(private val source: String) {
                 } else if (c.isLetter() || c == '_') {
                     identifier()
                 } else {
-                    addToken(TokenType.OPERATOR)
+                    throw RuntimeException("Unexpected character '$c' at line $line")
                 }
             }
         }
@@ -137,7 +137,9 @@ class Lexer(private val source: String) {
             if (peek() == '\n') line++
             advance()
         }
-        if (isAtEnd()) return // Unterminated string
+        if (isAtEnd()) {
+            throw RuntimeException("Unterminated string at line $line")
+        }
         advance() // The closing "
         val value = source.substring(start + 1, current - 1)
         addToken(TokenType.STRING, value)

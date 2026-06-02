@@ -12,13 +12,13 @@ import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.MutableList
-import kotlin.collections.MutableMap
 import kotlin.collections.Set
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -33,8 +33,8 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 
 public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
-  public val ketsuiStates: MutableMap<UUID, ResolveoftheDistantGirlSkill.KetsuiState> =
-      mutableMapOf()
+  public val ketsuiStates: ConcurrentHashMap<UUID, ResolveoftheDistantGirlSkill.KetsuiState> =
+      ConcurrentHashMap()
 
   override fun clearTransientState(playerId: UUID) {
     ketsuiStates.remove(playerId)
@@ -83,36 +83,34 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
     ; run execute@ {
       val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
       if (now % 20L == 0L) {
-                              if (!hifumi.cresora.weapon.WeaponSkillService.hasMark(player,
-              "ketsui_active")) return@execute;
-                              val world = player.world as? net.minecraft.server.world.ServerWorld ?:
-              return@execute;
-                              val markId = "kyundeath_" + player.uuid;
-                              world.getOtherEntities(
-                                  player,
-                                  player.boundingBox.expand(16.0)
-                              ) { entity ->
-                                  entity is net.minecraft.entity.LivingEntity &&
-                                  entity.isAlive &&
-                                  hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, markId)
-                              }
-                              .forEach { entity ->
-                                  val target = entity as net.minecraft.entity.LivingEntity;
-                                  val hits = player.random.nextBetween(1, 3);
-                                  for (i in 0 until hits) {
-                                      target.damage(
-                                          world,
-                                          world.damageSources.indirectMagic(player, player),
-                                          1.0f
-                                      );
-                                  }
-                                  world.spawnParticles(
-                                      net.minecraft.particle.ParticleTypes.HEART,
-                                      target.x, target.y + 1.0, target.z,
-                                      3, 0.2, 0.2, 0.2, 0.0
+                          if (!hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "ketsui_active")) return@execute;
+                          val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                          val markId = "kyundeath_" + player.uuid;
+                          world.getOtherEntities(
+                              player,
+                              player.boundingBox.expand(16.0)
+                          ) { entity ->
+                              entity is net.minecraft.entity.LivingEntity &&
+                              entity.isAlive &&
+                              hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, markId)
+                          }
+                          .forEach { entity ->
+                              val target = entity as net.minecraft.entity.LivingEntity;
+                              val hits = player.random.nextBetween(1, 3);
+                              for (i in 0 until hits) {
+                                  target.damage(
+                                      world,
+                                      world.damageSources.indirectMagic(player, player),
+                                      1.0f
                                   );
                               }
+                              world.spawnParticles(
+                                  net.minecraft.particle.ParticleTypes.HEART,
+                                  target.x, target.y + 1.0, target.z,
+                                  3, 0.2, 0.2, 0.2, 0.0
+                              );
                           }
+                      }
     }
 
   }
@@ -132,32 +130,29 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
       val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute
       val range = 8.0
       val targets = world.getOtherEntities(player, player.boundingBox.expand(range)) {
-                              it is net.minecraft.entity.LivingEntity &&
-                              it.isAlive &&
-                              it !is net.minecraft.entity.player.PlayerEntity
-                          }
-                          .filterIsInstance<net.minecraft.entity.LivingEntity>()
-                          .sortedBy { it.squaredDistanceTo(player) }
-                          .take(4)
+                          it is net.minecraft.entity.LivingEntity &&
+                          it.isAlive &&
+                          it !is net.minecraft.entity.player.PlayerEntity
+                      }
+                      .filterIsInstance<net.minecraft.entity.LivingEntity>()
+                      .sortedBy { it.squaredDistanceTo(player) }
+                      .take(4)
       targets.forEach { target ->
-                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target,
-              "kyundeath", 100L);
-                              hifumi.cresora.weapon.WeaponSkillService.applyMark(target,
-              "kyundeath_" + player.uuid, 100L);
-                              world.spawnParticles(
-                                  net.minecraft.particle.ParticleTypes.HEART,
-                                  target.x, target.y + 1.0, target.z,
-                                  5, 0.3, 0.3, 0.3, 0.0
-                              );
-                          }
-
-                          player.sendMessage(
-                              net.minecraft.text.Text.translatable(
-                                  "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated",
-                                  targets.size
-                              ).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
-                              true
-                          )
+                          hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "kyundeath", 100L);
+                          hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "kyundeath_" + player.uuid, 100L);
+                          world.spawnParticles(
+                              net.minecraft.particle.ParticleTypes.HEART,
+                              target.x, target.y + 1.0, target.z,
+                              5, 0.3, 0.3, 0.3, 0.0
+                          );
+                      }
+      player.sendMessage(
+                          net.minecraft.text.Text.translatable(
+                              "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated",
+                              targets.size
+                          ).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
+                          true
+                      )
     }
 
 
@@ -175,27 +170,21 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
 
     ; run execute@ {
       if (hifumi.cresora.combat.CombatFeedbackService.hasPendingCrit(player)) {
-                              val now =
-              hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
-                              val state =
-              ResolveoftheDistantGirlSkill.ketsuiStates.getOrPut(player.uuid) {
-              ResolveoftheDistantGirlSkill.KetsuiState() };
-                              if (state.expireTicks.size < 100) {
-                                  state.expireTicks.add(now + 40 * 20L);
-                              }
-                              val displayStacks = state.stacks + if
-              (hifumi.cresora.equipment.EquipmentPlayerSupport.getActiveSetBonuses(player).any {
-              it.set.id == "osananajimi" && it.pieceCount >= 4 }) 5 else 0;
-                              player.sendMessage(
-                                  net.minecraft.text.Text.translatable(
-                                      "item.cresora.weapon.skill.buff.ketsui.gained",
-                                     
-              net.minecraft.text.Text.translatable("item.cresora.weapon.skill.buff.ketsui.name"),
-                                      displayStacks
-                                  ),
-                                  true
-                              );
+                          val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player);
+                          val state = ResolveoftheDistantGirlSkill.ketsuiStates.getOrPut(player.uuid) { ResolveoftheDistantGirlSkill.KetsuiState() };
+                          if (state.expireTicks.size < 100) {
+                              state.expireTicks.add(now + 40 * 20L);
                           }
+                          val displayStacks = state.stacks + if (hifumi.cresora.equipment.EquipmentPlayerSupport.getActiveSetBonuses(player).any { it.set.id == "osananajimi" && it.pieceCount >= 4 }) 5 else 0;
+                          player.sendMessage(
+                              net.minecraft.text.Text.translatable(
+                                  "item.cresora.weapon.skill.buff.ketsui.gained",
+                                  net.minecraft.text.Text.translatable("item.cresora.weapon.skill.buff.ketsui.name"),
+                                  displayStacks
+                              ),
+                              true
+                          );
+                      }
     }
 
   }

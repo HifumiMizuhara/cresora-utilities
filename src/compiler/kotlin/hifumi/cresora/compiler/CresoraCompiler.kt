@@ -191,12 +191,12 @@ class CresoraCompiler(
             typeSpec.addType(stateClass)
 
             val mapName = "${buff.id.split("_").joinToString("") { if (it == buff.id.split("_")[0]) it else it.replaceFirstChar { c -> c.uppercase() } }}States"
-            val mapType = ClassName("kotlin.collections", "MutableMap").parameterizedBy(
+            val mapType = ClassName("java.util.concurrent", "ConcurrentHashMap").parameterizedBy(
                 ClassName("java.util", "UUID"),
                 ClassName(packageName, "$className.$stateClassName")
             )
             typeSpec.addProperty(PropertySpec.builder(mapName, mapType)
-                .initializer("mutableMapOf()")
+                .initializer("%T()", ClassName("java.util.concurrent", "ConcurrentHashMap"))
                 .build())
         }
 
@@ -281,10 +281,14 @@ class CresoraCompiler(
         skill: SkillNode?,
         packageName: String,
         className: String,
-        eventName: String
+        eventName: String,
+        inAoe: Boolean = false
     ) {
         when (action) {
             is CommandActionNode -> {
+                if ((action.commandName == "deal_true_damage" || action.commandName == "ignite") && eventName != "on_damage_dealt" && !inAoe) {
+                    throw RuntimeException("Command '${action.commandName}' requires a target. It can only be used in 'on_damage_dealt' or inside 'area_of_effect' block.")
+                }
                 when (action.commandName) {
                     "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
                     "heal" -> {
@@ -364,9 +368,9 @@ class CresoraCompiler(
                 )
                 action.actions.forEach { nested ->
                     when (nested) {
-                        is CommandActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName)
-                        is SendLocalizedMessageActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName)
-                        is ExecuteActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName)
+                        is CommandActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
+                        is SendLocalizedMessageActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
+                        is ExecuteActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
                         else -> funSpec.addStatement("// Unsupported nested AOE action: ${nested::class.simpleName}")
                     }
                 }
@@ -386,19 +390,30 @@ class CresoraCompiler(
                 if (eventName == "on_damage_absorbed" || eventName == "on_damage_taken") {
                     funSpec.addCode("return run execute@ {\n")
                     action.statements.forEach { stmt ->
-                        emitAction(stmt, funSpec, skill, packageName, className, eventName)
+                        emitAction(stmt, funSpec, skill, packageName, className, eventName, inAoe)
                     }
-                    funSpec.addCode("amount\n")
+                    val lastStmt = action.statements.lastOrNull()
+                    val hasExplicitReturn = lastStmt is ExpressionNode && (
+                        lastStmt.content.trim().startsWith("return@execute") ||
+                        lastStmt.content.trim().endsWith("f") ||
+                        (lastStmt.content.contains("amount") && !lastStmt.content.trim().startsWith("val ") && !lastStmt.content.trim().startsWith("var ") && !lastStmt.content.trim().contains("="))
+                    )
+                    if (!hasExplicitReturn) {
+                        funSpec.addCode("amount\n")
+                    }
                     funSpec.addCode("}\n")
                 } else {
                     funSpec.beginControlFlow("run execute@")
                     action.statements.forEach { stmt ->
-                        emitAction(stmt, funSpec, skill, packageName, className, eventName)
+                        emitAction(stmt, funSpec, skill, packageName, className, eventName, inAoe)
                     }
                     funSpec.endControlFlow()
                 }
             }
             is InstructionCallNode -> {
+                if ((action.functionName == "deal_true_damage" || action.functionName == "ignite") && eventName != "on_damage_dealt" && !inAoe) {
+                    throw RuntimeException("Instruction '${action.functionName}' requires a target. It can only be used in 'on_damage_dealt' or inside 'area_of_effect' block.")
+                }
                 when (action.functionName) {
                     "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
                     "start_cooldown" -> {
@@ -438,7 +453,9 @@ class CresoraCompiler(
                         content = content.replace(Regex("\\b$stateClassName\\b"), "$className.$stateClassName")
                     }
                 }
-                funSpec.addStatement("%L", content)
+                content = InstructionMapping.expandAll(content, CompilerContext.WEAPON)
+                val nonWrappingContent = content.replace(' ', '·')
+                funSpec.addCode("%L\n", nonWrappingContent)
             }
             else -> {}
         }
@@ -481,7 +498,7 @@ class CresoraCompiler(
                     """.trimMargin(), ClassName("hifumi.cresora.weapon", "WeaponSkillService"), ClassName("net.minecraft.text", "Text"), ClassName("net.minecraft.text", "Text"), ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
                 }
             } else {
-                funSpec.addStatement("// Buff $buffId not found")
+                throw RuntimeException("Buff '$buffId' not found/defined in main skill of $className")
             }
         }
     }

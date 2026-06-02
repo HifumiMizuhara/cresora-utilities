@@ -145,6 +145,14 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$cooldowns.putAll(hifumi.cresora.weapon.WeaponSkillService.INSTANCE.deserializeCooldowns(serializedCooldowns));
     }
 
+    @Inject(method = "onDeath", at = @At("HEAD"))
+    private void cresora$restoreHotbarImmediatelyOnDeath(net.minecraft.entity.damage.DamageSource source, CallbackInfo ci) {
+        ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
+        if (hifumi.cresora.weapon.HotbarOverrideService.INSTANCE.isOverridden(player)) {
+            hifumi.cresora.weapon.HotbarOverrideService.INSTANCE.restoreHotbar(player);
+        }
+    }
+
     @Override
     public int cresoraGetAdventureRank() {
         return this.cresora$adventureRank;

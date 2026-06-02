@@ -37,29 +37,22 @@ public object PastoralFluteReverieSkill : WeaponSkillHandler {
     ; run execute@ {
       val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
       val expireTick = now + definition.skill.durationSeconds.coerceAtLeast(1) * 20L
-      val normalPercent = hifumi.cresora.weapon.WeaponCombatSupport.skillValuePercent(definition,
-          data).coerceAtLeast(0.0)
-      val sunlightPercent =
-          hifumi.cresora.weapon.WeaponCombatSupport.secondarySkillValuePercent(definition,
-          data).coerceAtLeast(normalPercent)
-      val isSunlit = !player.world.isRaining && player.world.isDay &&
-          player.world.isSkyVisible(player.blockPos.up())
+      val normalPercent = hifumi.cresora.weapon.WeaponCombatSupport.skillValuePercent(definition, data).coerceAtLeast(0.0)
+      val sunlightPercent = hifumi.cresora.weapon.WeaponCombatSupport.secondarySkillValuePercent(definition, data).coerceAtLeast(normalPercent)
+      val isSunlit = !player.world.isRaining && player.world.isDay && player.world.isSkyVisible(player.blockPos.up())
       val amplifier = if (isSunlit) sunlightPercent else normalPercent
       val ampInt = (amplifier / 20.0).toInt().coerceAtMost(5)
-      player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SPEED,
-          50 * 20, ampInt))
+      player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SPEED, 50 * 20, ampInt))
       player.sendMessage(
-                              net.minecraft.text.Text.translatable(
-                                  "item.cresora.weapon.skill.sunlit_haste_activated",
-                                  net.minecraft.text.Text.translatable(definition.translationKey()),
-                                  definition.skill.durationSeconds,
-                                 
-              hifumi.cresora.weapon.WeaponSkillService.formatNumber(normalPercent),
-                                 
-              hifumi.cresora.weapon.WeaponSkillService.formatNumber(sunlightPercent)
-                              ).formatted(net.minecraft.util.Formatting.YELLOW),
-                              true
-                          )
+                          net.minecraft.text.Text.translatable(
+                              "item.cresora.weapon.skill.sunlit_haste_activated",
+                              net.minecraft.text.Text.translatable(definition.translationKey()),
+                              definition.skill.durationSeconds,
+                              hifumi.cresora.weapon.WeaponSkillService.formatNumber(normalPercent),
+                              hifumi.cresora.weapon.WeaponSkillService.formatNumber(sunlightPercent)
+                          ).formatted(net.minecraft.util.Formatting.YELLOW),
+                          true
+                      )
     }
 
 

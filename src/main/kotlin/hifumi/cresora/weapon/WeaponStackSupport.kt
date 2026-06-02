@@ -57,12 +57,18 @@ object WeaponStackSupport {
         if (data != null) {
             return data
         }
-        return syncWeaponData(stack, defaultWeaponData(definition))
+        return defaultWeaponData(definition)
     }
 
     fun ensureWeaponData(stack: ItemStack): WeaponData {
         val definition = getDefinition(stack) ?: error("Non-weapon stack cannot receive weapon data: ${stack.item}")
-        return syncWeaponData(stack, getWeaponData(stack) ?: defaultWeaponData(definition))
+        val data = stack.get(ModDataComponents.WEAPON_DATA)
+            ?.copy(weaponId = definition.id)
+            ?.normalized(definition)
+        if (data != null) {
+            return data
+        }
+        return syncWeaponData(stack, defaultWeaponData(definition))
     }
 
     fun syncWeaponData(stack: ItemStack, data: WeaponData): WeaponData {

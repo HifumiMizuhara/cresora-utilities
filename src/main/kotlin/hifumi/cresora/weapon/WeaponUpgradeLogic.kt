@@ -191,11 +191,25 @@ object WeaponUpgradeLogic {
             WeaponRarity.FOUR_STAR -> 2
             WeaponRarity.FIVE_STAR -> 3
         }
-        val investedLevels = (data.baseLevel - definition.craft.craftedBaseLevel).coerceAtLeast(0)
+        val cap0 = WeaponUpgradeService.levelCap(definition, 0)
+        val cap1 = WeaponUpgradeService.levelCap(definition, 1)
+        val historicalLevels = when (data.breakthrough) {
+            0 -> 0
+            1 -> (cap0 - definition.craft.craftedBaseLevel).coerceAtLeast(0)
+            else -> (cap0 - definition.craft.craftedBaseLevel).coerceAtLeast(0) + (cap1 - 1).coerceAtLeast(0)
+        }
+        val currentStageLevels = if (data.breakthrough == 0) {
+            (data.baseLevel - definition.craft.craftedBaseLevel).coerceAtLeast(0)
+        } else {
+            (data.baseLevel - 1).coerceAtLeast(0)
+        }
+        val investedLevels = historicalLevels + currentStageLevels
         val upgradeReturn = (((investedLevels * definition.upgrades.baseFragmentCost).toDouble()) * 0.6).toInt()
-        val returnCount = (baseReturn + rarityBonus + upgradeReturn).coerceAtMost(
-            definition.craft.fragmentsRequired + investedLevels * definition.upgrades.baseFragmentCost
-        ).coerceAtLeast(1)
+        var maxPossibleRefund = definition.craft.fragmentsRequired + investedLevels * definition.upgrades.baseFragmentCost
+        for (bt in 1..data.breakthrough) {
+            maxPossibleRefund += WeaponUpgradeService.breakthroughFragmentCost(data.rarity, bt)
+        }
+        val returnCount = (baseReturn + rarityBonus + upgradeReturn).coerceAtMost(maxPossibleRefund).coerceAtLeast(1)
         return DismantlePreview(returnCount, true, "screen.cresora.weapon_upgrade.ready_dismantle")
     }
 

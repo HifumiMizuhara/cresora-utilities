@@ -73,6 +73,7 @@ class WeaponSkillMaterialScreenHandler(
             }
             return
         }
+        super.onSlotClick(slotIndex, button, actionType, player)
     }
 
     override fun onClosed(player: PlayerEntity) {
