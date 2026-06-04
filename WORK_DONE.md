@@ -1,5 +1,39 @@
 # WORK_DONE
 
+## CAC 4セット効果 DSL 化 — 聖遺物ハードコード解消 (2026-06-04)
+- [x] CAC (Artifact Compiler) に `requires_weapon` および `display_stack_bonus` DSL構文を追加:
+  - `AST.kt`: `ArtifactBonusNode` に `requiresWeapon: String?` と `displayStackBonuses: List<DisplayStackBonusNode>` を追加。新規 `DisplayStackBonusNode` データクラスを定義。
+  - `Parser.kt`: `artifactBonus()` メソッドで `requires_weapon:` フィールドと `display_stack_bonus "buffId" { stacks: N; }` ブロックのパースを実装。
+- [x] `ArtifactSkillHandler` インターフェースを拡張:
+  - `getAllDamageBonus(player): Double` — 全ダメージボーナスの動的加算メソッドを追加。
+  - `getDisplayStackBonus(player, buffId): Int` — 表示スタック数のオフセットメソッドを追加。
+- [x] CAC にパッシブハンドラ自動生成を実装:
+  - `ArtifactCompiler.kt` に `generatePassiveArtifactHookClass()` を追加。イベントハンドラ（`on_attack_dealt` 等）がなくても、`requires_weapon` や `display_stack_bonus` のみの純粋パッシブ効果からハンドラクラスを生成。
+  - `generateConditionalStatOverrides()`: `requires_weapon` が設定されている場合、`stats` ブロックのフラット値をJSON直書きではなく、武器所持チェック付きの動的ハンドラメソッド（`getCritDamageBonus`, `getAllDamageBonus` 等）として生成。
+  - `generateDisplayStackBonusMethod()`: `display_stack_bonus` の宣言から `getDisplayStackBonus()` メソッドを自動生成。
+  - JSON 出力: `requires_weapon` が設定された場合、`stats` をJSON に出力せず（ハンドラ経由で動的適用）、`equip_changed` トリガーの `effectHook` を自動登録。
+- [x] ランタイム統合:
+  - `EquipmentPlayerSupport.getAggregatedStats()`: ハンドラの `getAllDamageBonus()` を集約し `StatType.ALL_DMG_BONUS` に加算。
+  - `EquipmentEffectHookService.getDisplayStacks()`: 全アクティブセットボーナスのハンドラから `getDisplayStackBonus()` を集約する実装に変更。
+  - `WeaponSkillService.getDisplayStacks()`: `EquipmentEffectHookService` に委譲する実装に簡素化。
+- [x] 「幼なじみ」4セット効果のハードコード完全解消:
+  - `WeaponSkillService.kt`: `hasChildhoodFriend4pcAndWeapon()` メソッドを削除。`critDamageBonusPercent()` および `allDamageBonusPercent()` から幼なじみ固有の条件分岐を除去。
+  - `harukanaru_shojo_no_ketsui.cresora`: インライン 4pc チェックを `WeaponSkillService.getDisplayStacks(player, "ketsui", state.stacks)` に置き換え。
+  - `ResolveoftheDistantGirlSkill.kt` (生成コード): 同様にインライン 4pc チェックを置き換え。
+- [x] `osananajimi.artifact` の4セットブロックをDSLで宣言:
+  ```
+  set 4 {
+      requires_weapon: "harukanaru_shojo_no_ketsui";
+      stats { crit_dmg: 10.0; all_dmg: 10.0; }
+      display_stack_bonus "ketsui" { stacks: 5; }
+  }
+  ```
+- [x] 生成ファイル・JSON・レジストリの手動更新（ビルド環境なし）:
+  - `ArtifactSkillOsananajimi4pcPassive.kt` を手動作成。
+  - `CompiledArtifactRegistry.kt` に `osananajimi_4pc_passive` の登録を追加。
+  - `cac_artifact_content.json` に4pcの `effectHook` エントリを追加。
+- 注意: クラウド環境のため `compileAssets` / `classes` の実行は不可。ローカルでのビルド検証と実機テストが必要。
+
 ## コンパイラ・ビルドエラー及びDSLマクロ展開の修正 (2026-05-31)
 - [x] DSL式ノード（`ExpressionNode`）内のマクロ展開のサポート:
   - `InstructionMapping` に `expandAll` と `splitArguments` を実装。

@@ -102,6 +102,10 @@ object EquipmentPlayerSupport {
                     if (critDmg != 0.0) {
                         totals[StatType.CRIT_DMG] = (totals[StatType.CRIT_DMG] ?: 0.0) + critDmg
                     }
+                    val allDmg = handler.getAllDamageBonus(player)
+                    if (allDmg != 0.0) {
+                        totals[StatType.ALL_DMG_BONUS] = (totals[StatType.ALL_DMG_BONUS] ?: 0.0) + allDmg
+                    }
                 }
             }
         }

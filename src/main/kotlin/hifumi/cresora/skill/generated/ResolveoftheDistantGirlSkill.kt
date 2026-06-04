@@ -175,7 +175,7 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
                           if (state.expireTicks.size < 100) {
                               state.expireTicks.add(now + 40 * 20L);
                           }
-                          val displayStacks = state.stacks + if (hifumi.cresora.equipment.EquipmentPlayerSupport.getActiveSetBonuses(player).any { it.set.id == "osananajimi" && it.pieceCount >= 4 }) 5 else 0;
+                          val displayStacks = hifumi.cresora.weapon.WeaponSkillService.getDisplayStacks(player, "ketsui", state.stacks);
                           player.sendMessage(
                               net.minecraft.text.Text.translatable(
                                   "item.cresora.weapon.skill.buff.ketsui.gained",

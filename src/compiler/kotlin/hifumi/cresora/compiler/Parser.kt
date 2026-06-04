@@ -179,6 +179,8 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         val stats = mutableMapOf<String, Double>()
         val handlers = mutableListOf<SkillHandlerNode>()
         val buffs = mutableListOf<BuffNode>()
+        var requiresWeapon: String? = null
+        val displayStackBonuses = mutableListOf<DisplayStackBonusNode>()
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             val token = advance()
@@ -198,6 +200,26 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 consume(TokenType.LEFT_BRACE, "Expect '{' for buff")
                 buffs.add(buff(buffId))
                 consume(TokenType.RIGHT_BRACE, "Expect '}' after buff")
+            } else if (token.type == TokenType.IDENTIFIER && token.lexeme == "requires_weapon") {
+                consume(TokenType.COLON, "Expect ':' after requires_weapon")
+                requiresWeapon = consume(TokenType.STRING, "Expect weapon id").lexeme
+            } else if (token.type == TokenType.IDENTIFIER && token.lexeme == "display_stack_bonus") {
+                val buffId = consume(TokenType.STRING, "Expect buff id for display_stack_bonus").lexeme
+                consume(TokenType.LEFT_BRACE, "Expect '{' for display_stack_bonus")
+                var stacks = 0
+                while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                    val field = advance()
+                    if (field.type == TokenType.SEMICOLON) continue
+                    when (field.lexeme) {
+                        "stacks" -> {
+                            consume(TokenType.COLON, "Expect ':' after stacks")
+                            stacks = consume(TokenType.NUMBER, "Expect number").lexeme.toInt()
+                        }
+                        else -> throw RuntimeException("Unknown display_stack_bonus field '${field.lexeme}' at line ${field.line}")
+                    }
+                }
+                consume(TokenType.RIGHT_BRACE, "Expect '}' after display_stack_bonus")
+                displayStackBonuses.add(DisplayStackBonusNode(buffId, stacks))
             } else if (token.type == TokenType.IDENTIFIER && token.lexeme.startsWith("on_")) {
                 consume(TokenType.LEFT_BRACE, "Expect '{' for handler")
                 handlers.add(handler(token.lexeme))
@@ -208,7 +230,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 throw RuntimeException("Unknown artifact bonus field '${token.lexeme}' at line ${token.line}")
             }
         }
-        return ArtifactBonusNode(pieces, stats, handlers, buffs)
+        return ArtifactBonusNode(pieces, stats, handlers, buffs, requiresWeapon, displayStackBonuses)
     }
 
     private fun stats(): StatsNode {

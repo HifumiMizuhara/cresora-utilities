@@ -18,6 +18,8 @@ interface ArtifactSkillHandler {
     fun getArmorScalar(player: ServerPlayerEntity): Double = 0.0
     fun getCritRateBonus(player: ServerPlayerEntity): Double = 0.0
     fun getCritDamageBonus(player: ServerPlayerEntity): Double = 0.0
+    fun getAllDamageBonus(player: ServerPlayerEntity): Double = 0.0
+    fun getDisplayStackBonus(player: ServerPlayerEntity, buffId: String): Int = 0
 }
 
 object ArtifactSkillRegistry {

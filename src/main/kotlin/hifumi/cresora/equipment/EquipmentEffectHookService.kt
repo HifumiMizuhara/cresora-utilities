@@ -65,8 +65,14 @@ object EquipmentEffectHookService {
 
     // dispatch function removed in favor of explicit calls for type safety
 
-    // 表示上のスタック数を取得（将来の拡張用）
     fun getDisplayStacks(player: ServerPlayerEntity, buffId: String, rawStacks: Int): Int {
-        return rawStacks
+        var total = rawStacks
+        for (activeSetBonus in EquipmentPlayerSupport.getActiveSetBonuses(player)) {
+            for (hook in activeSetBonus.bonus.effectHooks) {
+                val handler = ArtifactSkillRegistry.getHandler(hook.effectId) ?: continue
+                total += handler.getDisplayStackBonus(player, buffId)
+            }
+        }
+        return total
     }
 }
