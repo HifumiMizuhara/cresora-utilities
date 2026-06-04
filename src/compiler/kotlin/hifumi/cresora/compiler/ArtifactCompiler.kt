@@ -45,11 +45,19 @@ class ArtifactCompiler(
         allArtifacts.forEach { artifact ->
             println("Compiling artifact set: ${artifact.name}...")
             artifact.bonuses.forEach { bonus ->
-                println("  Bonus ${bonus.requiredPieces}pc: ${bonus.handlers.size} handlers, ${bonus.buffs.size} buffs")
-                bonus.handlers.forEach { handler ->
-                    val effectId = "${artifact.id}_${bonus.requiredPieces}pc_${handler.eventName}"
-                    val className = "ArtifactSkill${artifact.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}${bonus.requiredPieces}pc${handler.eventName.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}"
-                    generateArtifactHookClass(artifact, bonus, handler, effectId, className)
+                val hasPassiveContent = bonus.requiresWeapon != null || bonus.displayStackBonuses.isNotEmpty()
+                println("  Bonus ${bonus.requiredPieces}pc: ${bonus.handlers.size} handlers, ${bonus.buffs.size} buffs, passive=$hasPassiveContent")
+                if (bonus.handlers.isNotEmpty()) {
+                    bonus.handlers.forEach { handler ->
+                        val effectId = "${artifact.id}_${bonus.requiredPieces}pc_${handler.eventName}"
+                        val className = "ArtifactSkill${artifact.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}${bonus.requiredPieces}pc${handler.eventName.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}"
+                        generateArtifactHookClass(artifact, bonus, handler, effectId, className)
+                        generatedHandlers.add(effectId to className)
+                    }
+                } else if (hasPassiveContent) {
+                    val effectId = "${artifact.id}_${bonus.requiredPieces}pc_passive"
+                    val className = "ArtifactSkill${artifact.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } }}${bonus.requiredPieces}pcPassive"
+                    generatePassiveArtifactHookClass(artifact, bonus, effectId, className)
                     generatedHandlers.add(effectId to className)
                 }
             }
@@ -98,6 +106,96 @@ class ArtifactCompiler(
         
         file.addType(classSpec.build())
         file.build().writeTo(outputDir)
+    }
+
+    private fun generatePassiveArtifactHookClass(
+        artifact: ArtifactDefNode,
+        bonus: ArtifactBonusNode,
+        effectId: String,
+        className: String
+    ) {
+        val packageName = "hifumi.cresora.equipment.generated"
+        val file = FileSpec.builder(packageName, className)
+            .addDefaultImports()
+
+        val classSpec = TypeSpec.classBuilder(className)
+            .addSuperinterface(ClassName("hifumi.cresora.equipment", "ArtifactSkillHandler"))
+
+        if (bonus.requiresWeapon != null) {
+            val isActiveFun = FunSpec.builder("isActive")
+                .addModifiers(KModifier.PRIVATE)
+                .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
+                .returns(Boolean::class)
+                .addStatement("return %T.hasWeaponInInventory(player, %S)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"), bonus.requiresWeapon)
+                .build()
+            classSpec.addFunction(isActiveFun)
+            generateConditionalStatOverrides(classSpec, bonus)
+        }
+
+        if (bonus.displayStackBonuses.isNotEmpty()) {
+            generateDisplayStackBonusMethod(classSpec, bonus)
+        }
+
+        file.addType(classSpec.build())
+        file.build().writeTo(outputDir)
+    }
+
+    private fun generateConditionalStatOverrides(
+        typeSpec: TypeSpec.Builder,
+        bonus: ArtifactBonusNode
+    ) {
+        val statMethodMap = mapOf(
+            "crit_dmg" to "getCritDamageBonus",
+            "crit_damage" to "getCritDamageBonus",
+            "crit_rate" to "getCritRateBonus",
+            "atk_percent" to "getAttackDamageScalar",
+            "attack_percent" to "getAttackDamageScalar",
+            "def_percent" to "getArmorScalar",
+            "defense_percent" to "getArmorScalar",
+            "all_dmg" to "getAllDamageBonus",
+            "all_dmg_bonus" to "getAllDamageBonus"
+        )
+
+        val methodValues = mutableMapOf<String, Double>()
+        for ((statKey, value) in bonus.stats) {
+            val methodName = statMethodMap[statKey] ?: continue
+            methodValues[methodName] = (methodValues[methodName] ?: 0.0) + value
+        }
+
+        for ((methodName, value) in methodValues) {
+            val funSpec = FunSpec.builder(methodName)
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
+                .returns(Double::class)
+                .addStatement("if (!isActive(player)) return 0.0")
+                .addStatement("return $value")
+                .build()
+            typeSpec.addFunction(funSpec)
+        }
+    }
+
+    private fun generateDisplayStackBonusMethod(
+        typeSpec: TypeSpec.Builder,
+        bonus: ArtifactBonusNode
+    ) {
+        val funSpec = FunSpec.builder("getDisplayStackBonus")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
+            .addParameter("buffId", String::class)
+            .returns(Int::class)
+
+        if (bonus.requiresWeapon != null) {
+            funSpec.addStatement("if (!isActive(player)) return 0")
+        }
+
+        funSpec.beginControlFlow("return when (buffId)")
+        for (dsb in bonus.displayStackBonuses) {
+            funSpec.addStatement("%S -> %L", dsb.buffId, dsb.stacks)
+        }
+        funSpec.addStatement("else -> 0")
+        funSpec.endControlFlow()
+
+        typeSpec.addFunction(funSpec.build())
     }
 
     private fun setupArtifactCommon(
@@ -394,16 +492,18 @@ class ArtifactCompiler(
             for (bonus in artifact.bonuses) {
                 val bonusObj = JsonObject()
                 bonusObj.addProperty("requiredPieces", bonus.requiredPieces)
-                
+
                 val statsArray = JsonArray()
-                bonus.stats.forEach { (type, value) ->
-                    val statObj = JsonObject()
-                    statObj.addProperty("type", type.lowercase())
-                    statObj.addProperty("value", value)
-                    statsArray.add(statObj)
+                if (bonus.requiresWeapon == null) {
+                    bonus.stats.forEach { (type, value) ->
+                        val statObj = JsonObject()
+                        statObj.addProperty("type", type.lowercase())
+                        statObj.addProperty("value", value)
+                        statsArray.add(statObj)
+                    }
                 }
                 bonusObj.add("stats", statsArray)
-                
+
                 val hooksArray = JsonArray()
                 bonus.handlers.forEach { handler ->
                     val hookObj = JsonObject()
@@ -412,8 +512,16 @@ class ArtifactCompiler(
                     hookObj.add("parameters", JsonObject())
                     hooksArray.add(hookObj)
                 }
+                val hasPassiveContent = bonus.requiresWeapon != null || bonus.displayStackBonuses.isNotEmpty()
+                if (bonus.handlers.isEmpty() && hasPassiveContent) {
+                    val hookObj = JsonObject()
+                    hookObj.addProperty("trigger", "equip_changed")
+                    hookObj.addProperty("effectId", "${artifact.id}_${bonus.requiredPieces}pc_passive")
+                    hookObj.add("parameters", JsonObject())
+                    hooksArray.add(hookObj)
+                }
                 bonusObj.add("effectHooks", hooksArray)
-                
+
                 bonusesArray.add(bonusObj)
             }
             setObj.add("bonuses", bonusesArray) // Matches EquipmentSet codec "bonuses" field

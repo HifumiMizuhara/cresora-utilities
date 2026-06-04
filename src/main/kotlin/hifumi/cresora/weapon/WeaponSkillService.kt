@@ -335,10 +335,7 @@ object WeaponSkillService {
             return 0.0
         }
         val definition = activeContext.first
-        var bonus = runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getCritDamageBonus(player) }
-        if (definition.id == "harukanaru_shojo_no_ketsui" && hasChildhoodFriend4pcAndWeapon(player)) {
-            bonus += 10.0
-        }
+        val bonus = runWeaponBonus(definition.skill.effectId, definition) { handler, _ -> handler.getCritDamageBonus(player) }
         return bonus
     }
 
@@ -393,11 +390,8 @@ object WeaponSkillService {
             return 0.0
         }
         val definition = activeContext.first
-        var bonus = runWeaponBonus(definition.skill.effectId, definition) { handler, _ ->
+        val bonus = runWeaponBonus(definition.skill.effectId, definition) { handler, _ ->
             handler.getAllDamageBonus(player)
-        }
-        if (definition.id == "harukanaru_shojo_no_ketsui" && hasChildhoodFriend4pcAndWeapon(player)) {
-            bonus += 10.0
         }
         return bonus
     }
@@ -733,19 +727,8 @@ object WeaponSkillService {
         return definition to data
     }
 
-    private fun hasChildhoodFriend4pcAndWeapon(player: ServerPlayerEntity): Boolean {
-        if (!hasWeaponInInventory(player, "harukanaru_shojo_no_ketsui")) return false
-        return hifumi.cresora.equipment.EquipmentPlayerSupport.getActiveSetBonuses(player).any {
-            it.set.id == "osananajimi" && it.pieceCount >= 4
-        }
-    }
-
-    // 表示上のスタック数を取得（幼馴染4セット効果「決意」+5層バフ対応）
     fun getDisplayStacks(player: ServerPlayerEntity, buffId: String, rawStacks: Int): Int {
-        if (buffId == "ketsui" && hasChildhoodFriend4pcAndWeapon(player)) {
-            return rawStacks + 5
-        }
-        return rawStacks
+        return hifumi.cresora.equipment.EquipmentEffectHookService.getDisplayStacks(player, buffId, rawStacks)
     }
 }
 

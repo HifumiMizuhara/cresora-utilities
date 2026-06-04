@@ -19,7 +19,8 @@
 - [x] `ArtifactSkillHandler` を拡張し、より複雑な跨ぎターン状態保持（CWC の transient state と同様）をサポート。 (Completed 2026-05-20)
 - [x] CAC に `add_buff` などの組み込み命令を追加。 (Completed 2026-05-20)
 - [ ] 実際のゲーム内での聖遺物セット効果の動作検証（runClient での目視確認）。
-- [ ] 聖遺物セット効果のハードコードの解消（現在、「幼なじみ」の4セット効果 [クリダメ+10/全ダメ+10/決意+5層] は `WeaponSkillService` や `harukanaru_shojo_no_ketsui.cresora` に直書きされています。これを .artifact DSL 側の `set 4 {}` で記述できるようにし、コンパイラ（CAC）が自動的にハンドラやバフ効果を生成するデータ駆動の設計へマイグレーションする）。
+- [x] 聖遺物セット効果のハードコードの解消（「幼なじみ」の4セット効果を `.artifact` DSL の `requires_weapon` + `display_stack_bonus` で宣言し、CAC が自動的にパッシブハンドラを生成するデータ駆動の設計へマイグレーション）。 (Completed 2026-06-04)
+- [ ] 聖遺物4セット効果のDSL化後の実機テスト（osananajimi 4pc のクリダメ+10/全ダメ+10/決意+5層が正しく適用されることの確認）。
 
 ## CWC とシステムのブラッシュアップ
 - [ ] IDE での `execute` ブロックの Kotlin 構文ハイライト表示の改善（低優先度）。

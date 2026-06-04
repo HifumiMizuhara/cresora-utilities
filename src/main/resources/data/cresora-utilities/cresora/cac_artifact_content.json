@@ -54,7 +54,13 @@
         {
           "requiredPieces": 4,
           "stats": [],
-          "effectHooks": []
+          "effectHooks": [
+            {
+              "trigger": "equip_changed",
+              "effectId": "osananajimi_4pc_passive",
+              "parameters": {}
+            }
+          ]
         }
       ]
     }

@@ -8,6 +8,14 @@ artifact "Childhood Friend" {
     }
     
     set 4 {
+        requires_weapon: "harukanaru_shojo_no_ketsui";
+        stats {
+            crit_dmg: 10.0;
+            all_dmg: 10.0;
+        }
+        display_stack_bonus "ketsui" {
+            stacks: 5;
+        }
     }
 
     translations {

@@ -1508,10 +1508,18 @@ weapon "Name" {
 - **共通組み込み命令**: `log()`, `apply_mark()`, `spawn_particles()`, `add_buff()` をサポート。
 - **生ソースコード抽出**: `execute` 内の複雑な Kotlin ロジックを、トークン再構成ではなく原始ソースコードから直接抽出することで構文エラーを防ぎます。
 
-#### 聖遺物・武器相互作用のカスタムロジック（特記事項）
-- **「幼なじみ」と「遥かなる少女の決意」のシナジー**:
-  - `osananajimi` 4セット効果が有効で、かつインベントリに「遥かなる少女の決意」(`harukanaru_shojo_no_ketsui`) が存在する場合、`WeaponSkillService` レベルの計算処理（`critDamageBonusPercent` / `allDamageBonusPercent`）において、動的に「決意」+5層分のバフ（会心ダメージ+10.0%、全ダメージ+10.0%）が自動で加算されます。
-  - この効果は「決意」の通常の上限値100層の影響を受けず、最大105層まで重複・加算されます。また、会心時の「決意」獲得時のメッセージにおいても、この+5層分を加算したスタック数が表示されます。
+#### 条件付きセット効果 (`requires_weapon`)
+- `set N { }` ブロック内に `requires_weapon: "weapon_id";` を指定すると、そのセットボーナスは指定武器がインベントリに存在する場合のみ発動します。
+- `requires_weapon` が指定された場合、`stats { }` ブロックの値はJSONのフラットボーナスではなく、武器所持チェック付きのハンドラメソッド（`getCritDamageBonus`, `getAllDamageBonus` 等）として生成されます。
+- パッシブハンドラ: イベントハンドラ（`on_attack_dealt` 等）がなくても、`requires_weapon` や `display_stack_bonus` のみのセット効果からハンドラクラスが自動生成されます。
+
+#### 表示スタック数ボーナス (`display_stack_bonus`)
+- `display_stack_bonus "buffId" { stacks: N; }` を `set N { }` ブロック内に記述すると、指定バフの表示スタック数に固定値を加算します。
+- 集約は `EquipmentEffectHookService.getDisplayStacks()` → `WeaponSkillService.getDisplayStacks()` の経路で行われます。
+
+#### 聖遺物・武器相互作用の例：「幼なじみ」と「遥かなる少女の決意」
+- `osananajimi.artifact` の4セット効果は `requires_weapon: "harukanaru_shojo_no_ketsui"` で宣言されており、インベントリに該当武器が存在する場合のみ、会心ダメージ+10.0%、全ダメージ+10.0%、および「決意」バフの表示スタック+5層が適用されます。
+- この効果は「決意」の通常の上限値100層の影響を受けず、最大105層まで重複・加算されます。また、会心時の「決意」獲得時のメッセージにおいても、この+5層分を加算したスタック数が表示されます。
 
 
 
