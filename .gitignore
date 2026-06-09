@@ -6,6 +6,9 @@ build/
 out/
 classes/
 /net/
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
 
 # eclipse
 
@@ -47,6 +50,11 @@ replay_*.log
 
 # antigravity
 .antigravitycli/
+
+# local analysis & reports
+optimization/
+review/
+plans/
 
 
 # agents
