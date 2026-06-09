@@ -56,6 +56,13 @@ optimization/
 review/
 plans/
 
+# local development docs
+CLAUDE.md
+GEMINI.md
+WORK_DONE.md
+TODO.md
+TODO_*.md
+
 
 # agents
 .agents/
