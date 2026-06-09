@@ -272,7 +272,7 @@ class ArtifactCompiler(
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
                     onTickFun.nextControlFlow("else if (removed)")
                     onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S), %T.getDisplayStacks(player, %S, state.stacks)), true)",
-                        ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.gained",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.decreased",
                         ClassName("net.minecraft.text", "Text"), buffNameKey,
                         ClassName("hifumi.cresora.equipment", "EquipmentEffectHookService"), buff.id)
                     onTickFun.endControlFlow()
@@ -668,6 +668,17 @@ class ArtifactCompiler(
                                 else -> "Effect expired: %s"
                             }
                             langJson.addProperty(expiredKey, msg)
+                        }
+                        if (buff.decay == "independent") {
+                            val decreasedKey = "item.cresora.artifact.skill.buff.${buff.id}.decreased"
+                            if (!langJson.has(decreasedKey)) {
+                                val msg = when (locale) {
+                                    "ja_jp" -> "スタック減少: %s (残り %s 層)"
+                                    "zh_cn" -> "层数减少: %s (剩余 %s 层)"
+                                    else -> "Stack decayed: %s (%s remaining)"
+                                }
+                                langJson.addProperty(decreasedKey, msg)
+                            }
                         }
                     }
                 }

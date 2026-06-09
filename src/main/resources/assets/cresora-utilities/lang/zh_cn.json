@@ -746,5 +746,6 @@
   "screen.cresora.leyline.click_to_start": "点击以开启挑战",
   "screen.cresora.leyline.already_started": "此处已在进行地脉喷涌挑战。",
   "screen.cresora.leyline.invalid_block": "地脉喷涌方块已被破坏或改变。",
-  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "沉重思念：获得被动加成（暴击伤害/全伤害+10%）。若背包中持有「遥远少女的决意」，则升级为「双向奔赴」（暴击伤害+60%、全伤害+25%、暴击率+5%）；否则陷入「叹息」状态（攻击力-50%、防御力+100%、非确定伤害转为术能伤害、每10秒概率获得护盾）。主动释放：【模式A（叹息状态）】获得大量护盾；【模式B（普通状态）】对周围最多5个敌人造成大量术能伤害。"
+  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "沉重思念：获得被动加成（暴击伤害/全伤害+10%）。若背包中持有「遥远少女的决意」，则升级为「双向奔赴」（暴击伤害+60%、全伤害+25%、暴击率+5%）；否则陷入「叹息」状态（攻击力-50%、防御力+100%、非确定伤害转为术能伤害、每10秒概率获得护盾）。主动释放：【模式A（叹息状态）】获得大量护盾；【模式B（普通状态）】对周围最多5个敌人造成大量术能伤害。",
+  "item.cresora.weapon.skill.buff.ketsui.decreased": "%s 一层消散（剩余 %s 层）"
 }

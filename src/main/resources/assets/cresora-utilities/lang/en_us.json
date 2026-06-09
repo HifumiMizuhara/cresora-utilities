@@ -757,5 +757,6 @@
   "screen.cresora.leyline.click_to_start": "Click to start challenge",
   "screen.cresora.leyline.already_started": "A Ley Line Overflow challenge is already active here.",
   "screen.cresora.leyline.invalid_block": "The Ley Line Overflow block has been broken or altered.",
-  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "Heavy Thoughts: Grants passive stats (+10% CRIT DMG/DMG bonus). If 'Resolve of the Distant Girl' is in inventory, upgrades stats to (+60% CRIT DMG, +25% DMG bonus, +5% CRIT Rate). Otherwise, inflicts Grief (ATK -50%, DEF +100%, converts damage to arcane, grants shields periodically). Active: Pattern A (Grief active) grants a massive shield. Pattern B (Grief inactive) strikes up to 5 enemies dealing arcane damage."
+  "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "Heavy Thoughts: Grants passive stats (+10% CRIT DMG/DMG bonus). If 'Resolve of the Distant Girl' is in inventory, upgrades stats to (+60% CRIT DMG, +25% DMG bonus, +5% CRIT Rate). Otherwise, inflicts Grief (ATK -50%, DEF +100%, converts damage to arcane, grants shields periodically). Active: Pattern A (Grief active) grants a massive shield. Pattern B (Grief inactive) strikes up to 5 enemies dealing arcane damage.",
+  "item.cresora.weapon.skill.buff.ketsui.decreased": "%s faded: %s stacks remaining"
 }

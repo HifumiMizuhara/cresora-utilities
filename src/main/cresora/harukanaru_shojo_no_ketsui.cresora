@@ -126,6 +126,7 @@ weapon "Resolve of the Distant Girl" {
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "Girl's Gaze activated! Inflicted Kyundeath on %s targets."
             "item.cresora.weapon.skill.buff.ketsui.name": "Resolve"
             "item.cresora.weapon.skill.buff.ketsui.gained": "Gained effect: %s (%s stacks)"
+            "item.cresora.weapon.skill.buff.ketsui.decreased": "%s faded: %s stacks remaining"
             "item.cresora.weapon.skill.buff.ketsui.expired": "Resolve expired"
         }
         ja_jp {
@@ -134,6 +135,7 @@ weapon "Resolve of the Distant Girl" {
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女の眼差し 起動！ %s体の敵にキュン死を付与しました。"
             "item.cresora.weapon.skill.buff.ketsui.name": "決意"
             "item.cresora.weapon.skill.buff.ketsui.gained": "効果獲得: %s (%s 層)"
+            "item.cresora.weapon.skill.buff.ketsui.decreased": "%s 一層消失（残り %s 層）"
             "item.cresora.weapon.skill.buff.ketsui.expired": "決意の効果が終了しました"
         }
         zh_cn {
@@ -142,6 +144,7 @@ weapon "Resolve of the Distant Girl" {
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女的凝视 启动！对 %s 个目标施加了萌死。"
             "item.cresora.weapon.skill.buff.ketsui.name": "决意"
             "item.cresora.weapon.skill.buff.ketsui.gained": "获得效果: %s (%s 层)"
+            "item.cresora.weapon.skill.buff.ketsui.decreased": "%s 一层消散（剩余 %s 层）"
             "item.cresora.weapon.skill.buff.ketsui.expired": "决意失效"
         }
         lzh {
@@ -150,6 +153,7 @@ weapon "Resolve of the Distant Girl" {
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女之凝視 啓！施萌死於 %s 敵。"
             "item.cresora.weapon.skill.buff.ketsui.name": "決意"
             "item.cresora.weapon.skill.buff.ketsui.gained": "得%s（層：%s）"
+            "item.cresora.weapon.skill.buff.ketsui.decreased": "%s 一層散（餘 %s）"
             "item.cresora.weapon.skill.buff.ketsui.expired": "決意失效"
         }
     }

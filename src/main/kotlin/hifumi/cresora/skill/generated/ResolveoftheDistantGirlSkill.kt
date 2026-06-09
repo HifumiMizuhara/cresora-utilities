@@ -72,7 +72,7 @@ public object ResolveoftheDistantGirlSkill : WeaponSkillHandler {
           player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.expired",
               Text.translatable("item.cresora.weapon.skill.buff.ketsui.name")), true)
         } else if (removed) {
-          player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.gained",
+          player.sendMessage(Text.translatable("item.cresora.weapon.skill.buff.ketsui.decreased",
               Text.translatable("item.cresora.weapon.skill.buff.ketsui.name"),
               WeaponSkillService.getDisplayStacks(player, "ketsui", state.stacks)), true)
         }

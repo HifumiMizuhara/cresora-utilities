@@ -227,7 +227,7 @@ class CresoraCompiler(
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
                     onPlayerTickFun.nextControlFlow("else if (removed)")
                     onPlayerTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S), %T.getDisplayStacks(player, %S, state.stacks)), true)",
-                        ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.gained",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.decreased",
                         ClassName("net.minecraft.text", "Text"), buffNameKey,
                         ClassName("hifumi.cresora.weapon", "WeaponSkillService"), buff.id)
                     onPlayerTickFun.endControlFlow()
@@ -736,6 +736,15 @@ class CresoraCompiler(
                         else -> "Buff expired: %s"
                     }
                     langJson.addProperty("item.cresora.weapon.skill.buff.${buff.id}.expired", expired)
+
+                    if (weapon.skill?.buffs?.find { it.id == buff.id }?.decay == "independent") {
+                        val decreased = trans["buff_${buff.id}_decreased"] ?: when(locale) {
+                            "zh_cn" -> "层数减少: %s (剩余 %s 层)"
+                            "ja_jp" -> "スタック減少: %s (残り %s 層)"
+                            else -> "Stack decayed: %s (%s remaining)"
+                        }
+                        langJson.addProperty("item.cresora.weapon.skill.buff.${buff.id}.decreased", decreased)
+                    }
                 }
                 trans.forEach { (k, v) ->
                     if (!k.startsWith("name") && !k.startsWith("skill_name") && !k.startsWith("fragment_name") && !k.startsWith("buff_") && !k.startsWith("sub_skill_")) {
