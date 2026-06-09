@@ -12,6 +12,7 @@ import net.minecraft.util.math.random.Random
 import net.minecraft.world.PersistentState
 import net.minecraft.world.PersistentStateType
 import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.combat.FieldMobPackService
 
 enum class MoonPhase(val id: String, val translationKey: String, val displayName: String, val layer: Int) {
     NEW_MOON("new_moon", "moon.cresora.phase.new_moon", "朔", 0),
@@ -159,6 +160,8 @@ object MoonPhaseService {
 
     fun isBloodMoon(server: MinecraftServer): Boolean = currentNight(server).specialPhase == SpecialMoonPhase.BLOOD_MOON
 
+    fun isSolarEclipse(server: MinecraftServer): Boolean = currentNight(server).specialPhase == SpecialMoonPhase.SOLAR_ECLIPSE
+
     fun moonLayer(server: MinecraftServer): Int = currentNight(server).layer
 
     // Reserved hook for future non-blood special nights. Blood moon time scaling is applied in BloodMoonService.
@@ -250,8 +253,9 @@ object MoonPhaseService {
     }
 
     fun refreshLoadedHostiles(server: MinecraftServer) {
+        val solarEclipseActive = isSolarEclipse(server)
         for (world in server.worlds) {
-            refreshLoadedHostiles(world)
+            refreshLoadedHostiles(world, solarEclipseActive)
         }
     }
 
@@ -343,9 +347,14 @@ object MoonPhaseService {
         return runCatching { SpecialMoonPhase.valueOf(persisted.currentSpecialPhase) }.getOrNull()
     }
 
-    private fun refreshLoadedHostiles(world: ServerWorld) {
+    private fun refreshLoadedHostiles(world: ServerWorld, solarEclipseActive: Boolean) {
         val bounds = Box(-30_000_000.0, -2048.0, -30_000_000.0, 30_000_000.0, 2048.0, 30_000_000.0)
         for (hostile in world.getEntitiesByClass(HostileEntity::class.java, bounds) { true }) {
+            if (solarEclipseActive) {
+                FieldMobPackService.promoteToEclipseElite(hostile)
+            } else {
+                FieldMobPackService.demoteEclipseElite(hostile)
+            }
             AdventureRankService.applyMobScaling(hostile, AdventureRankService.mobRank(hostile))
             AdventureRankService.refreshMobDisplay(hostile)
         }

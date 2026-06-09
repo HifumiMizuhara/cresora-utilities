@@ -20,6 +20,7 @@ object FieldMobPackService {
     private const val NORMAL_COMMAND_TAG = "cresora_normal_mob"
     private const val ELITE_COMMAND_TAG = "cresora_elite_mob"
     private const val PACK_COMMAND_TAG = "cresora_pack_mob"
+    private const val ECLIPSE_ELITE_PACK_ID = "cresora_eclipse_elite"
 
     private const val PACK_SPAWN_CHANCE = 0.18
     private const val PACK_EXTRA_MIN = 2
@@ -49,6 +50,7 @@ object FieldMobPackService {
         if (queuedMember != null) {
             pendingPackMember.remove()
             classify(hostile, queuedMember.rank, queuedMember.elite, queuedMember.packId)
+            applyEclipseEliteIfActive(hostile, world)
             return
         }
 
@@ -59,6 +61,7 @@ object FieldMobPackService {
         val rank = AdventureRankService.getOrAssignMobRank(hostile, world)
         if (!supportsPack(hostile.type) || world.random.nextDouble() >= PACK_SPAWN_CHANCE) {
             classify(hostile, rank, false, "")
+            applyEclipseEliteIfActive(hostile, world)
             return
         }
 
@@ -71,8 +74,16 @@ object FieldMobPackService {
 
         val packId = UUID.randomUUID().toString()
         classify(hostile, rank, eliteSlots.contains(0), packId)
+        applyEclipseEliteIfActive(hostile, world)
         repeat(totalMembers - 1) { index ->
             spawnAdditionalPackMember(hostile, world, spawnReason, packId, rank, eliteSlots.contains(index + 1))
+        }
+    }
+
+    private fun applyEclipseEliteIfActive(hostile: MobEntity, world: ServerWorld) {
+        val server = world.server ?: return
+        if (hifumi.cresora.bloodmoon.MoonPhaseService.isSolarEclipse(server)) {
+            promoteToEclipseElite(hostile)
         }
     }
 
@@ -88,6 +99,21 @@ object FieldMobPackService {
     fun markExplicit(hostile: MobEntity, elite: Boolean) {
         val access = hostile as? AdventureRankMobAccess ?: return
         access.cresoraSetEliteMob(elite)
+        access.cresoraSetMobPackId("")
+        syncCommandTags(hostile)
+    }
+
+    fun promoteToEclipseElite(hostile: MobEntity) {
+        val access = hostile as? AdventureRankMobAccess ?: return
+        access.cresoraSetEliteMob(true)
+        access.cresoraSetMobPackId(ECLIPSE_ELITE_PACK_ID)
+        syncCommandTags(hostile)
+    }
+
+    fun demoteEclipseElite(hostile: MobEntity) {
+        val access = hostile as? AdventureRankMobAccess ?: return
+        if (access.cresoraGetMobPackId() != ECLIPSE_ELITE_PACK_ID) return
+        access.cresoraSetEliteMob(false)
         access.cresoraSetMobPackId("")
         syncCommandTags(hostile)
     }
