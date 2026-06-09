@@ -25,6 +25,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
+import hifumi.cresora.combat.CombatMobDisplayService;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
@@ -119,9 +120,15 @@ public class LivingEntityMixin {
                     }
                 }
             }
+            if (source.getAttacker() instanceof ServerPlayerEntity attackerPlayer) {
+                CombatMobDisplayService.INSTANCE.showPlayerHitFeedback(attackerPlayer, damageDone, source);
+            }
             return;
         }
         if (!(entity instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity))) {
+            if (source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+                CombatMobDisplayService.INSTANCE.showPlayerHitFeedback(serverPlayer, damageDone, source);
+            }
             return;
         }
         if (source.getAttacker() instanceof PlayerEntity player) {

@@ -1,5 +1,13 @@
 # WORK_DONE
 
+## Pending Crit 誤検知エッジケースの修正 (2026-06-09)
+- [x] `LivingEntityMixin.java` の `cresora$showMobDamage` にて、2 つのパスで `consumeCrit` が呼ばれず pending crit が残留するバグを修正:
+  - **PvP（プレイヤー vs プレイヤー）**: `entity instanceof PlayerEntity` の early return 前に `CombatMobDisplayService.showPlayerHitFeedback` を呼ぶことで会心フィードバックを表示しつつ pending crit を消費。
+  - **非ホスティル mob 攻撃（動物等）**: 同様に early return 前に `showPlayerHitFeedback` を呼んで消費。
+- [x] `CombatMobDisplayService.kt` に `showPlayerHitFeedback(attacker, damage, source)` を追加。`DamageSource` から属性タイプを取得し、`showOutgoingDamage` に resistance=0 で委譲する軽量ラッパー。
+- 設計: 会心は攻撃相手に関わらず（mob・プレイヤー・動物）すべて表示するのが正しい仕様。以前の修正（`clearTransientState` で抑制）は誤りであったため完全にリバートし、正しく表示・消費する実装に変更。
+- [x] `./gradlew classes` によるコンパイル成功確認。
+
 ## CAC 4セット効果 DSL 化 — 聖遺物ハードコード解消 (2026-06-04)
 - [x] CAC (Artifact Compiler) に `requires_weapon` および `display_stack_bonus` DSL構文を追加:
   - `AST.kt`: `ArtifactBonusNode` に `requiresWeapon: String?` と `displayStackBonuses: List<DisplayStackBonusNode>` を追加。新規 `DisplayStackBonusNode` データクラスを定義。

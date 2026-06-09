@@ -149,6 +149,12 @@ object CombatMobDisplayService {
         spawnDamageDisplay(world, target, damage, CombatDamageType.PHYSICAL, false)
     }
 
+    fun showPlayerHitFeedback(attacker: ServerPlayerEntity, damage: Float, source: DamageSource) {
+        if (damage <= 0.0f) return
+        val damageType = CombatDamageTypeSupport.damageSourceType(source)
+        showOutgoingDamage(attacker, damage.toDouble(), damageType, 0.0, false)
+    }
+
     fun showTrueDamage(target: LivingEntity, attacker: ServerPlayerEntity, damage: Double) {
         if (damage <= 0.0 || target.isRemoved) {
             return

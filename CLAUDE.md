@@ -237,6 +237,8 @@ GRADLE_USER_HOME=.gradle-user ./gradlew test --console=plain
 
 ## Commit & Pull Request Guidelines
 
+**Commit messages must be written in English.**
+
 Recent history favors short imperative subjects, usually with conventional prefixes such as `feat:` or `chore:`. Keep commits narrow. PRs should state gameplay impact, note any touched registries or generated files, and include screenshots for UI changes. If you modify content schemas, registries, or service APIs, update `cresora_document.md`; log finished work in `WORK_DONE.md` and future follow-up in `TODO.md`.
 
 ---
