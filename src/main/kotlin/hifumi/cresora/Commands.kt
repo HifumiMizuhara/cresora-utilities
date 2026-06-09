@@ -134,6 +134,7 @@ object Commands {
                                                     return@executes 0
                                                 }
                                                 MoonPhaseService.setSpecialMoon(server, special)
+                                                MoonPhaseService.refreshLoadedHostiles(server)
                                                 context.source.sendFeedback({ Text.translatable("commands.cresora.moon.set_special", Text.literal(special.id), Text.literal(special.displayName)) }, true)
                                                 1
                                             }
