@@ -5,6 +5,7 @@ import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import org.slf4j.LoggerFactory
+import kotlin.math.roundToInt
 
 object CreditsService {
     private const val PLAYER_CREDITS_KEY = "cresora_credits"
@@ -69,8 +70,8 @@ object CreditsService {
         return addCredits(player, CreditsRewardProfile.pickupReward(source, count))
     }
 
-    fun addHostileKillReward(player: ServerPlayerEntity, entity: MobEntity): Int {
-        return addCredits(player, CreditsRewardProfile.hostileKill(entity))
+    fun addHostileKillReward(player: ServerPlayerEntity, entity: MobEntity, multiplier: Double = 1.0): Int {
+        return addCredits(player, (CreditsRewardProfile.hostileKill(entity) * multiplier).roundToInt())
     }
 
     fun addFriendlyKillReward(player: ServerPlayerEntity, entity: MobEntity): Int {

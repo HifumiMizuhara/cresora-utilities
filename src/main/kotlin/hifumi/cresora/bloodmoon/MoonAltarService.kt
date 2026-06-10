@@ -18,6 +18,7 @@ import net.minecraft.world.World
 
 object MoonAltarService {
     private const val MOON_BRICK_DROP_CHANCE = 0.02
+    private const val LUNAR_ECLIPSE_MOON_BRICK_DROP_CHANCE = 0.08
 
     fun init() {
         UseBlockCallback.EVENT.register(UseBlockCallback { player, world, hand, hitResult ->
@@ -26,7 +27,9 @@ object MoonAltarService {
     }
 
     fun tryDropMoonBrick(player: ServerPlayerEntity, hostile: MobEntity) {
-        if (player.random.nextDouble() >= MOON_BRICK_DROP_CHANCE) {
+        val lunarEclipse = player.server?.let { MoonPhaseService.isLunarEclipse(it) } ?: false
+        val chance = if (lunarEclipse) LUNAR_ECLIPSE_MOON_BRICK_DROP_CHANCE else MOON_BRICK_DROP_CHANCE
+        if (player.random.nextDouble() >= chance) {
             return
         }
         player.inventory.offerOrDrop(ItemStack(CreSoraUtilities.MOON_BRICK_ITEM))

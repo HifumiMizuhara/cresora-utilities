@@ -1,6 +1,7 @@
 package hifumi.cresora.adventurerank
 import hifumi.cresora.CreSoraUtilities
 import hifumi.cresora.bloodmoon.MoonAltarService
+import hifumi.cresora.bloodmoon.MoonPhaseService
 import hifumi.cresora.combat.CombatMobDisplayService
 import hifumi.cresora.combat.FieldMobPackService
 import hifumi.cresora.credits.CreditsService
@@ -20,6 +21,7 @@ import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.mob.Monster
 import net.minecraft.server.network.ServerPlayerEntity
+import kotlin.math.roundToInt
 
 object AdventureRankHooks {
     fun init() {
@@ -28,8 +30,9 @@ object AdventureRankHooks {
             when (entity) {
                 is MobEntity -> {
                     if (entity is Monster || entity is HostileEntity) {
-                        AdventureRankService.addXp(killer, AdventureRankService.hostileKillXp(entity))
-                        CreditsService.addHostileKillReward(killer, entity)
+                        val rewardScale = killer.server?.let { MoonPhaseService.killRewardMultiplier(it) } ?: 1.0
+                        AdventureRankService.addXp(killer, (AdventureRankService.hostileKillXp(entity) * rewardScale).roundToInt())
+                        CreditsService.addHostileKillReward(killer, entity, rewardScale)
                         WeaponDropService.onHostileKilled(killer, entity)
                         ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
                         MoonAltarService.tryDropMoonBrick(killer, entity)

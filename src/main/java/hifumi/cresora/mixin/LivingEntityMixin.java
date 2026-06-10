@@ -2,6 +2,7 @@ package hifumi.cresora.mixin;
 
 import hifumi.cresora.adventurerank.AdventureRankMobAccess;
 import hifumi.cresora.adventurerank.AdventureRankService;
+import hifumi.cresora.bloodmoon.MoonPhaseService;
 import hifumi.cresora.combat.BaaMimicService;
 import hifumi.cresora.combat.CombatDamageType;
 import hifumi.cresora.combat.CombatDamageTypeSupport;
@@ -30,6 +31,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,9 +40,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-public class LivingEntityMixin {
+public abstract class LivingEntityMixin {
     @Unique
     private float cresora$preDamageHealth;
+
+    @Unique
+    private boolean cresora$lunarEclipseLootReroll;
+
+    @Shadow
+    protected abstract void dropLoot(ServerWorld world, DamageSource damageSource, boolean causedByPlayer);
 
     @ModifyVariable(method = "damage", at = @At("HEAD"), argsOnly = true)
     private float cresora$applyCombatScaling(float amount, net.minecraft.server.world.ServerWorld world, DamageSource source) {
@@ -177,6 +185,31 @@ public class LivingEntityMixin {
             return;
         }
         sheep.dropStack(world, new ItemStack(cresora$getWoolItem(sheep.getColor()), 1));
+    }
+
+    @Inject(
+            method = "dropLoot(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;Z)V",
+            at = @At("TAIL")
+    )
+    private void cresora$doubleLunarEclipseLoot(ServerWorld world, DamageSource source, boolean causedByPlayer, CallbackInfo ci) {
+        if (this.cresora$lunarEclipseLootReroll) {
+            return;
+        }
+        if (!((Object) this instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity))) {
+            return;
+        }
+        if (!(source.getAttacker() instanceof ServerPlayerEntity)) {
+            return;
+        }
+        if (!MoonPhaseService.INSTANCE.isLunarEclipse(world.getServer())) {
+            return;
+        }
+        this.cresora$lunarEclipseLootReroll = true;
+        try {
+            this.dropLoot(world, source, causedByPlayer);
+        } finally {
+            this.cresora$lunarEclipseLootReroll = false;
+        }
     }
 
     @Unique

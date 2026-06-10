@@ -162,6 +162,11 @@ object MoonPhaseService {
 
     fun isSolarEclipse(server: MinecraftServer): Boolean = currentNight(server).specialPhase == SpecialMoonPhase.SOLAR_ECLIPSE
 
+    fun isLunarEclipse(server: MinecraftServer): Boolean = currentNight(server).specialPhase == SpecialMoonPhase.LUNAR_ECLIPSE
+
+    // Lunar eclipse "blessing night": hostile-kill adventure XP / credits are doubled. Loot doubling is applied in LivingEntityMixin.
+    fun killRewardMultiplier(server: MinecraftServer): Double = if (isLunarEclipse(server)) 2.0 else 1.0
+
     fun moonLayer(server: MinecraftServer): Int = currentNight(server).layer
 
     // Reserved hook for future non-blood special nights. Blood moon time scaling is applied in BloodMoonService.
@@ -246,7 +251,7 @@ object MoonPhaseService {
             "commands.cresora.moon.summary",
             night.dayIndex,
             Text.translatable(night.phase.translationKey),
-            night.specialPhase?.let { Text.translatable(it.translationKey) } ?: Text.literal("无"),
+            night.specialPhase?.let { Text.translatable(it.translationKey) } ?: Text.translatable("commands.cresora.moon.none"),
             night.layer,
             persisted?.phaseOffset ?: 0
         )
@@ -316,7 +321,7 @@ object MoonPhaseService {
 
         val night = currentNight(server)
         server.playerManager.playerList.forEach { player ->
-            player.sendMessage(Text.literal("夜晚降临,今晚是").append(night.displayText()), false)
+            player.sendMessage(Text.translatable("message.cresora.moon.night_announce", night.displayText()), false)
         }
         refreshLoadedHostiles(server)
         tickSpecialNight(server)

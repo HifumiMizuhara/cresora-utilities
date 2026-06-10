@@ -722,14 +722,18 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `clearSpecialMoon(server)`
 - `clearBloodMoon(server)`
 - `refreshLoadedHostiles(server)`
+- `isSolarEclipse(server)` / `isLunarEclipse(server)`
+- `killRewardMultiplier(server)` — 月食中は `2.0`、通常は `1.0`
 
 重要仕様:
 
 - 通常月相は `朔 -> 既朔 -> 上弦 -> 逾弦 -> 几望 -> 望 -> 既望 -> 退望 -> 下弦 -> 残月 -> 晦` の 11 日周期
 - 特殊月相は互斥抽選で、命中時はその夜の通常増強を無効化
 - `血月` は 11 日周期内で最低 1 回発生するよう保底される
-- 当夜メッセージは `夜晚降临,今晚是...` 形式で送信
-- `血月` の詳細効果は `BloodMoonService` が実装済み。他の特殊月相は接続口のみ公開
+- 当夜メッセージは翻訳キー `message.cresora.moon.night_announce`（%s に月相名）で全プレイヤーへ送信（en/ja/zh_cn/lzh 対応）
+- `血月` の詳細効果は `BloodMoonService` が実装済み。`死月`・`？？` は接続口のみ公開
+- `日食` の効果: 全天然湧き敵対モブが精英怪化（HP x1.32 / ATK x1.16 / DEF x1.18 / サイズ+18%）。`FieldMobPackService.promoteToEclipseElite / demoteEclipseElite` が担当
+- `月食` の効果（恵みの月夜）: 敵対モブ撃破時の冒険ランクXPとクレジットが2倍（`killRewardMultiplier` 経由、`AdventureRankHooks` / `CreditsService.addHostileKillReward(multiplier)` で適用）。バニラ戦利品は `LivingEntityMixin.cresora$doubleLunarEclipseLoot` がプレイヤー撃破時に loot テーブルをもう1回ロール。`moon_brick` ドロップ率は 2% → 8%（`MoonAltarService`）。モブの強さ・湧き量は通常どおり
 - `/cresora moon set` は中文表示名ではなく英文 id を受け取る。使用可能 id: `new_moon`, `crescent_one`, `first_quarter`, `waxing_gibbous`, `near_full`, `full`, `full_after`, `wane_after`, `last_quarter`, `waning_crescent`, `old_moon`
 - `/cresora moon set_special` は特殊月相を当夜に強制設定する。使用可能 id: `blood_moon`, `solar_eclipse`, `lunar_eclipse`, `death_moon`, `unknown`
 - `/cresora moon stop_blood_moon` は当夜の血月だけを解除し、他の特殊月相記録は巻き込まない
