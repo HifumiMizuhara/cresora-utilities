@@ -1300,6 +1300,34 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `effectiveCritRateRatio(totals)`
 - `effectiveCritDamageRatio(totals)`
 
+### 7.19 CombatMobDisplayService
+
+ファイル:
+
+- `CombatMobDisplayService.kt`
+
+責務:
+
+- mob 頭上のランク / HP / 状態ラベル更新（`updateMobStatus`）
+- 被弾位置に浮かぶダメージ数値表示（`TextDisplayEntity`）のスポーンと寿命管理
+- プレイヤーへのアクションバー被弾 / 与ダメージ通知
+
+主 API:
+
+- `updateMobStatus(entity)`
+- `showDamage(target, source, damage)` / `showDamage(target, damage)`
+- `showTrueDamage(target, attacker, damage)`
+- `showIncomingDamage(player, source, damage)`
+- `showPlayerHitFeedback(attacker, damage, source)`
+- `tick(world)` — `END_WORLD_TICK` から呼ばれ、表示を上昇させ 16 tick で discard
+- `discardOrphanedIndicator(entity)` — `ENTITY_LOAD` から呼ばれ、チャンクデータから復元された残留ダメージ表示を discard する。該当時 `true`
+
+重要仕様:
+
+- ダメージ表示はコマンドタグ `cresora_damage_indicator` を持つ。追跡はメモリ上の `activeIndicators`（network entity id キー）のみで、エンティティ自体はチャンクに永続保存されるため、寿命 16 tick 内のチャンクアンロード / サーバー停止で孤児化する。`discardOrphanedIndicator` がロード時にタグ付き・未追跡の表示を回収する
+- `activeIndicators` への登録は `spawnEntity` より前に行う必要がある（`ENTITY_LOAD` が `spawnEntity` 内で同期発火し、未追跡だと新規スポーンが孤児と誤判定されるため）
+- タグ導入前に保存された残留表示は、テキスト内の翻訳キー prefix `combat.cresora.damage_type.short.` で識別して同様に回収（自己修復）
+
 ## 8. UI / Command API
 
 ### 8.1 ArtifactUiFlow

@@ -3,6 +3,7 @@ import hifumi.cresora.adventurerank.AdventureRankService
 import hifumi.cresora.weapon.WeaponSkillService
 import hifumi.cresora.equipment.EquipmentPlayerSupport
 import hifumi.cresora.masquerade.MasqueradeService
+import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
@@ -15,6 +16,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.Formatting
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -24,6 +26,8 @@ object CombatMobDisplayService {
     private const val FLOAT_LIFETIME_TICKS = 16L
     private const val FLOAT_RISE_PER_TICK = 0.045
     private const val FLOAT_SIDE_OFFSET = 0.18
+    private const val INDICATOR_COMMAND_TAG = "cresora_damage_indicator"
+    private const val SHORT_DAMAGE_TYPE_KEY_PREFIX = "combat.cresora.damage_type.short."
 
     private data class DamageIndicator(
         val world: ServerWorld,
@@ -243,8 +247,11 @@ object CombatMobDisplayService {
                     }
                 )
         )
-        world.spawnEntity(display)
+        display.addCommandTag(INDICATOR_COMMAND_TAG)
+        // Register before spawning: ENTITY_LOAD fires inside spawnEntity and treats
+        // tagged-but-untracked indicators as orphans restored from chunk data.
         activeIndicators[display.id] = DamageIndicator(world, display.id, world.time + FLOAT_LIFETIME_TICKS)
+        world.spawnEntity(display)
     }
 
     fun tick(world: ServerWorld) {
@@ -266,12 +273,36 @@ object CombatMobDisplayService {
         }
     }
 
+    fun discardOrphanedIndicator(entity: Entity): Boolean {
+        val display = entity as? DisplayEntity.TextDisplayEntity ?: return false
+        val orphaned = if (display.commandTags.contains(INDICATOR_COMMAND_TAG)) {
+            !activeIndicators.containsKey(display.id)
+        } else {
+            // Indicators saved before the command tag existed: identify them by the
+            // damage-type text so chunks containing stuck displays self-heal on load.
+            isIndicatorText(display.text)
+        }
+        if (orphaned) {
+            display.discard()
+        }
+        return orphaned
+    }
+
+    private fun isIndicatorText(text: Text?): Boolean {
+        if (text == null) {
+            return false
+        }
+        return (sequenceOf(text) + text.siblings.asSequence()).any {
+            ((it.content as? TranslatableTextContent)?.key ?: "").startsWith(SHORT_DAMAGE_TYPE_KEY_PREFIX)
+        }
+    }
+
     private fun shortDamageTypeText(damageType: CombatDamageType): MutableText {
-        return Text.translatable("combat.cresora.damage_type.short.${damageType.id}")
+        return Text.translatable("$SHORT_DAMAGE_TYPE_KEY_PREFIX${damageType.id}")
     }
 
     private fun shortTrueDamageText(): MutableText {
-        return Text.translatable("combat.cresora.damage_type.short.true_damage")
+        return Text.translatable("${SHORT_DAMAGE_TYPE_KEY_PREFIX}true_damage")
     }
 
     private fun colorForDamage(damageType: CombatDamageType?, trueDamage: Boolean): Formatting {

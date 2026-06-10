@@ -53,6 +53,9 @@ object AdventureRankHooks {
         })
 
         ServerEntityEvents.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, world ->
+            if (CombatMobDisplayService.discardOrphanedIndicator(entity)) {
+                return@Load
+            }
             val hostile = entity as? MobEntity ?: return@Load
             if (hostile is Monster || hostile is HostileEntity) {
                 val rank = AdventureRankService.getOrAssignMobRank(hostile, world)
