@@ -1235,6 +1235,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 注記:
 
 - 宝箱本体、所有者UUID、出現座標、有効期限（`expireTime`）などの情報は `TreasureChestPersistentState` を通じて完全に NBT へシリアライズされ、サーバー再起動後も復元されます。
+- プレイヤー向け通知はすべて `message.cresora.treasure_chest.*` 翻訳キー（en_us / ja_jp / zh_cn / lzh）。色は § コードを訳文内に埋め込み。守護者数の頭上表示（`challenge_display`）も `Text.translatable` でクライアント側解決。
 
 ### 7.16 NaturalRegenService
 

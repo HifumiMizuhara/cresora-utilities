@@ -274,7 +274,7 @@ object TreasureChestService {
             challenge.triggered = false
             activeChallenges.remove(chest.key)
             player.sendMessage(
-                Text.literal("§c[共鸣探索] 守护者唤醒失败，请重试或在更开阔的位置放置宝箱！"),
+                Text.translatable("message.cresora.treasure_chest.guardian_spawn_failed"),
                 false
             )
             return
@@ -290,7 +290,7 @@ object TreasureChestService {
         )
 
         player.sendMessage(
-            Text.literal("§6[共鸣探索] §f守护者已被唤醒，击败它们以解锁共鸣宝箱！"),
+            Text.translatable("message.cresora.treasure_chest.guardians_awakened"),
             false
         )
 
@@ -354,7 +354,7 @@ object TreasureChestService {
 
         val owner = server.playerManager.getPlayer(challenge.ownerId)
         owner?.sendMessage(
-            Text.literal("§c[共鸣探索] §f由于你离宝箱过远或不幸死亡，共鸣挑战已重置。"),
+            Text.translatable("message.cresora.treasure_chest.challenge_reset"),
             false
         )
     }
@@ -389,14 +389,14 @@ object TreasureChestService {
         )
 
         player.sendMessage(
-            Text.literal("§6[共鸣探索] §a共鸣挑战成功！你可以开启宝箱了。"),
+            Text.translatable("message.cresora.treasure_chest.challenge_complete"),
             false
         )
     }
 
     private fun syncChallengeDisplay(world: ServerWorld, chest: ActiveChest, challenge: ChestChallenge, remaining: Int) {
         val display = resolveChallengeDisplay(world, challenge) ?: createChallengeDisplay(world, chest, challenge, remaining)
-        display.setText(Text.literal("§6[共鸣挑战] §f击败守护者！ §7(剩余: $remaining)"))
+        display.setText(Text.translatable("message.cresora.treasure_chest.challenge_display", remaining))
     }
 
     private fun resolveChallengeDisplay(world: ServerWorld, challenge: ChestChallenge): DisplayEntity.TextDisplayEntity? {
@@ -420,7 +420,7 @@ object TreasureChestService {
         display.setNoGravity(true)
         display.isInvulnerable = true
         display.isSilent = true
-        display.setText(Text.literal("§6[共鸣挑战] §f击败守护者！ §7(剩余: $remaining)"))
+        display.setText(Text.translatable("message.cresora.treasure_chest.challenge_display", remaining))
         world.spawnEntity(display)
         challenge.displayEntityUuid = display.uuid
         return display
@@ -436,7 +436,7 @@ object TreasureChestService {
         val totalCredits = CreditsService.addCredits(targetPlayer, amount)
 
         targetPlayer.sendMessage(
-            Text.literal("§6[共鸣探索] §f击杀守护者：CSC +$amount | 当前 CSC ${ArtifactSpecialItem.formatWholeNumber(totalCredits)}"),
+            Text.translatable("message.cresora.treasure_chest.guardian_kill_reward", amount, ArtifactSpecialItem.formatWholeNumber(totalCredits)),
             true
         )
 
@@ -473,7 +473,7 @@ object TreasureChestService {
                     EquipmentStackSupport.syncEquipmentData(stack, data)
                     giveStack(player, stack)
                     player.sendMessage(
-                        Text.literal("§6[共鸣奖励] §f获得了圣遗物残响: ").append(stack.name),
+                        Text.translatable("message.cresora.treasure_chest.reward_artifact", stack.name),
                         false
                     )
                 }
@@ -492,7 +492,7 @@ object TreasureChestService {
                 val stack = ItemStack(item, count)
                 giveStack(player, stack)
                 player.sendMessage(
-                    Text.literal("§6[共鸣奖励] §f获得了武器碎片: ").append(stack.name).append(" x$count"),
+                    Text.translatable("message.cresora.treasure_chest.reward_fragment", stack.name, count),
                     false
                 )
             }
@@ -688,7 +688,8 @@ object TreasureChestService {
         val chest = activeByKey[key] ?: return ActionResult.PASS
 
         if (chest.ownerId != serverPlayer.uuid) {
-            val ownerName = server.playerManager.getPlayer(chest.ownerId)?.name?.string ?: "其他玩家"
+            val ownerName: Text = server.playerManager.getPlayer(chest.ownerId)?.name
+                ?: Text.translatable("message.cresora.treasure_chest.owner_unknown")
             serverPlayer.sendMessage(
                 Text.translatable("message.cresora.treasure_chest.not_owner", ownerName).formatted(Formatting.RED),
                 true
@@ -705,7 +706,7 @@ object TreasureChestService {
         }
         if (!challenge.completed) {
             serverPlayer.sendMessage(
-                Text.literal("§c请先击败周围的守护者！"),
+                Text.translatable("message.cresora.treasure_chest.defeat_guardians_first"),
                 true
             )
             return ActionResult.FAIL
