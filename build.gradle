@@ -104,13 +104,34 @@ sourceSets {
 	compiler {
 		kotlin.srcDirs = ['src/compiler/kotlin']
 	}
+	compilerTest {
+		kotlin.srcDirs = ['src/compilerTest/kotlin']
+		resources.srcDirs = ['src/compilerTest/resources']
+		compileClasspath += sourceSets.compiler.output
+		runtimeClasspath += sourceSets.compiler.output
+	}
+}
+
+configurations {
+	compilerTestImplementation.extendsFrom compilerImplementation
 }
 
 dependencies {
 	compilerImplementation "com.squareup:kotlinpoet:1.16.0"
 	compilerImplementation "com.google.code.gson:gson:2.11.0"
 	compilerImplementation "org.jetbrains.kotlin:kotlin-stdlib"
+	compilerTestImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+	compilerTestRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
+
+tasks.register('compilerTest', Test) {
+	group = "cresora"
+	description = "Unit tests for the CWC/CAC compilers"
+	testClassesDirs = sourceSets.compilerTest.output.classesDirs
+	classpath = sourceSets.compilerTest.runtimeClasspath
+	useJUnitPlatform()
+}
+tasks.named('check') { dependsOn 'compilerTest' }
 
 task compileAssets(type: JavaExec) {
     group = "cresora"

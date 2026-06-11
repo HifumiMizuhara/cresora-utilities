@@ -1,0 +1,52 @@
+{
+  "weaponDefinitions": [
+    {
+      "id": "golden_fixture",
+      "baseItemId": "minecraft:iron_sword",
+      "baseAttackDamage": 6.0,
+      "attackDamagePerLevel": 0.4,
+      "totalAttackSpeed": 1.6,
+      "maxBaseLevel": 70,
+      "maxSkillLevel": 10,
+      "critRateBonusPercent": 0.0,
+      "maxAllDamageBonusPercent": 0.0,
+      "hpBonusPercent": 0.0,
+      "damageType": "physical",
+      "role": "guard",
+      "skill": {
+        "effectId": "golden_strike",
+        "durationSeconds": 10,
+        "cooldownSeconds": 20,
+        "baseValue": 4.0,
+        "valuePerLevel": 0.5,
+        "radiusMeters": 0.0
+      },
+      "upgrades": {
+        "baseCscQuadraticCoefficient": 100,
+        "skillCscLinearCoefficient": 10000,
+        "skillCscQuadraticCoefficient": 0,
+        "baseFragmentCost": 1
+      },
+      "craft": {
+        "fragmentItemId": "golden_fixture_fragment",
+        "fragmentBaseItemId": "minecraft:prismarine_shard",
+        "fragmentsRequired": 8,
+        "craftedRarity": "epic",
+        "craftedBaseLevel": 1,
+        "craftedSkillLevel": 1
+      },
+      "drops": {
+        "fragmentDrop": {
+          "minMobLevel": 999,
+          "chance": 0.0,
+          "minCount": 0,
+          "maxCount": 0,
+          "bonusCountAtLevel70": 0
+        },
+        "directDropTiers": [],
+        "directDropBaseLevelMultiplier": 0.0,
+        "fiveStarChanceMultiplierAtLevel70": 1.0
+      }
+    }
+  ]
+}

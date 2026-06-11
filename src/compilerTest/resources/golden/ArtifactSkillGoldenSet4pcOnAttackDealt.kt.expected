@@ -1,0 +1,68 @@
+package hifumi.cresora.equipment.generated
+
+import hifumi.cresora.debuff.CresoraDebuffService
+import hifumi.cresora.equipment.ArtifactSkillHandler
+import hifumi.cresora.equipment.EquipmentEffectHookService
+import hifumi.cresora.weapon.WeaponSkillService
+import java.util.UUID
+import kotlin.Double
+import kotlin.Int
+import kotlin.Long
+import kotlin.collections.MutableMap
+import kotlin.collections.Set
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.particle.ParticleTypes
+import net.minecraft.registry.Registries
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.text.Text
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
+
+public class ArtifactSkillGoldenSet4pcOnAttackDealt : ArtifactSkillHandler {
+  public val goldenEchoStates:
+      MutableMap<UUID, ArtifactSkillGoldenSet4pcOnAttackDealt.GoldenEchoState> = mutableMapOf()
+
+  override fun clearTransientState(playerId: UUID) {
+    goldenEchoStates.remove(playerId)
+  }
+
+  override fun pruneTransientState(activePlayerIds: Set<UUID>) {
+    goldenEchoStates.keys.removeIf { !activePlayerIds.contains(it) }
+  }
+
+  override fun onTick(player: ServerPlayerEntity) {
+    val now = WeaponSkillService.currentWorldTime(player)
+    if (goldenEchoStates.containsKey(player.uuid) && now >=
+        goldenEchoStates[player.uuid]!!.expireTick) {
+      goldenEchoStates.remove(player.uuid)
+      player.sendMessage(Text.translatable("item.cresora.artifact.skill.buff.golden_echo.expired",
+          Text.translatable("item.cresora.artifact.skill.buff.golden_echo.name")), true)
+    }
+  }
+
+  override fun onAttackDealt(
+    player: ServerPlayerEntity,
+    target: LivingEntity,
+    damage: Double,
+  ) {
+    run {
+        val now = WeaponSkillService.currentWorldTime(player)
+        val state = this.goldenEchoStates.getOrPut(player.uuid) { GoldenEchoState(0L, 0) }
+        state.expireTick = now + 8 * 20L
+        state.stacks = (state.stacks + 1).coerceAtMost(2)
+        player.sendMessage(Text.translatable("item.cresora.artifact.skill.buff.golden_echo.gained",
+        Text.translatable("item.cresora.artifact.skill.buff.golden_echo.name"),
+        EquipmentEffectHookService.getDisplayStacks(player, "golden_echo", state.stacks)), true)
+    }
+    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "echo", 100)
+  }
+
+  public data class GoldenEchoState(
+    public var expireTick: Long,
+    public var stacks: Int,
+  )
+}
