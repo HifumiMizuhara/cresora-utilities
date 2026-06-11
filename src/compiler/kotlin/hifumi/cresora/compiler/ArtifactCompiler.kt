@@ -336,20 +336,34 @@ class ArtifactCompiler(
                 // InstructionMapping, so reaching this is always a DSL typo.
                 throw RuntimeException("Unknown command '${action.commandName}' in handler '$eventName'")
             }
+            is ApplyMarkActionNode -> {
+                funSpec.addStatement("%T.applyMark(${action.target}, %S, ${artifactTicks(action.duration, "apply_mark")})",
+                    ClassName("hifumi.cresora.weapon", "WeaponSkillService"), action.markId)
+            }
+            is GrantInvulnerabilityActionNode -> {
+                funSpec.addStatement("%T.grantInvulnerability(${action.target}, ${artifactTicks(action.duration, "grant_invulnerability")})",
+                    ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+            }
+            is AddBuffActionNode -> {
+                emitAddBuff(listOf("\"${action.buffId}\"", action.stacks.toString()), funSpec, bonus, className)
+            }
+            is StartCooldownActionNode -> {
+                throw RuntimeException("start_cooldown is not supported in artifacts")
+            }
+            is SendMessageActionNode -> {
+                funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.${action.color}), true)",
+                    ClassName("net.minecraft.text", "Text"), action.key, ClassName("net.minecraft.util", "Formatting"))
+            }
+            is ApplyStatusEffectActionNode -> {
+                funSpec.addStatement("player.addStatusEffect(%T(%T.STATUS_EFFECT.getEntry(%T.of(%S)).get(), (${artifactTicks(action.duration, "apply_status_effect")}).toInt(), ${action.amplifier}))",
+                    ClassName("net.minecraft.entity.effect", "StatusEffectInstance"),
+                    ClassName("net.minecraft.registry", "Registries"),
+                    ClassName("net.minecraft.util", "Identifier"),
+                    action.effectId)
+            }
             is InstructionCallNode -> {
-                when (action.functionName) {
-                    "add_buff" -> emitAddBuff(action.arguments, funSpec, bonus, className)
-                    "send_message" -> {
-                        val key = action.arguments[0].removeSurrounding("\"")
-                        val color = action.arguments.getOrNull(1)?.removeSurrounding("\"")?.uppercase() ?: "WHITE"
-                        funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.$color), true)",
-                            ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
-                    }
-                    else -> {
-                        val expanded = InstructionMapping.expand(action.functionName, action.arguments, CompilerContext.ARTIFACT)
-                        funSpec.addStatement("%L", expanded)
-                    }
-                }
+                val expanded = InstructionMapping.expand(action.functionName, action.arguments, CompilerContext.ARTIFACT)
+                funSpec.addStatement("%L", expanded)
             }
             is SendLocalizedMessageActionNode -> {
                 val key = action.key
@@ -371,12 +385,16 @@ class ArtifactCompiler(
             }
             is ExpressionNode -> {
                 var content = action.content
+                if (content.contains('·')) {
+                    throw RuntimeException("execute block contains the reserved character '·' (used internally to prevent line wrapping): $content")
+                }
                 if (bonus != null) {
                     for (buff in bonus.buffs) {
                         val mapName = camelCase(buff.id) + "States"
                         val stateClassName = buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } } + "State"
-                        content = content.replace(Regex("\\b$mapName\\b"), "$className.$mapName")
-                        content = content.replace(Regex("\\b$stateClassName\\b"), "$className.$stateClassName")
+                        // Negative lookbehind keeps already-qualified references from being double-qualified.
+                        content = content.replace(Regex("(?<![.\\w])$mapName\\b"), "$className.$mapName")
+                        content = content.replace(Regex("(?<![.\\w])$stateClassName\\b"), "$className.$stateClassName")
                     }
                 }
                 content = InstructionMapping.expandAll(content, CompilerContext.ARTIFACT)
@@ -385,6 +403,13 @@ class ArtifactCompiler(
             }
             else -> {}
         }
+    }
+
+    private fun artifactTicks(duration: DurationValue, command: String): String {
+        if (duration is DurationValue.SkillDuration) {
+            throw RuntimeException("skill_duration is not supported in artifacts ($command)")
+        }
+        return duration.toTicksExpression()
     }
 
     private fun emitAddBuff(arguments: List<String>, funSpec: FunSpec.Builder, bonus: ArtifactBonusNode?, className: String) {

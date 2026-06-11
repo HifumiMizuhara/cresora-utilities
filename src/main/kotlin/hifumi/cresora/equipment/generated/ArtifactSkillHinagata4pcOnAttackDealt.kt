@@ -55,7 +55,7 @@ public class ArtifactSkillHinagata4pcOnAttackDealt : ArtifactSkillHandler {
     target: LivingEntity,
     damage: Double,
   ) {
-    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "hinagata_curse", 100)
+    WeaponSkillService.applyMark(target, "hinagata_curse", 100L)
     run {
         val now = WeaponSkillService.currentWorldTime(player)
         val state = this.hinagataStacksStates.getOrPut(player.uuid) { HinagataStacksState(0L, 0) }

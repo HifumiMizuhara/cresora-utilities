@@ -290,6 +290,33 @@ class CresoraCompiler(
                 // InstructionMapping, so reaching this is always a DSL typo.
                 throw RuntimeException("Unknown command '${action.commandName}' in handler '$eventName'")
             }
+            is ApplyMarkActionNode -> {
+                funSpec.addStatement("%T.applyMark(${action.target}, %S, ${action.duration.toTicksExpression()})",
+                    ClassName("hifumi.cresora.weapon", "WeaponSkillService"), action.markId)
+            }
+            is GrantInvulnerabilityActionNode -> {
+                funSpec.addStatement("%T.grantInvulnerability(${action.target}, ${action.duration.toTicksExpression()})",
+                    ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+            }
+            is AddBuffActionNode -> {
+                emitAddBuff(listOf("\"${action.buffId}\"", action.stacks.toString()), funSpec, skill, className)
+            }
+            is StartCooldownActionNode -> {
+                val duration = action.duration?.toTicksExpression() ?: "definition.skill.cooldownSeconds * 20L"
+                funSpec.addStatement("%T.startCooldown(player, definition.id, $duration)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+                funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+            }
+            is SendMessageActionNode -> {
+                funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.${action.color}), true)",
+                    ClassName("net.minecraft.text", "Text"), action.key, ClassName("net.minecraft.util", "Formatting"))
+            }
+            is ApplyStatusEffectActionNode -> {
+                funSpec.addStatement("player.addStatusEffect(%T(%T.STATUS_EFFECT.getEntry(%T.of(%S)).get(), (${action.duration.toTicksExpression()}).toInt(), ${action.amplifier}))",
+                    ClassName("net.minecraft.entity.effect", "StatusEffectInstance"),
+                    ClassName("net.minecraft.registry", "Registries"),
+                    ClassName("net.minecraft.util", "Identifier"),
+                    action.effectId)
+            }
             is SendLocalizedMessageActionNode -> {
                 val key = action.key
                 val color = action.color.uppercase()
@@ -344,43 +371,21 @@ class CresoraCompiler(
                 if ((action.functionName == "deal_true_damage" || action.functionName == "ignite") && eventName != "on_damage_dealt" && !inAoe) {
                     throw RuntimeException("Instruction '${action.functionName}' requires a target. It can only be used in 'on_damage_dealt' or inside 'area_of_effect' block.")
                 }
-                when (action.functionName) {
-                    "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
-                    "start_cooldown" -> {
-                        val duration = if (action.arguments.isEmpty()) {
-                            "definition.skill.cooldownSeconds * 20L"
-                        } else {
-                            val arg = action.arguments[0]
-                            val durationSec = arg.removeSuffix("s")
-                            if (durationSec == "skill_duration") {
-                                "definition.skill.durationSeconds * 20L"
-                            } else {
-                                "${durationSec.toLong() * 20L}L"
-                            }
-                        }
-                        funSpec.addStatement("%T.startCooldown(player, definition.id, $duration)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
-                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
-                    }
-                    "send_message" -> {
-                        val key = action.arguments[0].removeSurrounding("\"")
-                        val color = action.arguments.getOrNull(1)?.removeSurrounding("\"")?.uppercase() ?: "WHITE"
-                        funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.$color), true)",
-                            ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
-                    }
-                    else -> {
-                        val expanded = InstructionMapping.expand(action.functionName, action.arguments, CompilerContext.WEAPON)
-                        funSpec.addStatement("%L", expanded)
-                    }
-                }
+                val expanded = InstructionMapping.expand(action.functionName, action.arguments, CompilerContext.WEAPON)
+                funSpec.addStatement("%L", expanded)
             }
             is ExpressionNode -> {
                 var content = action.content
+                if (content.contains('·')) {
+                    throw RuntimeException("execute block contains the reserved character '·' (used internally to prevent line wrapping): $content")
+                }
                 if (skill != null) {
                     for (buff in skill.buffs) {
                         val mapName = camelCase(buff.id) + "States"
                         val stateClassName = buff.id.split("_").joinToString("") { it.replaceFirstChar { c -> c.uppercase() } } + "State"
-                        content = content.replace(Regex("\\b$mapName\\b"), "$className.$mapName")
-                        content = content.replace(Regex("\\b$stateClassName\\b"), "$className.$stateClassName")
+                        // Negative lookbehind keeps already-qualified references from being double-qualified.
+                        content = content.replace(Regex("(?<![.\\w])$mapName\\b"), "$className.$mapName")
+                        content = content.replace(Regex("(?<![.\\w])$stateClassName\\b"), "$className.$stateClassName")
                     }
                 }
                 content = InstructionMapping.expandAll(content, CompilerContext.WEAPON)

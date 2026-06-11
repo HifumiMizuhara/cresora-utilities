@@ -458,6 +458,44 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                      val callArgs = args.drop(2)
                      SendLocalizedMessageActionNode(key, color, callArgs)
                 }
+                "apply_mark" -> {
+                    requireArity(name, args, 3, 3)
+                    ApplyMarkActionNode(args[0], stringArg(name, "mark id", args[1]), durationArg(name, args[2]))
+                }
+                "grant_invulnerability" -> {
+                    requireArity(name, args, 2, 2)
+                    GrantInvulnerabilityActionNode(args[0], durationArg(name, args[1]))
+                }
+                "add_buff" -> {
+                    requireArity(name, args, 1, 2)
+                    val stacks = args.getOrNull(1)?.let {
+                        it.toIntOrNull() ?: throw RuntimeException("add_buff stacks must be an integer, got '$it'")
+                    } ?: 1
+                    AddBuffActionNode(stringArg(name, "buff id", args[0]), stacks)
+                }
+                "start_cooldown" -> {
+                    requireArity(name, args, 0, 1)
+                    StartCooldownActionNode(args.firstOrNull()?.let { durationArg(name, it) })
+                }
+                "send_message" -> {
+                    requireArity(name, args, 1, 2)
+                    val color = (args.getOrNull(1)?.let { stringArg(name, "color", it) } ?: "WHITE").uppercase()
+                    if (color !in VALID_FORMATTING_COLORS) {
+                        throw RuntimeException("send_message color '$color' is not a Minecraft Formatting color")
+                    }
+                    SendMessageActionNode(stringArg(name, "translation key", args[0]), color)
+                }
+                "apply_status_effect" -> {
+                    requireArity(name, args, 2, 3)
+                    val effectId = stringArg(name, "effect id", args[0])
+                    if (!effectId.matches(Regex("[a-z0-9_.-]+:[a-z0-9_./-]+")) && !effectId.matches(Regex("[a-z0-9_./-]+"))) {
+                        throw RuntimeException("apply_status_effect effect id '$effectId' is not a valid identifier")
+                    }
+                    val amplifier = args.getOrNull(2)?.let {
+                        it.toIntOrNull() ?: throw RuntimeException("apply_status_effect amplifier must be an integer, got '$it'")
+                    } ?: 0
+                    ApplyStatusEffectActionNode(effectId, durationArg(name, args[1]), amplifier)
+                }
                 else -> {
                     if (InstructionMapping.isKnown(name)) {
                         InstructionCallNode(name, args)
@@ -467,6 +505,37 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 }
             }
         }
+    }
+
+    private fun requireArity(command: String, args: List<String>, min: Int, max: Int) {
+        if (args.size < min || args.size > max) {
+            val expected = if (min == max) "$min" else "$min..$max"
+            throw RuntimeException("$command expects $expected argument(s), got ${args.size}")
+        }
+    }
+
+    private fun stringArg(command: String, role: String, arg: String): String {
+        if (!arg.startsWith("\"") || !arg.endsWith("\"")) {
+            throw RuntimeException("$command $role must be a string literal, got '$arg'")
+        }
+        return arg.removeSurrounding("\"")
+    }
+
+    private fun durationArg(command: String, arg: String): DurationValue {
+        if (arg == "skill_duration") return DurationValue.SkillDuration
+        if (arg.endsWith("s")) {
+            arg.dropLast(1).toDoubleOrNull()?.let { return DurationValue.Seconds(it) }
+        }
+        arg.toLongOrNull()?.let { return DurationValue.Ticks(it) }
+        throw RuntimeException("$command duration must be a number (ticks), an Ns seconds literal, or skill_duration — got '$arg'")
+    }
+
+    private companion object {
+        val VALID_FORMATTING_COLORS = setOf(
+            "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE",
+            "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED",
+            "LIGHT_PURPLE", "YELLOW", "WHITE"
+        )
     }
 
     private fun handler(eventName: String): SkillHandlerNode {

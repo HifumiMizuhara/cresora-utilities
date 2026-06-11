@@ -60,7 +60,7 @@ class AreaOfEffectParsingTest {
     }
 
     @Test
-    fun `nested known instruction parses as InstructionCallNode`() {
+    fun `nested apply_mark parses as typed node`() {
         val aoe = parseAoe(
             """
             area_of_effect(5.0) {
@@ -68,9 +68,10 @@ class AreaOfEffectParsingTest {
             }
             """.trimIndent()
         )
-        val nested = assertInstanceOf(InstructionCallNode::class.java, aoe.actions.single())
-        assertEquals("apply_mark", nested.functionName)
-        assertEquals(listOf("target", "\"lux\"", "30s"), nested.arguments)
+        val nested = assertInstanceOf(ApplyMarkActionNode::class.java, aoe.actions.single())
+        assertEquals("target", nested.target)
+        assertEquals("lux", nested.markId)
+        assertEquals(DurationValue.Seconds(30.0), nested.duration)
     }
 
     @Test
@@ -85,8 +86,8 @@ class AreaOfEffectParsingTest {
             """.trimIndent()
         )
         assertEquals(3, aoe.actions.size)
-        val first = assertInstanceOf(InstructionCallNode::class.java, aoe.actions[0])
-        assertEquals("apply_mark", first.functionName)
+        val first = assertInstanceOf(ApplyMarkActionNode::class.java, aoe.actions[0])
+        assertEquals("a", first.markId)
         val second = assertInstanceOf(SendLocalizedMessageActionNode::class.java, aoe.actions[1])
         assertEquals("key.x", second.key)
         assertEquals("RED", second.color)
@@ -109,7 +110,7 @@ class AreaOfEffectParsingTest {
         val execute = assertInstanceOf(ExecuteActionNode::class.java, handlerActions(weapon).single())
         val aoe = execute.statements.filterIsInstance<AreaOfEffectActionNode>().single()
         assertEquals(4.0, aoe.radius)
-        assertInstanceOf(InstructionCallNode::class.java, aoe.actions.single())
+        assertInstanceOf(ApplyMarkActionNode::class.java, aoe.actions.single())
     }
 
     @Test
@@ -125,7 +126,7 @@ class AreaOfEffectParsingTest {
         )
         val actions = handlerActions(weapon)
         assertEquals(3, actions.size)
-        assertInstanceOf(InstructionCallNode::class.java, actions[0])
+        assertInstanceOf(StartCooldownActionNode::class.java, actions[0])
         assertInstanceOf(AreaOfEffectActionNode::class.java, actions[1])
         assertInstanceOf(SendLocalizedMessageActionNode::class.java, actions[2])
     }

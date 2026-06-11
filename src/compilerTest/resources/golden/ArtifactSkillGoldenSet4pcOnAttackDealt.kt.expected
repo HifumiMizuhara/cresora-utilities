@@ -58,7 +58,7 @@ public class ArtifactSkillGoldenSet4pcOnAttackDealt : ArtifactSkillHandler {
         Text.translatable("item.cresora.artifact.skill.buff.golden_echo.name"),
         EquipmentEffectHookService.getDisplayStacks(player, "golden_echo", state.stacks)), true)
     }
-    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "echo", 100)
+    WeaponSkillService.applyMark(target, "echo", 100L)
   }
 
   public data class GoldenEchoState(

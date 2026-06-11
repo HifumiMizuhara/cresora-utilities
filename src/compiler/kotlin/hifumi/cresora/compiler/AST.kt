@@ -94,9 +94,61 @@ data class AreaOfEffectActionNode(
 
 sealed class ActionNode : ASTNode()
 
+/**
+ * Duration argument of a typed action. A bare number in the DSL means ticks,
+ * an `Ns` suffix means seconds, and `skill_duration` resolves to the skill's
+ * configured duration at runtime.
+ */
+sealed class DurationValue {
+    abstract fun toTicksExpression(): String
+
+    data class Seconds(val value: Double) : DurationValue() {
+        override fun toTicksExpression() = "${(value * 20).toLong()}L"
+    }
+
+    data class Ticks(val value: Long) : DurationValue() {
+        override fun toTicksExpression() = "${value}L"
+    }
+
+    object SkillDuration : DurationValue() {
+        override fun toTicksExpression() = "(definition.skill.durationSeconds * 20).toLong()"
+    }
+}
+
 data class CommandActionNode(
     val commandName: String,
     val arguments: List<String>
+) : ActionNode()
+
+data class ApplyMarkActionNode(
+    val target: String,
+    val markId: String,
+    val duration: DurationValue
+) : ActionNode()
+
+data class GrantInvulnerabilityActionNode(
+    val target: String,
+    val duration: DurationValue
+) : ActionNode()
+
+data class AddBuffActionNode(
+    val buffId: String,
+    val stacks: Int
+) : ActionNode()
+
+data class StartCooldownActionNode(
+    val duration: DurationValue?
+) : ActionNode()
+
+data class SendMessageActionNode(
+    val key: String,
+    val color: String
+) : ActionNode()
+
+data class ApplyStatusEffectActionNode(
+    val effectId: String,
+    val duration: DurationValue,
+    val amplifier: Int
 ) : ActionNode()
 
 data class InstructionCallNode(

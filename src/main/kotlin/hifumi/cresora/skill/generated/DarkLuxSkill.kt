@@ -39,7 +39,7 @@ public object DarkLuxSkill : WeaponSkillHandler {
         player.boundingBox.expand(5.0.toDouble())).forEach { target ->
         if (target != player) {
             // area_of_effect block
-    hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "lux", 30)
+    WeaponSkillService.applyMark(target, "lux", 600L)
         }
     }
 
