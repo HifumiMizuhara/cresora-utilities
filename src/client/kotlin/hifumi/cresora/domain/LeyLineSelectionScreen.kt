@@ -15,6 +15,7 @@ class LeyLineSelectionScreen(
     inventory: PlayerInventory,
     title: Text
 ) : ArtifactChestScreenBase<LeyLineSelectionScreenHandler>(handler, inventory, title, 1) {
+    override fun shouldDrawTitle(): Boolean = false
 
     override fun drawExtraForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
         // Draw Adventure Rank

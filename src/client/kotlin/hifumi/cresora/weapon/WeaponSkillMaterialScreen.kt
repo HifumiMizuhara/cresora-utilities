@@ -9,6 +9,8 @@ class WeaponSkillMaterialScreen(
     inventory: PlayerInventory,
     title: Text
 ) : ArtifactChestScreenBase<WeaponSkillMaterialScreenHandler>(handler, inventory, title, 4) {
+    override fun shouldDrawTitle(): Boolean = false
+
     override fun drawExtraForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
         context.drawText(
             textRenderer,

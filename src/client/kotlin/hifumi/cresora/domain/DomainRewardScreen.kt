@@ -10,6 +10,8 @@ class DomainRewardScreen(
     inventory: PlayerInventory,
     title: Text
 ) : ArtifactChestScreenBase<DomainRewardScreenHandler>(handler, inventory, title, 1) {
+    override fun shouldDrawTitle(): Boolean = false
+
     override fun init() {
         super.init()
         addDrawableChild(

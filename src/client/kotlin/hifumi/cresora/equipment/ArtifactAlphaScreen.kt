@@ -8,6 +8,8 @@ class ArtifactAlphaScreen(
     inventory: PlayerInventory,
     title: Text
 ) : ArtifactChestScreenBase<ArtifactAlphaScreenHandler>(handler, inventory, title, 6) {
+    override fun shouldDrawTitle(): Boolean = false
+
     override fun drawExtraForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
         context.drawText(
             textRenderer,

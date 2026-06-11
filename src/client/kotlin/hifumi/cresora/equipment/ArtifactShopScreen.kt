@@ -9,6 +9,8 @@ class ArtifactShopScreen(
     inventory: PlayerInventory,
     title: Text
 ) : ArtifactChestScreenBase<ArtifactShopScreenHandler>(handler, inventory, title, 3) {
+    override fun shouldDrawTitle(): Boolean = false
+
     override fun drawExtraForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
         context.drawText(
             textRenderer,

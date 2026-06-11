@@ -35,10 +35,14 @@ abstract class ArtifactChestScreenBase<T : ScreenHandler>(
     }
 
     override fun drawForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawText(textRenderer, title, titleX, titleY, 0xFF404040.toInt(), false)
+        if (shouldDrawTitle()) {
+            context.drawText(textRenderer, title, titleX, titleY, 0xFF404040.toInt(), false)
+        }
         context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX, playerInventoryTitleY, 0xFF404040.toInt(), false)
         drawExtraForeground(context, mouseX, mouseY)
     }
+
+    protected open fun shouldDrawTitle(): Boolean = true
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context, mouseX, mouseY, delta)

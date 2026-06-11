@@ -9,6 +9,8 @@ class StoryStageSelectionScreen(
     inventory: PlayerInventory,
     title: Text
 ) : ArtifactChestScreenBase<StoryStageSelectionScreenHandler>(handler, inventory, title, 1) {
+    override fun shouldDrawTitle(): Boolean = false
+
     override fun drawExtraForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
         context.drawText(
             textRenderer,
