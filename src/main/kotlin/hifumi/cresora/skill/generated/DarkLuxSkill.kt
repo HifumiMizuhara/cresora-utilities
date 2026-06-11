@@ -2,20 +2,29 @@ package hifumi.cresora.skill.generated
 
 import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.combat.BaaMimicService
+import hifumi.cresora.combat.CombatFeedbackService
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.story.StoryService
 import hifumi.cresora.weapon.HotbarOverrideService
 import hifumi.cresora.weapon.WeaponCombatSupport
 import hifumi.cresora.weapon.WeaponData
 import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
+import hifumi.cresora.weapon.WeaponStackSupport
 import kotlin.Boolean
 import kotlin.Float
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.SpawnReason
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
@@ -60,38 +69,38 @@ public object DarkLuxSkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      if (hifumi.cresora.weapon.WeaponStackSupport.getDefinition(player.mainHandStack)?.id != "dark_lux") return@execute
+      if (WeaponStackSupport.getDefinition(player.mainHandStack)?.id != "dark_lux") return@execute
       if (isTrueDamage) return@execute
-      val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
-      if (hifumi.cresora.weapon.WeaponSkillService.hasMark(target, "entanglement")) return@execute
-      hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "dark", 200L)
-      if (hifumi.cresora.weapon.WeaponSkillService.hasMark(target, "lux") && hifumi.cresora.weapon.WeaponSkillService.hasMark(target, "dark")) {
-                          val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+      val now = WeaponSkillService.currentWorldTime(player)
+      if (WeaponSkillService.hasMark(target, "entanglement")) return@execute
+      WeaponSkillService.applyMark(target, "dark", 200L)
+      if (WeaponSkillService.hasMark(target, "lux") && WeaponSkillService.hasMark(target, "dark")) {
+                          val world = player.world as? ServerWorld ?: return@execute;
                           val roll = world.random.nextDouble();
                           when {
                               roll < 0.2 -> { // Annihilation
-                                  player.sendMessage(net.minecraft.text.Text.translatable("message.cresora.weapon.dark_lux.annihilation").formatted(net.minecraft.util.Formatting.DARK_RED), true);
-                                  hifumi.cresora.weapon.WeaponSkillService.removeMark(target, "dark");
-                                  hifumi.cresora.weapon.WeaponSkillService.removeMark(target, "lux");
+                                  player.sendMessage(Text.translatable("message.cresora.weapon.dark_lux.annihilation").formatted(Formatting.DARK_RED), true);
+                                  WeaponSkillService.removeMark(target, "dark");
+                                  WeaponSkillService.removeMark(target, "lux");
                                   val damage = target.health * 0.9f;
                                   target.damage(world, world.damageSources.magic(), damage);
-                                  world.getOtherEntities(target, target.boundingBox.expand(5.0)) { it is net.minecraft.entity.LivingEntity && it.isAlive }
-                                      .take(3).forEach { (it as net.minecraft.entity.LivingEntity).damage(world, world.damageSources.magic(), it.maxHealth * 0.2f) };
+                                  world.getOtherEntities(target, target.boundingBox.expand(5.0)) { it is LivingEntity && it.isAlive }
+                                      .take(3).forEach { (it as LivingEntity).damage(world, world.damageSources.magic(), it.maxHealth * 0.2f) };
                               }
                               roll < 0.4 -> { // Entanglement
-                                  player.sendMessage(net.minecraft.text.Text.translatable("message.cresora.weapon.dark_lux.entanglement").formatted(net.minecraft.util.Formatting.GOLD), true);
-                                  hifumi.cresora.weapon.WeaponSkillService.removeMark(target, "dark");
-                                  hifumi.cresora.weapon.WeaponSkillService.removeMark(target, "lux");
-                                  hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "entanglement", 200L); // 10s
+                                  player.sendMessage(Text.translatable("message.cresora.weapon.dark_lux.entanglement").formatted(Formatting.GOLD), true);
+                                  WeaponSkillService.removeMark(target, "dark");
+                                  WeaponSkillService.removeMark(target, "lux");
+                                  WeaponSkillService.applyMark(target, "entanglement", 200L); // 10s
                               }
                               else -> { // Dark Collapse
-                                  player.sendMessage(net.minecraft.text.Text.translatable("message.cresora.weapon.dark_lux.collapse").formatted(net.minecraft.util.Formatting.DARK_PURPLE), true);
+                                  player.sendMessage(Text.translatable("message.cresora.weapon.dark_lux.collapse").formatted(Formatting.DARK_PURPLE), true);
                                   player.heal(player.maxHealth * 0.05f);
                                   val hpRatio = player.health / player.maxHealth;
                                   val reductionRatio = (1.0f - hpRatio).coerceIn(0.0f, 1.0f);
-                                  val remainingTicks = hifumi.cresora.weapon.WeaponSkillService.getRemainingCooldownTicks(player, "dark_lux");
+                                  val remainingTicks = WeaponSkillService.getRemainingCooldownTicks(player, "dark_lux");
                                   if (remainingTicks > 0.0) {
-                                      hifumi.cresora.weapon.WeaponSkillService.startCooldown(player, "dark_lux", (remainingTicks * (1.0f - reductionRatio)).toLong());
+                                      WeaponSkillService.startCooldown(player, "dark_lux", (remainingTicks * (1.0f - reductionRatio)).toLong());
                                   }
                               }
                           }

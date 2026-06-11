@@ -2,19 +2,28 @@ package hifumi.cresora.skill.generated
 
 import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.combat.BaaMimicService
+import hifumi.cresora.combat.CombatFeedbackService
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.story.StoryService
 import hifumi.cresora.weapon.HotbarOverrideService
 import hifumi.cresora.weapon.WeaponCombatSupport
 import hifumi.cresora.weapon.WeaponData
 import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
+import hifumi.cresora.weapon.WeaponStackSupport
 import kotlin.Float
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.SpawnReason
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
@@ -36,9 +45,9 @@ public object RondoMelodySkill : WeaponSkillHandler {
 
 
     ; run execute@ {
-      val value = hifumi.cresora.weapon.WeaponCombatSupport.skillValueHp(definition, data)
-      hifumi.cresora.weapon.WeaponSkillService.grantShield(player, value, definition.skill.durationSeconds * 20L)
-      player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.activated", net.minecraft.text.Text.translatable(definition.translationKey()), hifumi.cresora.weapon.WeaponSkillService.formatNumber(value / 2.0)).formatted(net.minecraft.util.Formatting.AQUA), true)
+      val value = WeaponCombatSupport.skillValueHp(definition, data)
+      WeaponSkillService.grantShield(player, value, definition.skill.durationSeconds * 20L)
+      player.sendMessage(Text.translatable("item.cresora.weapon.skill.activated", Text.translatable(definition.translationKey()), WeaponSkillService.formatNumber(value / 2.0)).formatted(Formatting.AQUA), true)
     }
 
 
@@ -52,7 +61,7 @@ public object RondoMelodySkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      hifumi.cresora.weapon.WeaponSkillService.clearExpiredShield(player)
+      WeaponSkillService.clearExpiredShield(player)
     }
 
   }
@@ -65,19 +74,19 @@ public object RondoMelodySkill : WeaponSkillHandler {
   ): Float {
 
     ; return run execute@ {
-    hifumi.cresora.weapon.WeaponSkillService.clearExpiredShield(player)
-    val remainingShield = (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp()
+    WeaponSkillService.clearExpiredShield(player)
+    val remainingShield = (player as WeaponSkillAccess).cresoraGetShieldHp()
     if (remainingShield > 0.0f) {
                          var remainingAmount = amount;
                          if (remainingAmount <= remainingShield) {
-                             (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp(remainingShield - remainingAmount);
-                             if ((player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraGetShieldHp() <= 0.0f) hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
-                             player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.blocked", hifumi.cresora.weapon.WeaponSkillService.formatNumber(remainingAmount / 2.0.toDouble())).formatted(net.minecraft.util.Formatting.AQUA), true);
+                             (player as WeaponSkillAccess).cresoraSetShieldHp(remainingShield - remainingAmount);
+                             if ((player as WeaponSkillAccess).cresoraGetShieldHp() <= 0.0f) WeaponSkillService.clearShield(player);
+                             player.sendMessage(Text.translatable("item.cresora.weapon.skill.blocked", WeaponSkillService.formatNumber(remainingAmount / 2.0.toDouble())).formatted(Formatting.AQUA), true);
                              return@execute 0.0f;
                          }
-                         (player as hifumi.cresora.weapon.WeaponSkillAccess).cresoraSetShieldHp(0.0f);
-                         hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
-                         player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.broken").formatted(net.minecraft.util.Formatting.RED), true);
+                         (player as WeaponSkillAccess).cresoraSetShieldHp(0.0f);
+                         WeaponSkillService.clearShield(player);
+                         player.sendMessage(Text.translatable("item.cresora.weapon.skill.broken").formatted(Formatting.RED), true);
                          return@execute remainingAmount - remainingShield;
                      }
     return@execute amount

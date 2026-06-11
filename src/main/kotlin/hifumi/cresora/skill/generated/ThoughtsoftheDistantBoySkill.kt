@@ -2,24 +2,33 @@ package hifumi.cresora.skill.generated
 
 import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.combat.BaaMimicService
+import hifumi.cresora.combat.CombatFeedbackService
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.story.StoryService
 import hifumi.cresora.weapon.HotbarOverrideService
 import hifumi.cresora.weapon.WeaponCombatSupport
 import hifumi.cresora.weapon.WeaponData
 import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
+import hifumi.cresora.weapon.WeaponStackSupport
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.Double
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.Set
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.SpawnReason
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
@@ -93,13 +102,13 @@ public object ThoughtsoftheDistantBoySkill : WeaponSkillHandler {
       val passiveState = ThoughtsoftheDistantBoySkill.passiveStatsStates.getOrPut(player.uuid) { ThoughtsoftheDistantBoySkill.PassiveStatsState(0L, 0) }
       passiveState.expireTick = now + 100 * 20L
       passiveState.stacks = 1
-      val hasShojo = hifumi.cresora.weapon.WeaponSkillService.hasWeaponInInventory(player, "harukanaru_shojo_no_ketsui")
+      val hasShojo = WeaponSkillService.hasWeaponInInventory(player, "harukanaru_shojo_no_ketsui")
       if (hasShojo) {
-                          if (hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "nageki")) {
-                              hifumi.cresora.weapon.WeaponSkillService.removeMark(player, "nageki");
-                              val access = player as? hifumi.cresora.weapon.WeaponSkillAccess;
+                          if (WeaponSkillService.hasMark(player, "nageki")) {
+                              WeaponSkillService.removeMark(player, "nageki");
+                              val access = player as? WeaponSkillAccess;
                               if (access != null && access.cresoraGetShieldWeaponId() == definition.id) {
-                                  hifumi.cresora.weapon.WeaponSkillService.clearShield(player);
+                                  WeaponSkillService.clearShield(player);
                               }
                           }
                           
@@ -107,19 +116,19 @@ public object ThoughtsoftheDistantBoySkill : WeaponSkillHandler {
                           resolveState.expireTick = now + 100 * 20L;
                           resolveState.stacks = 1;
                       } else {
-                          hifumi.cresora.weapon.WeaponSkillService.applyMark(player, "nageki", 10L);
+                          WeaponSkillService.applyMark(player, "nageki", 10L);
                           ThoughtsoftheDistantBoySkill.shojoResolveStates.remove(player.uuid);
 
                           if (now % 200L == 0L) {
-                              val access = player as? hifumi.cresora.weapon.WeaponSkillAccess;
+                              val access = player as? WeaponSkillAccess;
                               if (access != null) {
                                   val currentShield = access.cresoraGetShieldHp();
                                   if (currentShield < 6.0f) {
                                       if (player.random.nextDouble() < 0.5) {
-                                          hifumi.cresora.weapon.WeaponSkillService.grantShield(player, 6.0f, 99999999L, definition.id);
+                                          WeaponSkillService.grantShield(player, 6.0f, 99999999L, definition.id);
                                           player.sendMessage(
-                                              net.minecraft.text.Text.translatable("item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained")
-                                                  .formatted(net.minecraft.util.Formatting.BLUE),
+                                              Text.translatable("item.cresora.weapon.skill.harukanaru_shonen_no_omoi.grief_shield_gained")
+                                                  .formatted(Formatting.BLUE),
                                               true
                                           );
                                       }
@@ -139,39 +148,39 @@ public object ThoughtsoftheDistantBoySkill : WeaponSkillHandler {
   ): ActionResult {
 
     ; run execute@ {
-      val isGriefActive = hifumi.cresora.weapon.WeaponSkillService.hasMark(player, "nageki")
+      val isGriefActive = WeaponSkillService.hasMark(player, "nageki")
       if (isGriefActive) {
                           // Pattern A
-                          hifumi.cresora.weapon.WeaponSkillService.startCooldown(player, definition.id, 200L);
-                          hifumi.cresora.weapon.WeaponSkillService.showCooldownBar(player, definition);
+                          WeaponSkillService.startCooldown(player, definition.id, 200L);
+                          WeaponSkillService.showCooldownBar(player, definition);
                           
                           val shieldHearts = 10.0 + (data.baseLevel - 1) * 0.5;
-                          hifumi.cresora.weapon.WeaponSkillService.grantShield(player, (shieldHearts * 2.0).toFloat(), 99999999L, definition.id);
+                          WeaponSkillService.grantShield(player, (shieldHearts * 2.0).toFloat(), 99999999L, definition.id);
                           
                           player.sendMessage(
-                              net.minecraft.text.Text.translatable(
+                              Text.translatable(
                                   "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a",
-                                  hifumi.cresora.weapon.WeaponSkillService.formatNumber(shieldHearts)
-                              ).formatted(net.minecraft.util.Formatting.AQUA),
+                                  WeaponSkillService.formatNumber(shieldHearts)
+                              ).formatted(Formatting.AQUA),
                               true
                           );
                       } else {
                           // Pattern B
-                          hifumi.cresora.weapon.WeaponSkillService.startCooldown(player, definition.id, 700L);
-                          hifumi.cresora.weapon.WeaponSkillService.showCooldownBar(player, definition);
+                          WeaponSkillService.startCooldown(player, definition.id, 700L);
+                          WeaponSkillService.showCooldownBar(player, definition);
                           
-                          val world = player.world as? net.minecraft.server.world.ServerWorld ?: return@execute;
+                          val world = player.world as? ServerWorld ?: return@execute;
                           val range = definition.skill.radiusMeters;
                           val targets = world.getOtherEntities(player, player.boundingBox.expand(range)) {
-                              it is net.minecraft.entity.LivingEntity &&
+                              it is LivingEntity &&
                               it.isAlive &&
-                              it !is net.minecraft.entity.player.PlayerEntity
+                              it !is PlayerEntity
                           }
-                          .filterIsInstance<net.minecraft.entity.LivingEntity>()
+                          .filterIsInstance<LivingEntity>()
                           .sortedBy { it.squaredDistanceTo(player) }
                           .take(5);
 
-                          val playerAtk = player.getAttributeValue(net.minecraft.entity.attribute.EntityAttributes.ATTACK_DAMAGE);
+                          val playerAtk = player.getAttributeValue(EntityAttributes.ATTACK_DAMAGE);
                           val damageAmount = (playerAtk * (3.0 + data.skillLevel * 0.5)).toFloat();
 
                           targets.forEach { target ->
@@ -181,18 +190,18 @@ public object ThoughtsoftheDistantBoySkill : WeaponSkillHandler {
                                   damageAmount
                               );
                               world.spawnParticles(
-                                  net.minecraft.particle.ParticleTypes.CRIT,
+                                  ParticleTypes.CRIT,
                                   target.x, target.y + 1.0, target.z,
                                   5, 0.3, 0.3, 0.3, 0.1
                               );
                           }
 
                           player.sendMessage(
-                              net.minecraft.text.Text.translatable(
+                              Text.translatable(
                                   "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b",
                                   targets.size,
-                                  hifumi.cresora.weapon.WeaponSkillService.formatNumber(damageAmount.toDouble())
-                              ).formatted(net.minecraft.util.Formatting.LIGHT_PURPLE),
+                                  WeaponSkillService.formatNumber(damageAmount.toDouble())
+                              ).formatted(Formatting.LIGHT_PURPLE),
                               true
                           );
                       }

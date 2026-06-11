@@ -2,15 +2,19 @@ package hifumi.cresora.skill.generated
 
 import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
+import hifumi.cresora.combat.BaaMimicService
+import hifumi.cresora.combat.CombatFeedbackService
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.skill.WeaponSkillHandler
+import hifumi.cresora.story.StoryService
 import hifumi.cresora.weapon.HotbarOverrideService
 import hifumi.cresora.weapon.WeaponCombatSupport
 import hifumi.cresora.weapon.WeaponData
 import hifumi.cresora.weapon.WeaponDefinition
 import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponSkillService
+import hifumi.cresora.weapon.WeaponStackSupport
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.Boolean
@@ -19,9 +23,14 @@ import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.collections.Set
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.SpawnReason
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.registry.Registries
 import net.minecraft.server.MinecraftServer
@@ -103,16 +112,16 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
   ) {
 
     ; run execute@ {
-      val now = hifumi.cresora.weapon.WeaponSkillService.currentWorldTime(player)
+      val now = WeaponSkillService.currentWorldTime(player)
       val state = ColdMistCoilingSnowSkill.snowMistStates.get(player.uuid)
       if (state != null && now < state.expireTick) {
                           if (state.stacks < 5) {
                               state.stacks += 1;
-                              player.sendMessage(net.minecraft.text.Text.translatable("item.cresora.weapon.skill.snow_mist_stack", state.stacks, state.stacks * 10.0).formatted(net.minecraft.util.Formatting.AQUA), true);
+                              player.sendMessage(Text.translatable("item.cresora.weapon.skill.snow_mist_stack", state.stacks, state.stacks * 10.0).formatted(Formatting.AQUA), true);
                           }
                           // Apply frost mark to target (using the new generic mark system)
-                          hifumi.cresora.weapon.WeaponSkillService.applyMark(target, "frost", 200L);
-                          target.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 200, 1, false, true, true));
+                          WeaponSkillService.applyMark(target, "frost", 200L);
+                          target.addStatusEffect(StatusEffectInstance(StatusEffects.SLOWNESS, 200, 1, false, true, true));
                       }
     }
 
@@ -127,10 +136,10 @@ public object ColdMistCoilingSnowSkill : WeaponSkillHandler {
     ; run execute@ {
       server.worlds.forEach { world ->
                           world.iterateEntities().forEach { entity ->
-                              if (entity is net.minecraft.entity.LivingEntity && hifumi.cresora.weapon.WeaponSkillService.hasMark(entity, "frost")) {
+                              if (entity is LivingEntity && WeaponSkillService.hasMark(entity, "frost")) {
                                   val now = world.time;
                                   // Simple frost damage slowness and freeze
-                                  entity.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 40, 1, false, true, true));
+                                  entity.addStatusEffect(StatusEffectInstance(StatusEffects.SLOWNESS, 40, 1, false, true, true));
                                   if (now % 20L == 0L) {
                                        entity.damage(world, world.damageSources.freeze(), 2.0f);
                                   }
