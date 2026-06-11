@@ -332,20 +332,9 @@ class ArtifactCompiler(
                 }
             }
             is CommandActionNode -> {
-                when (action.commandName) {
-                    "add_buff" -> emitAddBuff(action.arguments, funSpec, bonus, className)
-                    "send_message" -> {
-                        val key = action.arguments[0].removeSurrounding("\"")
-                        val color = action.arguments.getOrNull(1)?.removeSurrounding("\"")?.uppercase() ?: "WHITE"
-                        funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.$color), true)",
-                            ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
-                    }
-                    else -> {
-                         // Fallback for command actions that might be in InstructionMapping
-                         val expanded = InstructionMapping.expand(action.commandName, action.arguments, CompilerContext.ARTIFACT)
-                         funSpec.addStatement("%L", expanded)
-                    }
-                }
+                // The parser only produces CommandActionNode for names unknown to
+                // InstructionMapping, so reaching this is always a DSL typo.
+                throw RuntimeException("Unknown command '${action.commandName}' in handler '$eventName'")
             }
             is InstructionCallNode -> {
                 when (action.functionName) {
@@ -371,24 +360,11 @@ class ArtifactCompiler(
                     ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
             }
             is AreaOfEffectActionNode -> {
-                val radius = action.radius
-                funSpec.addCode(
-                    """
-                    |player.world.getNonSpectatingEntities(net.minecraft.entity.LivingEntity::class.java, player.boundingBox.expand($radius.toDouble())).forEach { target ->
-                    |    if (target != player) {
-                    |        // area_of_effect block
-                    |""".trimMargin()
-                )
+                CodegenSupport.beginAreaOfEffect(funSpec, action.radius)
                 action.actions.forEach { nested ->
                     emitAction(nested, funSpec, bonus, packageName, className, eventName)
                 }
-                funSpec.addCode(
-                    """
-                    |    }
-                    |}
-                    |
-                    """.trimMargin()
-                )
+                CodegenSupport.endAreaOfEffect(funSpec)
             }
             is CloseSkillMenuActionNode -> {
                 funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))

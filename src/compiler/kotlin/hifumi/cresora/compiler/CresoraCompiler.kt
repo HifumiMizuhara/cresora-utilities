@@ -286,61 +286,9 @@ class CresoraCompiler(
     ) {
         when (action) {
             is CommandActionNode -> {
-                if ((action.commandName == "deal_true_damage" || action.commandName == "ignite") && eventName != "on_damage_dealt" && !inAoe) {
-                    throw RuntimeException("Command '${action.commandName}' requires a target. It can only be used in 'on_damage_dealt' or inside 'area_of_effect' block.")
-                }
-                when (action.commandName) {
-                    "add_buff" -> emitAddBuff(action.arguments, funSpec, skill, className)
-                    "heal" -> {
-                        val amount = action.arguments[0].let { if (it == "skill_value") "%T.healHp(definition, data)" else "$it.toFloat()" }
-                        funSpec.addStatement("player.heal($amount)", ClassName("hifumi.cresora.weapon", "WeaponCombatSupport"))
-                    }
-                    "grant_shield" -> {
-                        val amount = action.arguments[0].let { if (it == "skill_value") "%T.shieldHp(definition, data)" else "$it.toFloat()" }
-                        val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("(player as %T).cresoraSetShieldHp($amount)", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"), ClassName("hifumi.cresora.weapon", "WeaponCombatSupport"))
-                        funSpec.addStatement("(player as %T).cresoraSetShieldExpireTick(%T.currentWorldTime(player) + $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillAccess"), ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
-                    }
-                    "start_cooldown" -> {
-                        funSpec.addStatement("%T.startCooldown(player, definition.id, definition.skill.cooldownSeconds * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
-                        funSpec.addStatement("%T.showCooldownBar(player, definition)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
-                    }
-                    "apply_mark" -> {
-                        val target = action.arguments[0]
-                        val markId = action.arguments[1].removeSurrounding("\"")
-                        val duration = action.arguments[2].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("%T.applyMark($target, %S, $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"), markId)
-                    }
-                    "grant_invulnerability" -> {
-                        val target = action.arguments[0]
-                        val duration = action.arguments[1].removeSuffix("s").let { if (it == "skill_duration") "definition.skill.durationSeconds.toLong()" else "$it.toLong()" }
-                        funSpec.addStatement("%T.grantInvulnerability($target, $duration * 20L)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
-                    }
-                    "send_message" -> {
-                        val key = action.arguments[0].removeSurrounding("\"")
-                        val color = action.arguments.getOrNull(1)?.removeSurrounding("\"")?.uppercase() ?: "WHITE"
-                        funSpec.addStatement("player.sendMessage(%T.translatable(%S).formatted(%T.$color), true)",
-                            ClassName("net.minecraft.text", "Text"), key, ClassName("net.minecraft.util", "Formatting"))
-                    }
-                    "apply_status_effect" -> {
-                        val effectId = action.arguments[0].removeSurrounding("\"")
-                        val duration = action.arguments[1].removeSuffix("s")
-                        val amplifier = action.arguments.getOrNull(2) ?: "0"
-                        funSpec.addStatement("player.addStatusEffect(%T(%T.STATUS_EFFECT.getEntry(%T.of(%S)).get(), $duration.toInt() * 20, $amplifier.toInt()))",
-                            ClassName("net.minecraft.entity.effect", "StatusEffectInstance"),
-                            ClassName("net.minecraft.registry", "Registries"),
-                            ClassName("net.minecraft.util", "Identifier"),
-                            effectId)
-                    }
-                    else -> {
-                        if (InstructionMapping.isKnown(action.commandName)) {
-                            val expanded = InstructionMapping.expand(action.commandName, action.arguments, CompilerContext.WEAPON)
-                            funSpec.addStatement("%L", expanded)
-                        } else {
-                            funSpec.addStatement("// Action: ${action.commandName}(${action.arguments.joinToString()})")
-                        }
-                    }
-                }
+                // The parser only produces CommandActionNode for names unknown to
+                // InstructionMapping, so reaching this is always a DSL typo.
+                throw RuntimeException("Unknown command '${action.commandName}' in handler '$eventName'")
             }
             is SendLocalizedMessageActionNode -> {
                 val key = action.key
@@ -358,29 +306,11 @@ class CresoraCompiler(
                 funSpec.addStatement("%T.overrideHotbar(player, definition.id, listOf($subSkillList), ${action.durationSeconds.toLong() * 20L})", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
             }
             is AreaOfEffectActionNode -> {
-                val radius = action.radius
-                funSpec.addCode(
-                    """
-                    |player.world.getNonSpectatingEntities(net.minecraft.entity.LivingEntity::class.java, player.boundingBox.expand($radius.toDouble())).forEach { target ->
-                    |    if (target != player) {
-                    |        // area_of_effect block
-                    |""".trimMargin()
-                )
+                CodegenSupport.beginAreaOfEffect(funSpec, action.radius)
                 action.actions.forEach { nested ->
-                    when (nested) {
-                        is CommandActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
-                        is SendLocalizedMessageActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
-                        is ExecuteActionNode -> emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
-                        else -> funSpec.addStatement("// Unsupported nested AOE action: ${nested::class.simpleName}")
-                    }
+                    emitAction(nested, funSpec, skill, packageName, className, eventName, inAoe = true)
                 }
-                funSpec.addCode(
-                    """
-                    |    }
-                    |}
-                    |
-                    """.trimMargin()
-                )
+                CodegenSupport.endAreaOfEffect(funSpec)
             }
             is CloseSkillMenuActionNode -> {
                 funSpec.addStatement("%T.restoreHotbar(player)", ClassName("hifumi.cresora.weapon", "HotbarOverrideService"))
