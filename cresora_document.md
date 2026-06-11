@@ -1520,7 +1520,29 @@ weapon "Name" {
 ```
 - **ホットバー展開**: `open_skill_menu` で指定したサブスキルがホットバー（0〜8スロット）に並びます。元のアイテムは自動的に退避され、スキル使用後または時間切れで復元されます。
 - **サブスキル定義**: `sub_skill` ブロックでアイコンと挙動を定義します。これらは独立したスキルハンドラとして生成されます。
-- **入力拒否**: unknown top-level token、unknown `sub_skill` field、unknown skill/buff field、未対応 block action は parse error になります。黙って読み飛ばす仕様ではありません。
+- **入力拒否**: unknown top-level token、unknown `sub_skill` field、unknown skill/buff field、未対応 block action は parse error になります。黙って読み飛ばす仕様ではありません。さらに、ハンドラ直下・`execute` ブロック直下・`area_of_effect` 内の**不明なコマンド名はコード生成時にエラー**になります（旧仕様のようにコメントとして握りつぶされません）。
+
+#### 型付きアクションノード (2026-06-11)
+ハンドラ直下・`area_of_effect` 内・`execute` ブロックのトップレベル文に現れる以下の 6 コマンドは、raw 文字列ではなく専用 AST ノードとしてパースされ、**パース時に検証**されます（CWC / CAC 共通）:
+
+| コマンド | 検証内容 |
+|---|---|
+| `apply_mark(target, "id", duration)` | 引数 3 個、マーク ID は文字列リテラル、duration は時間値 |
+| `grant_invulnerability(target, duration)` | 引数 2 個 |
+| `add_buff("id"[, stacks])` | バフ ID は文字列リテラル、stacks は整数（省略時 1） |
+| `start_cooldown([duration])` | 引数 0–1 個（省略時はスキルの cooldown） |
+| `send_message("key"[, "color"])` | color は Minecraft `Formatting` の 16 色名（省略時 WHITE） |
+| `apply_status_effect("ns:id", duration[, amplifier])` | effect ID は識別子形式、amplifier は整数（省略時 0） |
+
+- **時間値 (`DurationValue`) のセマンティクス**: `30s` のような接尾辞付きは**秒**（生成時に ×20 で tick 換算）、bare 数値は **tick**、`skill_duration` はスキル定義の duration を実行時参照。従来 `30s` が 30 tick として生成されていた単位バグはこの仕組みで修正済み。
+- artifact (CAC) 文脈では `start_cooldown` と `skill_duration` はコンパイルエラー。
+- 任意の Kotlin 式（if 文内の命令呼び出し等）は従来どおり `ExpressionNode` + `InstructionMapping.expandAll` の raw パススルー。raw パス内の `Ns` は従来仕様（接尾辞除去のみ）のまま。
+- `execute` ブロック内に予約文字 `·` (U+00B7) を含めるとコンパイルエラー（KotlinPoet の改行抑止に内部使用しているため）。
+
+#### コンパイラのテスト (`compilerTest`)
+- ソースセット: `src/compilerTest/kotlin/`（JUnit 5）。`GRADLE_USER_HOME=.gradle-user ./gradlew compilerTest --console=plain` で実行（`check` タスクにも接続済み）。
+- カバレッジ: Lexer のエラー/トークン化、不正な `.cresora`/`.artifact` のパースエラー、`area_of_effect` のパース（radius デフォルト 5.0、nested アクション）、型付きノードの検証、`InstructionMapping` の展開規則、CWC/CAC の golden スナップショット。
+- golden 期待値は `src/compilerTest/resources/golden/`。コンパイラの出力を意図的に変えた場合は、テスト失敗時に `build/golden-actual/` に書き出される実出力で期待値を更新する。
 
 ## 13. Artifact Compiler (CAC)
 `.artifact` ファイルを `src/main/cresora/` に配置することで、ビルド時に以下の要素が自動生成されます。
@@ -1538,7 +1560,7 @@ weapon "Name" {
 - **独立した減衰時間 (`decay: independent`)**:
   - `buff` 定義ブロックに `decay: independent` を指定することで、バフスタックごとに個別の残り持続時間 (Ticks) をカウントし、失効させる仕組み。
   - コンパイルされる `State` 状態クラスがスタックごとの失効時刻を記録する `expireTicks: MutableList<Long>` を持ち、毎ティック自動でクレンジングされます。
-- **共通組み込み命令**: `log()`, `apply_mark()`, `spawn_particles()`, `add_buff()` をサポート。
+- **共通組み込み命令**: `log()`, `apply_mark()`, `spawn_particles()`, `add_buff()`, `send_message()`, `apply_status_effect()`, `grant_invulnerability()` をサポート（型付きノード対象のコマンドは CWC と同じパース時検証が適用される。`start_cooldown` / `skill_duration` / `skill_value` は artifact では使用不可）。
 - **生ソースコード抽出**: `execute` 内の複雑な Kotlin ロジックを、トークン再構成ではなく原始ソースコードから直接抽出することで構文エラーを防ぎます。
 
 #### 条件付きセット効果 (`requires_weapon`)
