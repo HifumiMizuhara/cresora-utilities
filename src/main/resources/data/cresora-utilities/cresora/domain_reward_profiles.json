@@ -78,6 +78,27 @@
       }
     },
     {
+      "id": "osananajimi_reminiscence",
+      "artifactReward": {
+        "setId": "osananajimi",
+        "minCount": 1,
+        "maxCount": 2,
+        "minLevel": 0,
+        "maxLevel": 16,
+        "rarityWeights": {
+          "threeStar": 0.4,
+          "fourStar": 0.42,
+          "fiveStar": 0.18
+        }
+      },
+      "currencyReward": {
+        "creditsBase": 6500,
+        "creditsPerRank": 170,
+        "rankXpBase": 130,
+        "rankXpPerRank": 5
+      }
+    },
+    {
       "id": "csc_training",
       "currencyReward": {
         "creditsBase": 11000,

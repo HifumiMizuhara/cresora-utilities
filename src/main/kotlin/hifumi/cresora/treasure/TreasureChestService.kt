@@ -586,7 +586,7 @@ object TreasureChestService {
         }
 
         val playerWorld = serverPlayer.world as ServerWorld
-        if (playerWorld.registryKey == ArenaManager.DOMAIN_WORLD_KEY) {
+        if (ArenaManager.isDomainWorld(playerWorld.registryKey)) {
             serverPlayer.sendMessage(Text.translatable("message.cresora.treasure_chest.cannot_use_here").formatted(Formatting.RED), true)
             return ActionResult.FAIL
         }

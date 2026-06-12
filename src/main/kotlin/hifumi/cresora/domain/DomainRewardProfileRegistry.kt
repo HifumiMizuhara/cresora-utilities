@@ -265,6 +265,23 @@ object DomainRewardProfileRegistry {
                     )
                 ),
                 DomainRewardProfile(
+                    id = "osananajimi_reminiscence",
+                    artifactReward = DomainArtifactRewardDefinition(
+                        setId = "osananajimi",
+                        minCount = 1,
+                        maxCount = 2,
+                        minLevel = 0,
+                        maxLevel = 16,
+                        rarityWeights = DomainRarityWeights(0.40, 0.42, 0.18)
+                    ),
+                    currencyReward = DomainCurrencyRewardDefinition(
+                        creditsBase = 6_500,
+                        creditsPerRank = 170,
+                        rankXpBase = 130,
+                        rankXpPerRank = 5
+                    )
+                ),
+                DomainRewardProfile(
                     id = "csc_training",
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 11_000,

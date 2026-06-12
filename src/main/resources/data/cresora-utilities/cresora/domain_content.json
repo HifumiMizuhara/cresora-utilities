@@ -41,6 +41,15 @@
         { "entityTypeId": "minecraft:enderman", "weight": 2 },
         { "entityTypeId": "minecraft:witch", "weight": 1 }
       ]
+    },
+    {
+      "id": "osananajimi_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:pillager", "weight": 4 },
+        { "entityTypeId": "minecraft:witch", "weight": 3 },
+        { "entityTypeId": "minecraft:vindicator", "weight": 2 },
+        { "entityTypeId": "minecraft:phantom", "weight": 1 }
+      ]
     }
   ],
   "domains": [
@@ -113,6 +122,24 @@
             { "count": 4, "levelOffset": 7, "elite": false, "spawnDelayTicks": 60 },
             { "count": 2, "levelOffset": 9, "elite": true, "spawnDelayTicks": 80 },
             { "count": 3, "levelOffset": 10, "elite": true, "spawnDelayTicks": 100 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "osananajimi_reminiscence",
+      "nameKey": "screen.cresora.domain.osananajimi_reminiscence",
+      "themeId": "verdant",
+      "unlockRank": 1,
+      "entryCostCsc": 2000,
+      "rewardProfileId": "osananajimi_reminiscence",
+      "mobPoolId": "osananajimi_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 4, "levelOffset": 0, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 5, "levelOffset": 2, "elite": false, "spawnDelayTicks": 60 },
+            { "count": 2, "levelOffset": 4, "elite": true, "spawnDelayTicks": 80 }
           ]
         }
       ]

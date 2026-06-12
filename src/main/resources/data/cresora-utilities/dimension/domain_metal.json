@@ -1,0 +1,15 @@
+{
+  "type": "cresora-utilities:domain_metal",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "layers": [
+        { "block": "minecraft:bedrock", "height": 1 },
+        { "block": "minecraft:blackstone", "height": 4 }
+      ],
+      "biome": "minecraft:the_void",
+      "features": false,
+      "lakes": false
+    }
+  }
+}

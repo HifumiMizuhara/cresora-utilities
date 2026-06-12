@@ -167,14 +167,14 @@ object DomainService {
         }
 
         val server = player.server ?: return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.invalid" else "commands.cresora.story.invalid")
-        val arenaWorld = ArenaManager.getDomainWorld(server) ?: return DomainStartResult(false, "screen.cresora.domain.no_world")
-        
+        val arenaWorld = ArenaManager.getDomainWorld(server, domain.themeId) ?: return DomainStartResult(false, "screen.cresora.domain.no_world")
+
         if (!CreditsService.spendCredits(player, domain.entryCostCsc)) {
             return DomainStartResult(false, "screen.cresora.domain.not_enough_credits", listOf(ArtifactSpecialItem.formatWholeNumber(domain.entryCostCsc)))
         }
 
-        val arenaCenter = ArenaManager.getArenaPosForPlayer(player.uuid)
-        ArenaManager.ensureArena(arenaWorld, arenaCenter)
+        val arenaCenter = ArenaManager.getArenaPosForPlayer(player.uuid, domain.themeId)
+        ArenaManager.ensureArena(arenaWorld, arenaCenter, domain.themeId)
 
         val session = DomainSession(
             id = UUID.randomUUID(),
@@ -234,8 +234,9 @@ object DomainService {
             return
         }
         
-        val world = ArenaManager.getDomainWorld(server) ?: return
-        if (player.world.registryKey != ArenaManager.DOMAIN_WORLD_KEY || player.squaredDistanceTo(session.arenaCenter.toCenterPos()) > ARENA_FAIL_DISTANCE_SQUARED) {
+        val themeId = session.definition().themeId
+        val world = ArenaManager.getDomainWorld(server, themeId) ?: return
+        if (player.world.registryKey != world.registryKey || player.squaredDistanceTo(session.arenaCenter.toCenterPos()) > ARENA_FAIL_DISTANCE_SQUARED) {
             failSession(server, session, player, "screen.cresora.domain.failed_leave", restorePlayer = true)
             return
         }
