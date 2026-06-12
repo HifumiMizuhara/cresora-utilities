@@ -38,8 +38,9 @@ object BaaMimicService {
         sheep.addCommandTag("$ORIGINAL_RANK_PREFIX$rank")
         val maxHealthAttr = sheep.getAttributeInstance(EntityAttributes.MAX_HEALTH)
         if (maxHealthAttr != null) {
+            val hpRatio = (original.health / original.maxHealth).coerceIn(0f, 1f)
             maxHealthAttr.baseValue = currentNearbyMaxPlayerHealth(sheep)
-            sheep.health = sheep.maxHealth
+            sheep.health = sheep.maxHealth * hpRatio
         }
     }
 
