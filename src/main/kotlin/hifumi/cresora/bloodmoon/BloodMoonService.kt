@@ -4,6 +4,8 @@ import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
 import hifumi.cresora.combat.FieldMobPackService
 import hifumi.cresora.credits.CreditsService
+import hifumi.cresora.resonance.ResonanceCurrencyType
+import hifumi.cresora.resonance.ResonanceService
 import hifumi.cresora.equipment.EquipmentDefinitions
 import hifumi.cresora.equipment.EquipmentStackSupport
 import hifumi.cresora.equipment.EquipmentGenerationService
@@ -103,6 +105,8 @@ private data class ResolvedBloodMoonRewardChest(
 
 private data class BloodMoonRewardBundle(
     val credits: Int,
+    val chordProgression: Int,
+    val substituteChord: Int,
     val equipmentStacks: List<ItemStack>,
     val specialStacks: List<ItemStack>,
     val weaponStacks: List<ItemStack>
@@ -478,6 +482,12 @@ object BloodMoonService {
         if (chest.reward.credits > 0) {
             CreditsService.addCredits(serverPlayer, chest.reward.credits)
         }
+        if (chest.reward.chordProgression > 0) {
+            ResonanceService.addCurrency(serverPlayer, ResonanceCurrencyType.CHORD_PROGRESSION, chest.reward.chordProgression)
+        }
+        if (chest.reward.substituteChord > 0) {
+            ResonanceService.addCurrency(serverPlayer, ResonanceCurrencyType.SUBSTITUTE_CHORD, chest.reward.substituteChord)
+        }
         val rankXpReward = bloodMoonRankXpReward(serverPlayer)
         if (rankXpReward > 0) {
             AdventureRankService.addXp(serverPlayer, rankXpReward)
@@ -805,6 +815,8 @@ object BloodMoonService {
 
         return BloodMoonRewardBundle(
             credits = 100_000,
+            chordProgression = 1300,
+            substituteChord = 650,
             equipmentStacks = equipmentStacks,
             specialStacks = specialStacks,
             weaponStacks = weaponStacks

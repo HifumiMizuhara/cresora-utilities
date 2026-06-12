@@ -16,6 +16,8 @@ import hifumi.cresora.story.StoryChapterDefinition
 import hifumi.cresora.story.StoryContentRegistry
 import hifumi.cresora.story.StoryProgressService
 import hifumi.cresora.story.StoryService
+import hifumi.cresora.resonance.ResonanceCurrencyType
+import hifumi.cresora.resonance.ResonanceService
 import hifumi.cresora.story.StoryStartResult
 import hifumi.cresora.story.StoryTextRegistry
 import hifumi.cresora.weapon.WeaponContentRegistry
@@ -44,7 +46,9 @@ import java.util.UUID
 data class DomainRewardResult(
     val items: List<ItemStack>,
     val credits: Int,
-    val rankXp: Int
+    val rankXp: Int,
+    val chordProgression: Int = 0,
+    val substituteChord: Int = 0
 )
 
 data class DomainStartResult(
@@ -319,6 +323,12 @@ object DomainService {
         if (result.rankXp > 0) {
             AdventureRankService.addXp(player, result.rankXp)
         }
+        if (result.chordProgression > 0) {
+            ResonanceService.addCurrency(player, ResonanceCurrencyType.CHORD_PROGRESSION, result.chordProgression)
+        }
+        if (result.substituteChord > 0) {
+            ResonanceService.addCurrency(player, ResonanceCurrencyType.SUBSTITUTE_CHORD, result.substituteChord)
+        }
         val linkedStoryChapterId = session.linkedStoryChapterId
         if (linkedStoryChapterId == null) {
             player.sendMessage(Text.translatable("screen.cresora.domain.cleared", Text.translatable(session.definition().nameKey)), false)
@@ -449,7 +459,7 @@ object DomainService {
             .coerceAtLeast(0)
         val rankXp = (profile.currencyReward.rankXpBase + profile.currencyReward.rankXpPerRank * sessionRank)
             .coerceAtLeast(0)
-        return DomainRewardResult(items, credits, rankXp)
+        return DomainRewardResult(items, credits, rankXp, profile.chordProgressionReward, profile.substituteChordReward)
     }
 
     private fun deliverRewardItems(player: ServerPlayerEntity, rewards: List<ItemStack>): Int {

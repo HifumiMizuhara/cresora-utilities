@@ -57,6 +57,22 @@ object DomainDisplayStackFactory {
                 )
             }
         }
+        if (result.chordProgression > 0) {
+            displays += ItemStack(Items.PAPER).apply {
+                set(
+                    DataComponentTypes.CUSTOM_NAME,
+                    Text.translatable("screen.cresora.domain.reward_chord_progression", ArtifactSpecialItem.formatWholeNumber(result.chordProgression))
+                )
+            }
+        }
+        if (result.substituteChord > 0) {
+            displays += ItemStack(Items.NAME_TAG).apply {
+                set(
+                    DataComponentTypes.CUSTOM_NAME,
+                    Text.translatable("screen.cresora.domain.reward_substitute_chord", ArtifactSpecialItem.formatWholeNumber(result.substituteChord))
+                )
+            }
+        }
         return displays
     }
 

@@ -80,6 +80,9 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     private boolean cresora$arpeggioReady = false;
 
     @Unique
+    private long cresora$lastDailyLoginEpochDay = -1L;
+
+    @Unique
     private String cresora$storyClearsRaw = "";
 
     @Unique
@@ -111,6 +114,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         view.putInt(ResonanceService.INSTANCE.deepPityStreakKey(), this.cresora$deepPityStreak);
         view.putInt(ResonanceService.INSTANCE.limitedFiveStarGuaranteedKey(), this.cresora$limitedFiveStarGuaranteed ? 1 : 0);
         view.putInt(ResonanceService.INSTANCE.arpeggioReadyKey(), this.cresora$arpeggioReady ? 1 : 0);
+        view.putLong(ResonanceService.INSTANCE.dailyLoginEpochDayKey(), this.cresora$lastDailyLoginEpochDay);
         view.putString(StoryProgressService.INSTANCE.playerStoryClearsKey(), this.cresora$storyClearsRaw);
         view.putString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), this.cresora$masqueradeCurrentSeasonId);
         view.putInt(MasqueradeProgressService.INSTANCE.playerBestWaveKey(), this.cresora$masqueradeBestWave);
@@ -134,6 +138,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$deepPityStreak = view.getInt(ResonanceService.INSTANCE.deepPityStreakKey(), 0);
         this.cresora$limitedFiveStarGuaranteed = view.getInt(ResonanceService.INSTANCE.limitedFiveStarGuaranteedKey(), 0) != 0;
         this.cresora$arpeggioReady = view.getInt(ResonanceService.INSTANCE.arpeggioReadyKey(), 0) != 0;
+        this.cresora$lastDailyLoginEpochDay = view.getLong(ResonanceService.INSTANCE.dailyLoginEpochDayKey(), -1L);
         this.cresora$storyClearsRaw = view.getString(StoryProgressService.INSTANCE.playerStoryClearsKey(), "");
         this.cresora$masqueradeCurrentSeasonId = view.getString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), "");
         this.cresora$masqueradeBestWave = view.getInt(MasqueradeProgressService.INSTANCE.playerBestWaveKey(), 0);
@@ -326,6 +331,16 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetArpeggioReady(boolean value) {
         this.cresora$arpeggioReady = value;
+    }
+
+    @Override
+    public long cresoraGetLastDailyLoginEpochDay() {
+        return this.cresora$lastDailyLoginEpochDay;
+    }
+
+    @Override
+    public void cresoraSetLastDailyLoginEpochDay(long value) {
+        this.cresora$lastDailyLoginEpochDay = value;
     }
 
     @Override

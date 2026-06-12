@@ -35,4 +35,8 @@ interface ResonanceAccess {
     fun cresoraGetArpeggioReady(): Boolean
 
     fun cresoraSetArpeggioReady(value: Boolean)
+
+    fun cresoraGetLastDailyLoginEpochDay(): Long
+
+    fun cresoraSetLastDailyLoginEpochDay(value: Long)
 }

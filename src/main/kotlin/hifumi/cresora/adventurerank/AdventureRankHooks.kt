@@ -10,6 +10,7 @@ import hifumi.cresora.equipment.EquipmentAttributeService
 import hifumi.cresora.equipment.EquipmentEffectHookService
 import hifumi.cresora.masquerade.MasqueradeProgressService
 import hifumi.cresora.masquerade.MasqueradeService
+import hifumi.cresora.resonance.ResonanceCurrencyType
 import hifumi.cresora.resonance.ResonanceService
 import hifumi.cresora.story.StoryProgressService
 import hifumi.cresora.weapon.WeaponDropService
@@ -44,6 +45,10 @@ object AdventureRankHooks {
                                 killer.inventory.offerOrDrop(net.minecraft.item.ItemStack(keyItem))
                                 killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.leyline.key_dropped", net.minecraft.text.Text.translatable(element.translationKeyId)), false)
                             }
+                        }
+                        if (killer.random.nextDouble() < 0.01) {
+                            ResonanceService.addCurrency(killer, ResonanceCurrencyType.CHORD_PROGRESSION, 50)
+                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.chord_progression"), true)
                         }
                     } else {
                         CreditsService.addFriendlyKillReward(killer, entity)

@@ -9,6 +9,7 @@ import kotlin.math.max
 object ResonanceService {
     private const val CHORD_PROGRESSION_KEY = "cresora_resonance_chord_progression"
     private const val SUBSTITUTE_CHORD_KEY = "cresora_resonance_substitute_chord"
+    private const val DAILY_LOGIN_EPOCH_DAY_KEY = "cresora_daily_login_epoch_day"
     private const val LIMITED_PITY_KEY = "cresora_resonance_limited_pity"
     private const val STANDARD_PULLS_KEY = "cresora_resonance_standard_pulls"
     private const val LIMITED_FOUR_STAR_PULLS_KEY = "cresora_resonance_limited_four_star_pulls"
@@ -57,6 +58,16 @@ object ResonanceService {
     fun limitedFiveStarGuaranteedKey(): String = LIMITED_FIVE_STAR_GUARANTEED_KEY
 
     fun arpeggioReadyKey(): String = ARPEGGIO_READY_KEY
+
+    fun dailyLoginEpochDayKey(): String = DAILY_LOGIN_EPOCH_DAY_KEY
+
+    fun getLastDailyLoginEpochDay(player: ServerPlayerEntity): Long {
+        return (player as? ResonanceAccess)?.cresoraGetLastDailyLoginEpochDay() ?: -1L
+    }
+
+    fun setLastDailyLoginEpochDay(player: ServerPlayerEntity, day: Long) {
+        (player as? ResonanceAccess)?.cresoraSetLastDailyLoginEpochDay(day)
+    }
 
     fun getProgress(player: ServerPlayerEntity): Progress {
         val access = player as? ResonanceAccess ?: return Progress(0, 0, 0, 0, 0, false, false)
@@ -136,6 +147,7 @@ object ResonanceService {
         newAccess.cresoraSetDeepPityStreak(max(0, oldAccess.cresoraGetDeepPityStreak()))
         newAccess.cresoraSetLimitedFiveStarGuaranteed(oldAccess.cresoraIsLimitedFiveStarGuaranteed())
         newAccess.cresoraSetArpeggioReady(oldAccess.cresoraGetArpeggioReady())
+        newAccess.cresoraSetLastDailyLoginEpochDay(oldAccess.cresoraGetLastDailyLoginEpochDay())
     }
 
     fun currencyCount(player: ServerPlayerEntity, banner: ResonanceBannerDefinition): Int {

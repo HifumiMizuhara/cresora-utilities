@@ -122,7 +122,9 @@ data class DomainRewardProfile(
     val weaponFragmentReward: DomainWeaponFragmentRewardDefinition? = null,
     val proofReward: DomainMaterialRewardDefinition? = null,
     val insightReward: DomainMaterialRewardDefinition? = null,
-    val currencyReward: DomainCurrencyRewardDefinition
+    val currencyReward: DomainCurrencyRewardDefinition,
+    val chordProgressionReward: Int = 0,
+    val substituteChordReward: Int = 0
 ) {
     companion object {
         val CODEC: Codec<DomainRewardProfile> = RecordCodecBuilder.create { instance ->
@@ -136,9 +138,11 @@ data class DomainRewardProfile(
                     .forGetter { java.util.Optional.ofNullable(it.proofReward) },
                 DomainMaterialRewardDefinition.CODEC.optionalFieldOf("insightReward")
                     .forGetter { java.util.Optional.ofNullable(it.insightReward) },
-                DomainCurrencyRewardDefinition.CODEC.fieldOf("currencyReward").forGetter(DomainRewardProfile::currencyReward)
-            ).apply(instance) { id, artifactReward, weaponReward, proofReward, insightReward, currencyReward ->
-                DomainRewardProfile(id, artifactReward.orElse(null), weaponReward.orElse(null), proofReward.orElse(null), insightReward.orElse(null), currencyReward)
+                DomainCurrencyRewardDefinition.CODEC.fieldOf("currencyReward").forGetter(DomainRewardProfile::currencyReward),
+                Codec.INT.optionalFieldOf("chordProgressionReward", 0).forGetter(DomainRewardProfile::chordProgressionReward),
+                Codec.INT.optionalFieldOf("substituteChordReward", 0).forGetter(DomainRewardProfile::substituteChordReward)
+            ).apply(instance) { id, artifactReward, weaponReward, proofReward, insightReward, currencyReward, chordProgression, substituteChord ->
+                DomainRewardProfile(id, artifactReward.orElse(null), weaponReward.orElse(null), proofReward.orElse(null), insightReward.orElse(null), currencyReward, chordProgression, substituteChord)
             }
         }
     }

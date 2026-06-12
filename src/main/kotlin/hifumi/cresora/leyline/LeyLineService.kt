@@ -9,6 +9,8 @@ import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.domain.DomainCombatProfile
 import hifumi.cresora.domain.DomainDisplayStackFactory
 import hifumi.cresora.domain.DomainRewardResult
+import hifumi.cresora.resonance.ResonanceCurrencyType
+import hifumi.cresora.resonance.ResonanceService
 import hifumi.cresora.equipment.ArtifactSpecialItem
 import hifumi.cresora.equipment.ArtifactUiFlow
 import hifumi.cresora.equipment.EquipmentContentRegistry
@@ -402,6 +404,9 @@ object LeyLineService {
         if (reward.rankXp > 0) {
             AdventureRankService.addXp(player, reward.rankXp)
         }
+        if (reward.chordProgression > 0) {
+            ResonanceService.addCurrency(player, ResonanceCurrencyType.CHORD_PROGRESSION, reward.chordProgression)
+        }
 
         player.sendMessage(Text.translatable("message.cresora.leyline.cleared"), false)
         if (droppedCount > 0) {
@@ -545,7 +550,14 @@ object LeyLineService {
             }
         }
 
-        return DomainRewardResult(items, credits, rankXp)
+        val chordProgression = when (tier) {
+            1 -> 100
+            2 -> 200
+            3 -> 325
+            else -> 500
+        }
+
+        return DomainRewardResult(items, credits, rankXp, chordProgression = chordProgression)
     }
 
     private fun getNormalMobType(element: LeyLineElement, random: net.minecraft.util.math.random.Random): EntityType<*> {
