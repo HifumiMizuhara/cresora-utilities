@@ -74,10 +74,10 @@ internal data class BloodMoonBedKey(
     fun contains(pos: BlockPos): Boolean = pos == first || pos == second
 
     fun center(): Vec3d {
-        val minX = minOf(first.x, second.x)
-        val minZ = minOf(first.z, second.z)
+        val centerX = (first.x + second.x) * 0.5 + 0.5
+        val centerZ = (first.z + second.z) * 0.5 + 0.5
         val y = minOf(first.y, second.y)
-        return Vec3d(minX + 0.5, y + 1.0, minZ + 0.5)
+        return Vec3d(centerX, y + 1.0, centerZ)
     }
 }
 
