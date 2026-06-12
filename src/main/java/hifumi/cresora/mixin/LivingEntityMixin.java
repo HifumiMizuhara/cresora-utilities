@@ -122,6 +122,9 @@ public class LivingEntityMixin {
             return;
         }
         if (!(entity instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity))) {
+            if (source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+                CombatFeedbackService.INSTANCE.clearTransientState(serverPlayer);
+            }
             return;
         }
         if (source.getAttacker() instanceof PlayerEntity player) {

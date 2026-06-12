@@ -227,7 +227,7 @@ class CresoraCompiler(
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
                     onPlayerTickFun.nextControlFlow("else if (removed)")
                     onPlayerTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S), %T.getDisplayStacks(player, %S, state.stacks)), true)",
-                        ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.gained",
+                        ClassName("net.minecraft.text", "Text"), "item.cresora.weapon.skill.buff.${buff.id}.stacks",
                         ClassName("net.minecraft.text", "Text"), buffNameKey,
                         ClassName("hifumi.cresora.weapon", "WeaponSkillService"), buff.id)
                     onPlayerTickFun.endControlFlow()

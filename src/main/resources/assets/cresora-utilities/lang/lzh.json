@@ -680,6 +680,7 @@
   "item.cresora.weapon.skill.buff.ketsui.name": "決意",
   "item.cresora.weapon.skill.buff.ketsui.gained": "得%s（層：%s）",
   "item.cresora.weapon.skill.buff.ketsui.expired": "決意失效",
+  "item.cresora.weapon.skill.buff.ketsui.stacks": "決意餘%s層",
   "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女之凝視 啓！施萌死於 %s 敵。",
   "item.cresora-utilities.harukanaru_shonen_no_omoi": "遙遠少年之思",
   "item.cresora-utilities.harukanaru_shonen_no_omoi.skill": "重思",

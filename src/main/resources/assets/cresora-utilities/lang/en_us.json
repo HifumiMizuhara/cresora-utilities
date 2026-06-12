@@ -709,6 +709,7 @@
   "item.cresora.weapon.skill.buff.ketsui.name": "Resolve",
   "item.cresora.weapon.skill.buff.ketsui.gained": "Gained effect: %s (%s stacks)",
   "item.cresora.weapon.skill.buff.ketsui.expired": "Resolve expired",
+  "item.cresora.weapon.skill.buff.ketsui.stacks": "Resolve: %s stacks remaining",
   "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "Girl's Gaze activated! Inflicted Kyundeath on %s targets.",
   "item.cresora-utilities.harukanaru_shonen_no_omoi": "Thoughts of the Distant Boy",
   "item.cresora-utilities.harukanaru_shonen_no_omoi.skill": "Heavy Thoughts",

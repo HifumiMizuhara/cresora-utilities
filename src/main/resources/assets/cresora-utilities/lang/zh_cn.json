@@ -698,6 +698,7 @@
   "item.cresora.weapon.skill.buff.ketsui.name": "决意",
   "item.cresora.weapon.skill.buff.ketsui.gained": "获得效果: %s (%s 层)",
   "item.cresora.weapon.skill.buff.ketsui.expired": "决意失效",
+  "item.cresora.weapon.skill.buff.ketsui.stacks": "决意：剩余 %s 层",
   "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女的凝视 启动！对 %s 个目标施加了萌死。",
   "item.cresora-utilities.harukanaru_shonen_no_omoi": "遥远少年的思念",
   "item.cresora-utilities.harukanaru_shonen_no_omoi.skill": "沉重思念",
