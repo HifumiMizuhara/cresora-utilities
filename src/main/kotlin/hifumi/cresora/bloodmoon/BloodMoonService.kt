@@ -233,6 +233,7 @@ object BloodMoonService {
     private const val REST_SECONDS = 30L
     val REST_TICKS = REST_SECONDS * 20L
     const val START_DELAY_TICKS = 20L
+    const val INITIAL_START_DELAY_TICKS = 20L * 20L
     private const val CONFIRM_TIMEOUT_TICKS = 20L * 5L
     private const val MOB_DUPLICATION_CHANCE = 0.20
     private const val PLAYER_DAMAGE_PER_STACK = 0.10
@@ -919,7 +920,7 @@ object BloodMoonService {
         applySpecialBed(world, session)
         applyBattleRespawns(server, session)
         setMobGriefing(server, false)
-        session.nextWaveTick = world.time + START_DELAY_TICKS
+        session.nextWaveTick = world.time + INITIAL_START_DELAY_TICKS
 
         updatePersistentSession(session)
         persistentState?.lockedBattleDayIndex = session.startedDayIndex
