@@ -9,16 +9,16 @@ import net.minecraft.entity.mob.MobEntity
 import kotlin.math.roundToInt
 
 object CreditsRewardProfile {
-    private const val SURVIVOR_BASE = 120
-    private const val SURVIVOR_PER_LEVEL = 18
-    private const val ASSAULT_BASE = 180
-    private const val ASSAULT_PER_LEVEL = 24
-    private const val ARCANE_BASE = 240
-    private const val ARCANE_PER_LEVEL = 28
-    private const val ELITE_BASE = 420
-    private const val ELITE_PER_LEVEL = 38
-    private const val WARDEN_BASE = 2500
-    private const val WARDEN_PER_LEVEL = 90
+    private const val SURVIVOR_BASE = 144
+    private const val SURVIVOR_PER_LEVEL = 22
+    private const val ASSAULT_BASE = 216
+    private const val ASSAULT_PER_LEVEL = 29
+    private const val ARCANE_BASE = 288
+    private const val ARCANE_PER_LEVEL = 34
+    private const val ELITE_BASE = 504
+    private const val ELITE_PER_LEVEL = 46
+    private const val WARDEN_BASE = 3000
+    private const val WARDEN_PER_LEVEL = 108
 
     private const val FRIENDLY_KILL_BASE = 20
     private const val FRIENDLY_KILL_HEALTH_FACTOR = 4.0

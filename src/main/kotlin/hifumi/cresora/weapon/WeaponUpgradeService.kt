@@ -42,16 +42,16 @@ object WeaponUpgradeService {
     fun breakthroughCscCost(rarity: WeaponRarity, targetBreakthrough: Int): Int {
         return when (targetBreakthrough) {
             1 -> when (rarity) {
-                WeaponRarity.TWO_STAR -> 5_000
-                WeaponRarity.THREE_STAR -> 10_000
-                WeaponRarity.FOUR_STAR -> 25_000
-                WeaponRarity.FIVE_STAR -> 50_000
+                WeaponRarity.TWO_STAR -> 4_000
+                WeaponRarity.THREE_STAR -> 8_000
+                WeaponRarity.FOUR_STAR -> 20_000
+                WeaponRarity.FIVE_STAR -> 40_000
             }
             2 -> when (rarity) {
-                WeaponRarity.TWO_STAR -> 20_000
-                WeaponRarity.THREE_STAR -> 40_000
-                WeaponRarity.FOUR_STAR -> 100_000
-                WeaponRarity.FIVE_STAR -> 200_000
+                WeaponRarity.TWO_STAR -> 16_000
+                WeaponRarity.THREE_STAR -> 32_000
+                WeaponRarity.FOUR_STAR -> 80_000
+                WeaponRarity.FIVE_STAR -> 160_000
             }
             else -> 0
         }

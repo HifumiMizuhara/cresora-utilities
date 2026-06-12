@@ -15,8 +15,8 @@
         }
       },
       "currencyReward": {
-        "creditsBase": 6000,
-        "creditsPerRank": 160,
+        "creditsBase": 7200,
+        "creditsPerRank": 192,
         "rankXpBase": 120,
         "rankXpPerRank": 5
       }
@@ -34,8 +34,8 @@
         "maxCount": 3
       },
       "currencyReward": {
-        "creditsBase": 7500,
-        "creditsPerRank": 190,
+        "creditsBase": 9000,
+        "creditsPerRank": 228,
         "rankXpBase": 150,
         "rankXpPerRank": 6
       }
@@ -53,8 +53,8 @@
         "maxCount": 3
       },
       "currencyReward": {
-        "creditsBase": 7500,
-        "creditsPerRank": 190,
+        "creditsBase": 9000,
+        "creditsPerRank": 228,
         "rankXpBase": 150,
         "rankXpPerRank": 6
       }
@@ -72,8 +72,8 @@
         "maxCount": 2
       },
       "currencyReward": {
-        "creditsBase": 9000,
-        "creditsPerRank": 220,
+        "creditsBase": 10800,
+        "creditsPerRank": 264,
         "rankXpBase": 180,
         "rankXpPerRank": 7
       }
@@ -91,8 +91,8 @@
         "maxCount": 2
       },
       "currencyReward": {
-        "creditsBase": 12000,
-        "creditsPerRank": 260,
+        "creditsBase": 14400,
+        "creditsPerRank": 312,
         "rankXpBase": 240,
         "rankXpPerRank": 8
       }
@@ -112,8 +112,8 @@
         }
       },
       "currencyReward": {
-        "creditsBase": 6500,
-        "creditsPerRank": 170,
+        "creditsBase": 7800,
+        "creditsPerRank": 204,
         "rankXpBase": 130,
         "rankXpPerRank": 5
       }
@@ -125,8 +125,8 @@
         "maxCount": 2
       },
       "currencyReward": {
-        "creditsBase": 11000,
-        "creditsPerRank": 250,
+        "creditsBase": 13200,
+        "creditsPerRank": 300,
         "rankXpBase": 220,
         "rankXpPerRank": 8
       }

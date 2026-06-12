@@ -560,7 +560,7 @@ class CresoraCompiler(
             weaponObj.add("skill", skillObj)
 
             val upgrades = JsonObject()
-            upgrades.addProperty("baseCscQuadraticCoefficient", 100)
+            upgrades.addProperty("baseCscQuadraticCoefficient", 85)
             upgrades.addProperty("skillCscLinearCoefficient", 10000)
             upgrades.addProperty("skillCscQuadraticCoefficient", 0)
             upgrades.addProperty("baseFragmentCost", 1)

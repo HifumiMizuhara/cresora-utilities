@@ -241,8 +241,8 @@ object DomainRewardProfileRegistry {
                         rarityWeights = DomainRarityWeights(0.40, 0.42, 0.18)
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 6_000,
-                        creditsPerRank = 160,
+                        creditsBase = 7_200,
+                        creditsPerRank = 192,
                         rankXpBase = 120,
                         rankXpPerRank = 5
                     )
@@ -260,8 +260,8 @@ object DomainRewardProfileRegistry {
                         maxCount = 3
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 7_500,
-                        creditsPerRank = 190,
+                        creditsBase = 9_000,
+                        creditsPerRank = 228,
                         rankXpBase = 150,
                         rankXpPerRank = 6
                     )
@@ -279,8 +279,8 @@ object DomainRewardProfileRegistry {
                         maxCount = 3
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 7_500,
-                        creditsPerRank = 190,
+                        creditsBase = 9_000,
+                        creditsPerRank = 228,
                         rankXpBase = 150,
                         rankXpPerRank = 6
                     )
@@ -298,8 +298,8 @@ object DomainRewardProfileRegistry {
                         maxCount = 2
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 9_000,
-                        creditsPerRank = 220,
+                        creditsBase = 10_800,
+                        creditsPerRank = 264,
                         rankXpBase = 180,
                         rankXpPerRank = 7
                     )
@@ -317,8 +317,8 @@ object DomainRewardProfileRegistry {
                         maxCount = 2
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 12_000,
-                        creditsPerRank = 260,
+                        creditsBase = 14_400,
+                        creditsPerRank = 312,
                         rankXpBase = 240,
                         rankXpPerRank = 8
                     )
@@ -334,8 +334,8 @@ object DomainRewardProfileRegistry {
                         rarityWeights = DomainRarityWeights(0.40, 0.42, 0.18)
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 6_500,
-                        creditsPerRank = 170,
+                        creditsBase = 7_800,
+                        creditsPerRank = 204,
                         rankXpBase = 130,
                         rankXpPerRank = 5
                     )
@@ -348,8 +348,8 @@ object DomainRewardProfileRegistry {
                         maxCount = 2
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
-                        creditsBase = 11_000,
-                        creditsPerRank = 250,
+                        creditsBase = 13_200,
+                        creditsPerRank = 300,
                         rankXpBase = 220,
                         rankXpPerRank = 8
                     )
