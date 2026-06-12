@@ -100,6 +100,8 @@ private data class BloodMoonWorldPosKey(
     val pos: BlockPos
 )
 
+internal data class MobBlockBreakState(val targetPos: BlockPos, val startTick: Long)
+
 private data class ResolvedBloodMoonRewardChest(
     val ownerUuid: UUID,
     val rewardSeed: Long
@@ -199,6 +201,7 @@ internal class BloodMoonBattleSession(
     val participants: MutableSet<UUID> = linkedSetOf()
     val activeMobUuids: MutableSet<UUID> = linkedSetOf()
     val mobBedAttackCooldowns: MutableMap<UUID, Long> = linkedMapOf()
+    val mobBlockBreakStates: MutableMap<UUID, MobBlockBreakState> = linkedMapOf()
     val triggeredBedGuardThresholds: MutableSet<Int> = linkedSetOf()
     var currentState: BloodMoonBattleState = PreparingState()
     val phase: BloodMoonBattlePhase get() = currentState.phase
@@ -237,6 +240,9 @@ object BloodMoonService {
     private const val GLOW_DURATION_TICKS = 20 * 60 * 10
     private const val ZERO_SPAWN_RETRY_TICKS = 40L
     private const val MAX_SPAWN_TRIES_PER_MOB = 6
+    private const val MOB_BLOCK_BREAK_INTERVAL_TICKS = 100L
+    private const val ELITE_BLOCK_BREAK_INTERVAL_TICKS = 60L
+    private const val MOB_BLOCK_BREAK_REACH_SQUARED = 6.25
 
     private val battleMobTypes = listOf(
         "minecraft:zombie",
@@ -669,6 +675,7 @@ object BloodMoonService {
             if (entity == null || !entity.isAlive || entity.isRemoved) {
                 iterator.remove()
                 session.mobBedAttackCooldowns.remove(mobUuid)
+                session.mobBlockBreakStates.remove(mobUuid)
             }
         }
     }
@@ -1326,7 +1333,47 @@ object BloodMoonService {
                 continue
             }
             steerMobTowardBed(hostile, session.bedKey.center())
+            tickMobBlockBreaking(world, session, hostile)
             maybeDamageBattleBed(world, session, hostile)
+        }
+    }
+
+    private fun tickMobBlockBreaking(world: ServerWorld, session: BloodMoonBattleSession, hostile: HostileEntity) {
+        if (session.phase != BloodMoonBattlePhase.COMBAT) {
+            session.mobBlockBreakStates.remove(hostile.uuid)
+            return
+        }
+        val bedCenter = session.bedKey.center()
+        val raycast = world.raycast(
+            RaycastContext(hostile.eyePos, bedCenter, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, hostile)
+        )
+        val blockTarget: BlockPos? = if (raycast.type == HitResult.Type.BLOCK) {
+            val hitPos = raycast.blockPos
+            if (!session.bedKey.contains(hitPos) &&
+                hostile.squaredDistanceTo(hitPos.toCenterPos()) <= MOB_BLOCK_BREAK_REACH_SQUARED) {
+                val state = world.getBlockState(hitPos)
+                if (!state.isAir && state.getHardness(world, hitPos) >= 0.0f) hitPos.toImmutable() else null
+            } else null
+        } else null
+
+        val existing = session.mobBlockBreakStates[hostile.uuid]
+        if (blockTarget == null) {
+            session.mobBlockBreakStates.remove(hostile.uuid)
+            return
+        }
+        if (existing == null || existing.targetPos != blockTarget) {
+            session.mobBlockBreakStates[hostile.uuid] = MobBlockBreakState(blockTarget, world.time)
+            return
+        }
+        val isElite = (hostile as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true
+        val interval = if (isElite) ELITE_BLOCK_BREAK_INTERVAL_TICKS else MOB_BLOCK_BREAK_INTERVAL_TICKS
+        if (world.time - existing.startTick >= interval) {
+            val blockState = world.getBlockState(blockTarget)
+            if (!blockState.isAir) {
+                world.playSound(null, blockTarget, blockState.soundGroup.breakSound, SoundCategory.BLOCKS, 1.0f, 0.8f)
+                world.breakBlock(blockTarget, false)
+            }
+            session.mobBlockBreakStates.remove(hostile.uuid)
         }
     }
 
