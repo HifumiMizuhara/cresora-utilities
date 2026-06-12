@@ -994,6 +994,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `shieldHp(definition, data)`
 - `healHp(definition, data)`
 - `currentHpTrueDamageRatio(definition, data)`
+- `healHp(player, amount)`: プレイヤーの体力を回復するヘルパー（マクロ展開用）。
+- `grantShield(player, amount, durationTicks)`: プレイヤーにシールドを付与するヘルパー（マクロ展開用）。
+- `applyStatusEffect(player, effectId, durationTicks, amplifier)`: プレイヤーにステータス効果を付与するヘルパー（マクロ展開用）。
 - 精錬（突破）による戦闘属性ボーナスの適用：
   - 精錬0段階: 100% 属性
   - 精錬1段階: 115% 属性、会心率 +5%
