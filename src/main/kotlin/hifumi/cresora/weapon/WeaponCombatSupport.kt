@@ -111,4 +111,25 @@ object WeaponCombatSupport {
     fun currentHpTrueDamageRatio(definition: WeaponDefinition, data: WeaponData): Double {
         return (skillValuePercent(definition, data) / 100.0).coerceAtLeast(0.0)
     }
+
+    fun healHp(player: net.minecraft.server.network.ServerPlayerEntity, amount: Float) {
+        player.heal(amount)
+    }
+
+    fun healHp(player: net.minecraft.server.network.ServerPlayerEntity, amount: Double) {
+        player.heal(amount.toFloat())
+    }
+
+    fun grantShield(player: net.minecraft.server.network.ServerPlayerEntity, amount: Float, durationTicks: Long) {
+        WeaponSkillService.grantShield(player, amount, durationTicks, null)
+    }
+
+    fun grantShield(player: net.minecraft.server.network.ServerPlayerEntity, amount: Double, durationTicks: Long) {
+        WeaponSkillService.grantShield(player, amount.toFloat(), durationTicks, null)
+    }
+
+    fun applyStatusEffect(player: net.minecraft.server.network.ServerPlayerEntity, effectId: String, durationTicks: Int, amplifier: Int = 0) {
+        val entry = net.minecraft.registry.Registries.STATUS_EFFECT.getEntry(net.minecraft.util.Identifier.of(effectId)).orElse(null) ?: return
+        player.addStatusEffect(net.minecraft.entity.effect.StatusEffectInstance(entry, durationTicks, amplifier))
+    }
 }
