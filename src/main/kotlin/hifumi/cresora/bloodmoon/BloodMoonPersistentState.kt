@@ -11,6 +11,30 @@ import net.minecraft.world.PersistentStateType
 import net.minecraft.world.World
 import java.util.UUID
 
+data class SavedBedBlockState(
+    val x: Int,
+    val y: Int,
+    val z: Int,
+    val blockId: String,
+    val facing: String,
+    val part: String,
+    val occupied: Boolean
+) {
+    companion object {
+        val CODEC: Codec<SavedBedBlockState> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                Codec.INT.fieldOf("x").forGetter(SavedBedBlockState::x),
+                Codec.INT.fieldOf("y").forGetter(SavedBedBlockState::y),
+                Codec.INT.fieldOf("z").forGetter(SavedBedBlockState::z),
+                Codec.STRING.fieldOf("blockId").forGetter(SavedBedBlockState::blockId),
+                Codec.STRING.fieldOf("facing").forGetter(SavedBedBlockState::facing),
+                Codec.STRING.fieldOf("part").forGetter(SavedBedBlockState::part),
+                Codec.BOOL.fieldOf("occupied").forGetter(SavedBedBlockState::occupied)
+            ).apply(instance, ::SavedBedBlockState)
+        }
+    }
+}
+
 data class SavedBloodMoonBedKey(
     val worldId: String,
     val firstX: Int,
@@ -47,7 +71,8 @@ data class SavedBloodMoonSession(
     val phase: String,
     val nextWaveTick: Long = 0L,
     val restUntilTick: Long = 0L,
-    val activeMobUuids: List<UUID> = emptyList()
+    val activeMobUuids: List<UUID> = emptyList(),
+    val originalBedStates: List<SavedBedBlockState> = emptyList()
 ) {
     companion object {
         val CODEC: Codec<SavedBloodMoonSession> = RecordCodecBuilder.create { instance ->
@@ -63,7 +88,8 @@ data class SavedBloodMoonSession(
                 Codec.STRING.fieldOf("phase").forGetter(SavedBloodMoonSession::phase),
                 Codec.LONG.optionalFieldOf("nextWaveTick", 0L).forGetter(SavedBloodMoonSession::nextWaveTick),
                 Codec.LONG.optionalFieldOf("restUntilTick", 0L).forGetter(SavedBloodMoonSession::restUntilTick),
-                net.minecraft.util.Uuids.INT_STREAM_CODEC.listOf().optionalFieldOf("activeMobUuids", emptyList()).forGetter(SavedBloodMoonSession::activeMobUuids)
+                net.minecraft.util.Uuids.INT_STREAM_CODEC.listOf().optionalFieldOf("activeMobUuids", emptyList()).forGetter(SavedBloodMoonSession::activeMobUuids),
+                SavedBedBlockState.CODEC.listOf().optionalFieldOf("originalBedStates", emptyList<SavedBedBlockState>()).forGetter(SavedBloodMoonSession::originalBedStates)
             ).apply(instance, ::SavedBloodMoonSession)
         }
     }

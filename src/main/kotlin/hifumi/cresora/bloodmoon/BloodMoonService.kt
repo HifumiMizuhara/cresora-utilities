@@ -523,15 +523,36 @@ object BloodMoonService {
                 BlockPos(saved.bedKey.firstX, saved.bedKey.firstY, saved.bedKey.firstZ),
                 BlockPos(saved.bedKey.secondX, saved.bedKey.secondY, saved.bedKey.secondZ)
             )
-            // Reconstruct session. We use empty originalBedStates on recovery since the bed is already modified.
-            // This is a trade-off: if the server restarts, we might not be able to perfectly restore the bed look
-            // unless we also persist the original states. Let's add them to the persistent state in next iteration if needed.
+            val originalBedStates: Map<BlockPos, BlockState> = if (saved.originalBedStates.isNotEmpty()) {
+                saved.originalBedStates.associate { s ->
+                    val pos = BlockPos(s.x, s.y, s.z)
+                    val block = Registries.BLOCK.get(Identifier.of(s.blockId))
+                    val blockState = if (block is BedBlock) {
+                        val facing = Direction.values().firstOrNull { it.asString() == s.facing } ?: Direction.NORTH
+                        val part = if (s.part == "head") BedPart.HEAD else BedPart.FOOT
+                        block.defaultState
+                            .with(HorizontalFacingBlock.FACING, facing)
+                            .with(BedBlock.PART, part)
+                            .with(BedBlock.OCCUPIED, s.occupied)
+                    } else {
+                        block.defaultState
+                    }
+                    pos to blockState
+                }
+            } else {
+                // Fallback for old saves without persisted bed states: read current world state
+                val world = server.getWorld(bedKey.worldKey)
+                mapOf(
+                    bedKey.first to (world?.getBlockState(bedKey.first) ?: Blocks.RED_BED.defaultState),
+                    bedKey.second to (world?.getBlockState(bedKey.second) ?: Blocks.RED_BED.defaultState)
+                )
+            }
             val session = BloodMoonBattleSession(
                 saved.id,
                 bedKey,
                 saved.ownerUuid,
                 saved.startedDayIndex,
-                emptyMap() // TODO: Persist original bed states if critical
+                originalBedStates
             )
             session.participants.addAll(saved.participants)
             session.clearedWaveCount = saved.clearedWaveCount
@@ -556,6 +577,12 @@ object BloodMoonService {
             session.bedKey.first.x, session.bedKey.first.y, session.bedKey.first.z,
             session.bedKey.second.x, session.bedKey.second.y, session.bedKey.second.z
         )
+        val savedOriginalBedStates = session.originalBedStates.map { (pos, blockState) ->
+            val facing = if (blockState.block is BedBlock) blockState.get(HorizontalFacingBlock.FACING).asString() else "north"
+            val part = if (blockState.block is BedBlock) blockState.get(BedBlock.PART).asString() else "foot"
+            val occupied = blockState.block is BedBlock && blockState.get(BedBlock.OCCUPIED)
+            SavedBedBlockState(pos.x, pos.y, pos.z, Registries.BLOCK.getId(blockState.block).toString(), facing, part, occupied)
+        }
         state.activeSession = SavedBloodMoonSession(
             session.id,
             savedBedKey,
@@ -568,7 +595,8 @@ object BloodMoonService {
             session.phase.name,
             session.nextWaveTick,
             session.restUntilTick,
-            session.activeMobUuids.toList()
+            session.activeMobUuids.toList(),
+            savedOriginalBedStates
         )
         state.markDirty()
     }
