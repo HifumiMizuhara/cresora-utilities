@@ -506,6 +506,8 @@
   "screen.cresora.domain.entry": "%s | %s | %s CSC",
   "screen.cresora.domain.band": "推荐Lv %s-%s",
   "screen.cresora.domain.reward.training": "CSC / 等级训练",
+  "screen.cresora.domain.reward.proof": "职业之证",
+  "screen.cresora.domain.reward.insight": "职业之极意",
   "screen.cresora.domain.reward_credits": "奖励 CSC %s",
   "screen.cresora.domain.reward_rank_xp": "奖励 Rank XP %s",
   "screen.cresora.domain.reward_hint": "已发放",

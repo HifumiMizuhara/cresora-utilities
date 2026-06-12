@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-05-30
+最終更新: 2026-06-12
 
 このドキュメントは、Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジストリスキーマ、およびコアサービスの仕様書です。
 各機能の開発履歴や完了したタスクのログについては、[WORK_DONE.md](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/WORK_DONE.md) を参照してください。
@@ -511,6 +511,10 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 - 聖遺物報酬
 - 武器欠片報酬
+- 武器突破素材報酬（`proofReward` / `insightReward` -> `DomainMaterialRewardDefinition`）
+  - `role`: WeaponRole (optional, e.g. `"defender"`, `"guard"`, `"medic"`, `"caster"`. If omitted/null, rolls a random role dynamically at drop time)
+  - `minCount`: Int (non-negative)
+  - `maxCount`: Int (>= minCount)
 - CSC / Rank XP 報酬
 
 主 API:

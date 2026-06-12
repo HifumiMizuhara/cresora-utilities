@@ -72,6 +72,9 @@ dependencies {
 	modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cardinal_components_version}"
 	modImplementation "maven.modrinth:trinkets-canary:${project.trinkets_version}"
 	implementation "com.squareup:kotlinpoet:1.16.0"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 processResources {
@@ -132,6 +135,10 @@ tasks.register('compilerTest', Test) {
 	useJUnitPlatform()
 }
 tasks.named('check') { dependsOn 'compilerTest' }
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
 
 task compileAssets(type: JavaExec) {
     group = "cresora"

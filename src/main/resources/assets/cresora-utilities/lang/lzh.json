@@ -501,6 +501,8 @@
   "screen.cresora.domain.entry": "%s | %s | %s CSC",
   "screen.cresora.domain.band": "宜戰Lv %s-%s",
   "screen.cresora.domain.reward.training": "CSC與等第試鍊",
+  "screen.cresora.domain.reward.proof": "職業之證",
+  "screen.cresora.domain.reward.insight": "職業之極意",
   "screen.cresora.domain.reward_credits": "賞 CSC %s",
   "screen.cresora.domain.reward_rank_xp": "賞 Rank XP %s",
   "screen.cresora.domain.reward_hint": "賞已給",

@@ -646,6 +646,8 @@
   "screen.cresora.domain.credit_drill": "クレジット訓練",
   "screen.cresora.domain.reward": "遺跡報酬",
   "screen.cresora.domain.reward.training": "CSC / ランク訓練",
+  "screen.cresora.domain.reward.proof": "職業の証",
+  "screen.cresora.domain.reward.insight": "職業の極意",
   "screen.cresora.domain.entered": "%s に入場しました。敵Lv %s。",
   "screen.cresora.domain.wave": "%s 第 %s / %s 波が始まった。敵Lv %s。",
   "screen.cresora.domain.cleared": "%s をクリアしました。",

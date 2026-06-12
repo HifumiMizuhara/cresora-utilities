@@ -20,6 +20,8 @@ import hifumi.cresora.story.StoryStartResult
 import hifumi.cresora.story.StoryTextRegistry
 import hifumi.cresora.weapon.WeaponContentRegistry
 import hifumi.cresora.weapon.WeaponStackSupport
+import hifumi.cresora.weapon.WeaponRole
+import hifumi.cresora.CreSoraUtilities
 import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
@@ -422,6 +424,24 @@ object DomainService {
                 if (count > 0) {
                     items += ItemStack(item, count)
                 }
+            }
+        }
+
+        profile.proofReward?.let { proof ->
+            val count = randomCount(random, proof.minCount, proof.maxCount)
+            if (count > 0) {
+                val role = proof.role ?: WeaponRole.entries[random.nextInt(WeaponRole.entries.size)]
+                val item = CreSoraUtilities.getRoleProofItem(role)
+                items += ItemStack(item, count)
+            }
+        }
+
+        profile.insightReward?.let { insight ->
+            val count = randomCount(random, insight.minCount, insight.maxCount)
+            if (count > 0) {
+                val role = insight.role ?: WeaponRole.entries[random.nextInt(WeaponRole.entries.size)]
+                val item = CreSoraUtilities.getRoleInsightItem(role)
+                items += ItemStack(item, count)
             }
         }
 

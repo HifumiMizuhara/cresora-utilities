@@ -1,6 +1,7 @@
 package hifumi.cresora.domain
 import hifumi.cresora.CreSoraUtilities
 import hifumi.cresora.equipment.EquipmentRarity
+import hifumi.cresora.weapon.WeaponRole
 import com.google.gson.JsonParser
 import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
@@ -79,6 +80,24 @@ data class DomainWeaponFragmentRewardDefinition(
     }
 }
 
+data class DomainMaterialRewardDefinition(
+    val role: WeaponRole? = null,
+    val minCount: Int,
+    val maxCount: Int
+) {
+    companion object {
+        val CODEC: Codec<DomainMaterialRewardDefinition> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                WeaponRole.CODEC.optionalFieldOf("role").forGetter { java.util.Optional.ofNullable(it.role) },
+                Codec.INT.fieldOf("minCount").forGetter(DomainMaterialRewardDefinition::minCount),
+                Codec.INT.fieldOf("maxCount").forGetter(DomainMaterialRewardDefinition::maxCount)
+            ).apply(instance) { role, minCount, maxCount ->
+                DomainMaterialRewardDefinition(role.orElse(null), minCount, maxCount)
+            }
+        }
+    }
+}
+
 data class DomainCurrencyRewardDefinition(
     val creditsBase: Int,
     val creditsPerRank: Int,
@@ -101,6 +120,8 @@ data class DomainRewardProfile(
     val id: String,
     val artifactReward: DomainArtifactRewardDefinition? = null,
     val weaponFragmentReward: DomainWeaponFragmentRewardDefinition? = null,
+    val proofReward: DomainMaterialRewardDefinition? = null,
+    val insightReward: DomainMaterialRewardDefinition? = null,
     val currencyReward: DomainCurrencyRewardDefinition
 ) {
     companion object {
@@ -111,9 +132,13 @@ data class DomainRewardProfile(
                     .forGetter { java.util.Optional.ofNullable(it.artifactReward) },
                 DomainWeaponFragmentRewardDefinition.CODEC.optionalFieldOf("weaponFragmentReward")
                     .forGetter { java.util.Optional.ofNullable(it.weaponFragmentReward) },
+                DomainMaterialRewardDefinition.CODEC.optionalFieldOf("proofReward")
+                    .forGetter { java.util.Optional.ofNullable(it.proofReward) },
+                DomainMaterialRewardDefinition.CODEC.optionalFieldOf("insightReward")
+                    .forGetter { java.util.Optional.ofNullable(it.insightReward) },
                 DomainCurrencyRewardDefinition.CODEC.fieldOf("currencyReward").forGetter(DomainRewardProfile::currencyReward)
-            ).apply(instance) { id, artifactReward, weaponReward, currencyReward ->
-                DomainRewardProfile(id, artifactReward.orElse(null), weaponReward.orElse(null), currencyReward)
+            ).apply(instance) { id, artifactReward, weaponReward, proofReward, insightReward, currencyReward ->
+                DomainRewardProfile(id, artifactReward.orElse(null), weaponReward.orElse(null), proofReward.orElse(null), insightReward.orElse(null), currencyReward)
             }
         }
     }
@@ -184,6 +209,16 @@ object DomainRewardProfileRegistry {
                     "Invalid weapon fragment count range in domain reward profile '${profile.id}'"
                 }
             }
+            profile.proofReward?.let { proof ->
+                require(proof.minCount >= 0 && proof.maxCount >= proof.minCount) {
+                    "Invalid proof reward count range in domain reward profile '${profile.id}'"
+                }
+            }
+            profile.insightReward?.let { insight ->
+                require(insight.minCount >= 0 && insight.maxCount >= insight.minCount) {
+                    "Invalid insight reward count range in domain reward profile '${profile.id}'"
+                }
+            }
         }
         profiles = profileMap
     }
@@ -215,6 +250,11 @@ object DomainRewardProfileRegistry {
                         minCount = 2,
                         maxCount = 8
                     ),
+                    proofReward = DomainMaterialRewardDefinition(
+                        role = WeaponRole.DEFENDER,
+                        minCount = 1,
+                        maxCount = 3
+                    ),
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 7_500,
                         creditsPerRank = 190,
@@ -228,6 +268,11 @@ object DomainRewardProfileRegistry {
                         weaponId = "masquerade_invitation",
                         minCount = 2,
                         maxCount = 8
+                    ),
+                    proofReward = DomainMaterialRewardDefinition(
+                        role = WeaponRole.MEDIC,
+                        minCount = 1,
+                        maxCount = 3
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 7_500,
@@ -243,6 +288,11 @@ object DomainRewardProfileRegistry {
                         minCount = 2,
                         maxCount = 7
                     ),
+                    insightReward = DomainMaterialRewardDefinition(
+                        role = WeaponRole.CASTER,
+                        minCount = 1,
+                        maxCount = 2
+                    ),
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 9_000,
                         creditsPerRank = 220,
@@ -256,6 +306,11 @@ object DomainRewardProfileRegistry {
                         weaponId = "lakeside_stride",
                         minCount = 1,
                         maxCount = 4
+                    ),
+                    insightReward = DomainMaterialRewardDefinition(
+                        role = WeaponRole.GUARD,
+                        minCount = 1,
+                        maxCount = 2
                     ),
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 12_000,
@@ -283,6 +338,11 @@ object DomainRewardProfileRegistry {
                 ),
                 DomainRewardProfile(
                     id = "csc_training",
+                    proofReward = DomainMaterialRewardDefinition(
+                        role = null,
+                        minCount = 1,
+                        maxCount = 2
+                    ),
                     currencyReward = DomainCurrencyRewardDefinition(
                         creditsBase = 11_000,
                         creditsPerRank = 250,

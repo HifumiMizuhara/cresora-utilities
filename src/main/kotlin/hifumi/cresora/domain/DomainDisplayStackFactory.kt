@@ -5,6 +5,8 @@ import hifumi.cresora.equipment.EquipmentStackSupport
 import hifumi.cresora.story.StoryChapterDefinition
 import hifumi.cresora.weapon.WeaponContentRegistry
 import hifumi.cresora.weapon.WeaponStackSupport
+import hifumi.cresora.weapon.WeaponRole
+import hifumi.cresora.CreSoraUtilities
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -65,6 +67,12 @@ object DomainDisplayStackFactory {
         profile.weaponFragmentReward?.let { weapon ->
             return Text.translatable(WeaponContentRegistry.requireWeapon(weapon.weaponId).craft.craftedRarity.fragmentTranslationKey())
         }
+        profile.proofReward?.let { proof ->
+            return Text.translatable("screen.cresora.domain.reward.proof")
+        }
+        profile.insightReward?.let { insight ->
+            return Text.translatable("screen.cresora.domain.reward.insight")
+        }
         return Text.translatable("screen.cresora.domain.reward.training")
     }
 
@@ -80,6 +88,14 @@ object DomainDisplayStackFactory {
         }
         profile.weaponFragmentReward?.let { weapon ->
             return WeaponStackSupport.fragmentItem(weapon.weaponId) ?: Items.PRISMARINE_SHARD
+        }
+        profile.proofReward?.let { proof ->
+            val role = proof.role ?: WeaponRole.GUARD
+            return CreSoraUtilities.getRoleProofItem(role)
+        }
+        profile.insightReward?.let { insight ->
+            val role = insight.role ?: WeaponRole.GUARD
+            return CreSoraUtilities.getRoleInsightItem(role)
         }
         return Items.EMERALD
     }

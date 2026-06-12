@@ -514,6 +514,8 @@
   "screen.cresora.domain.entry": "%s | %s | %s CSC",
   "screen.cresora.domain.band": "Recommended Lv %s-%s",
   "screen.cresora.domain.reward.training": "CSC / Rank Drill",
+  "screen.cresora.domain.reward.proof": "Role Proofs",
+  "screen.cresora.domain.reward.insight": "Role Insights",
   "screen.cresora.domain.reward_credits": "Reward CSC %s",
   "screen.cresora.domain.reward_rank_xp": "Reward Rank XP %s",
   "screen.cresora.domain.reward_hint": "Already Granted",
