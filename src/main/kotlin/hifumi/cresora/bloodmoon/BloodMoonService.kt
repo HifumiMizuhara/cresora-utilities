@@ -53,6 +53,8 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.hit.HitResult
+import net.minecraft.world.RaycastContext
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
@@ -74,10 +76,10 @@ internal data class BloodMoonBedKey(
     fun contains(pos: BlockPos): Boolean = pos == first || pos == second
 
     fun center(): Vec3d {
-        val minX = minOf(first.x, second.x)
-        val minZ = minOf(first.z, second.z)
+        val centerX = (first.x + second.x) * 0.5 + 0.5
+        val centerZ = (first.z + second.z) * 0.5 + 0.5
         val y = minOf(first.y, second.y)
-        return Vec3d(minX + 0.5, y + 1.0, minZ + 0.5)
+        return Vec3d(centerX, y + 1.0, centerZ)
     }
 }
 
@@ -1340,7 +1342,12 @@ object BloodMoonService {
         if (session.phase != BloodMoonBattlePhase.COMBAT || session.bedInvulnerableUntilNextWave) {
             return
         }
-        if (hostile.squaredDistanceTo(session.bedKey.center()) > BED_ATTACK_RANGE_SQUARED) {
+        val bedCenter = session.bedKey.center()
+        if (hostile.squaredDistanceTo(bedCenter) > BED_ATTACK_RANGE_SQUARED) {
+            return
+        }
+        val raycast = world.raycast(RaycastContext(hostile.eyePos, bedCenter, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, hostile))
+        if (raycast.type == HitResult.Type.BLOCK) {
             return
         }
         val nextAttackTick = session.mobBedAttackCooldowns[hostile.uuid] ?: 0L
