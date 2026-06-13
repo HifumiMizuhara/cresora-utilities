@@ -26,7 +26,10 @@ object AdventureRankService {
     private const val PLAYER_RANK_XP_KEY = "cresora_adventure_rank_xp"
     private const val MOB_RANK_KEY = "cresora_mob_adventure_rank"
     private const val SEARCH_RADIUS = 64.0
-    private const val FIELD_MOB_RANK_VARIANCE = 5
+    private const val FIELD_MOB_MIN_RANK_OFFSET = -4
+    private const val FIELD_MOB_MAX_RANK_OFFSET = 1
+    private const val FIELD_ELITE_MIN_RANK_OFFSET = -1
+    private const val FIELD_ELITE_MAX_RANK_OFFSET = 3
 
     private val MOB_HEALTH_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_health_scalar")
     private val MOB_ARMOR_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_armor_bonus")
@@ -312,11 +315,10 @@ object AdventureRankService {
 
     private fun rollNearbyFieldRank(entity: MobEntity, world: ServerWorld, x: Double, y: Double, z: Double): Int {
         val anchorRank = findNearestNearbyRank(world, x, y, z)
-        val variance = FIELD_MOB_RANK_VARIANCE.coerceAtLeast(0)
-        if (variance == 0) {
-            return anchorRank
-        }
-        val offset = entity.random.nextBetween(-variance, variance)
+        val isElite = (entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false
+        val minOffset = if (isElite) FIELD_ELITE_MIN_RANK_OFFSET else FIELD_MOB_MIN_RANK_OFFSET
+        val maxOffset = if (isElite) FIELD_ELITE_MAX_RANK_OFFSET else FIELD_MOB_MAX_RANK_OFFSET
+        val offset = entity.random.nextBetween(minOffset, maxOffset)
         return AdventureRankProgression.sanitizeRank(anchorRank + offset)
     }
 }

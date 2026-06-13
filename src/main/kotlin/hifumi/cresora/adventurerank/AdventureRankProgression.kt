@@ -22,11 +22,11 @@ object AdventureRankProgression {
         }
         val step = normalized - MIN_RANK
         return when {
-            step < 10 -> 100 + step * 25
-            step < 20 -> 350 + (step - 10) * 40
-            step < 35 -> 750 + (step - 20) * 65
-            step < 50 -> 1725 + (step - 35) * 95
-            else -> 3150 + (step - 50) * 130
+            step < 10 -> 300 + step * 75
+            step < 20 -> 1_050 + (step - 10) * 130
+            step < 35 -> 2_350 + (step - 20) * 220
+            step < 50 -> 5_650 + (step - 35) * 360
+            else -> 11_050 + (step - 50) * 520
         }
     }
 

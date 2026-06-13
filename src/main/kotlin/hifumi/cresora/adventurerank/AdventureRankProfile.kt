@@ -24,10 +24,10 @@ object AdventureRankProfile {
     fun healthMultiplier(entityType: EntityType<*>, rank: Int): Double {
         val progress = AdventureRankProgression.normalizedProgress(rank)
         return when (HostileRewardFamilies.classify(entityType)) {
-            HostileRewardFamily.SURVIVOR -> 1.0 + 8.8 * progress.pow(1.18)
-            HostileRewardFamily.ASSAULT -> 1.0 + 8.4 * progress.pow(1.17)
-            HostileRewardFamily.ARCANE -> 1.0 + 7.8 * progress.pow(1.19)
-            HostileRewardFamily.ELITE -> 1.0 + 9.8 * progress.pow(1.20)
+            HostileRewardFamily.SURVIVOR -> 1.0 + 4.2 * progress.pow(1.10)
+            HostileRewardFamily.ASSAULT -> 1.0 + 4.6 * progress.pow(1.10)
+            HostileRewardFamily.ARCANE -> 1.0 + 4.0 * progress.pow(1.12)
+            HostileRewardFamily.ELITE -> 1.0 + 5.4 * progress.pow(1.12)
             HostileRewardFamily.RELIC -> 1.0 + 0.08 * progress.pow(1.40)
         }
     }
@@ -36,18 +36,18 @@ object AdventureRankProfile {
         val progress = AdventureRankProgression.normalizedProgress(rank)
         val family = HostileRewardFamilies.classify(entityType)
         val baseArmor = when (family) {
-            HostileRewardFamily.SURVIVOR -> 2.2 + 10.6 * progress.pow(1.16)
-            HostileRewardFamily.ASSAULT -> 1.8 + 9.2 * progress.pow(1.14)
-            HostileRewardFamily.ARCANE -> 1.6 + 8.6 * progress.pow(1.15)
-            HostileRewardFamily.ELITE -> 3.2 + 12.4 * progress.pow(1.12)
-            HostileRewardFamily.RELIC -> 8.0 + 12.0 * progress.pow(1.10)
+            HostileRewardFamily.SURVIVOR -> 1.4 + 5.8 * progress.pow(1.08)
+            HostileRewardFamily.ASSAULT -> 1.2 + 5.4 * progress.pow(1.08)
+            HostileRewardFamily.ARCANE -> 1.0 + 4.8 * progress.pow(1.10)
+            HostileRewardFamily.ELITE -> 2.0 + 7.2 * progress.pow(1.08)
+            HostileRewardFamily.RELIC -> 6.0 + 8.0 * progress.pow(1.08)
         }
         val baseToughness = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.8 + 3.8 * progress.pow(1.16)
-            HostileRewardFamily.ASSAULT -> 0.6 + 3.2 * progress.pow(1.15)
-            HostileRewardFamily.ARCANE -> 0.8 + 3.6 * progress.pow(1.14)
-            HostileRewardFamily.ELITE -> 1.6 + 4.8 * progress.pow(1.12)
-            HostileRewardFamily.RELIC -> 4.0 + 7.0 * progress.pow(1.08)
+            HostileRewardFamily.SURVIVOR -> 0.4 + 1.8 * progress.pow(1.10)
+            HostileRewardFamily.ASSAULT -> 0.3 + 1.6 * progress.pow(1.10)
+            HostileRewardFamily.ARCANE -> 0.4 + 1.8 * progress.pow(1.10)
+            HostileRewardFamily.ELITE -> 0.8 + 2.6 * progress.pow(1.08)
+            HostileRewardFamily.RELIC -> 3.0 + 4.0 * progress.pow(1.08)
         }
 
         if (overflowHealth <= 0.0) {
@@ -55,18 +55,18 @@ object AdventureRankProfile {
         }
 
         val overflowArmorCoefficient = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.34
-            HostileRewardFamily.ASSAULT -> 0.30
-            HostileRewardFamily.ARCANE -> 0.28
-            HostileRewardFamily.ELITE -> 0.38
-            HostileRewardFamily.RELIC -> 0.40
+            HostileRewardFamily.SURVIVOR -> 0.12
+            HostileRewardFamily.ASSAULT -> 0.11
+            HostileRewardFamily.ARCANE -> 0.10
+            HostileRewardFamily.ELITE -> 0.15
+            HostileRewardFamily.RELIC -> 0.22
         }
         val overflowToughnessCoefficient = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.08
-            HostileRewardFamily.ASSAULT -> 0.08
-            HostileRewardFamily.ARCANE -> 0.07
-            HostileRewardFamily.ELITE -> 0.10
-            HostileRewardFamily.RELIC -> 0.12
+            HostileRewardFamily.SURVIVOR -> 0.03
+            HostileRewardFamily.ASSAULT -> 0.03
+            HostileRewardFamily.ARCANE -> 0.03
+            HostileRewardFamily.ELITE -> 0.04
+            HostileRewardFamily.RELIC -> 0.07
         }
 
         return DefenseBonus(
