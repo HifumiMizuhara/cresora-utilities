@@ -6,9 +6,6 @@ build/
 out/
 classes/
 /net/
-gradlew
-gradlew.bat
-gradle/wrapper/gradle-wrapper.jar
 
 # eclipse
 

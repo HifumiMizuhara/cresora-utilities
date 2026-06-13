@@ -1,8 +1,8 @@
-name: test
+name: build
 on: [pull_request, push]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repository
@@ -16,11 +16,11 @@ jobs:
           distribution: 'microsoft'
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
-      - name: test
-        run: ./gradlew test
-      - name: upload test report
+      - name: build
+        run: ./gradlew build
+      - name: upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: test-reports
           path: build/reports/tests/

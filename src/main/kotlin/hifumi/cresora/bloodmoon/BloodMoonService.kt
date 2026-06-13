@@ -1395,7 +1395,7 @@ object BloodMoonService {
             return
         }
         val raycast = world.raycast(RaycastContext(hostile.eyePos, bedCenter, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, hostile))
-        if (raycast.type == HitResult.Type.BLOCK) {
+        if (raycast.type == HitResult.Type.BLOCK && !session.bedKey.contains(raycast.blockPos)) {
             return
         }
         val nextAttackTick = session.mobBedAttackCooldowns[hostile.uuid] ?: 0L

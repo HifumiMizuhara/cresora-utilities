@@ -69,9 +69,14 @@ private class LeyLineEventSession(
     var ticksWithoutPlayers = 0
 }
 
+private data class LeyLineWorldPosKey(
+    val worldKey: RegistryKey<World>,
+    val pos: BlockPos
+)
+
 object LeyLineService {
-    private val pendingLeyLines = ConcurrentHashMap<BlockPos, PendingLeyLine>()
-    private val activeSessions = ConcurrentHashMap<BlockPos, LeyLineEventSession>()
+    private val pendingLeyLines = ConcurrentHashMap<LeyLineWorldPosKey, PendingLeyLine>()
+    private val activeSessions = ConcurrentHashMap<LeyLineWorldPosKey, LeyLineEventSession>()
     private val mobRuntime = ConcurrentHashMap<UUID, Double>()
 
     fun placeLeyLine(
@@ -80,14 +85,15 @@ object LeyLineService {
         player: ServerPlayerEntity,
         element: LeyLineElement
     ): Boolean {
+        val key = leyLineKey(world, pos)
         // Clear any existing at the position
-        pendingLeyLines.remove(pos)
-        activeSessions.remove(pos)
+        pendingLeyLines.remove(key)
+        activeSessions.remove(key)
 
         val state = CreSoraUtilities.LEY_LINE_OVERFLOW_BLOCK.defaultState.with(LeyLineOverflowBlock.ELEMENT, element)
         world.setBlockState(pos, state)
 
-        pendingLeyLines[pos] = PendingLeyLine(
+        pendingLeyLines[key] = PendingLeyLine(
             pos = pos,
             placerUuid = player.uuid,
             element = element,
@@ -100,7 +106,7 @@ object LeyLineService {
     }
 
     fun onBlockRemoved(world: World, pos: BlockPos) {
-        val pending = pendingLeyLines.remove(pos) ?: return
+        val pending = pendingLeyLines.remove(leyLineKey(world, pos)) ?: return
         refundKey(world, pos, pending.placerUuid, pending.element)
     }
 
@@ -142,17 +148,18 @@ object LeyLineService {
         }
 
         val world = player.world as ServerWorld
+        val key = leyLineKey(world, pos)
         val state = world.getBlockState(pos)
         if (!state.isOf(CreSoraUtilities.LEY_LINE_OVERFLOW_BLOCK)) {
             return LeyLineStartResult(false, "screen.cresora.leyline.invalid_block")
         }
 
-        if (activeSessions.containsKey(pos)) {
+        if (activeSessions.containsKey(key)) {
             return LeyLineStartResult(false, "screen.cresora.leyline.already_started")
         }
 
         // Remove from pending so we don't refund key when replacing the block with air
-        pendingLeyLines.remove(pos)
+        pendingLeyLines.remove(key)
         world.setBlockState(pos, Blocks.AIR.defaultState)
 
         val session = LeyLineEventSession(
@@ -163,7 +170,7 @@ object LeyLineService {
             worldKey = world.registryKey
         )
         session.nextSpawnTick = world.time + 40 // 2 seconds delay
-        activeSessions[pos] = session
+        activeSessions[key] = session
 
         player.sendMessage(Text.translatable("message.cresora.leyline.started"), false)
         return LeyLineStartResult(true, "")
@@ -303,7 +310,9 @@ object LeyLineService {
         return mobRuntime[uuid] ?: 1.0
     }
 
-    // PendingLeyLine stores worldKey directly, helper removed
+    private fun leyLineKey(world: World, pos: BlockPos): LeyLineWorldPosKey {
+        return LeyLineWorldPosKey(world.registryKey, pos.toImmutable())
+    }
 
     private fun refundKey(world: World, pos: BlockPos, playerUuid: UUID, element: LeyLineElement) {
         val player = world.server?.playerManager?.getPlayer(playerUuid)

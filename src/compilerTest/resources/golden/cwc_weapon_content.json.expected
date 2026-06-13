@@ -22,7 +22,7 @@
         "radiusMeters": 0.0
       },
       "upgrades": {
-        "baseCscQuadraticCoefficient": 100,
+        "baseCscQuadraticCoefficient": 85,
         "skillCscLinearCoefficient": 10000,
         "skillCscQuadraticCoefficient": 0,
         "baseFragmentCost": 1

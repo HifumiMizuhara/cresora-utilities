@@ -592,7 +592,7 @@ class CresoraCompiler(
         }
 
         weaponJsonFile.parentFile.mkdirs()
-        weaponJsonFile.writeText(gson.toJson(root))
+        weaponJsonFile.writeText(gson.toJson(root) + "\n")
     }
 
     private fun updateRegistry(weapons: List<WeaponDefNode>) {
