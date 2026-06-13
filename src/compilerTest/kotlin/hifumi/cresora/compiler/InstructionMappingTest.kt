@@ -8,9 +8,9 @@ import org.junit.jupiter.api.assertThrows
 class InstructionMappingTest {
 
     @Test
-    fun `time suffix is stripped from arguments`() {
+    fun `duration suffix is converted to ticks`() {
         val expanded = InstructionMapping.expand("apply_mark", listOf("target", "\"lux\"", "30s"))
-        assertEquals("hifumi.cresora.weapon.WeaponSkillService.applyMark(target, \"lux\", 30)", expanded)
+        assertEquals("hifumi.cresora.weapon.WeaponSkillService.applyMark(target, \"lux\", 600L)", expanded)
     }
 
     @Test
@@ -29,7 +29,16 @@ class InstructionMappingTest {
     fun `skill_duration is substituted`() {
         val expanded = InstructionMapping.expand("grant_invulnerability", listOf("player", "skill_duration"))
         assertEquals(
-            "hifumi.cresora.weapon.WeaponSkillService.grantInvulnerability(player, definition.skill.durationSeconds)",
+            "hifumi.cresora.weapon.WeaponSkillService.grantInvulnerability(player, definition.skill.durationSeconds * 20L)",
+            expanded
+        )
+    }
+
+    @Test
+    fun `apply_status_effect duration is converted to int ticks`() {
+        val expanded = InstructionMapping.expand("apply_status_effect", listOf("\"minecraft:strength\"", "10s", "1"))
+        assertEquals(
+            "hifumi.cresora.weapon.WeaponCombatSupport.applyStatusEffect(player, \"minecraft:strength\", 200, 1)",
             expanded
         )
     }
@@ -85,7 +94,7 @@ class InstructionMappingTest {
     @Test
     fun `expandAll keeps commas inside string arguments intact`() {
         val expanded = InstructionMapping.expandAll("apply_mark(target, \"a,b\", 5s)", CompilerContext.WEAPON)
-        assertEquals("hifumi.cresora.weapon.WeaponSkillService.applyMark(target, \"a,b\", 5)", expanded)
+        assertEquals("hifumi.cresora.weapon.WeaponSkillService.applyMark(target, \"a,b\", 100L)", expanded)
     }
 
     @Test

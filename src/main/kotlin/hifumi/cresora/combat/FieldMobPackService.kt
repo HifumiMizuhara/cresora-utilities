@@ -21,6 +21,8 @@ object FieldMobPackService {
     private const val ELITE_COMMAND_TAG = "cresora_elite_mob"
     private const val PACK_COMMAND_TAG = "cresora_pack_mob"
     private const val ECLIPSE_ELITE_PACK_ID = "cresora_eclipse_elite"
+    private const val ECLIPSE_PROMOTED_COMMAND_TAG = "cresora_eclipse_promoted"
+    private const val ECLIPSE_WAS_ELITE_COMMAND_TAG = "cresora_eclipse_was_elite"
 
     private const val PACK_SPAWN_CHANCE = 0.18
     private const val PACK_EXTRA_MIN = 2
@@ -105,16 +107,29 @@ object FieldMobPackService {
 
     fun promoteToEclipseElite(hostile: MobEntity) {
         val access = hostile as? AdventureRankMobAccess ?: return
+        if (!hostile.commandTags.contains(ECLIPSE_PROMOTED_COMMAND_TAG)) {
+            hostile.addCommandTag(ECLIPSE_PROMOTED_COMMAND_TAG)
+            if (access.cresoraIsEliteMob()) {
+                hostile.addCommandTag(ECLIPSE_WAS_ELITE_COMMAND_TAG)
+            }
+        }
         access.cresoraSetEliteMob(true)
-        access.cresoraSetMobPackId(ECLIPSE_ELITE_PACK_ID)
+        if (access.cresoraGetMobPackId().isBlank()) {
+            access.cresoraSetMobPackId(ECLIPSE_ELITE_PACK_ID)
+        }
         syncCommandTags(hostile)
     }
 
     fun demoteEclipseElite(hostile: MobEntity) {
         val access = hostile as? AdventureRankMobAccess ?: return
-        if (access.cresoraGetMobPackId() != ECLIPSE_ELITE_PACK_ID) return
-        access.cresoraSetEliteMob(false)
-        access.cresoraSetMobPackId("")
+        if (!hostile.commandTags.contains(ECLIPSE_PROMOTED_COMMAND_TAG)) return
+        val wasElite = hostile.commandTags.contains(ECLIPSE_WAS_ELITE_COMMAND_TAG)
+        if (access.cresoraGetMobPackId() == ECLIPSE_ELITE_PACK_ID) {
+            access.cresoraSetMobPackId("")
+        }
+        access.cresoraSetEliteMob(wasElite)
+        hostile.removeCommandTag(ECLIPSE_PROMOTED_COMMAND_TAG)
+        hostile.removeCommandTag(ECLIPSE_WAS_ELITE_COMMAND_TAG)
         syncCommandTags(hostile)
     }
 

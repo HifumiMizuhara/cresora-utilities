@@ -163,7 +163,7 @@ object DomainService {
         }
         val rank = AdventureRankService.getRank(player)
         if (linkedStoryChapterId == null && rank < domain.unlockRank) {
-            return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.locked" else "commands.cresora.story.locked", listOf(domain.unlockRank))
+            return DomainStartResult(false, "screen.cresora.domain.locked", listOf(domain.unlockRank))
         }
         if (!InventoryGate.hasFreeMainSlot(player)) {
             return DomainStartResult(false, if (linkedStoryChapterId == null) "screen.cresora.domain.inventory_full" else "commands.cresora.story.inventory_full", listOf(1))
@@ -369,9 +369,9 @@ object DomainService {
     }
 
     private fun cleanupSession(server: MinecraftServer, session: DomainSession) {
-        val world = ArenaManager.getDomainWorld(server) ?: return
-        for (mobUuid in session.activeMobUuids) {
-            world.getEntity(mobUuid)?.discard()
+        val world = ArenaManager.getDomainWorld(server, session.definition().themeId)
+        for (mobUuid in session.activeMobUuids.toList()) {
+            world?.getEntity(mobUuid)?.discard()
             mobRuntime.remove(mobUuid)
         }
         session.activeMobUuids.clear()

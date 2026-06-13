@@ -49,17 +49,18 @@ object InstructionMapping {
                 else -> emptyList()
             }
         } else {
-            args.map { arg ->
-                when (arg) {
-                    "skill_value" -> {
+            args.mapIndexed { index, arg ->
+                when {
+                    isDurationArgument(functionName, index) -> durationToTicks(functionName, arg)
+                    arg == "skill_value" -> {
                         if (context == CompilerContext.ARTIFACT) throw RuntimeException("skill_value is not supported in artifacts")
                         "definition.skill.baseValue"
                     }
-                    "skill_duration" -> {
+                    arg == "skill_duration" -> {
                         if (context == CompilerContext.ARTIFACT) throw RuntimeException("skill_duration is not supported in artifacts")
                         "definition.skill.durationSeconds"
                     }
-                    else -> arg.replace(Regex("(\\d+)s$"), "$1") // Remove 's' from time literals like '5s' but not 'status'
+                    else -> arg
                 }
             }
         }
@@ -67,6 +68,41 @@ object InstructionMapping {
         val expanded = pattern.replace("%args%", processedArgs.joinToString(", "))
         
         return expanded
+    }
+
+    private fun isDurationArgument(functionName: String, index: Int): Boolean {
+        return when (functionName) {
+            "grant_shield" -> index == 1
+            "start_cooldown" -> index == 0
+            "apply_mark" -> index == 2
+            "grant_invulnerability" -> index == 1
+            "apply_status_effect" -> index == 1
+            else -> false
+        }
+    }
+
+    private fun durationToTicks(functionName: String, arg: String): String {
+        if (arg == "skill_duration") {
+            return if (functionName == "apply_status_effect") {
+                "definition.skill.durationSeconds * 20"
+            } else {
+                "definition.skill.durationSeconds * 20L"
+            }
+        }
+        if (arg.endsWith("s")) {
+            val seconds = arg.dropLast(1).toDoubleOrNull()
+                ?: throw RuntimeException("$functionName duration must be a number of seconds, got '$arg'")
+            val ticks = seconds * 20.0
+            return if (functionName == "apply_status_effect") {
+                if (ticks % 1.0 == 0.0) ticks.toInt().toString() else "($seconds * 20).toInt()"
+            } else {
+                if (ticks % 1.0 == 0.0) "${ticks.toLong()}L" else "($seconds * 20).toLong()"
+            }
+        }
+        return when (arg) {
+            "skill_value" -> throw RuntimeException("skill_value is not a valid duration for $functionName")
+            else -> arg
+        }
     }
 
     fun expandAll(content: String, context: CompilerContext): String {
@@ -169,4 +205,3 @@ object InstructionMapping {
     }
 
 }
-
