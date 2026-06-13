@@ -34,6 +34,25 @@ object WeaponDropService {
         }
     }
 
+    // Reward-family scaling for fragment drops. Pure so the relative scaling can be
+    // regression-tested without a live world/RNG.
+    fun fragmentFamilyMultiplier(family: HostileRewardFamily): Double = when (family) {
+        HostileRewardFamily.SURVIVOR -> 1.0
+        HostileRewardFamily.ASSAULT -> 1.05
+        HostileRewardFamily.ARCANE -> 1.08
+        HostileRewardFamily.ELITE -> 1.15
+        HostileRewardFamily.RELIC -> 1.25
+    }
+
+    // Reward-family scaling for direct weapon drops.
+    fun weaponFamilyMultiplier(family: HostileRewardFamily): Double = when (family) {
+        HostileRewardFamily.SURVIVOR -> 0.85
+        HostileRewardFamily.ASSAULT -> 1.0
+        HostileRewardFamily.ARCANE -> 1.08
+        HostileRewardFamily.ELITE -> 1.18
+        HostileRewardFamily.RELIC -> 1.35
+    }
+
     private fun maybeDropFragments(
         world: ServerWorld,
         definition: WeaponDefinition,
@@ -47,13 +66,7 @@ object WeaponDropService {
         if (mobLevel < fragmentDrop.minMobLevel) {
             return
         }
-        val familyMultiplier = when (family) {
-            HostileRewardFamily.SURVIVOR -> 1.0
-            HostileRewardFamily.ASSAULT -> 1.05
-            HostileRewardFamily.ARCANE -> 1.08
-            HostileRewardFamily.ELITE -> 1.15
-            HostileRewardFamily.RELIC -> 1.25
-        }
+        val familyMultiplier = fragmentFamilyMultiplier(family)
         if (world.random.nextDouble() >= fragmentDrop.chance * familyMultiplier) {
             return
         }
@@ -75,13 +88,7 @@ object WeaponDropService {
         y: Double,
         z: Double
     ) {
-        val familyMultiplier = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.85
-            HostileRewardFamily.ASSAULT -> 1.0
-            HostileRewardFamily.ARCANE -> 1.08
-            HostileRewardFamily.ELITE -> 1.18
-            HostileRewardFamily.RELIC -> 1.35
-        }
+        val familyMultiplier = weaponFamilyMultiplier(family)
         for (tier in definition.drops.directDropTiers.sortedByDescending { it.minMobLevel }) {
             if (mobLevel < tier.minMobLevel) {
                 continue
