@@ -47,7 +47,6 @@ public object CadenzaAllegroSkill : WeaponSkillHandler {
       val world = player.world as? ServerWorld ?: return@execute
       val radius = definition.skill.radiusMeters
       val n = if (data.baseLevel >= 61) 3 else if (data.baseLevel >= 41) 2 else 1
-      val maxPlayerHp = world.players.filter { it.squaredDistanceTo(player.x, player.y, player.z) < 100.0 }.maxOfOrNull { it.maxHealth } ?: 20.0f
       val targets = world.getOtherEntities(player, player.boundingBox.expand(radius)) { entity ->
                           val hostile = entity as? HostileEntity ?: return@getOtherEntities false;
                           if (!hostile.isAlive) return@getOtherEntities false;
@@ -59,11 +58,6 @@ public object CadenzaAllegroSkill : WeaponSkillHandler {
                           val sheep = EntityType.SHEEP.spawn(world, null, target.blockPos, SpawnReason.COMMAND, true, false) ?: continue;
                           sheep!!.refreshPositionAndAngles(target.x, target.y, target.z, target.yaw, target.pitch);
                           BaaMimicService.markTransformedSheep(sheep!!, target);
-                          val maxHealthAttr = sheep!!.getAttributeInstance(EntityAttributes.MAX_HEALTH);
-                          if (maxHealthAttr != null) {
-                              maxHealthAttr.baseValue = maxPlayerHp.toDouble();
-                              sheep!!.health = maxPlayerHp;
-                          }
                           AdventureRankService.refreshMobDisplay(sheep!!);
                           target.discard();
                           transformedCount++;

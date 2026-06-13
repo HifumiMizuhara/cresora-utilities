@@ -133,6 +133,19 @@ public abstract class LivingEntityMixin {
             }
             return;
         }
+        if (entity instanceof SheepEntity sheep && BaaMimicService.INSTANCE.isMimicSheep(sheep)) {
+            boolean trueDamage = WeaponSkillService.isDealingTrueDamage() && source.getAttacker() instanceof ServerPlayerEntity;
+            if (WeaponSkillService.isDealingTrueDamage() && source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+                AdventureRankService.INSTANCE.showMobTrueDamage(sheep, serverPlayer, damageDone);
+            } else {
+                AdventureRankService.INSTANCE.showMobDamage(sheep, source, damageDone);
+            }
+            if (!trueDamage && source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
+                CombatMobDisplayService.INSTANCE.showPlayerHitFeedback(serverPlayer, damageDone, source);
+            }
+            AdventureRankService.INSTANCE.refreshMobDisplay(sheep);
+            return;
+        }
         if (!(entity instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity))) {
             if (source.getAttacker() instanceof ServerPlayerEntity serverPlayer) {
                 CombatMobDisplayService.INSTANCE.showPlayerHitFeedback(serverPlayer, damageDone, source);
