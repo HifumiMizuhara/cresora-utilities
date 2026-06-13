@@ -153,9 +153,9 @@ object ArtifactSpecialItemRegistry {
                     shopPrice = 0,
                     shopVisible = false,
                     mobDrop = ArtifactSpecialMobDrop(
-                        rankMin = 1,
-                        rankMax = 1,
-                        maxChance = 0.005
+                        rankMin = 5,
+                        rankMax = 25,
+                        maxChance = 0.04
                     )
                 )
             )
