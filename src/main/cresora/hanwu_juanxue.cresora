@@ -6,7 +6,7 @@ weapon "Cold Mist, Coiling Snow" {
     role: caster
     stats {
         base_damage: 8.0
-        damage_per_level: 0.0
+        damage_per_level: 0.1
         speed: 1.6
         max_base_level: 60
         max_skill_level: 10

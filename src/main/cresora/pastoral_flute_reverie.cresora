@@ -6,7 +6,7 @@ weapon "Pastoral Flute Reverie" {
     role: vanguard
     stats {
         base_damage: 7.0
-        damage_per_level: 0.18
+        damage_per_level: 0.24
         speed: 1.6
     }
     skill "Sunlit Haste" {

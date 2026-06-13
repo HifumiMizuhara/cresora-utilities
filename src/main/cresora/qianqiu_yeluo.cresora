@@ -7,7 +7,7 @@ weapon "Qianqiu, Yeluo" {
     role: caster
     stats {
         base_damage: 9.0
-        damage_per_level: 0.1
+        damage_per_level: 0.16
         speed: 1.6
         max_base_level: 60
         max_skill_level: 10

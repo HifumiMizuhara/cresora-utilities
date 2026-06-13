@@ -6,7 +6,7 @@ weapon "Cadenza Allegro" {
     role: specialist
     stats {
         base_damage: 8.5
-        damage_per_level: 0.2
+        damage_per_level: 0.27
         speed: 1.6
         max_base_level: 80
         max_skill_level: 1

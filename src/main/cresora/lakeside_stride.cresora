@@ -6,7 +6,7 @@ weapon "Stride by the Lakeside" {
     role: guard
     stats {
         base_damage: 7.0
-        damage_per_level: 0.0
+        damage_per_level: 0.08
         speed: 1.6
         max_base_level: 60
         max_skill_level: 10
