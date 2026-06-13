@@ -331,7 +331,7 @@ object WeaponSkillService {
     // Enhanced active weapon checks ensure inactive weapon stats do not blend.
     fun critDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
         val activeContext = activeWeaponContext(player) ?: return 0.0
-        if (weaponId != null && activeContext.first.id != weaponId) {
+        if (!WeaponScopeSupport.isActiveWeaponScope(activeContext.first.id, weaponId)) {
             return 0.0
         }
         val definition = activeContext.first
@@ -343,7 +343,7 @@ object WeaponSkillService {
     // Enhanced active weapon checks ensure inactive weapon stats do not blend.
     fun critRateBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
         val activeContext = activeWeaponContext(player) ?: return 0.0
-        if (weaponId != null && activeContext.first.id != weaponId) {
+        if (!WeaponScopeSupport.isActiveWeaponScope(activeContext.first.id, weaponId)) {
             return 0.0
         }
         val definition = activeContext.first
@@ -386,7 +386,7 @@ object WeaponSkillService {
     @JvmStatic
     fun allDamageBonusPercent(player: ServerPlayerEntity, weaponId: String?): Double {
         val activeContext = activeWeaponContext(player) ?: return 0.0
-        if (weaponId != null && activeContext.first.id != weaponId) {
+        if (!WeaponScopeSupport.isActiveWeaponScope(activeContext.first.id, weaponId)) {
             return 0.0
         }
         val definition = activeContext.first
