@@ -104,6 +104,14 @@ object CresoraDebuffService {
     }
 
     fun clearTransientState(player: ServerPlayerEntity) {
-        activeDebuffs.remove(player.uuid)
+        clearTransientState(player.uuid)
     }
+
+    // UUID-keyed cleanup. Disconnect routes through here so a reconnecting player never
+    // inherits stale debuffs (reskill protection must not carry across sessions).
+    fun clearTransientState(playerId: UUID) {
+        activeDebuffs.remove(playerId)
+    }
+
+    fun hasActiveDebuffs(playerId: UUID): Boolean = activeDebuffs.containsKey(playerId)
 }

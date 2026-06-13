@@ -230,8 +230,17 @@ object MasqueradeService {
     }
 
     fun clearTransientState(player: ServerPlayerEntity) {
-        pendingRespawnSnapshots.remove(player.uuid)
+        clearTransientState(player.uuid)
     }
+
+    // UUID-keyed cleanup. A pending respawn snapshot must be dropped when the player
+    // disconnects so a reconnecting player cannot replay it (reskill protection state
+    // must not leak across sessions).
+    fun clearTransientState(playerId: UUID) {
+        pendingRespawnSnapshots.remove(playerId)
+    }
+
+    fun hasPendingRespawnSnapshot(playerId: UUID): Boolean = pendingRespawnSnapshots.containsKey(playerId)
 
     fun restoreAfterRespawn(newPlayer: ServerPlayerEntity) {
         val snapshot = pendingRespawnSnapshots.remove(newPlayer.uuid) ?: return
