@@ -69,6 +69,7 @@ object TreasureChestService {
         val stars: Int,
         val credits: Int,
         val chordProgression: Int,
+        val substituteChord: Int,
         val weight: Int,
         val block: Block,
         val particle: net.minecraft.particle.ParticleEffect
@@ -98,9 +99,9 @@ object TreasureChestService {
 
     // Using our custom block for all chests to completely prevent conflict with vanilla player chests
     private val rewards = listOf(
-        ChestReward(3, 400, 100, 70, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.HAPPY_VILLAGER),
-        ChestReward(4, 1_000, 125, 22, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.ENCHANT),
-        ChestReward(5, 1_500, 150, 8, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.END_ROD)
+        ChestReward(3, 400, 180, 90, 70, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.HAPPY_VILLAGER),
+        ChestReward(4, 1_000, 320, 160, 22, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.ENCHANT),
+        ChestReward(5, 1_500, 650, 325, 8, CreSoraUtilities.RESONANT_CACHE_BLOCK, ParticleTypes.END_ROD)
     )
 
     private val activeKeysByOwner: MutableMap<UUID, MutableSet<ChestKey>> = linkedMapOf()
@@ -432,11 +433,22 @@ object TreasureChestService {
         challenge.guardianUuids.remove(entityUuid)
 
         val targetPlayer = killer ?: entity.world.server?.playerManager?.getPlayer(challenge.ownerId) ?: return
-        val amount = if ((entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true) 100 else 40
+        val elite = (entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true
+        val amount = if (elite) 100 else 40
         val totalCredits = CreditsService.addCredits(targetPlayer, amount)
+        val chordAmount = if (elite) 35 else 15
+        val substituteAmount = if (elite) 18 else 8
+        ResonanceService.addCurrency(targetPlayer, ResonanceCurrencyType.CHORD_PROGRESSION, chordAmount)
+        ResonanceService.addCurrency(targetPlayer, ResonanceCurrencyType.SUBSTITUTE_CHORD, substituteAmount)
 
         targetPlayer.sendMessage(
-            Text.translatable("message.cresora.treasure_chest.guardian_kill_reward", amount, ArtifactSpecialItem.formatWholeNumber(totalCredits)),
+            Text.translatable(
+                "message.cresora.treasure_chest.guardian_kill_reward",
+                amount,
+                chordAmount,
+                substituteAmount,
+                ArtifactSpecialItem.formatWholeNumber(totalCredits)
+            ),
             true
         )
 
@@ -714,6 +726,7 @@ object TreasureChestService {
 
         val creditsTotal = CreditsService.addCredits(serverPlayer, chest.reward.credits)
         val chordTotal = ResonanceService.addCurrency(serverPlayer, ResonanceCurrencyType.CHORD_PROGRESSION, chest.reward.chordProgression)
+        val substituteTotal = ResonanceService.addCurrency(serverPlayer, ResonanceCurrencyType.SUBSTITUTE_CHORD, chest.reward.substituteChord)
 
         grantUpgradedChallengeRewards(serverPlayer, chest.reward.stars)
 
@@ -725,8 +738,10 @@ object TreasureChestService {
                 chest.reward.stars,
                 chest.reward.credits,
                 chest.reward.chordProgression,
+                chest.reward.substituteChord,
                 ArtifactSpecialItem.formatWholeNumber(creditsTotal),
-                ArtifactSpecialItem.formatWholeNumber(chordTotal)
+                ArtifactSpecialItem.formatWholeNumber(chordTotal),
+                ArtifactSpecialItem.formatWholeNumber(substituteTotal)
             ).formatted(Formatting.AQUA),
             false
         )
@@ -895,6 +910,7 @@ object TreasureChestService {
             stars = savedChest.stars,
             credits = savedChest.credits,
             chordProgression = savedChest.chordProgression,
+            substituteChord = savedChest.substituteChord,
             weight = template.weight,
             block = template.block,
             particle = template.particle
@@ -915,6 +931,7 @@ object TreasureChestService {
                     stars = chest.reward.stars,
                     credits = chest.reward.credits,
                     chordProgression = chest.reward.chordProgression,
+                    substituteChord = chest.reward.substituteChord,
                     expireTime = chest.expireTime
                 )
             }

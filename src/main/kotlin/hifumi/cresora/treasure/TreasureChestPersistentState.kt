@@ -14,6 +14,7 @@ data class SavedTreasureChest(
     val stars: Int,
     val credits: Int,
     val chordProgression: Int,
+    val substituteChord: Int = 0,
     val expireTime: Long
 ) {
     companion object {
@@ -27,6 +28,7 @@ data class SavedTreasureChest(
                 Codec.INT.fieldOf("stars").forGetter(SavedTreasureChest::stars),
                 Codec.INT.fieldOf("credits").forGetter(SavedTreasureChest::credits),
                 Codec.INT.fieldOf("chordProgression").forGetter(SavedTreasureChest::chordProgression),
+                Codec.INT.optionalFieldOf("substituteChord", 0).forGetter(SavedTreasureChest::substituteChord),
                 Codec.LONG.optionalFieldOf("expireTime", 0L).forGetter(SavedTreasureChest::expireTime)
             ).apply(instance, ::SavedTreasureChest)
         }

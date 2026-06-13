@@ -46,9 +46,17 @@ object AdventureRankHooks {
                                 killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.leyline.key_dropped", net.minecraft.text.Text.translatable(element.translationKeyId)), false)
                             }
                         }
-                        if (killer.random.nextDouble() < 0.01) {
-                            ResonanceService.addCurrency(killer, ResonanceCurrencyType.CHORD_PROGRESSION, 50)
-                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.chord_progression"), true)
+                        if (killer.random.nextDouble() < 0.03) {
+                            ResonanceService.addCurrency(killer, ResonanceCurrencyType.CHORD_PROGRESSION, 35)
+                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.chord_progression", 35), true)
+                        }
+                        if (killer.random.nextDouble() < 0.015) {
+                            ResonanceService.addCurrency(killer, ResonanceCurrencyType.SUBSTITUTE_CHORD, 25)
+                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.substitute_chord", 25), true)
+                        }
+                        if (killer.random.nextDouble() < 0.008) {
+                            killer.inventory.offerOrDrop(net.minecraft.item.ItemStack(CreSoraUtilities.RESONANT_LOCATOR_ITEM))
+                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.resonant_locator"), true)
                         }
                     } else {
                         CreditsService.addFriendlyKillReward(killer, entity)
