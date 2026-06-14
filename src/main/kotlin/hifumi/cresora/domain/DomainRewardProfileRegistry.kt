@@ -124,7 +124,8 @@ data class DomainRewardProfile(
     val insightReward: DomainMaterialRewardDefinition? = null,
     val currencyReward: DomainCurrencyRewardDefinition,
     val chordProgressionReward: Int = 0,
-    val substituteChordReward: Int = 0
+    val substituteChordReward: Int = 0,
+    val resonantLocatorChance: Double = 0.0
 ) {
     companion object {
         val CODEC: Codec<DomainRewardProfile> = RecordCodecBuilder.create { instance ->
@@ -140,9 +141,10 @@ data class DomainRewardProfile(
                     .forGetter { java.util.Optional.ofNullable(it.insightReward) },
                 DomainCurrencyRewardDefinition.CODEC.fieldOf("currencyReward").forGetter(DomainRewardProfile::currencyReward),
                 Codec.INT.optionalFieldOf("chordProgressionReward", 0).forGetter(DomainRewardProfile::chordProgressionReward),
-                Codec.INT.optionalFieldOf("substituteChordReward", 0).forGetter(DomainRewardProfile::substituteChordReward)
-            ).apply(instance) { id, artifactReward, weaponReward, proofReward, insightReward, currencyReward, chordProgression, substituteChord ->
-                DomainRewardProfile(id, artifactReward.orElse(null), weaponReward.orElse(null), proofReward.orElse(null), insightReward.orElse(null), currencyReward, chordProgression, substituteChord)
+                Codec.INT.optionalFieldOf("substituteChordReward", 0).forGetter(DomainRewardProfile::substituteChordReward),
+                Codec.DOUBLE.optionalFieldOf("resonantLocatorChance", 0.0).forGetter(DomainRewardProfile::resonantLocatorChance)
+            ).apply(instance) { id, artifactReward, weaponReward, proofReward, insightReward, currencyReward, chordProgression, substituteChord, locatorChance ->
+                DomainRewardProfile(id, artifactReward.orElse(null), weaponReward.orElse(null), proofReward.orElse(null), insightReward.orElse(null), currencyReward, chordProgression, substituteChord, locatorChance)
             }
         }
     }
@@ -222,6 +224,9 @@ object DomainRewardProfileRegistry {
                 require(insight.minCount >= 0 && insight.maxCount >= insight.minCount) {
                     "Invalid insight reward count range in domain reward profile '${profile.id}'"
                 }
+            }
+            require(profile.resonantLocatorChance in 0.0..1.0) {
+                "Invalid resonantLocatorChance in domain reward profile '${profile.id}'"
             }
         }
         profiles = profileMap

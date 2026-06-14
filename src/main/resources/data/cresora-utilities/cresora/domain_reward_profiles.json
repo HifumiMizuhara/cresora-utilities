@@ -21,7 +21,8 @@
         "rankXpPerRank": 5
       },
       "chordProgressionReward": 120,
-      "substituteChordReward": 60
+      "substituteChordReward": 60,
+      "resonantLocatorChance": 0.05
     },
     {
       "id": "rondo_forge",
@@ -42,7 +43,8 @@
         "rankXpPerRank": 6
       },
       "chordProgressionReward": 150,
-      "substituteChordReward": 75
+      "substituteChordReward": 75,
+      "resonantLocatorChance": 0.05
     },
     {
       "id": "masquerade_soiree",
@@ -63,7 +65,8 @@
         "rankXpPerRank": 6
       },
       "chordProgressionReward": 150,
-      "substituteChordReward": 75
+      "substituteChordReward": 75,
+      "resonantLocatorChance": 0.05
     },
     {
       "id": "requiem_reliquary",
@@ -84,7 +87,8 @@
         "rankXpPerRank": 7
       },
       "chordProgressionReward": 220,
-      "substituteChordReward": 110
+      "substituteChordReward": 110,
+      "resonantLocatorChance": 0.05
     },
     {
       "id": "lakeside_sanctum",
@@ -105,7 +109,8 @@
         "rankXpPerRank": 8
       },
       "chordProgressionReward": 325,
-      "substituteChordReward": 160
+      "substituteChordReward": 160,
+      "resonantLocatorChance": 0.05
     },
     {
       "id": "osananajimi_reminiscence",
@@ -128,7 +133,8 @@
         "rankXpPerRank": 5
       },
       "chordProgressionReward": 120,
-      "substituteChordReward": 60
+      "substituteChordReward": 60,
+      "resonantLocatorChance": 0.05
     },
     {
       "id": "csc_training",
@@ -143,7 +149,8 @@
         "rankXpPerRank": 8
       },
       "chordProgressionReward": 180,
-      "substituteChordReward": 90
+      "substituteChordReward": 90,
+      "resonantLocatorChance": 0.05
     }
   ]
 }

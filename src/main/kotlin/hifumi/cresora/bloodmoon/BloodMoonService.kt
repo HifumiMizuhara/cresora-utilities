@@ -6,7 +6,8 @@ import hifumi.cresora.combat.FieldMobPackService
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.resonance.ResonanceCurrencyType
 import hifumi.cresora.resonance.ResonanceService
-import hifumi.cresora.equipment.EquipmentDefinitions
+import hifumi.cresora.equipment.EquipmentContentRegistry
+import hifumi.cresora.equipment.EquipmentDefinition
 import hifumi.cresora.equipment.EquipmentStackSupport
 import hifumi.cresora.equipment.EquipmentGenerationService
 import hifumi.cresora.equipment.EquipmentRarity
@@ -792,15 +793,15 @@ object BloodMoonService {
 
     private fun buildRewardBundle(seed: Long): BloodMoonRewardBundle {
         val random = net.minecraft.util.math.random.Random.create(seed)
-        val equipmentStacks = listOf(
-            EquipmentDefinitions.HINAGATA_WAND,
-            EquipmentDefinitions.HINAGATA_HAT,
-            EquipmentDefinitions.HINAGATA_GLASSES,
-            EquipmentDefinitions.HINAGATA_ARMOR,
-            EquipmentDefinitions.HINAGATA_BOOTS
-        ).map { ref ->
-            val definition = ref.resolve()
-            val stack = ItemStack(EquipmentStackSupport.itemForDefinitionId(definition.id) ?: error("Missing equipment item: ${definition.id}"))
+        val slotOrder = listOf("wand", "hat", "glasses", "armor", "boots")
+        val definitionsBySlot: Map<String, List<EquipmentDefinition>> =
+            EquipmentContentRegistry.equipmentDefinitions().groupBy(EquipmentDefinition::slotTypeId)
+        val equipmentStacks = slotOrder.mapNotNull { slotId ->
+            val pool = definitionsBySlot[slotId] ?: return@mapNotNull null
+            if (pool.isEmpty()) return@mapNotNull null
+            val definition = pool[random.nextInt(pool.size)]
+            val item = EquipmentStackSupport.itemForDefinitionId(definition.id) ?: return@mapNotNull null
+            val stack = ItemStack(item)
             EquipmentStackSupport.syncEquipmentData(
                 stack,
                 EquipmentGenerationService.createEquipment(
@@ -817,11 +818,11 @@ object BloodMoonService {
         ArtifactSpecialItemSupport.itemForDefinitionId("blood_note")?.let { specialStacks += ItemStack(it) }
 
         val weaponStacks = mutableListOf<ItemStack>()
-        if (random.nextDouble() < 0.20) {
+        if (random.nextDouble() < 0.50) {
             val definition = WeaponContentRegistry.requireWeapon("lossless_crown")
             weaponStacks += WeaponStackSupport.createWeaponStack(definition, WeaponRarity.FIVE_STAR, 1, 1)
         }
-        if (random.nextDouble() < 0.50) {
+        if (random.nextDouble() < 0.75) {
             val definition = WeaponContentRegistry.requireWeapon("blood_tear")
             weaponStacks += WeaponStackSupport.createWeaponStack(definition, WeaponRarity.FOUR_STAR, 1, 1)
         }

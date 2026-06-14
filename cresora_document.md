@@ -516,6 +516,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
   - `role`: WeaponRole (optional, e.g. `"defender"`, `"guard"`, `"medic"`, `"caster"`. If omitted/null, rolls a random role dynamically at drop time)
   - `minCount`: Int (non-negative)
   - `maxCount`: Int (>= minCount)
+- 共鳴探索コンパスの副報酬枠 `resonantLocatorChance: Double = 0.0`（0.0〜1.0、`DomainService.generateRewardsForProfile` が確率判定で 1 個 `resonant_locator` を追加）
 - CSC / Rank XP 報酬
 
 主 API:
@@ -840,7 +841,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - 参加者が全員 offline になった active battle は自動中断し、mob / gamerule / respawn override を掃除する
 - `debugStop(server)` は active battle、pending confirmation、bed lock を解除し、active wave mob を despawn する
 - 勝利後、参加者 1 人につき 1 個の chest を bed 近くに生成する。owner 以外は報酬を回収できない
-- 報酬は 100k CSC、5-star artifact set、`blood_note`、20% `lossless_crown`、50% `blood_tear`、および現在 rank の必要 XP 上限 50% 分の adventure XP
+- 報酬は 100k CSC、5 部位 ★5 聖遺物（各スロット `wand / hat / glasses / armor / boots` から登録済み全聖遺物プールよりランダム抽選、セットは部位ごとに独立）、確定の `blood_note`、50% で `lossless_crown` (★5)、75% で `blood_tear` (★4)、および現在 rank の必要 XP 上限 50% 分の adventure XP
 - reward chest ownership / reward seed は persistent state へ保存し、server restart 後も復元できる
 
 

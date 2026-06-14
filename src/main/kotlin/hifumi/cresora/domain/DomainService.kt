@@ -455,6 +455,10 @@ object DomainService {
             }
         }
 
+        if (profile.resonantLocatorChance > 0.0 && random.nextDouble() < profile.resonantLocatorChance) {
+            items += ItemStack(CreSoraUtilities.RESONANT_LOCATOR_ITEM)
+        }
+
         val credits = (profile.currencyReward.creditsBase + profile.currencyReward.creditsPerRank * sessionRank)
             .coerceAtLeast(0)
         val rankXp = (profile.currencyReward.rankXpBase + profile.currencyReward.rankXpPerRank * sessionRank)
