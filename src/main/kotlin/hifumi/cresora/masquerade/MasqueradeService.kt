@@ -386,7 +386,7 @@ object MasqueradeService {
                 val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? MobEntity ?: return@repeat
                 val access = hostile as? AdventureRankMobAccess ?: return@repeat
                 access.cresoraSetMobAdventureRank(spawn.rank)
-                FieldMobPackService.markExplicit(hostile, spawn.elite)
+                FieldMobPackService.markExplicit(hostile, spawn.elite || spawn.boss, spawn.boss)
                 AdventureRankService.applyMobScaling(
                     hostile,
                     spawn.rank,
@@ -395,7 +395,7 @@ object MasqueradeService {
                     spawn.modifiers.toughnessScalar
                 )
                 hostile.target = player
-                if (spawn.elite) {
+                if (spawn.elite || spawn.boss) {
                     hostile.setPersistent()
                 }
                 mobRuntime[hostile.uuid] = MasqueradeRuntimeMob(

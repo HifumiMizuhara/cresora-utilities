@@ -165,6 +165,7 @@
   "debuff.cresora.heal_block": "回復禁止",
   "status.cresora.mob.normal": " [雑魚]",
   "status.cresora.mob.elite": " [精鋭]",
+  "status.cresora.mob.boss": " [ボス]",
   "commands.cresora.moon.header": "月相",
   "commands.cresora.moon.summary": "第 %s 日 | 月相: %s | 特殊: %s | 段階: %s | 偏移: %s",
   "commands.cresora.moon.none": "なし",

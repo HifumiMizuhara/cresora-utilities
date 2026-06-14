@@ -8,14 +8,15 @@ object DomainCombatProfile {
         val damageScalar: Double
     )
 
-    fun scaling(rank: Int, elite: Boolean): Scaling {
+    fun scaling(rank: Int, elite: Boolean, boss: Boolean = false): Scaling {
         val progress = AdventureRankProgression.normalizedProgress(rank)
-        val eliteBonus = if (elite) 1.0 else 0.0
+        val eliteBonus = if (elite || boss) 1.0 else 0.0
+        val bossBonus = if (boss) 1.0 else 0.0
         return Scaling(
-            healthScalar = 0.92 + progress * 0.42 + eliteBonus * 0.32,
-            defenseScalar = 1.0 + progress * 0.18 + eliteBonus * 0.18,
-            toughnessScalar = 1.0 + progress * 0.12 + eliteBonus * 0.14,
-            damageScalar = 1.0 + progress * 0.18 + eliteBonus * 0.16
+            healthScalar = 0.92 + progress * 0.42 + eliteBonus * 0.32 + bossBonus * 0.56,
+            defenseScalar = 1.0 + progress * 0.18 + eliteBonus * 0.18 + bossBonus * 0.27,
+            toughnessScalar = 1.0 + progress * 0.12 + eliteBonus * 0.14 + bossBonus * 0.21,
+            damageScalar = 1.0 + progress * 0.18 + eliteBonus * 0.16 + bossBonus * 0.19
         )
     }
 

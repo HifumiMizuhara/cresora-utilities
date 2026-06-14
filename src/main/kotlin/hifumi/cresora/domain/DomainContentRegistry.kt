@@ -40,7 +40,8 @@ data class DomainWaveDefinition(
     val count: Int,
     val levelOffset: Int,
     val elite: Boolean,
-    val spawnDelayTicks: Int
+    val spawnDelayTicks: Int,
+    val boss: Boolean = false
 ) {
     companion object {
         val CODEC: Codec<DomainWaveDefinition> = RecordCodecBuilder.create { instance ->
@@ -48,7 +49,8 @@ data class DomainWaveDefinition(
                 Codec.INT.fieldOf("count").forGetter(DomainWaveDefinition::count),
                 Codec.INT.optionalFieldOf("levelOffset", 0).forGetter(DomainWaveDefinition::levelOffset),
                 Codec.BOOL.optionalFieldOf("elite", false).forGetter(DomainWaveDefinition::elite),
-                Codec.INT.optionalFieldOf("spawnDelayTicks", 40).forGetter(DomainWaveDefinition::spawnDelayTicks)
+                Codec.INT.optionalFieldOf("spawnDelayTicks", 40).forGetter(DomainWaveDefinition::spawnDelayTicks),
+                Codec.BOOL.optionalFieldOf("boss", false).forGetter(DomainWaveDefinition::boss)
             ).apply(instance, ::DomainWaveDefinition)
         }
     }

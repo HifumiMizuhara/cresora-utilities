@@ -30,6 +30,8 @@ object AdventureRankService {
     private const val FIELD_MOB_MAX_RANK_OFFSET = 1
     private const val FIELD_ELITE_MIN_RANK_OFFSET = -1
     private const val FIELD_ELITE_MAX_RANK_OFFSET = 3
+    private const val FIELD_BOSS_MIN_RANK_OFFSET = 2
+    private const val FIELD_BOSS_MAX_RANK_OFFSET = 6
 
     private val MOB_HEALTH_SCALAR_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_health_scalar")
     private val MOB_ARMOR_BONUS_ID: Identifier = Identifier.of(CreSoraUtilities.MOD_ID, "mob_adventure_armor_bonus")
@@ -190,12 +192,12 @@ object AdventureRankService {
         toughnessInstance?.removeModifier(MOB_TOUGHNESS_BONUS_ID)
         scaleInstance?.removeModifier(MOB_ELITE_SCALE_ID)
 
-        val isElite = (entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false
-        if (isElite) {
+        val scaleBonus = FieldMobPackService.scaleBonus(entity)
+        if (scaleBonus > 0.0) {
             scaleInstance?.addTemporaryModifier(
                 EntityAttributeModifier(
                     MOB_ELITE_SCALE_ID,
-                    0.18,
+                    scaleBonus,
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
             )
@@ -315,9 +317,19 @@ object AdventureRankService {
 
     private fun rollNearbyFieldRank(entity: MobEntity, world: ServerWorld, x: Double, y: Double, z: Double): Int {
         val anchorRank = findNearestNearbyRank(world, x, y, z)
-        val isElite = (entity as? AdventureRankMobAccess)?.cresoraIsEliteMob() ?: false
-        val minOffset = if (isElite) FIELD_ELITE_MIN_RANK_OFFSET else FIELD_MOB_MIN_RANK_OFFSET
-        val maxOffset = if (isElite) FIELD_ELITE_MAX_RANK_OFFSET else FIELD_MOB_MAX_RANK_OFFSET
+        val access = entity as? AdventureRankMobAccess
+        val isBoss = access?.cresoraIsBossMob() ?: false
+        val isElite = access?.cresoraIsEliteMob() ?: false
+        val minOffset = when {
+            isBoss -> FIELD_BOSS_MIN_RANK_OFFSET
+            isElite -> FIELD_ELITE_MIN_RANK_OFFSET
+            else -> FIELD_MOB_MIN_RANK_OFFSET
+        }
+        val maxOffset = when {
+            isBoss -> FIELD_BOSS_MAX_RANK_OFFSET
+            isElite -> FIELD_ELITE_MAX_RANK_OFFSET
+            else -> FIELD_MOB_MAX_RANK_OFFSET
+        }
         val offset = entity.random.nextBetween(minOffset, maxOffset)
         return AdventureRankProgression.sanitizeRank(anchorRank + offset)
     }

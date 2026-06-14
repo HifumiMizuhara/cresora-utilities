@@ -180,6 +180,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `AdventureRankMobAccess`
   - mob rank
   - elite flag
+  - boss flag
   - pack id
 
 ## 4. 基本モデル API
@@ -489,7 +490,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 - mob pool
 - stage
-- wave
+- wave（`count` / `levelOffset` / `elite` / `spawnDelayTicks` / `boss`）
 - unlock rank
 - entry cost
 - reward profile link
@@ -534,7 +535,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `seasonId`
 - `maxWaveCount`
 - `rewardPerClearedWave`
-- wave ごとの spawn
+- wave ごとの spawn（`elite` / `boss` / `modifiers`）
 - 演出サポート定義
 
 主 API:
@@ -701,6 +702,46 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `showMobTrueDamage(...)`
 - `showPlayerDamageFeedback(...)`
 
+### 7.1.0 FieldMobPackService
+
+ファイル:
+
+- `FieldMobPackService.kt`
+
+責務:
+
+- 自然湧き敵対モブの分類（雑魚 / 精鋭 / フィールドボス / パック随伴）
+- パックスポーン制御（18% 確率で 3〜5 体のパックを作成、内部 1 体を精鋭化）
+- フィールドボス自然湧き（**0.25% 確率**、出現時はパック非生成）
+- 精鋭・ボス用の HP / 防御 / 攻撃 / モデルスケール係数の提供
+- `cresora_normal_mob` / `cresora_elite_mob` / `cresora_boss_mob` / `cresora_pack_mob` の command tag 同期
+- 日食昇格対象の選定（`promoteToEclipseElite` / `demoteEclipseElite`、ボスは対象外）
+
+主 API:
+
+- `initializeOnSpawn(hostile, world, spawnReason)`
+- `markExplicit(mob, elite)` / `markExplicit(mob, elite, boss)` — 明示的に分類（ドメイン・マスカレード等で使用）
+- `eliteHealthScalar(mob)` / `eliteDefenseScalar(mob)` / `eliteToughnessScalar(mob)` / `eliteDamageScalar(mob)` — `when { isBoss -> BOSS_*, isElite -> ELITE_*, else -> 1.0 }`
+- `scaleBonus(mob)` — `BOSS_SCALE_BONUS = 0.35`、`ELITE_SCALE_BONUS = 0.18`、雑魚は `0.0`
+- `classificationTag(entity)` — 頭上に付与される `[雑魚] / [精鋭] / [ボス]` ラベル（ボスは `DARK_RED + BOLD`）
+- `eliteKey()` / `bossKey()` / `packIdKey()` — NBT キー
+- `promoteToEclipseElite(...)` / `demoteEclipseElite(...)`（日食用）
+
+スケール定数:
+
+| 分類 | HP | 防御 | タフネス | ダメージ | モデル |
+|---|---|---|---|---|---|
+| 精鋭 | x1.32 | x1.18 | x1.12 | x1.16 | +18% |
+| フィールドボス | **x2.20** | **x1.45** | **x1.35** | **x1.35** | **+35%** |
+
+重要仕様:
+
+- `cresoraIsEliteMob()` は `boss == true` のときも `true` を返す（多態：ボスは精鋭の上位互換）。`isFieldBoss / isFieldElite` の private 述語は `when` の順序でボスを先に判定するため二重加算は発生しない
+- フィールドボス撃破時、`AdventureRankHooks` が冒険ランクXP・クレジット報酬を **x3.0**、`CHORD_PROGRESSION` を +120 確定、`SUBSTITUTE_CHORD` を +60（35% 確率）追加付与する
+- フィールドボスは `BloodMoonService.promoteEclipseElite` の昇格対象から除外される（既に精鋭超のスケールがあるため）
+- ボスはパック非生成。boss spawn 判定が成功するとパック判定はスキップ
+- ドメイン / マスカレードの wave 定義は `boss: Boolean` で明示的にボスを生成可能。両サービスは `markExplicit(mob, elite || boss, boss)` を呼ぶ
+
 ### 7.1.1 MoonPhaseService
 
 ファイル:
@@ -745,9 +786,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 重要仕様:
 
 - mob rank 上限は `AdventureRankProgression` 側に依存
-- field mob は近傍プレイヤー rank を基準に `±5` の振れ幅で割当
+- field mob は近傍プレイヤー rank を基準に `-1〜+1` の振れ幅で割当（精鋭は `-1〜+3`、ボスは `+2〜+6`）
 - HP は内部で cap と overflow 防御変換を使う
-- **エリートモブの視覚化**: `EntityAttributes.GENERIC_SCALE` を利用し、エリートモブのモデルサイズとヒットボックスを **18% 拡大** しています。
+- **モブ視覚化（モデル拡大）**: `EntityAttributes.GENERIC_SCALE` を利用し、精鋭モブは **+18%**、フィールドボスは **+35%** に拡大される。スケール量は `FieldMobPackService.scaleBonus(entity)` が決定し、`applyMobScaling` 内で一括適用される。
 
 ### 7.1.2 BloodMoonService
 

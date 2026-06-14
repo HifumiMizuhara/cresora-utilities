@@ -165,6 +165,7 @@
   "debuff.cresora.heal_block": "Heal Block",
   "status.cresora.mob.normal": " [Mob]",
   "status.cresora.mob.elite": " [Elite]",
+  "status.cresora.mob.boss": " [Boss]",
   "commands.cresora.moon.header": "Moon Phase",
   "commands.cresora.moon.summary": "Day %s | Phase: %s | Special: %s | Layer: %s | Offset: %s",
   "commands.cresora.moon.none": "None",

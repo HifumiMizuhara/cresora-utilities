@@ -280,7 +280,7 @@ object DomainService {
     ) {
         val domain = session.definition()
         val spawnRank = AdventureRankProgression.sanitizeRank(session.sessionRank + wave.levelOffset)
-        val scaling = DomainCombatProfile.scaling(spawnRank, wave.elite)
+        val scaling = DomainCombatProfile.scaling(spawnRank, wave.elite, wave.boss)
         val pool = DomainContentRegistry.requireMobPool(domain.mobPoolId)
         val totalWaveIndex = session.clearedWaveCount() + 1
 
@@ -294,10 +294,10 @@ object DomainService {
             val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? MobEntity ?: return@repeat
             val access = hostile as? AdventureRankMobAccess ?: return@repeat
             access.cresoraSetMobAdventureRank(spawnRank)
-            FieldMobPackService.markExplicit(hostile, wave.elite)
+            FieldMobPackService.markExplicit(hostile, wave.elite || wave.boss, wave.boss)
             AdventureRankService.applyMobScaling(hostile, spawnRank, scaling.healthScalar, scaling.defenseScalar, scaling.toughnessScalar)
             hostile.target = player
-            if (wave.elite) {
+            if (wave.elite || wave.boss) {
                 hostile.setPersistent()
             }
             mobRuntime[hostile.uuid] = DomainRuntimeMob(session.id, scaling.damageScalar)

@@ -21,6 +21,8 @@ public class MobEntityMixin implements AdventureRankMobAccess {
     @Unique
     private boolean cresora$eliteMob = false;
     @Unique
+    private boolean cresora$bossMob = false;
+    @Unique
     private String cresora$mobPackId = "";
 
     @Inject(method = "writeCustomData", at = @At("TAIL"))
@@ -31,6 +33,9 @@ public class MobEntityMixin implements AdventureRankMobAccess {
         if (this.cresora$eliteMob) {
             view.putBoolean(FieldMobPackService.INSTANCE.eliteKey(), true);
         }
+        if (this.cresora$bossMob) {
+            view.putBoolean(FieldMobPackService.INSTANCE.bossKey(), true);
+        }
         if (!this.cresora$mobPackId.isBlank()) {
             view.putString(FieldMobPackService.INSTANCE.packIdKey(), this.cresora$mobPackId);
         }
@@ -40,6 +45,7 @@ public class MobEntityMixin implements AdventureRankMobAccess {
     private void cresora$readMobAdventureRank(ReadView view, CallbackInfo ci) {
         this.cresora$mobAdventureRank = view.getInt(AdventureRankService.INSTANCE.mobRankKey(), 0);
         this.cresora$eliteMob = view.getBoolean(FieldMobPackService.INSTANCE.eliteKey(), false);
+        this.cresora$bossMob = view.getBoolean(FieldMobPackService.INSTANCE.bossKey(), false);
         this.cresora$mobPackId = view.getString(FieldMobPackService.INSTANCE.packIdKey(), "");
     }
 
@@ -69,12 +75,28 @@ public class MobEntityMixin implements AdventureRankMobAccess {
 
     @Override
     public boolean cresoraIsEliteMob() {
-        return this.cresora$eliteMob;
+        return this.cresora$eliteMob || this.cresora$bossMob;
     }
 
     @Override
     public void cresoraSetEliteMob(boolean elite) {
         this.cresora$eliteMob = elite;
+        if (!elite) {
+            this.cresora$bossMob = false;
+        }
+    }
+
+    @Override
+    public boolean cresoraIsBossMob() {
+        return this.cresora$bossMob;
+    }
+
+    @Override
+    public void cresoraSetBossMob(boolean boss) {
+        this.cresora$bossMob = boss;
+        if (boss) {
+            this.cresora$eliteMob = true;
+        }
     }
 
     @Override

@@ -36,7 +36,8 @@ data class MasqueradeSpawnDefinition(
     val rank: Int,
     val count: Int,
     val elite: Boolean = false,
-    val modifiers: MasqueradeEnemyModifierDefinition = MasqueradeEnemyModifierDefinition()
+    val modifiers: MasqueradeEnemyModifierDefinition = MasqueradeEnemyModifierDefinition(),
+    val boss: Boolean = false
 ) {
     companion object {
         val CODEC: Codec<MasqueradeSpawnDefinition> = RecordCodecBuilder.create { instance ->
@@ -46,7 +47,8 @@ data class MasqueradeSpawnDefinition(
                 Codec.INT.fieldOf("count").forGetter(MasqueradeSpawnDefinition::count),
                 Codec.BOOL.optionalFieldOf("elite", false).forGetter(MasqueradeSpawnDefinition::elite),
                 MasqueradeEnemyModifierDefinition.CODEC.optionalFieldOf("modifiers", MasqueradeEnemyModifierDefinition())
-                    .forGetter(MasqueradeSpawnDefinition::modifiers)
+                    .forGetter(MasqueradeSpawnDefinition::modifiers),
+                Codec.BOOL.optionalFieldOf("boss", false).forGetter(MasqueradeSpawnDefinition::boss)
             ).apply(instance, ::MasqueradeSpawnDefinition)
         }
     }
@@ -291,9 +293,10 @@ object MasqueradeContentRegistry {
             rank: Int,
             count: Int,
             elite: Boolean = false,
-            modifiers: MasqueradeEnemyModifierDefinition = MasqueradeEnemyModifierDefinition()
+            modifiers: MasqueradeEnemyModifierDefinition = MasqueradeEnemyModifierDefinition(),
+            boss: Boolean = false
         ): MasqueradeSpawnDefinition {
-            return MasqueradeSpawnDefinition(id, rank, count, elite, modifiers)
+            return MasqueradeSpawnDefinition(id, rank, count, elite, modifiers, boss)
         }
 
         val waves = listOf(

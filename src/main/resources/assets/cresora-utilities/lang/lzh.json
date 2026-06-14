@@ -152,6 +152,7 @@
   "status.cresora.kyundeath": " [❤]",
   "status.cresora.mob.normal": " [卒]",
   "status.cresora.mob.elite": " [精]",
+  "status.cresora.mob.boss": " [魁]",
   "commands.cresora.moon.header": "月相",
   "commands.cresora.moon.summary": "第 %s 日 | 月相: %s | 特殊: %s | 層: %s | 偏移: %s",
   "commands.cresora.moon.none": "無",

@@ -337,6 +337,9 @@ object BloodMoonService {
         if (spawnReason != SpawnReason.NATURAL && spawnReason != SpawnReason.CHUNK_GENERATION) {
             return
         }
+        if ((hostile as? AdventureRankMobAccess)?.cresoraIsBossMob() == true) {
+            return
+        }
         val server = world.server ?: return
         if (!MoonPhaseService.isBloodMoon(server)) {
             return

@@ -32,8 +32,9 @@ object AdventureRankHooks {
                 is MobEntity -> {
                     if (entity is Monster || entity is HostileEntity) {
                         val rewardScale = killer.server?.let { MoonPhaseService.killRewardMultiplier(it) } ?: 1.0
-                        AdventureRankService.addXp(killer, (AdventureRankService.hostileKillXp(entity) * rewardScale).roundToInt())
-                        CreditsService.addHostileKillReward(killer, entity, rewardScale)
+                        val bossRewardScale = if ((entity as? AdventureRankMobAccess)?.cresoraIsBossMob() == true) 3.0 else 1.0
+                        AdventureRankService.addXp(killer, (AdventureRankService.hostileKillXp(entity) * rewardScale * bossRewardScale).roundToInt())
+                        CreditsService.addHostileKillReward(killer, entity, rewardScale * bossRewardScale)
                         WeaponDropService.onHostileKilled(killer, entity)
                         ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
                         MoonAltarService.tryDropMoonBrick(killer, entity)
@@ -53,6 +54,14 @@ object AdventureRankHooks {
                         if (killer.random.nextDouble() < 0.015) {
                             ResonanceService.addCurrency(killer, ResonanceCurrencyType.SUBSTITUTE_CHORD, 25)
                             killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.substitute_chord", 25), true)
+                        }
+                        if ((entity as? AdventureRankMobAccess)?.cresoraIsBossMob() == true) {
+                            ResonanceService.addCurrency(killer, ResonanceCurrencyType.CHORD_PROGRESSION, 120)
+                            killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.chord_progression", 120), true)
+                            if (killer.random.nextDouble() < 0.35) {
+                                ResonanceService.addCurrency(killer, ResonanceCurrencyType.SUBSTITUTE_CHORD, 60)
+                                killer.sendMessage(net.minecraft.text.Text.translatable("message.cresora.mob_drop.substitute_chord", 60), true)
+                            }
                         }
                         if (killer.random.nextDouble() < 0.008) {
                             killer.inventory.offerOrDrop(net.minecraft.item.ItemStack(CreSoraUtilities.RESONANT_LOCATOR_ITEM))
