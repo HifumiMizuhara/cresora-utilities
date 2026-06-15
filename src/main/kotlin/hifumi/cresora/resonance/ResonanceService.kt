@@ -246,6 +246,7 @@ object ResonanceService {
         player.giveItemStack(pulledWeapon.copy())
 
         val updated = updateProgress(player, banner, rarity, obtainedFeatured)
+        hifumi.cresora.guide.GuideService.onResonancePull(player, 1)
         return PullOutcome.Success(
             PullResult(
                 banner = banner,

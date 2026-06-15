@@ -57,7 +57,7 @@ object Commands {
                 literal("cresora")
                     .requires { source -> source.entity is ServerPlayerEntity }
                     .executes { context ->
-                        ArtifactUiFlow.openMenu(context.source.playerOrThrow)
+                        ArtifactUiFlow.openGuide(context.source.playerOrThrow)
                         1
                     }
                     .then(

@@ -80,6 +80,7 @@ class ResonanceScreenHandler(
                         }
                     }
                     STANDARD_SLOT -> attemptPull(serverPlayer, standardBanner)
+                    8 -> ArtifactUiFlow.openGuide(serverPlayer)
                 }
             }
             return
@@ -157,6 +158,7 @@ class ResonanceScreenHandler(
             STANDARD_SLOT,
             ArtifactDisplayStackFactory.resonanceBannerDisplay(standardBanner, progress.standardPulls, false, null)
         )
+        displayInventory.setStack(8, hifumi.cresora.guide.GuideDisplayStackFactory.backDisplay())
     }
 
     private fun addPlayerSlots(playerInventory: PlayerInventory, rows: Int) {

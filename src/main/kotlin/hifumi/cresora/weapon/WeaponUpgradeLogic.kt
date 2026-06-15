@@ -219,11 +219,18 @@ object WeaponUpgradeLogic {
         val definition = WeaponStackSupport.getDefinition(stack)
             ?: return AttemptResult(false, Text.translatable("screen.cresora.weapon_upgrade.need_weapon").formatted(Formatting.RED))
         val data = WeaponStackSupport.ensureWeaponData(stack)
-        return when (type) {
+        val result = when (type) {
             UpgradeType.BASE -> attemptBaseUpgrade(serverPlayer, stack, definition, data)
             UpgradeType.SKILL -> attemptSkillUpgrade(serverPlayer, stack, definition, data)
             UpgradeType.DISMANTLE -> attemptDismantle(serverPlayer, stack, definition)
         }
+        if (result.success && type == UpgradeType.BASE) {
+            val newData = WeaponStackSupport.getWeaponData(stack)
+            if (newData != null) {
+                hifumi.cresora.guide.GuideService.onWeaponUpgrade(serverPlayer, newData.baseLevel)
+            }
+        }
+        return result
     }
 
     private fun attemptBaseUpgrade(

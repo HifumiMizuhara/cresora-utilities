@@ -59,7 +59,12 @@ class StoryChapterSelectionScreenHandler(
     override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
         if (slotIndex in 0 until SLOT_COUNT) {
             if (actionType == SlotActionType.PICKUP || actionType == SlotActionType.QUICK_MOVE) {
-                openGroup(slotIndex, player)
+                if (slotIndex == 8) {
+                    val serverPlayer = player as? ServerPlayerEntity ?: return
+                    ArtifactUiFlow.openGuide(serverPlayer)
+                } else {
+                    openGroup(slotIndex, player)
+                }
             }
             return
         }
@@ -75,13 +80,14 @@ class StoryChapterSelectionScreenHandler(
     }
 
     private fun refreshEntries() {
-        for (index in 0 until SLOT_COUNT) {
+        for (index in 0 until 8) {
             val groupId = chapterGroups.getOrNull(index)
             displayInventory.setStack(
                 index,
                 if (groupId == null) ArtifactDisplayStackFactory.fillerDisplay() else ArtifactDisplayStackFactory.storyChapterGroupDisplay(groupId, StoryContentRegistry.chaptersForGroup(groupId).size)
             )
         }
+        displayInventory.setStack(8, hifumi.cresora.guide.GuideDisplayStackFactory.backDisplay())
     }
 
     private fun refreshProperties() {

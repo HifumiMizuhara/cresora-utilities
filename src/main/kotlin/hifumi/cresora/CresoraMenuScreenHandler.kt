@@ -25,6 +25,7 @@ class CresoraMenuScreenHandler(
     companion object {
         private const val ROWS = 1
         private const val SLOT_COUNT = 9
+        private const val GUIDE_SLOT = 0
         private const val STORY_SLOT = 1
         private const val DOMAIN_SLOT = 3
         private const val MASQUERADE_SLOT = 4
@@ -78,6 +79,7 @@ class CresoraMenuScreenHandler(
     private fun openMenuSlot(slotIndex: Int, player: PlayerEntity) {
         val serverPlayer = player as? ServerPlayerEntity ?: return
         when (slotIndex) {
+            GUIDE_SLOT -> ArtifactUiFlow.openGuide(serverPlayer)
             STORY_SLOT -> ArtifactUiFlow.openStoryChapterSelection(serverPlayer)
             DOMAIN_SLOT -> ArtifactUiFlow.openDomainSelection(serverPlayer)
             MASQUERADE_SLOT -> ArtifactUiFlow.openMasqueradeLoadout(serverPlayer)
@@ -90,6 +92,7 @@ class CresoraMenuScreenHandler(
         for (index in 0 until SLOT_COUNT) {
             displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
+        displayInventory.setStack(GUIDE_SLOT, ArtifactDisplayStackFactory.cresoraMenuDisplay("guide"))
         displayInventory.setStack(STORY_SLOT, ArtifactDisplayStackFactory.cresoraMenuDisplay("story"))
         displayInventory.setStack(DOMAIN_SLOT, ArtifactDisplayStackFactory.cresoraMenuDisplay("domain"))
         displayInventory.setStack(MASQUERADE_SLOT, ArtifactDisplayStackFactory.cresoraMenuDisplay("masquerade"))

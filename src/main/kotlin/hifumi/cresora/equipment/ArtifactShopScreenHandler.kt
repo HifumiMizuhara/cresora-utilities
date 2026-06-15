@@ -129,6 +129,13 @@ class ArtifactShopScreenHandler(
             }
             return
         }
+        if (slotIndex == 26) {
+            if (actionType == SlotActionType.PICKUP || actionType == SlotActionType.QUICK_MOVE) {
+                val serverPlayer = player as? ServerPlayerEntity ?: return
+                ArtifactUiFlow.openGuide(serverPlayer)
+            }
+            return
+        }
         super.onSlotClick(slotIndex, button, actionType, player)
     }
 
@@ -196,6 +203,7 @@ class ArtifactShopScreenHandler(
         ScreenSyncSupport.writeInt(properties, PROPERTY_SELL_PRICE_LOW, preview.totalPrice)
         setInventoryStack(SELL_PREVIEW_SLOT, ArtifactDisplayStackFactory.shopSellPreview(preview))
         setInventoryStack(SELL_BUTTON_SLOT, ArtifactDisplayStackFactory.shopSellButton(preview))
+        setInventoryStack(26, hifumi.cresora.guide.GuideDisplayStackFactory.backDisplay())
     }
 
     private fun setInventoryStack(index: Int, stack: ItemStack) {

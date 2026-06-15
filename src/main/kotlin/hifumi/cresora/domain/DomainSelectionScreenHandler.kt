@@ -31,7 +31,7 @@ class DomainSelectionScreenHandler(
         private const val PROPERTY_PLAYER_RANK = 2
     }
 
-    private val domainDefinitions = DomainContentRegistry.domains().take(DOMAIN_SLOT_COUNT)
+    private val domainDefinitions = DomainContentRegistry.domains().take(8)
     private val domainInventory: Inventory = object : SimpleInventory(DOMAIN_SLOT_COUNT) {}
     private val properties: PropertyDelegate = ArrayPropertyDelegate(3)
 
@@ -64,7 +64,12 @@ class DomainSelectionScreenHandler(
     override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
         if (slotIndex in 0 until DOMAIN_SLOT_COUNT) {
             if (actionType == SlotActionType.PICKUP || actionType == SlotActionType.QUICK_MOVE) {
-                attemptStart(slotIndex, player)
+                if (slotIndex == 8) {
+                    val serverPlayer = player as? ServerPlayerEntity ?: return
+                    hifumi.cresora.equipment.ArtifactUiFlow.openGuide(serverPlayer)
+                } else {
+                    attemptStart(slotIndex, player)
+                }
             }
             return
         }
@@ -106,9 +111,10 @@ class DomainSelectionScreenHandler(
     }
 
     private fun refreshEntries() {
-        for (index in 0 until DOMAIN_SLOT_COUNT) {
+        for (index in 0 until 8) {
             domainInventory.setStack(index, domainDefinitions.getOrNull(index)?.let(DomainDisplayStackFactory::domainDisplay) ?: ArtifactDisplayStackFactory.fillerDisplay())
         }
+        domainInventory.setStack(8, hifumi.cresora.guide.GuideDisplayStackFactory.backDisplay())
     }
 
     private fun refreshProperties() {

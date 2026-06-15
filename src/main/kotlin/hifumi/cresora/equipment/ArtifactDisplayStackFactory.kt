@@ -29,13 +29,12 @@ import net.minecraft.util.Identifier
 
 object ArtifactDisplayStackFactory {
     fun fillerDisplay(): ItemStack {
-        return ItemStack(Items.GRAY_STAINED_GLASS_PANE).apply {
-            set(DataComponentTypes.CUSTOM_NAME, Text.empty())
-        }
+        return ItemStack.EMPTY
     }
 
     fun cresoraMenuDisplay(optionId: String): ItemStack {
         val item = when (optionId) {
+            "guide" -> Items.BOOK
             "story" -> Items.WRITABLE_BOOK
             "domain" -> Items.IRON_SWORD
             "masquerade" -> Items.ENDER_EYE

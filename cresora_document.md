@@ -1386,7 +1386,41 @@ LIMITED ★5 抽選の概要:
 
 - ダメージ表示はコマンドタグ `cresora_damage_indicator` を持つ。追跡はメモリ上の `activeIndicators`（network entity id キー）のみで、エンティティ自体はチャンクに永続保存されるため、寿命 16 tick 内のチャンクアンロード / サーバー停止で孤児化する。`discardOrphanedIndicator` がロード時にタグ付き・未追跡の表示を回収する
 - `activeIndicators` への登録は `spawnEntity` より前に行う必要がある（`ENTITY_LOAD` が `spawnEntity` 内で同期発火し、未追跡だと新規スポーンが孤児と誤判定されるため）
-- タグ導入前に保存された残留表示は、テキスト内の翻訳キー prefix `combat.cresora.damage_type.short.` で識別して同様に回収（自己修復）
+- タグ導入前に保存された残留表示は、テキスト内の翻訳キー prefix `combat.cresora.damage_type.short.` で識別して同様に回収（自己修复）
+
+### 7.20 GuideService
+
+ファイル:
+
+- `GuideContentRegistry.kt`
+- `GuideProgressAccess.kt`
+- `GuideService.kt`
+- `GuideScreenHandler.kt`
+- `GuideScreen.kt`
+
+责务:
+
+- 新手引导（冒险之证）任务系统。按章节管理引导任务，完成任务获得 CSC 及和弦奖励。
+- 玩家进度的保存与加载（`ServerPlayerEntityMixin` 扩展 `GuideProgressAccess` 支持 NBT 序列化与数据在重生时的复制）。
+- 事件触发与进度自动更新（击杀敌对怪物、共鸣抽卡、升级武器、通关剧情等）。
+- UI 显示与奖励手动领取，通过主菜单（Slot 0）或者 UI Flow 开启引导界面。
+
+主 API:
+
+- `GuideService.getPlayerChapter(player)`
+- `GuideService.getTaskProgress(player, task)`
+- `GuideService.claimTaskReward(player, taskId)`
+- `GuideService.claimChapterReward(player, chapterIndex)`
+- `GuideService.onKillHostile(player)`
+- `GuideService.onResonancePull(player, count)`
+- `GuideService.copyTo(oldPlayer, newPlayer)`
+
+UI 与界面设计 (2026-06-15 重构):
+- 冒险之证 UI 移除了玩家物品栏的注册，不再渲染玩家背包格子。
+- 界面尺寸为 380x220 像素，使用自定义开书式双页布局。
+- 左侧页展示“见闻进度”标题、圆形进度环（通过中点圆算法绘制的外环）及 3 段式分段绿色进度条，以及章节奖励大奖 Slot 和“领取奖励”按钮。
+- 右侧页展示章节标题和 `<` `>` 导航按钮，以及 3 个垂直排布的任务卡片，每个卡片内置任务槽、标题、进度、奖励数值和“领取”按钮或“已完成/进行中”状态文本。
+- 书本左侧有“见闻”（激活）、“委托”、“秘境”、“讨伐”的装饰性标签。书本右侧上方配有 “✕” 关闭按钮以退回到主菜单。
 
 ## 8. UI / Command API
 
@@ -1400,7 +1434,8 @@ LIMITED ★5 抽選の概要:
 
 主 API:
 
-- `openMenu(player)`
+- `openMenu(player)` (Deprecated: replaced by openGuide)
+- `openGuide(player)`
 - `openStoryChapterSelection(player)`
 - `openStoryStageSelection(player, chapterGroup)`
 - `openRewardSummary(player, title, displayStacks)`

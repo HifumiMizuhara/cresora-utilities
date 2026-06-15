@@ -39,6 +39,7 @@ object AdventureRankHooks {
                         ArtifactSpecialUpgradeService.tryDropSpecialItems(killer, entity)
                         MoonAltarService.tryDropMoonBrick(killer, entity)
                         EquipmentEffectHookService.onKill(killer, entity)
+                        hifumi.cresora.guide.GuideService.onKillHostile(killer)
                         if (killer.random.nextDouble() < 0.05) {
                             val element = hifumi.cresora.leyline.LeyLineElement.entries[killer.random.nextInt(hifumi.cresora.leyline.LeyLineElement.entries.size)]
                             val keyItem = CreSoraUtilities.LEY_LINE_KEYS[element]
@@ -92,6 +93,7 @@ object AdventureRankHooks {
             ResonanceService.copyTo(oldPlayer, newPlayer)
             StoryProgressService.copyTo(oldPlayer, newPlayer)
             MasqueradeProgressService.copyTo(oldPlayer, newPlayer)
+            hifumi.cresora.guide.GuideService.copyTo(oldPlayer, newPlayer)
             MasqueradeService.restoreAfterRespawn(newPlayer)
             EquipmentAttributeService.markForFullHeal(newPlayer)
         })

@@ -12,6 +12,7 @@ import hifumi.cresora.resonance.ResonanceService;
 import hifumi.cresora.story.StoryProgressAccess;
 import hifumi.cresora.story.StoryProgressService;
 import hifumi.cresora.weapon.WeaponSkillAccess;
+import hifumi.cresora.guide.GuideProgressAccess;
 import java.util.Map;
 
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -24,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
-public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAccess, WeaponSkillAccess, ResonanceAccess, StoryProgressAccess, MasqueradeProgressAccess {
+public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAccess, WeaponSkillAccess, ResonanceAccess, StoryProgressAccess, MasqueradeProgressAccess, GuideProgressAccess {
     @Unique
     private int cresora$adventureRank = AdventureRankProgression.MIN_RANK;
 
@@ -103,6 +104,18 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Unique
     private String cresora$masqueradeArchiveRaw = "";
 
+    @Unique
+    private int cresora$guideCurrentChapter = 1;
+
+    @Unique
+    private String cresora$guideClaimedTasks = "";
+
+    @Unique
+    private String cresora$guideClaimedChapters = "";
+
+    @Unique
+    private String cresora$guideProgressMap = "";
+
     @Inject(method = "writeCustomData", at = @At("TAIL"))
     private void cresora$writeAdventureRank(WriteView view, CallbackInfo ci) {
         view.putInt(AdventureRankService.INSTANCE.playerRankKey(), this.cresora$adventureRank);
@@ -126,6 +139,10 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         view.putInt(MasqueradeProgressService.INSTANCE.playerTotalClearedWavesKey(), this.cresora$masqueradeTotalClearedWaves);
         view.putString(MasqueradeProgressService.INSTANCE.playerArchiveKey(), this.cresora$masqueradeArchiveRaw);
         view.putString("cresora_weapon_cooldowns", hifumi.cresora.weapon.WeaponSkillService.INSTANCE.serializeCooldowns(this.cresora$cooldowns));
+        view.putInt("cresora_guide_current_chapter", this.cresora$guideCurrentChapter);
+        view.putString("cresora_guide_claimed_tasks", this.cresora$guideClaimedTasks);
+        view.putString("cresora_guide_claimed_chapters", this.cresora$guideClaimedChapters);
+        view.putString("cresora_guide_progress_map", this.cresora$guideProgressMap);
     }
 
     @Inject(method = "readCustomData", at = @At("TAIL"))
@@ -153,6 +170,10 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         String serializedCooldowns = view.getString("cresora_weapon_cooldowns", "");
         this.cresora$cooldowns.clear();
         this.cresora$cooldowns.putAll(hifumi.cresora.weapon.WeaponSkillService.INSTANCE.deserializeCooldowns(serializedCooldowns));
+        this.cresora$guideCurrentChapter = view.getInt("cresora_guide_current_chapter", 1);
+        this.cresora$guideClaimedTasks = view.getString("cresora_guide_claimed_tasks", "");
+        this.cresora$guideClaimedChapters = view.getString("cresora_guide_claimed_chapters", "");
+        this.cresora$guideProgressMap = view.getString("cresora_guide_progress_map", "");
     }
 
     @Inject(method = "onDeath", at = @At("HEAD"))
@@ -420,5 +441,45 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetMasqueradeArchiveRaw(String value) {
         this.cresora$masqueradeArchiveRaw = value == null ? "" : value;
+    }
+
+    @Override
+    public int cresoraGetGuideCurrentChapter() {
+        return this.cresora$guideCurrentChapter;
+    }
+
+    @Override
+    public void cresoraSetGuideCurrentChapter(int value) {
+        this.cresora$guideCurrentChapter = value;
+    }
+
+    @Override
+    public String cresoraGetGuideClaimedTasks() {
+        return this.cresora$guideClaimedTasks;
+    }
+
+    @Override
+    public void cresoraSetGuideClaimedTasks(String value) {
+        this.cresora$guideClaimedTasks = value == null ? "" : value;
+    }
+
+    @Override
+    public String cresoraGetGuideClaimedChapters() {
+        return this.cresora$guideClaimedChapters;
+    }
+
+    @Override
+    public void cresoraSetGuideClaimedChapters(String value) {
+        this.cresora$guideClaimedChapters = value == null ? "" : value;
+    }
+
+    @Override
+    public String cresoraGetGuideProgressMap() {
+        return this.cresora$guideProgressMap;
+    }
+
+    @Override
+    public void cresoraSetGuideProgressMap(String value) {
+        this.cresora$guideProgressMap = value == null ? "" : value;
     }
 }

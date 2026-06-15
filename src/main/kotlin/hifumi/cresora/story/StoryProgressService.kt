@@ -29,6 +29,7 @@ object StoryProgressService {
         val updated = clearedChapterIds(player).toMutableSet()
         updated += chapterId
         access.cresoraSetStoryClearsRaw(updated.sorted().joinToString(DELIMITER))
+        hifumi.cresora.guide.GuideService.onStoryStageClear(player, chapterId)
         return true
     }
 
