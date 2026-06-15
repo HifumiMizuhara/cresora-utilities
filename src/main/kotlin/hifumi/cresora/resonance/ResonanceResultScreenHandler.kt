@@ -76,23 +76,36 @@ class ResonanceResultScreenHandler(
     private fun repull(player: PlayerEntity) {
         val serverPlayer = player as? ServerPlayerEntity ?: return
         val banner = bannerId?.let(ResonanceContentRegistry::banner) ?: return
-        val result = ResonanceService.pull(serverPlayer, banner)
-        if (result == null) {
-            player.sendMessage(Text.translatable("screen.cresora.resonance.not_enough_currency", banner.cost), false)
-            return
+        when (val outcome = ResonanceService.pull(serverPlayer, banner)) {
+            is ResonanceService.PullOutcome.Success -> {
+                val result = outcome.result
+                player.sendMessage(
+                    Text.translatable(
+                        "screen.cresora.resonance.pull_success",
+                        Text.translatable(result.banner.translationKey),
+                        Text.translatable(result.pulledWeapon.item.translationKey),
+                        Text.translatable(result.rarity.translationKey())
+                    ),
+                    false
+                )
+                bannerId = result.banner.id
+                refreshDisplay(result)
+                sendContentUpdates()
+            }
+
+            ResonanceService.PullOutcome.NotEnoughCurrency -> {
+                player.sendMessage(Text.translatable("screen.cresora.resonance.not_enough_currency", banner.cost), false)
+            }
+
+            ResonanceService.PullOutcome.FeaturedNotSelected -> {
+                player.sendMessage(Text.translatable("screen.cresora.resonance.featured_not_selected"), false)
+                ArtifactUiFlow.openResonanceFeaturedSelection(serverPlayer)
+            }
+
+            ResonanceService.PullOutcome.NoFiveStarWeaponsAvailable -> {
+                player.sendMessage(Text.translatable("screen.cresora.resonance.no_five_star_available"), false)
+            }
         }
-        player.sendMessage(
-            Text.translatable(
-                "screen.cresora.resonance.pull_success",
-                Text.translatable(result.banner.translationKey),
-                Text.translatable(result.pulledWeapon.item.translationKey),
-                Text.translatable(result.rarity.translationKey())
-            ),
-            false
-        )
-        bannerId = result.banner.id
-        refreshDisplay(result)
-        sendContentUpdates()
     }
 
     private fun refreshDisplay(result: ResonanceService.PullResult) {

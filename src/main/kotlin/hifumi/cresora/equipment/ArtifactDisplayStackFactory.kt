@@ -190,7 +190,12 @@ object ArtifactDisplayStackFactory {
         }
     }
 
-    fun resonanceBannerDisplay(definition: ResonanceBannerDefinition, pityCount: Int, arpeggioReady: Boolean): ItemStack {
+    fun resonanceBannerDisplay(
+        definition: ResonanceBannerDefinition,
+        pityCount: Int,
+        arpeggioReady: Boolean,
+        selectedFeaturedWeaponId: String? = null
+    ): ItemStack {
         val displayItem = definition.currencyType().icon()
         return ItemStack(displayItem).apply {
             set(
@@ -207,7 +212,64 @@ object ArtifactDisplayStackFactory {
                     }
                 )
             )
+            if (definition.type == ResonanceBannerType.LIMITED) {
+                val lore = if (selectedFeaturedWeaponId != null) {
+                    listOf(
+                        Text.translatable(
+                            "screen.cresora.resonance.banner_lore_featured",
+                            Text.translatable("item.cresora-utilities.$selectedFeaturedWeaponId")
+                        )
+                    )
+                } else {
+                    listOf(Text.translatable("screen.cresora.resonance.banner_lore_featured_unset"))
+                }
+                set(DataComponentTypes.LORE, LoreComponent(lore))
+            }
         }
+    }
+
+    fun resonanceFeaturedSelectDisplay(selectedFeaturedWeaponId: String?): ItemStack {
+        return ItemStack(Items.NAME_TAG).apply {
+            set(
+                DataComponentTypes.CUSTOM_NAME,
+                Text.translatable("screen.cresora.resonance.featured_select_entry")
+            )
+            val lore = if (selectedFeaturedWeaponId != null) {
+                listOf(
+                    Text.translatable(
+                        "screen.cresora.resonance.featured_select_current",
+                        Text.translatable("item.cresora-utilities.$selectedFeaturedWeaponId")
+                    ),
+                    Text.translatable("screen.cresora.resonance.featured_select_hint_change")
+                )
+            } else {
+                listOf(
+                    Text.translatable("screen.cresora.resonance.featured_select_none"),
+                    Text.translatable("screen.cresora.resonance.featured_select_hint_set")
+                )
+            }
+            set(DataComponentTypes.LORE, LoreComponent(lore))
+        }
+    }
+
+    fun resonanceFeaturedOptionDisplay(weaponStack: ItemStack, selected: Boolean): ItemStack {
+        val display = weaponStack.copy()
+        if (selected) {
+            display.set(
+                DataComponentTypes.CUSTOM_NAME,
+                Text.translatable(
+                    "screen.cresora.resonance.featured_option_selected",
+                    display.name
+                )
+            )
+        }
+        val lore = if (selected) {
+            listOf(Text.translatable("screen.cresora.resonance.featured_option_lore_selected"))
+        } else {
+            listOf(Text.translatable("screen.cresora.resonance.featured_option_lore_unselected"))
+        }
+        display.set(DataComponentTypes.LORE, LoreComponent(lore))
+        return display
     }
 
     fun resonanceResultDisplay(result: ResonanceService.PullResult): ItemStack {

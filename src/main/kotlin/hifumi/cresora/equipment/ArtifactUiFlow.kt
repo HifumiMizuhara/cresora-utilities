@@ -5,6 +5,7 @@ import hifumi.cresora.domain.DomainRewardScreenHandler
 import hifumi.cresora.domain.DomainSelectionScreenHandler
 import hifumi.cresora.masquerade.MasqueradeLoadoutScreenHandler
 import hifumi.cresora.masquerade.MasqueradeSupportScreenHandler
+import hifumi.cresora.resonance.ResonanceFeaturedSelectionScreenHandler
 import hifumi.cresora.resonance.ResonanceResultScreenHandler
 import hifumi.cresora.resonance.ResonanceScreenHandler
 import hifumi.cresora.resonance.ResonanceService
@@ -117,6 +118,15 @@ object ArtifactUiFlow {
             SimpleNamedScreenHandlerFactory(
                 { syncId, playerInventory, _ -> ResonanceResultScreenHandler(syncId, playerInventory, result) },
                 Text.translatable("screen.cresora.resonance.result")
+            )
+        )
+    }
+
+    fun openResonanceFeaturedSelection(player: ServerPlayerEntity) {
+        player.openHandledScreen(
+            SimpleNamedScreenHandlerFactory(
+                { syncId, playerInventory, _ -> ResonanceFeaturedSelectionScreenHandler(syncId, playerInventory) },
+                Text.translatable("screen.cresora.resonance.featured_selection")
             )
         )
     }

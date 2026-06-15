@@ -25,6 +25,7 @@ class ResonanceScreenHandler(
     companion object {
         private const val ROWS = 1
         private const val SLOT_COUNT = 9
+        private const val FEATURED_SELECT_SLOT = 0
         private const val LIMITED_SLOT = 2
         private const val STANDARD_SLOT = 6
         private const val PROPERTY_LIMITED_PITY = 0
@@ -67,9 +68,18 @@ class ResonanceScreenHandler(
     override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
         if (slotIndex in 0 until SLOT_COUNT) {
             if (actionType == SlotActionType.PICKUP || actionType == SlotActionType.QUICK_MOVE) {
+                val serverPlayer = player as? ServerPlayerEntity ?: return
                 when (slotIndex) {
-                    LIMITED_SLOT -> attemptPull(player, limitedBanner)
-                    STANDARD_SLOT -> attemptPull(player, standardBanner)
+                    FEATURED_SELECT_SLOT -> ArtifactUiFlow.openResonanceFeaturedSelection(serverPlayer)
+                    LIMITED_SLOT -> {
+                        if (ResonanceService.getSelectedFeaturedWeaponId(serverPlayer) == null) {
+                            player.sendMessage(Text.translatable("screen.cresora.resonance.featured_not_selected"), false)
+                            ArtifactUiFlow.openResonanceFeaturedSelection(serverPlayer)
+                        } else {
+                            attemptPull(serverPlayer, limitedBanner)
+                        }
+                    }
+                    STANDARD_SLOT -> attemptPull(serverPlayer, standardBanner)
                 }
             }
             return
@@ -87,23 +97,35 @@ class ResonanceScreenHandler(
 
     fun arpeggioReady(): Boolean = properties.get(PROPERTY_ARPEGGIO_READY) > 0
 
-    private fun attemptPull(player: PlayerEntity, banner: ResonanceBannerDefinition) {
-        val serverPlayer = player as? ServerPlayerEntity ?: return
-        val result = ResonanceService.pull(serverPlayer, banner)
-        if (result == null) {
-            player.sendMessage(Text.translatable("screen.cresora.resonance.not_enough_currency", banner.cost), false)
-            return
+    private fun attemptPull(player: ServerPlayerEntity, banner: ResonanceBannerDefinition) {
+        when (val outcome = ResonanceService.pull(player, banner)) {
+            is ResonanceService.PullOutcome.Success -> {
+                val result = outcome.result
+                player.sendMessage(
+                    Text.translatable(
+                        "screen.cresora.resonance.pull_success",
+                        Text.translatable(result.banner.translationKey),
+                        Text.translatable(result.pulledWeapon.item.translationKey),
+                        Text.translatable(result.rarity.translationKey())
+                    ),
+                    false
+                )
+                ArtifactUiFlow.openResonanceResult(player, result)
+            }
+
+            ResonanceService.PullOutcome.NotEnoughCurrency -> {
+                player.sendMessage(Text.translatable("screen.cresora.resonance.not_enough_currency", banner.cost), false)
+            }
+
+            ResonanceService.PullOutcome.FeaturedNotSelected -> {
+                player.sendMessage(Text.translatable("screen.cresora.resonance.featured_not_selected"), false)
+                ArtifactUiFlow.openResonanceFeaturedSelection(player)
+            }
+
+            ResonanceService.PullOutcome.NoFiveStarWeaponsAvailable -> {
+                player.sendMessage(Text.translatable("screen.cresora.resonance.no_five_star_available"), false)
+            }
         }
-        player.sendMessage(
-            Text.translatable(
-                "screen.cresora.resonance.pull_success",
-                Text.translatable(result.banner.translationKey),
-                Text.translatable(result.pulledWeapon.item.translationKey),
-                Text.translatable(result.rarity.translationKey())
-            ),
-            false
-        )
-        ArtifactUiFlow.openResonanceResult(serverPlayer, result)
     }
 
     private fun refreshOffers() {
@@ -119,12 +141,21 @@ class ResonanceScreenHandler(
             displayInventory.setStack(index, ArtifactDisplayStackFactory.fillerDisplay())
         }
         displayInventory.setStack(
+            FEATURED_SELECT_SLOT,
+            ArtifactDisplayStackFactory.resonanceFeaturedSelectDisplay(progress.selectedFeaturedWeaponId)
+        )
+        displayInventory.setStack(
             LIMITED_SLOT,
-            ArtifactDisplayStackFactory.resonanceBannerDisplay(limitedBanner, progress.limitedPityPulls, progress.arpeggioReady)
+            ArtifactDisplayStackFactory.resonanceBannerDisplay(
+                limitedBanner,
+                progress.limitedPityPulls,
+                progress.arpeggioReady,
+                progress.selectedFeaturedWeaponId
+            )
         )
         displayInventory.setStack(
             STANDARD_SLOT,
-            ArtifactDisplayStackFactory.resonanceBannerDisplay(standardBanner, progress.standardPulls, false)
+            ArtifactDisplayStackFactory.resonanceBannerDisplay(standardBanner, progress.standardPulls, false, null)
         )
     }
 

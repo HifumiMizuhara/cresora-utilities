@@ -111,6 +111,7 @@
 - `cresora-utilities:artifact_beta`
 - `cresora-utilities:resonance`
 - `cresora-utilities:resonance_result`
+- `cresora-utilities:resonance_featured_selection`
 
 ### 2.4 Loot Function
 
@@ -411,11 +412,10 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 対象:
 
-- 限定奏鳴
+- 限定奏鳴 (SELECT ガチャ：プレイヤー個別に★5 PU を選択)
 - 常設奏鳴
 - レート
-- ピックアップ
-- 各レアリティ pool
+- 各レアリティ pool（限定の `fiveStarPool` は省略可で、PU および「すり抜けプール」は実行時に WeaponContentRegistry の全★5から動的構成される）
 
 主 API:
 
@@ -426,7 +426,8 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 注意:
 
 - 各 rarity pool は content load 時に検証されます。
-- 空 pool、負の weight、pool と rarity の不一致、限定 banner の不正な featured 参照は reject されます。
+- 空 pool（LIMITED の `fiveStarPool` を除く）、負の weight、pool と rarity の不一致は reject されます。
+- LIMITED バナーは `featuredFiveStarWeaponId` / `fiveStarPool` を持ちません。PU はプレイヤーごとに `cresoraGetSelectedFeaturedWeaponId()` から取得します。
 
 ### 5.6 StoryContentRegistry
 
@@ -921,20 +922,30 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 責務:
 
 - コード進行 / 代理コードの所持管理
-- 限定 / 常設のガチャ実行
+- 限定 (SELECT) / 常設のガチャ実行
 - pity / deep pity / arpeggio 管理
+- LIMITED 用 PU★5 のプレイヤー単位選択管理（変更時は LIMITED ピティ群を全リセット）
 
 主 API:
 
-- `getProgress(player)`
+- `getProgress(player)` → `Progress(... , selectedFeaturedWeaponId)`
 - `getCurrency(player, type)`
 - `addCurrency(player, type, amount)`
 - `setCurrency(player, type, amount)`
 - `spendCurrency(player, type, amount)`
 - `copyTo(old, new)`
 - `currencyCount(player, banner)`
-- `canPull(player, banner)`
-- `pull(player, banner)`
+- `canPull(player, banner)` ※ LIMITED は PU 未選択時に false
+- `pull(player, banner)` → `PullOutcome.Success | NotEnoughCurrency | FeaturedNotSelected | NoFiveStarWeaponsAvailable`
+- `getSelectedFeaturedWeaponId(player)`
+- `selectableFeaturedWeaponIds()` → WeaponContentRegistry 上の `craftedRarity == FIVE_STAR` を全て返す
+- `setSelectedFeaturedWeaponId(player, weaponId)` → 変更時に limited pity / four-star pity / guaranteed / deep pity / arpeggio を全てリセット
+
+LIMITED ★5 抽選の概要:
+
+- ★5 を引いたとき、`limitedFiveStarGuaranteed` または `random.nextDouble() < 0.5` の場合は PU を排出（確定枠を消費）
+- それ以外は「登録済み全★5から PU を除外したリスト」から重み均等で抽選（すり抜け）
+- PU 以外の★5が一つも無い場合は最終フォールバックとして PU を排出
 
 ### 7.4 EquipmentGenerationService
 
@@ -1401,6 +1412,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `openShop(player)`
 - `openResonance(player)`
 - `openResonanceResult(player, result)`
+- `openResonanceFeaturedSelection(player)`
 - `openUpgradeScreen(player, baseStack, materialStack)`
 - `openAlphaSelection(player, baseStack, materialStack)`
 - `openBetaSelection(player, baseStack, materialStack)`

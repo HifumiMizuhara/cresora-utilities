@@ -34,6 +34,7 @@ import hifumi.cresora.masquerade.MasqueradeLoadoutScreenHandler
 import hifumi.cresora.masquerade.MasqueradeSupportScreenHandler
 import hifumi.cresora.musicecho.MusicEchoContentRegistry
 import hifumi.cresora.resonance.ResonanceContentRegistry
+import hifumi.cresora.resonance.ResonanceFeaturedSelectionScreenHandler
 import hifumi.cresora.resonance.ResonanceResultScreenHandler
 import hifumi.cresora.resonance.ResonanceScreenHandler
 import hifumi.cresora.story.StoryChapterSelectionScreenHandler
@@ -153,6 +154,7 @@ object CreSoraUtilities : ModInitializer {
 	lateinit var ARTIFACT_BETA_SCREEN_HANDLER: ScreenHandlerType<ArtifactBetaScreenHandler>
 	lateinit var RESONANCE_SCREEN_HANDLER: ScreenHandlerType<ResonanceScreenHandler>
 	lateinit var RESONANCE_RESULT_SCREEN_HANDLER: ScreenHandlerType<ResonanceResultScreenHandler>
+	lateinit var RESONANCE_FEATURED_SELECTION_SCREEN_HANDLER: ScreenHandlerType<ResonanceFeaturedSelectionScreenHandler>
 	lateinit var LEY_LINE_SELECTION_SCREEN_HANDLER: ScreenHandlerType<LeyLineSelectionScreenHandler>
 	lateinit var SET_LEVEL_LOOT_FUNCTION: LootFunctionType<SetLevelLootFunction>
 
@@ -266,6 +268,11 @@ object CreSoraUtilities : ModInitializer {
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "resonance_result"),
 			ScreenHandlerType(::ResonanceResultScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		RESONANCE_FEATURED_SELECTION_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "resonance_featured_selection"),
+			ScreenHandlerType(::ResonanceFeaturedSelectionScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
 		LEY_LINE_SELECTION_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,

@@ -3,24 +3,16 @@
     {
       "id": "limited_lakeside",
       "type": "limited",
-      "familyId": "minor_1_3",
+      "familyId": "select_pickup",
       "translationKey": "screen.cresora.resonance.banner.limited_lakeside",
       "currencyItemId": "chord_progression",
       "cost": 325,
-      "featuredFiveStarWeaponId": "lakeside_stride",
       "rates": {
         "fiveStarChance": 0.003,
         "fourStarChance": 0.08,
         "threeStarChance": 0.15,
         "twoStarChance": 0.767
       },
-      "fiveStarPool": [
-        {
-          "weaponId": "lakeside_stride",
-          "rarity": "5_star",
-          "weight": 1.0
-        }
-      ],
       "fourStarPool": [
         {
           "weaponId": "requiem_toward_dawn",

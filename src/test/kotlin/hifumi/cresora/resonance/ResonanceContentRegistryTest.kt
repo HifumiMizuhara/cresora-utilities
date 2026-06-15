@@ -35,7 +35,6 @@ class ResonanceContentRegistryTest {
             id: String = "test_banner",
             type: ResonanceBannerType = ResonanceBannerType.STANDARD,
             cost: Int = 325,
-            featuredFiveStarWeaponId: String? = null,
             rates: ResonanceRateTable = ResonanceRateTable(0.01, 0.0325, 0.0799, 0.8776),
             fiveStarPool: List<ResonanceWeaponEntry> = listOf(ResonanceWeaponEntry("rondo_melody", WeaponRarity.FIVE_STAR, 1.0)),
             fourStarPool: List<ResonanceWeaponEntry> = listOf(ResonanceWeaponEntry("gaoshan_liushui", WeaponRarity.FOUR_STAR, 1.0)),
@@ -48,7 +47,6 @@ class ResonanceContentRegistryTest {
             translationKey = "screen.cresora.resonance.banner.$id",
             currencyItemId = "substitute_chord",
             cost = cost,
-            featuredFiveStarWeaponId = featuredFiveStarWeaponId,
             rates = rates,
             fiveStarPool = fiveStarPool,
             fourStarPool = fourStarPool,
@@ -64,9 +62,19 @@ class ResonanceContentRegistryTest {
     }
 
     @Test
-    fun testEmptyFiveStarPoolRejected() {
+    fun testEmptyFiveStarPoolRejectedForStandard() {
+        // STANDARD タイプは fiveStarPool 必須
         val cause = invokeApply(ResonanceContentBundle(listOf(banner(fiveStarPool = emptyList()))))
         assertTrue(cause.message!!.contains("five-star pool"), "Unexpected message: ${cause.message}")
+    }
+
+    @Test
+    fun testEmptyFiveStarPoolAcceptedForLimitedSelect() {
+        // LIMITED は SELECT モードのため fiveStarPool 空でも通る
+        applyBundle.invoke(
+            ResonanceContentRegistry,
+            ResonanceContentBundle(listOf(banner(type = ResonanceBannerType.LIMITED, fiveStarPool = emptyList())))
+        )
     }
 
     @Test
@@ -98,19 +106,6 @@ class ResonanceContentRegistryTest {
     fun testDuplicateBannerIdsRejected() {
         val cause = invokeApply(ResonanceContentBundle(listOf(banner(id = "dup"), banner(id = "dup"))))
         assertTrue(cause.message!!.contains("Duplicate resonance banner ids"), "Unexpected message: ${cause.message}")
-    }
-
-    @Test
-    fun testFeaturedFiveStarOutsidePoolRejected() {
-        val bundle = ResonanceContentBundle(listOf(
-            banner(
-                type = ResonanceBannerType.LIMITED,
-                featuredFiveStarWeaponId = "lakeside_stride",
-                fiveStarPool = listOf(ResonanceWeaponEntry("rondo_melody", WeaponRarity.FIVE_STAR, 1.0))
-            )
-        ))
-        val cause = invokeApply(bundle)
-        assertTrue(cause.message!!.contains("featured five-star"), "Unexpected message: ${cause.message}")
     }
 
     @Test

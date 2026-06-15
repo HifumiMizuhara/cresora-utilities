@@ -8,6 +8,7 @@ import hifumi.cresora.equipment.ArtifactBetaScreen
 import hifumi.cresora.equipment.ArtifactShopScreen
 import hifumi.cresora.masquerade.MasqueradeLoadoutScreen
 import hifumi.cresora.masquerade.MasqueradeSupportScreen
+import hifumi.cresora.resonance.ResonanceFeaturedSelectionScreen
 import hifumi.cresora.resonance.ResonanceResultScreen
 import hifumi.cresora.resonance.ResonanceScreen
 import hifumi.cresora.story.StoryChapterSelectionScreen
@@ -37,5 +38,6 @@ object CreSoraUtilitiesClient : ClientModInitializer {
 		HandledScreens.register(CreSoraUtilities.ARTIFACT_BETA_SCREEN_HANDLER, ::ArtifactBetaScreen)
 		HandledScreens.register(CreSoraUtilities.RESONANCE_SCREEN_HANDLER, ::ResonanceScreen)
 		HandledScreens.register(CreSoraUtilities.RESONANCE_RESULT_SCREEN_HANDLER, ::ResonanceResultScreen)
+		HandledScreens.register(CreSoraUtilities.RESONANCE_FEATURED_SELECTION_SCREEN_HANDLER, ::ResonanceFeaturedSelectionScreen)
 	}
 }

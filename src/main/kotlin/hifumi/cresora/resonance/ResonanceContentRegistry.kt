@@ -64,7 +64,6 @@ data class ResonanceBannerDefinition(
     val translationKey: String,
     val currencyItemId: String,
     val cost: Int,
-    val featuredFiveStarWeaponId: String? = null,
     val rates: ResonanceRateTable,
     val fiveStarPool: List<ResonanceWeaponEntry>,
     val fourStarPool: List<ResonanceWeaponEntry>,
@@ -82,29 +81,12 @@ data class ResonanceBannerDefinition(
                 Codec.STRING.fieldOf("translationKey").forGetter(ResonanceBannerDefinition::translationKey),
                 Codec.STRING.fieldOf("currencyItemId").forGetter(ResonanceBannerDefinition::currencyItemId),
                 Codec.INT.fieldOf("cost").forGetter(ResonanceBannerDefinition::cost),
-                Codec.STRING.optionalFieldOf("featuredFiveStarWeaponId")
-                    .forGetter { java.util.Optional.ofNullable(it.featuredFiveStarWeaponId) },
                 ResonanceRateTable.CODEC.fieldOf("rates").forGetter(ResonanceBannerDefinition::rates),
-                ResonanceWeaponEntry.CODEC.listOf().fieldOf("fiveStarPool").forGetter(ResonanceBannerDefinition::fiveStarPool),
+                ResonanceWeaponEntry.CODEC.listOf().optionalFieldOf("fiveStarPool", emptyList()).forGetter(ResonanceBannerDefinition::fiveStarPool),
                 ResonanceWeaponEntry.CODEC.listOf().fieldOf("fourStarPool").forGetter(ResonanceBannerDefinition::fourStarPool),
                 ResonanceWeaponEntry.CODEC.listOf().fieldOf("threeStarPool").forGetter(ResonanceBannerDefinition::threeStarPool),
                 ResonanceWeaponEntry.CODEC.listOf().fieldOf("twoStarPool").forGetter(ResonanceBannerDefinition::twoStarPool)
-            ).apply(instance) { id, type, familyId, translationKey, currencyItemId, cost, featured, rates, five, four, three, two ->
-                ResonanceBannerDefinition(
-                    id = id,
-                    type = type,
-                    familyId = familyId,
-                    translationKey = translationKey,
-                    currencyItemId = currencyItemId,
-                    cost = cost,
-                    featuredFiveStarWeaponId = featured.orElse(null),
-                    rates = rates,
-                    fiveStarPool = five,
-                    fourStarPool = four,
-                    threeStarPool = three,
-                    twoStarPool = two
-                )
-            }
+            ).apply(instance, ::ResonanceBannerDefinition)
         }
     }
 }
@@ -168,22 +150,22 @@ object ResonanceContentRegistry {
             require(banner.rates.threeStarChance >= 0.0 && banner.rates.twoStarChance >= 0.0) {
                 "Resonance banner '${banner.id}' has negative rates"
             }
-            require(banner.fiveStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a five-star pool" }
+            // LIMITED は ★5 をプレイヤーが選択するため fiveStarPool は不要
+            if (banner.type != ResonanceBannerType.LIMITED) {
+                require(banner.fiveStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a five-star pool" }
+            }
             require(banner.fourStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a four-star pool" }
             require(banner.threeStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a three-star pool" }
             require(banner.twoStarPool.isNotEmpty()) { "Resonance banner '${banner.id}' needs a two-star pool" }
             require(banner.rates.fiveStarChance + banner.rates.fourStarChance + banner.rates.threeStarChance + banner.rates.twoStarChance <= 1.000001) {
                 "Resonance banner '${banner.id}' has rates summing above 1.0"
             }
-            validatePool(banner, "fiveStarPool", banner.fiveStarPool, WeaponRarity.FIVE_STAR)
+            if (banner.fiveStarPool.isNotEmpty()) {
+                validatePool(banner, "fiveStarPool", banner.fiveStarPool, WeaponRarity.FIVE_STAR)
+            }
             validatePool(banner, "fourStarPool", banner.fourStarPool, WeaponRarity.FOUR_STAR)
             validatePool(banner, "threeStarPool", banner.threeStarPool, WeaponRarity.THREE_STAR)
             validatePool(banner, "twoStarPool", banner.twoStarPool, WeaponRarity.TWO_STAR)
-            if (banner.type == ResonanceBannerType.LIMITED && banner.featuredFiveStarWeaponId != null) {
-                require(banner.fiveStarPool.any { it.weaponId == banner.featuredFiveStarWeaponId }) {
-                    "Resonance banner '${banner.id}' references featured five-star '${banner.featuredFiveStarWeaponId}' outside its five-star pool"
-                }
-            }
         }
         banners = bannerMap
     }
@@ -213,15 +195,12 @@ object ResonanceContentRegistry {
                 ResonanceBannerDefinition(
                     id = "limited_lakeside",
                     type = ResonanceBannerType.LIMITED,
-                    familyId = "minor_1_3",
+                    familyId = "select_pickup",
                     translationKey = "screen.cresora.resonance.banner.limited_lakeside",
                     currencyItemId = "chord_progression",
                     cost = 325,
-                    featuredFiveStarWeaponId = "lakeside_stride",
                     rates = defaultRates(),
-                    fiveStarPool = listOf(
-                        ResonanceWeaponEntry("lakeside_stride", WeaponRarity.FIVE_STAR, 1.0)
-                    ),
+                    fiveStarPool = emptyList(),
                     fourStarPool = standardFourStarPool(),
                     threeStarPool = standardThreeStarPool(),
                     twoStarPool = standardTwoStarPool()

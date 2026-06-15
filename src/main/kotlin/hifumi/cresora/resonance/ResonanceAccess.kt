@@ -39,4 +39,8 @@ interface ResonanceAccess {
     fun cresoraGetLastDailyLoginEpochDay(): Long
 
     fun cresoraSetLastDailyLoginEpochDay(value: Long)
+
+    fun cresoraGetSelectedFeaturedWeaponId(): String?
+
+    fun cresoraSetSelectedFeaturedWeaponId(value: String?)
 }
