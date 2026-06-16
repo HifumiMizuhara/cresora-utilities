@@ -164,8 +164,8 @@ object AdventureRankService {
         val toughnessInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR_TOUGHNESS)
         val scaleInstance = entity.attributes.getCustomInstance(EntityAttributes.SCALE)
         val world = entity.world as? ServerWorld
-        if (world != null && CresoraWorldKeys.isOverworldAlt(world.registryKey)) {
-            applyOverworldAltMobScaling(entity, maxHealthInstance, armorInstance, toughnessInstance, scaleInstance)
+        if (world != null && CresoraWorldKeys.isCresoraWorld(world.registryKey)) {
+            applyCresoraWorldMobScaling(entity, maxHealthInstance, armorInstance, toughnessInstance, scaleInstance)
             return
         }
         val moonScalar = world?.server?.let { MoonPhaseService.healthScalar(it) } ?: 1.0
@@ -247,7 +247,7 @@ object AdventureRankService {
         val bloodMoonMultiplier = BloodMoonService.damageMultiplier(attacker)
         val leyLineMultiplier = hifumi.cresora.leyline.LeyLineService.damageMultiplier(attacker)
         val world = hostile.world as? ServerWorld ?: return 1.0
-        if (CresoraWorldKeys.isOverworldAlt(world.registryKey)) {
+        if (CresoraWorldKeys.isCresoraWorld(world.registryKey)) {
             val phaseMultiplier = if (hostile.health <= hostile.maxHealth * 0.5f) 1.12 else 1.0
             return phaseMultiplier * FieldMobPackService.eliteDamageScalar(hostile)
         }
@@ -264,7 +264,7 @@ object AdventureRankService {
             leyLineMultiplier
     }
 
-    private fun applyOverworldAltMobScaling(
+    private fun applyCresoraWorldMobScaling(
         entity: MobEntity,
         maxHealthInstance: net.minecraft.entity.attribute.EntityAttributeInstance,
         armorInstance: net.minecraft.entity.attribute.EntityAttributeInstance?,

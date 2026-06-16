@@ -7,10 +7,10 @@ import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
 object CresoraWorldKeys {
-    val OVERWORLD_ALT: RegistryKey<World> = RegistryKey.of(
+    val CRESORA_WORLD: RegistryKey<World> = RegistryKey.of(
         RegistryKeys.WORLD,
-        Identifier.of(CreSoraUtilities.MOD_ID, "overworld_alt")
+        Identifier.of(CreSoraUtilities.MOD_ID, "cresora_world")
     )
 
-    fun isOverworldAlt(worldKey: RegistryKey<World>): Boolean = worldKey == OVERWORLD_ALT
+    fun isCresoraWorld(worldKey: RegistryKey<World>): Boolean = worldKey == CRESORA_WORLD
 }

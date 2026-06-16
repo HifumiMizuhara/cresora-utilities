@@ -24,11 +24,11 @@ class PortalBlock(settings: Settings) : Block(settings) {
 
         val serverPlayer = player as? ServerPlayerEntity ?: return ActionResult.CONSUME
         val server = serverPlayer.server ?: return ActionResult.CONSUME
-        val leavingAlt = CresoraWorldKeys.isOverworldAlt(world.registryKey)
-        val targetWorld = if (leavingAlt) {
+        val leavingCresora = CresoraWorldKeys.isCresoraWorld(world.registryKey)
+        val targetWorld = if (leavingCresora) {
             server.overworld
         } else {
-            server.getWorld(CresoraWorldKeys.OVERWORLD_ALT)
+            server.getWorld(CresoraWorldKeys.CRESORA_WORLD)
         }
 
         if (targetWorld == null) {
@@ -36,19 +36,19 @@ class PortalBlock(settings: Settings) : Block(settings) {
             return ActionResult.FAIL
         }
 
-        val targetPos = if (leavingAlt) {
+        val targetPos = if (leavingCresora) {
             server.overworld.spawnPos.up()
         } else {
             SpiritGuideService.LANDING_POS
         }
-        if (!leavingAlt) {
+        if (!leavingCresora) {
             SpiritGuideService.ensureLanding(targetWorld)
         }
         val center = targetPos.toCenterPos()
         serverPlayer.teleport(targetWorld, center.x, center.y + 0.1, center.z, setOf(), serverPlayer.yaw, serverPlayer.pitch, false)
         serverPlayer.fallDistance = 0.0
         serverPlayer.sendMessage(
-            Text.translatable(if (leavingAlt) "message.cresora.portal.returned" else "message.cresora.portal.entered"),
+            Text.translatable(if (leavingCresora) "message.cresora.portal.returned" else "message.cresora.portal.entered"),
             true
         )
         return ActionResult.SUCCESS

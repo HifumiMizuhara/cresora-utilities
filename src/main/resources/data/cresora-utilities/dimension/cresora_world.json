@@ -1,0 +1,84 @@
+{
+  "type": "cresora-utilities:cresora_world",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "cresora-utilities:cresora_coast",
+          "parameters": {
+            "temperature": 0.0,
+            "humidity": -0.1,
+            "continentalness": -0.25,
+            "erosion": -0.2,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "cresora-utilities:cresora_plains",
+          "parameters": {
+            "temperature": 0.5,
+            "humidity": -0.3,
+            "continentalness": 0.5,
+            "erosion": -0.5,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "cresora-utilities:cresora_forest",
+          "parameters": {
+            "temperature": 0.3,
+            "humidity": 0.3,
+            "continentalness": 0.5,
+            "erosion": 0.0,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "cresora-utilities:cresora_wetland",
+          "parameters": {
+            "temperature": 0.5,
+            "humidity": 0.6,
+            "continentalness": 0.2,
+            "erosion": -0.7,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "cresora-utilities:cresora_mountains",
+          "parameters": {
+            "temperature": 0.0,
+            "humidity": 0.0,
+            "continentalness": 0.7,
+            "erosion": 0.6,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "cresora-utilities:cresora_snowfield",
+          "parameters": {
+            "temperature": -0.7,
+            "humidity": -0.3,
+            "continentalness": 0.4,
+            "erosion": -0.3,
+            "weirdness": 0.0,
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        }
+      ]
+    },
+    "settings": "minecraft:overworld"
+  }
+}

@@ -235,7 +235,22 @@ Client screens live in `src/main/resources/assets/cresora-utilities/textures/gui
 
 ## Testing Guidelines
 
-Running `classes` compilation is mandatory, and gameplay changes should get a manual smoke pass in `runClient` or `runServer`.
+Running `classes` compilation is mandatory, and gameplay changes **MUST** get a manual smoke pass in **both** `runClient` and `runServer`.
+
+### Smoke Test Requirement (CRITICAL)
+
+**Every change that touches runtime behavior, registries, worldgen, dimensions, or data-driven JSON MUST be verified with both server and client smoke tests:**
+
+```bash
+GRADLE_USER_HOME=.gradle-user ./gradlew runServer --console=plain
+GRADLE_USER_HOME=.gradle-user ./gradlew runClient --console=plain
+```
+
+- `runServer` validates that the server can start without registry loading errors, dimension initialization failures, or datapack validation crashes.
+- `runClient` validates that the client can start and that GUI, rendering, and client-server handshakes work end-to-end.
+- A `classes` compile-only pass is **not sufficient** — many schema errors (e.g., missing biome `features`, invalid `carvers` format) only surface at runtime during registry/JSON loading.
+
+### Compiler Tests
 
 The CWC/CAC compilers have an automated test suite in the `compilerTest` source set (`src/compilerTest/kotlin/`, JUnit 5), covering lexer/parser error handling, `area_of_effect` parsing, typed action-node validation, `InstructionMapping` expansion, and golden codegen snapshots. Run it after any compiler or parser change:
 ```bash

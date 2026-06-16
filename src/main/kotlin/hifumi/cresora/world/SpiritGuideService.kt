@@ -27,7 +27,7 @@ object SpiritGuideService {
 
     fun init() {
         UseEntityCallback.EVENT.register(UseEntityCallback { player, world, _, entity, _ ->
-            if (world.isClient || !CresoraWorldKeys.isOverworldAlt(world.registryKey)) {
+            if (world.isClient || !CresoraWorldKeys.isCresoraWorld(world.registryKey)) {
                 return@UseEntityCallback ActionResult.PASS
             }
             if (entity !is VillagerEntity || !isGuide(entity)) {
@@ -44,14 +44,14 @@ object SpiritGuideService {
                 return@register
             }
             nextEnsureTick = now + 100L
-            val world = server.getWorld(CresoraWorldKeys.OVERWORLD_ALT) ?: return@register
+            val world = server.getWorld(CresoraWorldKeys.CRESORA_WORLD) ?: return@register
             ensureLanding(world)
             ensureGuide(world)
         }
     }
 
     fun ensureLanding(world: ServerWorld) {
-        if (!CresoraWorldKeys.isOverworldAlt(world.registryKey)) {
+        if (!CresoraWorldKeys.isCresoraWorld(world.registryKey)) {
             return
         }
 
