@@ -24,6 +24,7 @@ object ResonanceService {
     private const val LIMITED_SOFT_PITY_START = 100
     private const val LIMITED_HARD_PITY = 150
     private const val ARPEGGIO_GUARANTEE_PULL = 100
+    private val SPIRIT_BOND_STAGE_THRESHOLDS = intArrayOf(0, 40, 100, 200, 350, 550)
 
     data class Progress(
         val limitedPityPulls: Int,
@@ -218,6 +219,20 @@ object ResonanceService {
         points[weaponId] = updated
         access.cresoraSetSpiritBondPointsRaw(writeSpiritBondPoints(points))
         return updated
+    }
+
+    fun spiritBondStage(player: ServerPlayerEntity, weaponId: String): Int {
+        return spiritBondStageForPoints(getSpiritBondPoints(player, weaponId))
+    }
+
+    fun spiritBondStageForPoints(points: Int): Int {
+        val normalized = points.coerceAtLeast(0)
+        for (index in SPIRIT_BOND_STAGE_THRESHOLDS.indices.reversed()) {
+            if (normalized >= SPIRIT_BOND_STAGE_THRESHOLDS[index]) {
+                return index + 1
+            }
+        }
+        return 1
     }
 
     fun currencyCount(player: ServerPlayerEntity, banner: ResonanceBannerDefinition): Int {

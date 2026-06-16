@@ -252,6 +252,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `baseLevel: Int`
 - `skillLevel: Int`
 - `breakthrough: Int` (精錬レベル 0..2)
+- `spiritBondStage: Int` (霊絆段階 1..6、`normalized()` でクランプ。レガシーデータは codec のデフォルト値 `1` で復元)
 
 公開メソッド:
 
@@ -347,6 +348,14 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `upgrades`
 - `craft`
 - `drops`
+- `spirit` (Optional) — 武器擬人化「霊」メタデータ。`WeaponSpiritDefinition` を参照
+
+`WeaponSpiritDefinition` の構造:
+
+- `nameKey: String` — 霊の表示名翻訳キー(必須)
+- `voiceLines: Map<String, String>` — `first_contact` などのフラグ別ボイスライン翻訳キー(任意)
+- `bondStages: List<WeaponSpiritBondStageDefinition>` — 各段階の `{ stage, titleKey, storyKey }`(stage は 1..6、ユニーク)
+- `awakeningConditionKey: String?` — 覚醒条件の翻訳キー(任意)
 
 主 API:
 
@@ -358,6 +367,7 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 - 武器の「数値と入手」はかなり JSON 化済み
 - ただし `skill.effectId` が新規なら、たいてい `WeaponSkillService` 側のコード追加がまだ必要
+- `spirit` は CWC の `.cresora` DSL の `spirit { name, awakening_condition, voice_lines { ... }, bond_stage N { title, story } }` ブロックから生成される。`applyBundle` 検証で `bondStages` の重複と範囲(1..6)・必須キーの空白を弾く
 
 ### 5.3 ArtifactSpecialItemRegistry
 
@@ -940,6 +950,9 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `getSelectedFeaturedWeaponId(player)`
 - `selectableFeaturedWeaponIds()` → WeaponContentRegistry 上の `craftedRarity == FIVE_STAR` を全て返す
 - `setSelectedFeaturedWeaponId(player, weaponId)` → 変更時に limited pity / four-star pity / guaranteed / deep pity / arpeggio を全てリセット
+- `getSpiritBondPoints(player, weaponId)` / `addSpiritBondPoints(player, weaponId, delta)` — 霊絆ポイントの取得・加算(ガチャ重複時に自動加算)
+- `spiritBondStageForPoints(points: Int): Int` — ポイント→段階(1..6)のしきい値 `[0, 40, 100, 200, 350, 550]` を適用する純粋関数
+- `spiritBondStage(player, weaponId): Int` — 現在のポイントから段階を直接取得
 
 LIMITED ★5 抽選の概要:
 
@@ -1421,6 +1434,30 @@ UI 与界面设计 (2026-06-15 重构):
 - 左侧页展示“见闻进度”标题、圆形进度环（通过中点圆算法绘制的外环）及 3 段式分段绿色进度条，以及章节奖励大奖 Slot 和“领取奖励”按钮。
 - 右侧页展示章节标题和 `<` `>` 导航按钮，以及 3 个垂直排布的任务卡片，每个卡片内置任务槽、标题、进度、奖励数值和“领取”按钮或“已完成/进行中”状态文本。
 - 书本左侧有“见闻”（激活）、“委托”、“秘境”、“讨伐”的装饰性标签。书本右侧上方配有 “✕” 关闭按钮以退回到主菜单。
+
+### 7.21 SpiritBondService / SpiritRenderer
+
+ファイル:
+
+- `weapon/SpiritBondService.kt` (server)
+- `client/.../weapon/SpiritRenderer.kt` (client)
+
+責務:
+
+- 武器擬人化「霊」モデル(Phase 2)の同期と描画
+- `SpiritBondService` は `END_SERVER_TICK` で 1 秒ごと(`time % 20`)に全オンラインプレイヤーのインベントリを走査し、`spirit` メタデータを持つ武器スタックに対し `ResonanceService.spiritBondStage(player, weaponId)` を当てて `WeaponData.spiritBondStage` を同期する
+- `SpiritRenderer` は `END_CLIENT_TICK` で `time % 4` ごとに 48m 以内のプレイヤーを巡回し、メインハンドの武器が霊を持つ場合に頭上を周回するオーブパーティクル(`END_ROD` 基準、bond stage ≥ 3 で `ENCHANT`、≥ 5 で `GLOW` を重畳)をスポーンする。半径は bond stage で線形拡大
+
+主 API:
+
+- `SpiritBondService.init()` — `CreSoraUtilities.onInitialize` から登録
+- `SpiritBondService.syncInventory(player)`
+- `SpiritRenderer.init()` — `CreSoraUtilitiesClient.onInitializeClient` から登録
+
+連動:
+
+- ガチャ重複で `ResonanceService.addSpiritBondPoints` が呼ばれ、しきい値 `[0, 40, 100, 200, 350, 550]` で stage 1..6 が決まる
+- 武器ツールチップ(`CresoraWeaponItem`)と強化画面 Stats タブ(`WeaponUpgradeScreen`)が `spiritBondStage` と現在の `bondStages[stage].titleKey` / `awakeningConditionKey` を表示する
 
 ## 8. UI / Command API
 

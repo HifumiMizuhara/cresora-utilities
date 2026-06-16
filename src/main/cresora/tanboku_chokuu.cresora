@@ -12,6 +12,37 @@ weapon "Tanboku Chokuu" {
         max_base_level: 60
         max_skill_level: 10
     }
+    spirit {
+        name: "item.cresora-utilities.tanboku_chokuu"
+        awakening_condition: "spirit.cresora.tanboku_chokuu.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.tanboku_chokuu.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.tanboku_chokuu.bond.1.title"
+            story: "spirit.cresora.tanboku_chokuu.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.tanboku_chokuu.bond.2.title"
+            story: "spirit.cresora.tanboku_chokuu.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.tanboku_chokuu.bond.3.title"
+            story: "spirit.cresora.tanboku_chokuu.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.tanboku_chokuu.bond.4.title"
+            story: "spirit.cresora.tanboku_chokuu.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.tanboku_chokuu.bond.5.title"
+            story: "spirit.cresora.tanboku_chokuu.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.tanboku_chokuu.bond.6.title"
+            story: "spirit.cresora.tanboku_chokuu.bond.6.story"
+        }
+    }
 
     // メインスキル：メニュー展開
     skill "Rougan Kenpo" {
@@ -201,6 +232,20 @@ weapon "Tanboku Chokuu" {
         en_us {
             name: "Tanboku Chokuu"
             skill_name: "Rougan Sword Styles"
+            "spirit.cresora.tanboku_chokuu.awakening": "Awakens when breath, ink, and blade finally move as one intention."
+            "spirit.cresora.tanboku_chokuu.voice.first_contact": "Do not chase the blade. Empty the heart, and the edge will arrive by itself."
+            "spirit.cresora.tanboku_chokuu.bond.1.title": "Ink Unsettled"
+            "spirit.cresora.tanboku_chokuu.bond.1.story": "His presence first appears like a stroke left half-finished, severe but searching."
+            "spirit.cresora.tanboku_chokuu.bond.2.title": "Dew-Cutting Form"
+            "spirit.cresora.tanboku_chokuu.bond.2.story": "Technique becomes more than precision; it becomes a way to remove what clouds your mind."
+            "spirit.cresora.tanboku_chokuu.bond.3.title": "Frost Listening"
+            "spirit.cresora.tanboku_chokuu.bond.3.story": "He begins to hear the silence between your choices and corrects you without humiliation."
+            "spirit.cresora.tanboku_chokuu.bond.4.title": "Empty Stroke"
+            "spirit.cresora.tanboku_chokuu.bond.4.story": "What looked like austerity reveals itself as mercy: the strength to cut only what must be cut."
+            "spirit.cresora.tanboku_chokuu.bond.5.title": "Vast Sky in Ink"
+            "spirit.cresora.tanboku_chokuu.bond.5.story": "His discipline opens rather than narrows, making space for conviction that does not waver."
+            "spirit.cresora.tanboku_chokuu.bond.6.title": "Blade Beyond Thought"
+            "spirit.cresora.tanboku_chokuu.bond.6.story": "At last he trusts your hand enough to let instinct stand where doctrine once ruled."
             sub_skill_danro_name: "First Style: Danro"
             sub_skill_zanso_name: "Second Style: Zanso"
             sub_skill_bokuchu_munen_name: "Third Style: Munen"
@@ -216,6 +261,20 @@ weapon "Tanboku Chokuu" {
         ja_jp {
             name: "淡墨長空"
             skill_name: "琅玕剣法"
+            "spirit.cresora.tanboku_chokuu.awakening": "息と墨と刃が、ようやくひとつの意志として揃った時に目覚める。"
+            "spirit.cresora.tanboku_chokuu.voice.first_contact": "刃を追うな。心を空にすれば、切っ先のほうから訪れる。"
+            "spirit.cresora.tanboku_chokuu.bond.1.title": "揺れる墨"
+            "spirit.cresora.tanboku_chokuu.bond.1.story": "彼の気配は、描き終える前に止められた一筆のように、峻厳でありながら何かを探している。"
+            "spirit.cresora.tanboku_chokuu.bond.2.title": "露を断つ型"
+            "spirit.cresora.tanboku_chokuu.bond.2.story": "技はただの正確さではなく、心を曇らせるものを払い落とす術へ変わる。"
+            "spirit.cresora.tanboku_chokuu.bond.3.title": "霜を聴く"
+            "spirit.cresora.tanboku_chokuu.bond.3.story": "彼はあなたの選択のあいだにある沈黙を聞き取り、辱めることなく矯めてくれる。"
+            "spirit.cresora.tanboku_chokuu.bond.4.title": "空なる一閃"
+            "spirit.cresora.tanboku_chokuu.bond.4.story": "厳しさに見えたものは慈悲だったと知る。斬るべきものだけを斬る力なのだと。"
+            "spirit.cresora.tanboku_chokuu.bond.5.title": "墨にひらく長空"
+            "spirit.cresora.tanboku_chokuu.bond.5.story": "彼の鍛錬は狭めるのではなく、揺るがぬ決意が立つだけの広さをひらいていく。"
+            "spirit.cresora.tanboku_chokuu.bond.6.title": "念を越える刃"
+            "spirit.cresora.tanboku_chokuu.bond.6.story": "ついに彼は、教えの代わりに本能を託せるほど、あなたの手を信じるようになる。"
             sub_skill_danro_name: "第一式：断露"
             sub_skill_zanso_name: "第二式：斬霜"
             sub_skill_bokuchu_munen_name: "第三式：墨中無念"
@@ -231,6 +290,20 @@ weapon "Tanboku Chokuu" {
         zh_cn {
             name: "淡墨长空"
             skill_name: "琅玕剑法"
+            "spirit.cresora.tanboku_chokuu.awakening": "当呼吸、墨意与剑锋终于化为同一个意志时，他便苏醒。"
+            "spirit.cresora.tanboku_chokuu.voice.first_contact": "不要追着剑走。心若空了，锋刃自会来到你手中。"
+            "spirit.cresora.tanboku_chokuu.bond.1.title": "未定之墨"
+            "spirit.cresora.tanboku_chokuu.bond.1.story": "他的气息像一笔未竟的墨痕，严厉，却仍在寻找落点。"
+            "spirit.cresora.tanboku_chokuu.bond.2.title": "断露之式"
+            "spirit.cresora.tanboku_chokuu.bond.2.story": "技法不再只是准确，而成了替你斩去心中浑浊的方式。"
+            "spirit.cresora.tanboku_chokuu.bond.3.title": "听霜"
+            "spirit.cresora.tanboku_chokuu.bond.3.story": "他开始听懂你选择之间的沉默，并在不伤你颜面的情况下纠正偏差。"
+            "spirit.cresora.tanboku_chokuu.bond.4.title": "空笔一划"
+            "spirit.cresora.tanboku_chokuu.bond.4.story": "你终于明白，那份看似冷硬的克制，其实是只斩必须斩之物的慈悲。"
+            "spirit.cresora.tanboku_chokuu.bond.5.title": "墨开长空"
+            "spirit.cresora.tanboku_chokuu.bond.5.story": "他的修行不是收紧，而是替你打开一片足以容纳信念的天空。"
+            "spirit.cresora.tanboku_chokuu.bond.6.title": "念外之刃"
+            "spirit.cresora.tanboku_chokuu.bond.6.story": "最终，他信任你的手，信任到愿让本能立在教条曾站的位置。"
             sub_skill_danro_name: "第一式：断露"
             sub_skill_zanso_name: "第二式：斩霜"
             sub_skill_bokuchu_munen_name: "第三式：墨中无念"
@@ -246,6 +319,20 @@ weapon "Tanboku Chokuu" {
         lzh {
             name: "淡墨長空"
             skill_name: "琅玕劍法"
+            "spirit.cresora.tanboku_chokuu.awakening": "息、墨、刃既合為一志，其靈乃寤。"
+            "spirit.cresora.tanboku_chokuu.voice.first_contact": "勿逐刃而行。心苟能虛，鋒自至焉。"
+            "spirit.cresora.tanboku_chokuu.bond.1.title": "未定之墨"
+            "spirit.cresora.tanboku_chokuu.bond.1.story": "其氣若未竟之一筆，嚴而猶有所尋。"
+            "spirit.cresora.tanboku_chokuu.bond.2.title": "斷露之式"
+            "spirit.cresora.tanboku_chokuu.bond.2.story": "技不徒為準，乃成去爾心翳之道。"
+            "spirit.cresora.tanboku_chokuu.bond.3.title": "聽霜"
+            "spirit.cresora.tanboku_chokuu.bond.3.story": "彼能聞爾抉擇間之默，而不辱其顏以正其偏。"
+            "spirit.cresora.tanboku_chokuu.bond.4.title": "空筆"
+            "spirit.cresora.tanboku_chokuu.bond.4.story": "貌若峻厲者，實慈也，惟斬所當斬。"
+            "spirit.cresora.tanboku_chokuu.bond.5.title": "墨開長空"
+            "spirit.cresora.tanboku_chokuu.bond.5.story": "其修非收束也，乃為爾闢可容定志之天。"
+            "spirit.cresora.tanboku_chokuu.bond.6.title": "念外之刃"
+            "spirit.cresora.tanboku_chokuu.bond.6.story": "終則信爾之手，至能使本能立於教法昔所據之地。"
             sub_skill_danro_name: "第一式：斷露"
             sub_skill_zanso_name: "第二式：斬霜"
             sub_skill_bokuchu_munen_name: "第三式：墨中無念"

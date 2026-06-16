@@ -13,6 +13,37 @@ weapon "Resolve of the Distant Girl" {
         crit_rate_bonus: 10.0
         hp_bonus: 10.0
     }
+    spirit {
+        name: "item.cresora-utilities.harukanaru_shojo_no_ketsui"
+        awakening_condition: "spirit.cresora.harukanaru_shojo_no_ketsui.awakening"
+        voice_lines {
+            first_contact: "story.cresora.phase0.line.2"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.title"
+            story: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.title"
+            story: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.title"
+            story: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.title"
+            story: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.title"
+            story: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.title"
+            story: "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.story"
+        }
+    }
     skill "Girl's Gaze" {
         effect_id: "harukanaru_shojo_no_ketsui"
         cooldown: 60s
@@ -123,6 +154,19 @@ weapon "Resolve of the Distant Girl" {
         en_us {
             name: "Spirit: Resolve of the Distant Girl"
             skill_name: "Girl's Gaze"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.awakening": "Awakens when you choose to hear her beyond the Gate."
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.title": "The First Voice"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.story": "A distant voice stops being rumor and becomes a vow beside your hand."
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.title": "Hand Kept Close"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.story": "The voice that once crossed a distance now waits where your hand returns."
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.title": "Name Answered"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.story": "When you call for her, the answer arrives before fear can speak."
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.title": "Quiet Trust"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.story": "She no longer watches your choices from afar; she leans into them."
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.title": "Vow Before Dawn"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.story": "Her resolve and yours stop echoing and begin pointing in one direction."
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.title": "Chosen Resolve"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.story": "At the edge of dawn, her will and your choice become one certainty in your grasp."
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "Girl's Gaze activated! Inflicted Kyundeath on %s targets."
             "item.cresora.weapon.skill.buff.ketsui.name": "Resolve"
             "item.cresora.weapon.skill.buff.ketsui.gained": "Gained effect: %s (%s stacks)"
@@ -132,6 +176,19 @@ weapon "Resolve of the Distant Girl" {
         ja_jp {
             name: "霊・遥かなる少女の決意"
             skill_name: "少女の眼差し"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.awakening": "界門の先で、その声を聞くと決めた時に目覚める。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.title": "最初の声"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.story": "遠い囁きは噂ではなく、やがてあなたの手元で交わされる誓いになる。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.title": "手の届く距離"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.story": "遠くを渡っていた声は、今ではあなたの手が戻る場所で静かに待っている。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.title": "呼べば応える名"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.story": "あなたが名を呼ぶ時、その答えは恐れより先に届く。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.title": "静かな信頼"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.story": "彼女はもう遠くから見守るだけではなく、あなたの選択に身を寄せている。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.title": "暁前の誓い"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.story": "二つの決意は反響ではなく、同じ方角を指す誓いへ変わっていく。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.title": "選び取られた決意"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.story": "夜明けの縁で、彼女の意志とあなたの選択はひとつの確信となって手の中に宿る。"
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女の眼差し 起動！ %s体の敵にキュン死を付与しました。"
             "item.cresora.weapon.skill.buff.ketsui.name": "決意"
             "item.cresora.weapon.skill.buff.ketsui.gained": "効果獲得: %s (%s 層)"
@@ -141,6 +198,19 @@ weapon "Resolve of the Distant Girl" {
         zh_cn {
             name: "灵・遥远少女的决意"
             skill_name: "少女的凝视"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.awakening": "当你决定穿过界门，认真听见她的声音时，她便苏醒。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.title": "最初的声音"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.story": "遥远的低语不再只是传闻，而会化作守在你手边的誓言。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.title": "伸手可及"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.story": "那道曾跨越远方的声音，如今静静等在你伸手归来的地方。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.title": "呼名即应"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.story": "当你呼唤她的名字时，回答会比恐惧更早抵达。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.title": "静默的信赖"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.story": "她不再只是远远注视，而是把自己交给你的选择。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.title": "黎明前的誓约"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.story": "你们的决意不再彼此回响，而开始指向同一个方向。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.title": "被选择的决意"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.story": "在破晓边缘，她的意志与你的选择合为一体，安稳落在你的掌心。"
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女的凝视 启动！对 %s 个目标施加了萌死。"
             "item.cresora.weapon.skill.buff.ketsui.name": "决意"
             "item.cresora.weapon.skill.buff.ketsui.gained": "获得效果: %s (%s 层)"
@@ -150,6 +220,19 @@ weapon "Resolve of the Distant Girl" {
         lzh {
             name: "靈・遙遠少女之決意"
             skill_name: "少女之凝視"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.awakening": "既越界門，而決意聽其聲，則靈始寤。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.title": "初聞其聲"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.story": "遙辭不復為傳聞，終將化作在汝掌側之誓。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.title": "在手之側"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.story": "昔越遙空之聲，今靜候於汝伸手而返之所。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.title": "呼名則應"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.story": "汝既呼其名，其答先於懼而至。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.title": "靜然之信"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.story": "彼不復徒遠觀，乃以身寄汝所擇。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.title": "曉前之誓"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.story": "二志不復相和而已，遂同指一方。"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.title": "所擇之決意"
+            "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.story": "將曉之際，彼之意與汝之擇合為一確，安棲掌中。"
             "item.cresora.weapon.skill.harukanaru_shojo_no_ketsui.activated": "少女之凝視 啓！施萌死於 %s 敵。"
             "item.cresora.weapon.skill.buff.ketsui.name": "決意"
             "item.cresora.weapon.skill.buff.ketsui.gained": "得%s（層：%s）"

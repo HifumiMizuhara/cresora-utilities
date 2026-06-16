@@ -539,6 +539,30 @@ class CresoraCompiler(
             weaponObj.addProperty("damageType", weapon.damageType)
             weaponObj.addProperty("role", weapon.role)
             weapon.customModelData?.let { weaponObj.addProperty("custom_model_data", it) }
+            weapon.spirit?.let { spirit ->
+                val spiritObj = JsonObject()
+                spiritObj.addProperty("nameKey", spirit.nameKey)
+                if (spirit.voiceLines.isNotEmpty()) {
+                    val voiceLines = JsonObject()
+                    spirit.voiceLines.forEach { (key, value) ->
+                        voiceLines.addProperty(key, value)
+                    }
+                    spiritObj.add("voiceLines", voiceLines)
+                }
+                if (spirit.bondStages.isNotEmpty()) {
+                    val bondStages = JsonArray()
+                    spirit.bondStages.forEach { stage ->
+                        val stageObj = JsonObject()
+                        stageObj.addProperty("stage", stage.stage)
+                        stageObj.addProperty("titleKey", stage.titleKey)
+                        stageObj.addProperty("storyKey", stage.storyKey)
+                        bondStages.add(stageObj)
+                    }
+                    spiritObj.add("bondStages", bondStages)
+                }
+                spirit.awakeningConditionKey?.let { spiritObj.addProperty("awakeningConditionKey", it) }
+                weaponObj.add("spirit", spiritObj)
+            }
 
             val skillObj = JsonObject()
             if (weapon.skill != null) {

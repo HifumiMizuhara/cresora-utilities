@@ -13,6 +13,37 @@ weapon "Qianqiu, Yeluo" {
         max_skill_level: 10
         crit_rate_bonus: 5.0
     }
+    spirit {
+        name: "item.cresora-utilities.qianqiu_yeluo"
+        awakening_condition: "spirit.cresora.qianqiu_yeluo.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.qianqiu_yeluo.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.qianqiu_yeluo.bond.1.title"
+            story: "spirit.cresora.qianqiu_yeluo.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.qianqiu_yeluo.bond.2.title"
+            story: "spirit.cresora.qianqiu_yeluo.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.qianqiu_yeluo.bond.3.title"
+            story: "spirit.cresora.qianqiu_yeluo.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.qianqiu_yeluo.bond.4.title"
+            story: "spirit.cresora.qianqiu_yeluo.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.qianqiu_yeluo.bond.5.title"
+            story: "spirit.cresora.qianqiu_yeluo.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.qianqiu_yeluo.bond.6.title"
+            story: "spirit.cresora.qianqiu_yeluo.bond.6.story"
+        }
+    }
 
     skill "Qianqiu Yeluo" {
         effect_id: "qianqiu_yeluo"
@@ -209,6 +240,20 @@ weapon "Qianqiu, Yeluo" {
         en_us {
             name: "Qianqiu, Yeluo"
             skill_name: "Rougan Sword Styles"
+            "spirit.cresora.qianqiu_yeluo.awakening": "Awakens when you stop calling autumn an ending and learn to hear what it preserves."
+            "spirit.cresora.qianqiu_yeluo.voice.first_contact": "Autumn is not an ending. It is the color things wear before they speak plainly."
+            "spirit.cresora.qianqiu_yeluo.bond.1.title": "First Falling Leaf"
+            "spirit.cresora.qianqiu_yeluo.bond.1.story": "She arrives with the hush of something beautiful already half on its way to loss."
+            "spirit.cresora.qianqiu_yeluo.bond.2.title": "Hidden Thunder"
+            "spirit.cresora.qianqiu_yeluo.bond.2.story": "Beneath her melancholy you hear the force she keeps restrained, waiting for the right wound."
+            "spirit.cresora.qianqiu_yeluo.bond.3.title": "Frost on Old Branches"
+            "spirit.cresora.qianqiu_yeluo.bond.3.story": "Her sorrow stops being fragile and reveals the endurance that carried it through many seasons."
+            "spirit.cresora.qianqiu_yeluo.bond.4.title": "Bright Bitterness"
+            "spirit.cresora.qianqiu_yeluo.bond.4.story": "She teaches you that grief can gleam without becoming false, and pain can sharpen without consuming."
+            "spirit.cresora.qianqiu_yeluo.bond.5.title": "Unwithering Season"
+            "spirit.cresora.qianqiu_yeluo.bond.5.story": "What should have fallen away remains, not as regret, but as strength carefully ripened."
+            "spirit.cresora.qianqiu_yeluo.bond.6.title": "Thousand Autumns Unbound"
+            "spirit.cresora.qianqiu_yeluo.bond.6.story": "At last she entrusts you with every season she endured, and none of them feel wasted."
             fragment_name: "Fragment of Qianqiu"
             sub_skill_danrai_name: "First Style: Danrai"
             sub_skill_zansou_name: "Second Style: Zansou"
@@ -224,6 +269,20 @@ weapon "Qianqiu, Yeluo" {
         ja_jp {
             name: "千秋、叶落"
             skill_name: "琅玕剣法"
+            "spirit.cresora.qianqiu_yeluo.awakening": "秋を終わりと呼ぶのをやめ、その中に残されるものへ耳を澄ませた時に目覚める。"
+            "spirit.cresora.qianqiu_yeluo.voice.first_contact": "秋は終わりではないわ。ものごとが本音を語る前にまとう色なの。"
+            "spirit.cresora.qianqiu_yeluo.bond.1.title": "初めて落ちる葉"
+            "spirit.cresora.qianqiu_yeluo.bond.1.story": "彼女は、美しいものがすでに喪失へ向かい始めている時の静けさをまとって現れる。"
+            "spirit.cresora.qianqiu_yeluo.bond.2.title": "秘めた雷"
+            "spirit.cresora.qianqiu_yeluo.bond.2.story": "その憂いの底に、彼女が正しい痛みのためだけに抑えてきた力が響いている。"
+            "spirit.cresora.qianqiu_yeluo.bond.3.title": "古枝の霜"
+            "spirit.cresora.qianqiu_yeluo.bond.3.story": "彼女の悲しみは脆さではなく、幾度もの季節を越えてきた持続のかたちだと分かる。"
+            "spirit.cresora.qianqiu_yeluo.bond.4.title": "冴える苦み"
+            "spirit.cresora.qianqiu_yeluo.bond.4.story": "嘆きは偽りなく輝けるし、痛みは身を焼かずに刃を研げるのだと彼女は教える。"
+            "spirit.cresora.qianqiu_yeluo.bond.5.title": "朽ちぬ季節"
+            "spirit.cresora.qianqiu_yeluo.bond.5.story": "落ちて消えるはずのものは、後悔ではなく熟した力としてなお留まり続ける。"
+            "spirit.cresora.qianqiu_yeluo.bond.6.title": "千秋解放"
+            "spirit.cresora.qianqiu_yeluo.bond.6.story": "ついに彼女は、耐え抜いてきたすべての季節をあなたへ預け、そのどれ一つも無駄ではなかったと知る。"
             fragment_name: "千秋の欠片"
             sub_skill_danrai_name: "第一式：断雷"
             sub_skill_zansou_name: "第二式：斬霜"
@@ -246,6 +305,20 @@ weapon "Qianqiu, Yeluo" {
         zh_cn {
             name: "千秋、叶落"
             skill_name: "琅玕剑法"
+            "spirit.cresora.qianqiu_yeluo.awakening": "当你不再把秋天称作终结，而开始倾听它留下了什么时，她便苏醒。"
+            "spirit.cresora.qianqiu_yeluo.voice.first_contact": "秋不是结束。那只是万物在坦白之前披上的颜色。"
+            "spirit.cresora.qianqiu_yeluo.bond.1.title": "初坠之叶"
+            "spirit.cresora.qianqiu_yeluo.bond.1.story": "她带着一种静意而来，像美好之物已开始朝失去倾斜的那一刻。"
+            "spirit.cresora.qianqiu_yeluo.bond.2.title": "藏起的雷"
+            "spirit.cresora.qianqiu_yeluo.bond.2.story": "在她的忧色之下，你听见那股只为正确伤口而保留的力量。"
+            "spirit.cresora.qianqiu_yeluo.bond.3.title": "旧枝寒霜"
+            "spirit.cresora.qianqiu_yeluo.bond.3.story": "她的悲伤不再显得脆弱，而更像穿过无数季节后仍旧不折的耐性。"
+            "spirit.cresora.qianqiu_yeluo.bond.4.title": "明亮的苦涩"
+            "spirit.cresora.qianqiu_yeluo.bond.4.story": "她让你明白，哀伤可以发亮而不虚假，痛楚也能锋利而不吞没自己。"
+            "spirit.cresora.qianqiu_yeluo.bond.5.title": "不凋的季节"
+            "spirit.cresora.qianqiu_yeluo.bond.5.story": "本该落尽的东西仍留着，不是因为执念，而是因为它们终于被酿成了力量。"
+            "spirit.cresora.qianqiu_yeluo.bond.6.title": "千秋解缚"
+            "spirit.cresora.qianqiu_yeluo.bond.6.story": "最后，她把自己熬过的每一个季节都交到你手里，而你知道它们没有一个被白白浪费。"
             fragment_name: "千秋碎片"
             sub_skill_danrai_name: "第一式：断雷"
             sub_skill_zansou_name: "第二式：斩霜"
@@ -268,6 +341,20 @@ weapon "Qianqiu, Yeluo" {
         lzh {
             name: "千秋，葉落"
             skill_name: "琅玕劍法"
+            "spirit.cresora.qianqiu_yeluo.awakening": "不復以秋為終，而能聽其所留者，其靈乃寤。"
+            "spirit.cresora.qianqiu_yeluo.voice.first_contact": "秋非終也。萬物將吐其實之前，姑先衣此色耳。"
+            "spirit.cresora.qianqiu_yeluo.bond.1.title": "初墜之葉"
+            "spirit.cresora.qianqiu_yeluo.bond.1.story": "彼來時之靜，如美物既向失去微傾之一瞬。"
+            "spirit.cresora.qianqiu_yeluo.bond.2.title": "藏雷"
+            "spirit.cresora.qianqiu_yeluo.bond.2.story": "其憂色之下，可聞彼所蓄之力，惟待當受之創而發。"
+            "spirit.cresora.qianqiu_yeluo.bond.3.title": "故枝寒霜"
+            "spirit.cresora.qianqiu_yeluo.bond.3.story": "其悲不復為脆，乃歷諸時序而不折之忍。"
+            "spirit.cresora.qianqiu_yeluo.bond.4.title": "明苦"
+            "spirit.cresora.qianqiu_yeluo.bond.4.story": "彼使爾知，哀可明而不妄，痛可利而不噬其身。"
+            "spirit.cresora.qianqiu_yeluo.bond.5.title": "不凋之時"
+            "spirit.cresora.qianqiu_yeluo.bond.5.story": "本當盡落者猶留焉，非由執著，乃由其終釀為力。"
+            "spirit.cresora.qianqiu_yeluo.bond.6.title": "千秋解縛"
+            "spirit.cresora.qianqiu_yeluo.bond.6.story": "終則彼以所經諸時序盡付於爾，而知其無一徒然。"
             fragment_name: "千秋之片"
             sub_skill_danrai_name: "第一式：斷雷"
             sub_skill_zansou_name: "第二式：斬霜"

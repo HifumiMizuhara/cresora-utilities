@@ -14,6 +14,45 @@
       "damageType": "arcane",
       "role": "caster",
       "custom_model_data": 10103,
+      "spirit": {
+        "nameKey": "item.cresora-utilities.qianqiu_yeluo",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.qianqiu_yeluo.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.qianqiu_yeluo.bond.1.title",
+            "storyKey": "spirit.cresora.qianqiu_yeluo.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.qianqiu_yeluo.bond.2.title",
+            "storyKey": "spirit.cresora.qianqiu_yeluo.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.qianqiu_yeluo.bond.3.title",
+            "storyKey": "spirit.cresora.qianqiu_yeluo.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.qianqiu_yeluo.bond.4.title",
+            "storyKey": "spirit.cresora.qianqiu_yeluo.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.qianqiu_yeluo.bond.5.title",
+            "storyKey": "spirit.cresora.qianqiu_yeluo.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.qianqiu_yeluo.bond.6.title",
+            "storyKey": "spirit.cresora.qianqiu_yeluo.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.qianqiu_yeluo.awakening"
+      },
       "skill": {
         "effectId": "qianqiu_yeluo",
         "durationSeconds": 0,
@@ -63,6 +102,45 @@
       "damageType": "physical",
       "role": "supporter",
       "custom_model_data": 10102,
+      "spirit": {
+        "nameKey": "item.cresora-utilities.dark_lux",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.dark_lux.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.dark_lux.bond.1.title",
+            "storyKey": "spirit.cresora.dark_lux.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.dark_lux.bond.2.title",
+            "storyKey": "spirit.cresora.dark_lux.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.dark_lux.bond.3.title",
+            "storyKey": "spirit.cresora.dark_lux.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.dark_lux.bond.4.title",
+            "storyKey": "spirit.cresora.dark_lux.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.dark_lux.bond.5.title",
+            "storyKey": "spirit.cresora.dark_lux.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.dark_lux.bond.6.title",
+            "storyKey": "spirit.cresora.dark_lux.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.dark_lux.awakening"
+      },
       "skill": {
         "effectId": "dark_lux",
         "durationSeconds": 30,
@@ -159,6 +237,45 @@
       "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "supporter",
+      "spirit": {
+        "nameKey": "item.cresora-utilities.kyokusui_no_ryusho",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.kyokusui_no_ryusho.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.kyokusui_no_ryusho.bond.1.title",
+            "storyKey": "spirit.cresora.kyokusui_no_ryusho.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.kyokusui_no_ryusho.bond.2.title",
+            "storyKey": "spirit.cresora.kyokusui_no_ryusho.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.kyokusui_no_ryusho.bond.3.title",
+            "storyKey": "spirit.cresora.kyokusui_no_ryusho.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.kyokusui_no_ryusho.bond.4.title",
+            "storyKey": "spirit.cresora.kyokusui_no_ryusho.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.kyokusui_no_ryusho.bond.5.title",
+            "storyKey": "spirit.cresora.kyokusui_no_ryusho.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.kyokusui_no_ryusho.bond.6.title",
+            "storyKey": "spirit.cresora.kyokusui_no_ryusho.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.kyokusui_no_ryusho.awakening"
+      },
       "skill": {
         "effectId": "orchid_pavilion_echo",
         "durationSeconds": 16,
@@ -784,6 +901,45 @@
       "damageType": "physical",
       "role": "guard",
       "custom_model_data": 10101,
+      "spirit": {
+        "nameKey": "item.cresora-utilities.tanboku_chokuu",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.tanboku_chokuu.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.tanboku_chokuu.bond.1.title",
+            "storyKey": "spirit.cresora.tanboku_chokuu.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.tanboku_chokuu.bond.2.title",
+            "storyKey": "spirit.cresora.tanboku_chokuu.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.tanboku_chokuu.bond.3.title",
+            "storyKey": "spirit.cresora.tanboku_chokuu.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.tanboku_chokuu.bond.4.title",
+            "storyKey": "spirit.cresora.tanboku_chokuu.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.tanboku_chokuu.bond.5.title",
+            "storyKey": "spirit.cresora.tanboku_chokuu.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.tanboku_chokuu.bond.6.title",
+            "storyKey": "spirit.cresora.tanboku_chokuu.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.tanboku_chokuu.awakening"
+      },
       "skill": {
         "effectId": "rougan_kenpo",
         "durationSeconds": 0,
@@ -880,6 +1036,45 @@
       "hpBonusPercent": 10.0,
       "damageType": "arcane",
       "role": "specialist",
+      "spirit": {
+        "nameKey": "item.cresora-utilities.harukanaru_shojo_no_ketsui",
+        "voiceLines": {
+          "first_contact": "story.cresora.phase0.line.2"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.title",
+            "storyKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.title",
+            "storyKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.title",
+            "storyKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.title",
+            "storyKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.title",
+            "storyKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.title",
+            "storyKey": "spirit.cresora.harukanaru_shojo_no_ketsui.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.harukanaru_shojo_no_ketsui.awakening"
+      },
       "skill": {
         "effectId": "harukanaru_shojo_no_ketsui",
         "durationSeconds": 5,
@@ -928,6 +1123,45 @@
       "hpBonusPercent": 0.0,
       "damageType": "arcane",
       "role": "specialist",
+      "spirit": {
+        "nameKey": "item.cresora-utilities.harukanaru_shonen_no_omoi",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.harukanaru_shonen_no_omoi.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.title",
+            "storyKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.title",
+            "storyKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.title",
+            "storyKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.title",
+            "storyKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.title",
+            "storyKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.title",
+            "storyKey": "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.harukanaru_shonen_no_omoi.awakening"
+      },
       "skill": {
         "effectId": "harukanaru_shonen_no_omoi",
         "durationSeconds": 5,
@@ -976,6 +1210,45 @@
       "hpBonusPercent": 0.0,
       "damageType": "arcane",
       "role": "caster",
+      "spirit": {
+        "nameKey": "item.cresora-utilities.hanwu_juanxue",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.hanwu_juanxue.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.hanwu_juanxue.bond.1.title",
+            "storyKey": "spirit.cresora.hanwu_juanxue.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.hanwu_juanxue.bond.2.title",
+            "storyKey": "spirit.cresora.hanwu_juanxue.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.hanwu_juanxue.bond.3.title",
+            "storyKey": "spirit.cresora.hanwu_juanxue.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.hanwu_juanxue.bond.4.title",
+            "storyKey": "spirit.cresora.hanwu_juanxue.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.hanwu_juanxue.bond.5.title",
+            "storyKey": "spirit.cresora.hanwu_juanxue.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.hanwu_juanxue.bond.6.title",
+            "storyKey": "spirit.cresora.hanwu_juanxue.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.hanwu_juanxue.awakening"
+      },
       "skill": {
         "effectId": "snow_frost",
         "durationSeconds": 10,
@@ -1024,6 +1297,45 @@
       "hpBonusPercent": 0.0,
       "damageType": "physical",
       "role": "guard",
+      "spirit": {
+        "nameKey": "item.cresora-utilities.lakeside_stride",
+        "voiceLines": {
+          "first_contact": "spirit.cresora.lakeside_stride.voice.first_contact"
+        },
+        "bondStages": [
+          {
+            "stage": 1,
+            "titleKey": "spirit.cresora.lakeside_stride.bond.1.title",
+            "storyKey": "spirit.cresora.lakeside_stride.bond.1.story"
+          },
+          {
+            "stage": 2,
+            "titleKey": "spirit.cresora.lakeside_stride.bond.2.title",
+            "storyKey": "spirit.cresora.lakeside_stride.bond.2.story"
+          },
+          {
+            "stage": 3,
+            "titleKey": "spirit.cresora.lakeside_stride.bond.3.title",
+            "storyKey": "spirit.cresora.lakeside_stride.bond.3.story"
+          },
+          {
+            "stage": 4,
+            "titleKey": "spirit.cresora.lakeside_stride.bond.4.title",
+            "storyKey": "spirit.cresora.lakeside_stride.bond.4.story"
+          },
+          {
+            "stage": 5,
+            "titleKey": "spirit.cresora.lakeside_stride.bond.5.title",
+            "storyKey": "spirit.cresora.lakeside_stride.bond.5.story"
+          },
+          {
+            "stage": 6,
+            "titleKey": "spirit.cresora.lakeside_stride.bond.6.title",
+            "storyKey": "spirit.cresora.lakeside_stride.bond.6.story"
+          }
+        ],
+        "awakeningConditionKey": "spirit.cresora.lakeside_stride.awakening"
+      },
       "skill": {
         "effectId": "current_hp_true_damage",
         "durationSeconds": 0,

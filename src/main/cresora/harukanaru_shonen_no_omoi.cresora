@@ -11,6 +11,37 @@ weapon "Thoughts of the Distant Boy" {
         max_base_level: 60
         max_skill_level: 10
     }
+    spirit {
+        name: "item.cresora-utilities.harukanaru_shonen_no_omoi"
+        awakening_condition: "spirit.cresora.harukanaru_shonen_no_omoi.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.harukanaru_shonen_no_omoi.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.title"
+            story: "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.title"
+            story: "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.title"
+            story: "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.title"
+            story: "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.title"
+            story: "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.title"
+            story: "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.story"
+        }
+    }
     skill "Heavy Thoughts" {
         effect_id: "harukanaru_shonen_no_omoi"
         cooldown: 35s
@@ -147,6 +178,20 @@ weapon "Thoughts of the Distant Boy" {
         en_us {
             name: "Thoughts of the Distant Boy"
             skill_name: "Heavy Thoughts"
+            "spirit.cresora.harukanaru_shonen_no_omoi.awakening": "Awakens when the thoughts he swallowed become words he can no longer deny."
+            "spirit.cresora.harukanaru_shonen_no_omoi.voice.first_contact": "If I speak now... will it finally reach you?"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.title": "A Heavy Whisper"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.story": "The thought stays unspoken, yet it has already chosen you as its shelter."
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.title": "Shielding Silence"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.story": "What he cannot confess turns into the instinct to protect."
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.title": "Unhidden Weight"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.story": "The burden in his chest stops being shame and becomes resolve with direction."
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.title": "Twin Echo"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.story": "When another resolve answers his own, his loneliness begins to loosen."
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.title": "Heart Turned Outward"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.story": "He stops clutching pain as proof and starts offering it as strength."
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.title": "Thoughts Given Form"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.story": "At last the weight he carried becomes a vow that can stand beside someone else."
             "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "Heavy Thoughts: Grants passive stats (+10% CRIT DMG/DMG bonus). If 'Resolve of the Distant Girl' is in inventory, upgrades stats to (+60% CRIT DMG, +25% DMG bonus, +5% CRIT Rate). Otherwise, inflicts Grief (ATK -50%, DEF +100%, converts damage to arcane, grants shields periodically). Active: Pattern A (Grief active) grants a massive shield. Pattern B (Grief inactive) strikes up to 5 enemies dealing arcane damage."
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "Heavy Thoughts (Pattern A): Gained a %s-heart shield."
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "Heavy Thoughts (Pattern B): Struck %s enemies for %s arcane damage!"
@@ -157,6 +202,20 @@ weapon "Thoughts of the Distant Boy" {
         ja_jp {
             name: "遥かなる少年の想い"
             skill_name: "重き想い"
+            "spirit.cresora.harukanaru_shonen_no_omoi.awakening": "のみ込んできた想いが、もはや否定できない言葉へ変わった時に目覚める。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.voice.first_contact": "今ここで言葉にしたなら……やっと、届くだろうか。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.title": "重い囁き"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.story": "口にされない想いは、それでもすでにあなたを拠り所に選んでいる。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.title": "守るための沈黙"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.story": "彼が言えなかったものは、そのまま守ろうとする衝動へ変わる。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.title": "隠せない重さ"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.story": "胸の重さは恥ではなく、進む先を持った決意へ変わっていく。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.title": "二つの反響"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.story": "もう一つの決意が応える時、彼の孤独は少しずつほどけていく。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.title": "外へ向いた心"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.story": "彼は痛みを抱え込む代わりに、それを誰かを支える力へ変え始める。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.title": "形を得た想い"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.story": "抱え続けた重さは、ついに誰かの隣に立てる誓いとなる。"
             "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "重き想い：パッシブ効果（会心ダメージ・与ダメージ+10%）を獲得。インベントリに「遥かなる少女の決意」がある場合、効果が「二人の決意」（会心ダメージ+60%、与ダメージ+25%、会心率+5%）に強化される。ない場合、「嘆き」状態（攻击力-50%、防御力+100%、術ダメージ変換、10秒毎に確率でシールド獲得）になる。アクティブ：【パターンA（「嘆き」状態）】強力なシールドを獲得。【パターンB（通常）】周囲の最大5体の敵に強力な術ダメージを与える。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重き想い（パターンA）: %sハート of シールドを獲得しました。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重き想い（パターンB）: %s体の敵に%sの術ダメージを与えました！"
@@ -167,6 +226,20 @@ weapon "Thoughts of the Distant Boy" {
         zh_cn {
             name: "遥远少年的思念"
             skill_name: "沉重思念"
+            "spirit.cresora.harukanaru_shonen_no_omoi.awakening": "当那些被他咽下的思念终于变成再也无法否认的话语时，他便苏醒。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.voice.first_contact": "如果我现在说出口……终于也能传达到你那里吗？"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.title": "沉重低语"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.story": "那份未曾出口的思念，早已把你选作自己的栖身之处。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.title": "守护般的沉默"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.story": "那些他说不出口的话，渐渐化作了想要保护谁的本能。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.title": "无法隐藏的重量"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.story": "压在胸口的分量不再只是羞怯，而开始成为有方向的决意。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.title": "双重回响"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.story": "当另一份决意回应他的心声时，他的孤独终于开始松动。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.title": "向外伸出的心"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.story": "他不再把痛楚攥成证据，而开始把它递出去，化作支撑别人的力量。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.title": "成形的思念"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.story": "他背负已久的重量，终于化作能站在别人身旁的誓言。"
             "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "沉重思念：获得被动加成（暴击伤害/全伤害+10%）。若背包中持有「遥远少女的决意」，则升级为「双向奔赴」（暴击伤害+60%、全伤害+25%、暴击率+5%）；否则陷入「叹息」状态（攻击力-50%、防御力+100%、非确定伤害转为术能伤害、每10秒概率获得护盾）。主动释放：【模式A（叹息状态）】获得大量护盾；【模式B（普通状态）】对周围最多5个敌人造成大量术能伤害。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "沉重思念（模式A）：获得 %s 颗心的护盾。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "沉重思念（模式B）：对 %s 个目标造成了 %s 点术能伤害！"
@@ -177,6 +250,20 @@ weapon "Thoughts of the Distant Boy" {
         lzh {
             name: "遙遠少年之思"
             skill_name: "重思"
+            "spirit.cresora.harukanaru_shonen_no_omoi.awakening": "所吞之思，既成不可復諱之辭，則靈始寤。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.voice.first_contact": "今若出之於口……其可終達於汝乎？"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.title": "重然之語"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.1.story": "未宣之思，早已擇汝為其所棲。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.title": "守之沈默"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.2.story": "彼所不能言者，遂化為欲護人之本心。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.title": "難藏之重"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.3.story": "壓於胸中者，不復徒為愧懼，乃漸成有向之決意。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.title": "雙聲之響"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.4.story": "他志既得應聲，其孤寂始稍解。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.title": "向外之心"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.5.story": "彼不復執痛以自證，乃欲轉之為扶人之力。"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.title": "成形之思"
+            "spirit.cresora.harukanaru_shonen_no_omoi.bond.6.story": "所負久矣之重，終化為可立人側之誓。"
             "item.cresora-utilities.harukanaru_shonen_no_omoi.skill.desc": "重思：得被動增益（會心傷與全傷加一成）。若囊中有「遙遠少女之決意」，則升為「二心合一」（會心傷加六成、全傷加兩成半、會心率加半成）；否則入「歎息」之境（攻減半，防禦加倍，傷化術能，十秒內概率得盾）。主動釋放：【其一（歎息）】得重盾；【其二（普通）】擊周遭五敵，施大術能傷。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_a": "重思（其一）：得 %s 心之盾。"
             "item.cresora.weapon.skill.harukanaru_shonen_no_omoi.pattern_b": "重思（其二）：施術傷於 %s 敵（傷：%s）！"

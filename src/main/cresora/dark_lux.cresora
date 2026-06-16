@@ -12,6 +12,37 @@ weapon "Dark Lux" {
         max_base_level: 60
         max_skill_level: 10
     }
+    spirit {
+        name: "item.cresora-utilities.dark_lux"
+        awakening_condition: "spirit.cresora.dark_lux.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.dark_lux.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.dark_lux.bond.1.title"
+            story: "spirit.cresora.dark_lux.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.dark_lux.bond.2.title"
+            story: "spirit.cresora.dark_lux.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.dark_lux.bond.3.title"
+            story: "spirit.cresora.dark_lux.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.dark_lux.bond.4.title"
+            story: "spirit.cresora.dark_lux.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.dark_lux.bond.5.title"
+            story: "spirit.cresora.dark_lux.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.dark_lux.bond.6.title"
+            story: "spirit.cresora.dark_lux.bond.6.story"
+        }
+    }
     skill "Event Horizon" {
         effect_id: "dark_lux"
         cooldown: 30s
@@ -73,6 +104,20 @@ weapon "Dark Lux" {
         en_us {
             name: "Dark Lux"
             skill_name: "Event Horizon"
+            "spirit.cresora.dark_lux.awakening": "Awakens when you refuse to choose between darkness and light, and dare to carry both."
+            "spirit.cresora.dark_lux.voice.first_contact": "If the dark frightens you, walk beside my light. If the light wounds you, leave your shadow to me."
+            "spirit.cresora.dark_lux.bond.1.title": "Threshold of Dusk"
+            "spirit.cresora.dark_lux.bond.1.story": "At the edge where black and white meet, her voice asks you to stand still and look longer."
+            "spirit.cresora.dark_lux.bond.2.title": "Twin Radiance"
+            "spirit.cresora.dark_lux.bond.2.story": "She stops speaking of opposites and begins teaching you how two truths can share one blade."
+            "spirit.cresora.dark_lux.bond.3.title": "Kept Orbit"
+            "spirit.cresora.dark_lux.bond.3.story": "What once circled at a distance now turns close, held by trust rather than gravity."
+            "spirit.cresora.dark_lux.bond.4.title": "Gravity Shared"
+            "spirit.cresora.dark_lux.bond.4.story": "Your doubt and her certainty begin pulling in the same direction, and neither falls alone."
+            "spirit.cresora.dark_lux.bond.5.title": "Horizon Drawn Close"
+            "spirit.cresora.dark_lux.bond.5.story": "The line between night and dawn no longer divides; it becomes a place you can cross together."
+            "spirit.cresora.dark_lux.bond.6.title": "Singular Heart"
+            "spirit.cresora.dark_lux.bond.6.story": "Light and shadow cease their argument and answer as one will in your hand."
             "item.cresora.weapon.skill.dark_lux_activated.generic": "Event Horizon Activated!"
             "message.cresora.weapon.dark_lux.annihilation": "Annihilation: Target's health reduced drastically, AOE damage dealt!"
             "message.cresora.weapon.dark_lux.entanglement": "Entanglement: Target weakened!"
@@ -81,6 +126,20 @@ weapon "Dark Lux" {
         ja_jp {
             name: "白夜と極夜"
             skill_name: "事象の地平線"
+            "spirit.cresora.dark_lux.awakening": "闇か光かを選ぶことをやめ、その両方を抱えると決めた時に目覚める。"
+            "spirit.cresora.dark_lux.voice.first_contact": "闇が怖いなら、私の光のそばを歩いて。光が痛むなら、その影は私が預かる。"
+            "spirit.cresora.dark_lux.bond.1.title": "黄昏の敷居"
+            "spirit.cresora.dark_lux.bond.1.story": "黒と白の境で、彼女の声は立ち止まり、もう少し見つめよと囁く。"
+            "spirit.cresora.dark_lux.bond.2.title": "二つの輝き"
+            "spirit.cresora.dark_lux.bond.2.story": "彼女は対立を語るのをやめ、一つの刃に二つの真実を宿す術を教え始める。"
+            "spirit.cresora.dark_lux.bond.3.title": "寄り添う軌道"
+            "spirit.cresora.dark_lux.bond.3.story": "遠くを巡っていたものは、重力ではなく信頼によってあなたの近くを回り始める。"
+            "spirit.cresora.dark_lux.bond.4.title": "重なる引力"
+            "spirit.cresora.dark_lux.bond.4.story": "あなたの迷いと彼女の確信は同じ方角へ引き合い、どちらも独りでは落ちなくなる。"
+            "spirit.cresora.dark_lux.bond.5.title": "引き寄せられた地平"
+            "spirit.cresora.dark_lux.bond.5.story": "夜と暁を分けていた境界は、二人で越えていける道へ変わる。"
+            "spirit.cresora.dark_lux.bond.6.title": "ひとつの心臓"
+            "spirit.cresora.dark_lux.bond.6.story": "光と影の論争は終わり、ただ一つの意志としてあなたの手の中で脈打つ。"
             "item.cresora.weapon.skill.dark_lux_activated.generic": "事象の地平線 展開！"
             "message.cresora.weapon.dark_lux.annihilation": "対消滅：対象のHPが激減し、周囲にダメージを与えた！"
             "message.cresora.weapon.dark_lux.entanglement": "もつれ：対象を弱体化させた！"
@@ -89,6 +148,20 @@ weapon "Dark Lux" {
         zh_cn {
             name: "暗与光"
             skill_name: "事件视界"
+            "spirit.cresora.dark_lux.awakening": "当你不再在黑暗与光明之间二选一，而决定同时背负二者时，她便苏醒。"
+            "spirit.cresora.dark_lux.voice.first_contact": "若你惧怕黑暗，就走在我的光旁。若你被光刺痛，就把影子交给我。"
+            "spirit.cresora.dark_lux.bond.1.title": "黄昏门槛"
+            "spirit.cresora.dark_lux.bond.1.story": "在黑与白交界的地方，她的声音要你停下，再多看一会儿。"
+            "spirit.cresora.dark_lux.bond.2.title": "双生辉光"
+            "spirit.cresora.dark_lux.bond.2.story": "她不再谈论对立，而开始教你如何让两种真实共宿一刃。"
+            "spirit.cresora.dark_lux.bond.3.title": "被留住的轨道"
+            "spirit.cresora.dark_lux.bond.3.story": "曾在远处盘旋的东西，如今不靠重力，而靠信赖绕在你身旁。"
+            "spirit.cresora.dark_lux.bond.4.title": "共鸣引力"
+            "spirit.cresora.dark_lux.bond.4.story": "你的迟疑与她的确信开始朝同一个方向牵引，谁都不再独自坠落。"
+            "spirit.cresora.dark_lux.bond.5.title": "被拉近的地平"
+            "spirit.cresora.dark_lux.bond.5.story": "分开夜与晓的那条线，不再是隔阂，而成了你们可以一同跨越的地方。"
+            "spirit.cresora.dark_lux.bond.6.title": "唯一之心"
+            "spirit.cresora.dark_lux.bond.6.story": "光与影停止争辩，只以同一个意志在你掌中跳动。"
             "item.cresora.weapon.skill.dark_lux_activated.generic": "事件视界 已展开！"
             "message.cresora.weapon.dark_lux.annihilation": "对消灭：目标生命值骤降，并对周围造成伤害！"
             "message.cresora.weapon.dark_lux.entanglement": "纠缠：目标已虚弱！"
@@ -97,6 +170,20 @@ weapon "Dark Lux" {
         lzh {
             name: "暗與光"
             skill_name: "事象邊界"
+            "spirit.cresora.dark_lux.awakening": "既不擇闇，亦不擇光，而能並荷二者之時，其靈乃寤。"
+            "spirit.cresora.dark_lux.voice.first_contact": "懼闇乎，則行吾光側；畏光乎，則以爾影付我。"
+            "spirit.cresora.dark_lux.bond.1.title": "薄暮之閾"
+            "spirit.cresora.dark_lux.bond.1.story": "黑白交際之所，其聲勸爾暫止，更審視之。"
+            "spirit.cresora.dark_lux.bond.2.title": "雙曜"
+            "spirit.cresora.dark_lux.bond.2.story": "彼不復言對立，而授爾以一刃容二真之道。"
+            "spirit.cresora.dark_lux.bond.3.title": "近侍之軌"
+            "spirit.cresora.dark_lux.bond.3.story": "昔日遠旋之物，今非由引力，乃由信而近侍於爾。"
+            "spirit.cresora.dark_lux.bond.4.title": "同引"
+            "spirit.cresora.dark_lux.bond.4.story": "爾之疑與彼之確，同趨一方，自此無復獨墜。"
+            "spirit.cresora.dark_lux.bond.5.title": "逼近之地平"
+            "spirit.cresora.dark_lux.bond.5.story": "分夜與曉之界，不復為隔，乃成可共越之境。"
+            "spirit.cresora.dark_lux.bond.6.title": "一心"
+            "spirit.cresora.dark_lux.bond.6.story": "光影息爭，惟同一之志，躍於爾掌。"
             "item.cresora.weapon.skill.dark_lux_activated.generic": "事象邊界 啓矣！"
             "message.cresora.weapon.dark_lux.annihilation": "對消滅：彼氣驟失，波及四方！"
             "message.cresora.weapon.dark_lux.entanglement": "糾纏：彼勢既弱！"

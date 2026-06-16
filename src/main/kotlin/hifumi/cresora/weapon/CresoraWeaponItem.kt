@@ -79,6 +79,30 @@ class CresoraWeaponItem(
                 ).formatted(Formatting.LIGHT_PURPLE)
             )
         }
+        resolved.spirit?.let { spirit ->
+            textConsumer.accept(
+                Text.translatable(
+                    "item.cresora.weapon.spirit_bond_stage",
+                    data.spiritBondStage
+                ).formatted(Formatting.DARK_AQUA)
+            )
+            spirit.bondStages.firstOrNull { it.stage == data.spiritBondStage }?.let { stage ->
+                textConsumer.accept(
+                    Text.translatable(
+                        "item.cresora.weapon.spirit_bond_title",
+                        Text.translatable(stage.titleKey)
+                    ).formatted(Formatting.GRAY)
+                )
+            }
+            spirit.awakeningConditionKey?.let { awakeningKey ->
+                textConsumer.accept(
+                    Text.translatable(
+                        "item.cresora.weapon.spirit_awakening",
+                        Text.translatable(awakeningKey)
+                    ).formatted(Formatting.DARK_GRAY)
+                )
+            }
+        }
         textConsumer.accept(
             buildSkillTooltipLine(resolved, data).copy().formatted(Formatting.AQUA)
         )

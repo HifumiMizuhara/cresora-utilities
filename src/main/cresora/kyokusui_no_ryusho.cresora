@@ -11,6 +11,37 @@ weapon "Kyokusui no Ryusho" {
         max_base_level: 60
         max_skill_level: 1
     }
+    spirit {
+        name: "item.cresora-utilities.kyokusui_no_ryusho"
+        awakening_condition: "spirit.cresora.kyokusui_no_ryusho.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.kyokusui_no_ryusho.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.kyokusui_no_ryusho.bond.1.title"
+            story: "spirit.cresora.kyokusui_no_ryusho.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.kyokusui_no_ryusho.bond.2.title"
+            story: "spirit.cresora.kyokusui_no_ryusho.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.kyokusui_no_ryusho.bond.3.title"
+            story: "spirit.cresora.kyokusui_no_ryusho.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.kyokusui_no_ryusho.bond.4.title"
+            story: "spirit.cresora.kyokusui_no_ryusho.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.kyokusui_no_ryusho.bond.5.title"
+            story: "spirit.cresora.kyokusui_no_ryusho.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.kyokusui_no_ryusho.bond.6.title"
+            story: "spirit.cresora.kyokusui_no_ryusho.bond.6.story"
+        }
+    }
     skill "Orchid Pavilion Echo" {
         effect_id: "orchid_pavilion_echo"
         cooldown: 25s
@@ -121,6 +152,20 @@ weapon "Kyokusui no Ryusho" {
         en_us {
             name: "Kyokusui no Ryusho"
             skill_name: "Orchid Pavilion Echo"
+            "spirit.cresora.kyokusui_no_ryusho.awakening": "Awakens when a wandering heart finally learns how to rest beside flowing words."
+            "spirit.cresora.kyokusui_no_ryusho.voice.first_contact": "Sit. The stream is patient, and so am I."
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.title": "The First Pour"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.story": "She greets you not with a command, but with a cup and a place to sit."
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.title": "Shared Verse"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.story": "Words that would have drifted downstream now remain because you answered them."
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.title": "Stone and Ink"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.story": "Grace stops being ornament and becomes the discipline that steadies your hand."
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.title": "Moon over Orchid Pavilion"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.story": "Under a quiet moon, her elegance reveals itself as endurance rather than distance."
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.title": "Echo Kept in Water"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.story": "The stream no longer carries her voice away; it returns it to you, clearer each time."
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.title": "Cup Offered Without Parting"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.story": "At last the farewell hidden in elegance dissolves, and what remains is companionship freely given."
             "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "Orchid Pavilion Echo Activated!"
             "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "Raise a Cup %s | ATK +%s%% | CRIT DMG +%s%% | [Zhi] %s | Pierce %s hearts"
             "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "Recite Poetry %s | DEF +%s%% | Regen Stage +%s"
@@ -131,6 +176,20 @@ weapon "Kyokusui no Ryusho" {
         ja_jp {
             name: "曲水流觞"
             skill_name: "蘭亭の反響"
+            "spirit.cresora.kyokusui_no_ryusho.awakening": "さまよう心が、流れる言葉のそばでようやく憩う術を知った時に目覚める。"
+            "spirit.cresora.kyokusui_no_ryusho.voice.first_contact": "お掛けなさい。流れゆく水は気長ですし、私もそうです。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.title": "最初の一献"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.story": "彼女は命令ではなく、一杯の酒と腰を下ろす場所であなたを迎える。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.title": "交わされた詩"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.story": "流れ去るはずだった言葉は、あなたが応えたことでその場に留まり始める。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.title": "石と墨"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.story": "優雅さは飾りではなく、手元を静める修養へと姿を変える。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.title": "蘭亭の月"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.story": "静かな月の下で、彼女の気品は遠さではなく耐え抜く力として見えてくる。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.title": "水に留まる反響"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.story": "流れはもう彼女の声を攫わず、むしろいっそう澄んだ形であなたへ返してくる。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.title": "別れなき献杯"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.story": "気品に紛れていた別離の気配は溶け、最後に残るのは惜しみなく差し出される同伴だけとなる。"
             "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "蘭亭の反響 起動！"
             "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "献杯 %s層 | 攻撃力 +%s%% | 会心ダメージ +%s%% | [之] %s層 | 貫通 %sハート"
             "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "詠歌 %s層 | 防御力 +%s%% | 自然回復段階 +%s"
@@ -141,6 +200,20 @@ weapon "Kyokusui no Ryusho" {
         zh_cn {
             name: "曲水流觞"
             skill_name: "兰亭回声"
+            "spirit.cresora.kyokusui_no_ryusho.awakening": "当漂泊的心终于学会在流动的言语旁停歇时，她便苏醒。"
+            "spirit.cresora.kyokusui_no_ryusho.voice.first_contact": "坐下吧。流水很有耐心，我也是。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.title": "第一杯"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.story": "她不是用命令迎接你，而是递来一盏酒与一个落座的位置。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.title": "同写之句"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.story": "原本会顺流而去的话，因为你的回应而留在了身边。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.title": "石与墨"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.story": "风雅不再只是装饰，而成了稳住你手中一笔一划的修养。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.title": "兰亭上月"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.story": "安静的月色下，她的清贵不再像距离，而更像一种耐久的力量。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.title": "留在水中的回声"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.story": "流水不再带走她的声音，而是一遍比一遍更清楚地把它送回你耳边。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.title": "无别之献杯"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.story": "藏在雅意中的离别意味终于散去，留下的只有她坦然递来的同行。"
             "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "兰亭回声 已启动！"
             "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "献杯 %s层 | 攻击力 +%s%% | 暴击伤害 +%s%% | [之] %s层 | 贯穿 %s心"
             "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "咏歌 %s层 | 防御力 +%s%% | 自然回复阶段 +%s"
@@ -151,6 +224,20 @@ weapon "Kyokusui no Ryusho" {
         lzh {
             name: "曲水流觴"
             skill_name: "蘭亭迴聲"
+            "spirit.cresora.kyokusui_no_ryusho.awakening": "流宕之心，既知依流言而少憩，其靈乃寤。"
+            "spirit.cresora.kyokusui_no_ryusho.voice.first_contact": "且坐。流水有耐，我亦如是。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.title": "初獻"
+            "spirit.cresora.kyokusui_no_ryusho.bond.1.story": "彼迎爾者，非令也，乃一觴與可坐之席。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.title": "同賦"
+            "spirit.cresora.kyokusui_no_ryusho.bond.2.story": "本將隨流而去之辭，因爾應之，遂留於側。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.title": "石與墨"
+            "spirit.cresora.kyokusui_no_ryusho.bond.3.story": "風雅不復為飾，乃成定爾手勢之修。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.title": "蘭亭月"
+            "spirit.cresora.kyokusui_no_ryusho.bond.4.story": "靜月之下，彼之清華，不若遠隔，反若耐持之力。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.title": "水中留響"
+            "spirit.cresora.kyokusui_no_ryusho.bond.5.story": "流水不復奪其聲，反一再返之於爾，愈加清明。"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.title": "無別之觴"
+            "spirit.cresora.kyokusui_no_ryusho.bond.6.story": "雅意中所藏離情既散，惟坦然同遊之意留焉。"
             "item.cresora.weapon.skill.orchid_pavilion_echo_activated.generic": "蘭亭迴聲 啓矣！"
             "item.cresora.weapon.skill.orchid_pavilion_echo.raise_a_cup": "獻杯 %s重 | 攻 +%s%% | 會傷 +%s%% | [之] %s重 | 穿傷 %s心"
             "item.cresora.weapon.skill.orchid_pavilion_echo.recite_poetry": "詠歌 %s重 | 防 +%s%% | 自癒階 +%s"

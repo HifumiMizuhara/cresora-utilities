@@ -11,6 +11,37 @@ weapon "Cold Mist, Coiling Snow" {
         max_base_level: 60
         max_skill_level: 10
     }
+    spirit {
+        name: "item.cresora-utilities.hanwu_juanxue"
+        awakening_condition: "spirit.cresora.hanwu_juanxue.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.hanwu_juanxue.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.hanwu_juanxue.bond.1.title"
+            story: "spirit.cresora.hanwu_juanxue.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.hanwu_juanxue.bond.2.title"
+            story: "spirit.cresora.hanwu_juanxue.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.hanwu_juanxue.bond.3.title"
+            story: "spirit.cresora.hanwu_juanxue.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.hanwu_juanxue.bond.4.title"
+            story: "spirit.cresora.hanwu_juanxue.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.hanwu_juanxue.bond.5.title"
+            story: "spirit.cresora.hanwu_juanxue.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.hanwu_juanxue.bond.6.title"
+            story: "spirit.cresora.hanwu_juanxue.bond.6.story"
+        }
+    }
     skill "Snow Frost" {
         effect_id: "snow_frost"
         cooldown: 25s
@@ -71,6 +102,20 @@ weapon "Cold Mist, Coiling Snow" {
         en_us {
             name: "Cold Mist, Coiling Snow"
             skill_name: "Snow Frost"
+            "spirit.cresora.hanwu_juanxue.awakening": "Awakens when you keep walking through the cold instead of begging it to leave."
+            "spirit.cresora.hanwu_juanxue.voice.first_contact": "Do not fear the cold. It only remembers what heat forgot."
+            "spirit.cresora.hanwu_juanxue.bond.1.title": "First Frost"
+            "spirit.cresora.hanwu_juanxue.bond.1.story": "Her presence touches your breath lightly, like winter testing whether you will endure it."
+            "spirit.cresora.hanwu_juanxue.bond.2.title": "White Mist Breath"
+            "spirit.cresora.hanwu_juanxue.bond.2.story": "The chill around her stops feeling hostile and begins to clear the noise from your thoughts."
+            "spirit.cresora.hanwu_juanxue.bond.3.title": "Snow That Lingers"
+            "spirit.cresora.hanwu_juanxue.bond.3.story": "She remains after the storm should have passed, proof that quiet can be stronger than force."
+            "spirit.cresora.hanwu_juanxue.bond.4.title": "Winter Kept Near"
+            "spirit.cresora.hanwu_juanxue.bond.4.story": "What others call loneliness becomes, with her, a calm that stands beside you."
+            "spirit.cresora.hanwu_juanxue.bond.5.title": "Blizzard Without Panic"
+            "spirit.cresora.hanwu_juanxue.bond.5.story": "In the white roar of battle, her restraint teaches you that clarity is a weapon of its own."
+            "spirit.cresora.hanwu_juanxue.bond.6.title": "Spring Hidden in Snow"
+            "spirit.cresora.hanwu_juanxue.bond.6.story": "Beneath all that cold, you finally feel the tenderness she protected by never speaking first."
             "item.cresora.weapon.skill.snow_frost_activated.generic": "Snow Frost Activated!"
             "item.cresora.weapon.skill.snow_mist_stack": "Snow Mist %s | CRIT DMG +%s%%"
             "item.cresora.weapon.skill.snow_mist_expired": "Snow Mist faded."
@@ -80,6 +125,20 @@ weapon "Cold Mist, Coiling Snow" {
         ja_jp {
             name: "寒霧、雪巻きて"
             skill_name: "雪氷の舞"
+            "spirit.cresora.hanwu_juanxue.awakening": "寒さが去るのを願うのではなく、その中を歩き続けると決めた時に目覚める。"
+            "spirit.cresora.hanwu_juanxue.voice.first_contact": "寒さを恐れないで。それは熱が忘れてしまったものを覚えているだけ。"
+            "spirit.cresora.hanwu_juanxue.bond.1.title": "初霜"
+            "spirit.cresora.hanwu_juanxue.bond.1.story": "彼女の気配は、耐えられるかを試す冬のように、まずそっとあなたの吐息に触れる。"
+            "spirit.cresora.hanwu_juanxue.bond.2.title": "白き息"
+            "spirit.cresora.hanwu_juanxue.bond.2.story": "その冷たさは敵意ではなく、思考の雑音を静める澄明さへ変わっていく。"
+            "spirit.cresora.hanwu_juanxue.bond.3.title": "残る雪"
+            "spirit.cresora.hanwu_juanxue.bond.3.story": "過ぎるはずの吹雪の後にも彼女は残り、静けさが力になり得ることを示す。"
+            "spirit.cresora.hanwu_juanxue.bond.4.title": "寄り添う冬"
+            "spirit.cresora.hanwu_juanxue.bond.4.story": "他人が孤独と呼ぶものは、彼女といる時だけ、隣に立つ落ち着きへ姿を変える。"
+            "spirit.cresora.hanwu_juanxue.bond.5.title": "乱れぬ吹雪"
+            "spirit.cresora.hanwu_juanxue.bond.5.story": "白く荒ぶる戦場の中で、彼女の節度は明晰さそのものが武器だと教える。"
+            "spirit.cresora.hanwu_juanxue.bond.6.title": "雪に隠れた春"
+            "spirit.cresora.hanwu_juanxue.bond.6.story": "積もる冷気の底で、言葉より先に守られていた優しさにようやく触れる。"
             "item.cresora.weapon.skill.snow_frost_activated.generic": "雪氷の舞 起動！"
             "item.cresora.weapon.skill.snow_mist_stack": "残雪 %s層 | 会心ダメージ +%s%%"
             "item.cresora.weapon.skill.snow_mist_expired": "残雪は消えました。"
@@ -89,6 +148,20 @@ weapon "Cold Mist, Coiling Snow" {
         zh_cn {
             name: "寒雾卷雪"
             skill_name: "雪影霜华"
+            "spirit.cresora.hanwu_juanxue.awakening": "当你不再乞求寒冷离去，而决定继续走进它时，她便苏醒。"
+            "spirit.cresora.hanwu_juanxue.voice.first_contact": "别怕冷。它只是记得炽热忘掉的东西。"
+            "spirit.cresora.hanwu_juanxue.bond.1.title": "初霜"
+            "spirit.cresora.hanwu_juanxue.bond.1.story": "她的存在先轻轻落在你的呼吸上，像冬天试探你是否能承受。"
+            "spirit.cresora.hanwu_juanxue.bond.2.title": "白雾之息"
+            "spirit.cresora.hanwu_juanxue.bond.2.story": "她身边的冷意不再像敌意，而开始替你驱散思绪里的杂音。"
+            "spirit.cresora.hanwu_juanxue.bond.3.title": "未融之雪"
+            "spirit.cresora.hanwu_juanxue.bond.3.story": "暴雪本该过去，她却仍留在身旁，证明安静也能比猛烈更有力量。"
+            "spirit.cresora.hanwu_juanxue.bond.4.title": "留在身边的冬"
+            "spirit.cresora.hanwu_juanxue.bond.4.story": "别人称作孤独的东西，在她这里反而成了站在你身旁的平静。"
+            "spirit.cresora.hanwu_juanxue.bond.5.title": "不慌的暴雪"
+            "spirit.cresora.hanwu_juanxue.bond.5.story": "在一片雪白轰鸣的战场里，她让你明白，清明本身就是武器。"
+            "spirit.cresora.hanwu_juanxue.bond.6.title": "雪下藏春"
+            "spirit.cresora.hanwu_juanxue.bond.6.story": "穿过层层寒意后，你终于触到她从不先说出口的温柔。"
             "item.cresora.weapon.skill.snow_frost_activated.generic": "雪影霜华 已启动！"
             "item.cresora.weapon.skill.snow_mist_stack": "残雪 %s 层 | 暴击伤害 +%s%%"
             "item.cresora.weapon.skill.snow_mist_expired": "残雪已消散。"
@@ -98,6 +171,20 @@ weapon "Cold Mist, Coiling Snow" {
         lzh {
             name: "寒霧卷雪"
             skill_name: "雪影霜華"
+            "spirit.cresora.hanwu_juanxue.awakening": "不復祈寒以去，而決意行於其間，其靈乃寤。"
+            "spirit.cresora.hanwu_juanxue.voice.first_contact": "勿懼寒。寒但記熱所遺忘者耳。"
+            "spirit.cresora.hanwu_juanxue.bond.1.title": "初霜"
+            "spirit.cresora.hanwu_juanxue.bond.1.story": "其氣先拂爾息，如冬試爾能否堪之。"
+            "spirit.cresora.hanwu_juanxue.bond.2.title": "白霧之息"
+            "spirit.cresora.hanwu_juanxue.bond.2.story": "彼側之寒，不復若敵，反能澄爾思中雜響。"
+            "spirit.cresora.hanwu_juanxue.bond.3.title": "未消之雪"
+            "spirit.cresora.hanwu_juanxue.bond.3.story": "暴雪既當過，彼猶在側，以明靜亦可強於猛。"
+            "spirit.cresora.hanwu_juanxue.bond.4.title": "近侍之冬"
+            "spirit.cresora.hanwu_juanxue.bond.4.story": "人所謂孤者，與彼偕時，反成傍身之定。"
+            "spirit.cresora.hanwu_juanxue.bond.5.title": "不亂之雪"
+            "spirit.cresora.hanwu_juanxue.bond.5.story": "白戰轟然之中，彼使爾知澄明自可為兵。"
+            "spirit.cresora.hanwu_juanxue.bond.6.title": "雪下之春"
+            "spirit.cresora.hanwu_juanxue.bond.6.story": "歷諸寒而後，始觸其未曾先言之柔。"
             "item.cresora.weapon.skill.snow_frost_activated.generic": "雪影霜華 啓矣！"
             "item.cresora.weapon.skill.snow_mist_stack": "殘雪 %s 層 | 會傷 +%s%%"
             "item.cresora.weapon.skill.snow_mist_expired": "殘雪散矣。"

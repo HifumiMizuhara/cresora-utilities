@@ -310,6 +310,16 @@ class WeaponUpgradeScreen(
         // Rarity
         context.drawText(textRenderer, Text.translatable("screen.cresora.weapon_upgrade.stat.rarity"), 178, currentY, 0xFF5F503D.toInt(), false)
         context.drawText(textRenderer, Text.translatable(data.rarity.translationKey()), 246, currentY, 0xFF8B6A34.toInt(), false)
+        currentY += 12
+
+        val spirit = definition.spirit
+        if (spirit != null) {
+            context.drawText(textRenderer, Text.translatable("screen.cresora.weapon_upgrade.stat.spirit_bond"), 178, currentY, 0xFF5F503D.toInt(), false)
+            context.drawText(textRenderer, Text.literal("${data.spiritBondStage} / 6"), 246, currentY, 0xFF355E73.toInt(), false)
+            spirit.bondStages.firstOrNull { it.stage == data.spiritBondStage }?.let { stage ->
+                context.drawText(textRenderer, Text.translatable(stage.titleKey), 178, currentY + 12, 0xFF355E73.toInt(), false)
+            }
+        }
     }
 
     private fun renderUpgradeTab(

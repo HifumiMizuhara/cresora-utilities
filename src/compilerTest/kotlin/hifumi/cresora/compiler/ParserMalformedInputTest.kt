@@ -146,6 +146,49 @@ class ParserMalformedInputTest {
     }
 
     @Test
+    fun `spirit block requires a name`() {
+        assertParseFails(
+            """
+            weapon "Nameless Spirit" {
+                id: "nameless_spirit"
+                rarity: "5_star"
+                base_item: "minecraft:diamond_sword"
+                stats { base_damage: 1.0 }
+                spirit {
+                    bond_stage 1 {
+                        title: "spirit.test.bond.1.title"
+                        story: "spirit.test.bond.1.story"
+                    }
+                }
+            }
+            """.trimIndent(),
+            "Spirit block is missing required name"
+        )
+    }
+
+    @Test
+    fun `spirit bond stage range is validated`() {
+        assertParseFails(
+            """
+            weapon "Bad Spirit Stage" {
+                id: "bad_spirit_stage"
+                rarity: "5_star"
+                base_item: "minecraft:diamond_sword"
+                stats { base_damage: 1.0 }
+                spirit {
+                    name: "spirit.test.name"
+                    bond_stage 7 {
+                        title: "spirit.test.bond.7.title"
+                        story: "spirit.test.bond.7.story"
+                    }
+                }
+            }
+            """.trimIndent(),
+            "Spirit bond stage must be between 1 and 6"
+        )
+    }
+
+    @Test
     fun `open_skill_menu requires sub-skill and duration`() {
         val ex = assertThrows<RuntimeException> {
             weaponWithHandler("""open_skill_menu("only_one")""")

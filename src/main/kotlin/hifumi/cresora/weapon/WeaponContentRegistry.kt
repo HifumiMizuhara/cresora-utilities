@@ -107,6 +107,42 @@ data class WeaponCraftDefinition(
     }
 }
 
+data class WeaponSpiritBondStageDefinition(
+    val stage: Int,
+    val titleKey: String,
+    val storyKey: String
+) {
+    companion object {
+        val CODEC: Codec<WeaponSpiritBondStageDefinition> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                Codec.INT.fieldOf("stage").forGetter(WeaponSpiritBondStageDefinition::stage),
+                Codec.STRING.fieldOf("titleKey").forGetter(WeaponSpiritBondStageDefinition::titleKey),
+                Codec.STRING.fieldOf("storyKey").forGetter(WeaponSpiritBondStageDefinition::storyKey)
+            ).apply(instance, ::WeaponSpiritBondStageDefinition)
+        }
+    }
+}
+
+data class WeaponSpiritDefinition(
+    val nameKey: String,
+    val voiceLines: Map<String, String> = emptyMap(),
+    val bondStages: List<WeaponSpiritBondStageDefinition> = emptyList(),
+    val awakeningConditionKey: String? = null
+) {
+    companion object {
+        val CODEC: Codec<WeaponSpiritDefinition> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                Codec.STRING.fieldOf("nameKey").forGetter(WeaponSpiritDefinition::nameKey),
+                Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("voiceLines", emptyMap()).forGetter(WeaponSpiritDefinition::voiceLines),
+                WeaponSpiritBondStageDefinition.CODEC.listOf().optionalFieldOf("bondStages", emptyList()).forGetter(WeaponSpiritDefinition::bondStages),
+                Codec.STRING.optionalFieldOf("awakeningConditionKey").forGetter { java.util.Optional.ofNullable(it.awakeningConditionKey) }
+            ).apply(instance) { nameKey, voiceLines, bondStages, awakeningConditionKey ->
+                WeaponSpiritDefinition(nameKey, voiceLines, bondStages, awakeningConditionKey.orElse(null))
+            }
+        }
+    }
+}
+
 data class WeaponDropTier(
     val rarity: WeaponRarity,
     val minMobLevel: Int,
@@ -179,7 +215,8 @@ data class WeaponDefinition(
     val upgrades: WeaponUpgradeDefinition,
     val craft: WeaponCraftDefinition,
     val drops: WeaponDropDefinition,
-    val customModelData: Int? = null
+    val customModelData: Int? = null,
+    val spirit: WeaponSpiritDefinition? = null
 ) {
     fun translationKey(): String = "item.cresora-utilities.$id"
 
@@ -200,7 +237,8 @@ data class WeaponDefinition(
             upgrades = WeaponUpgradeDefinition(0, 0, 0, 0),
             craft = WeaponCraftDefinition("dummy", "air", 0, WeaponRarity.TWO_STAR, 1, 1),
             drops = WeaponDropDefinition(WeaponFragmentDropDefinition(0, 0.0, 0, 0, 0), emptyList(), 0.0, 0.0),
-            customModelData = null
+            customModelData = null,
+            spirit = null
         )
     }
 }
@@ -281,8 +319,9 @@ object WeaponContentRegistry {
             WeaponUpgradeDefinition.CODEC.fieldOf("upgrades").forGetter(WeaponDefinition::upgrades),
             WeaponCraftDefinition.CODEC.fieldOf("craft").forGetter(WeaponDefinition::craft),
             WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops),
-            Codec.INT.optionalFieldOf("custom_model_data").forGetter { java.util.Optional.ofNullable(it.customModelData) }
-        ).apply(instance) { id, baseItemId, stats, curve, skill, upgrades, craft, drops, modelData ->
+            Codec.INT.optionalFieldOf("custom_model_data").forGetter { java.util.Optional.ofNullable(it.customModelData) },
+            WeaponSpiritDefinition.CODEC.optionalFieldOf("spirit").forGetter { java.util.Optional.ofNullable(it.spirit) }
+        ).apply(instance) { id, baseItemId, stats, curve, skill, upgrades, craft, drops, modelData, spirit ->
             WeaponDefinition(
                 id = id,
                 baseItemId = baseItemId,
@@ -301,7 +340,8 @@ object WeaponContentRegistry {
                 upgrades = upgrades,
                 craft = craft,
                 drops = drops,
-                customModelData = modelData.orElse(null)
+                customModelData = modelData.orElse(null),
+                spirit = spirit.orElse(null)
             )
         }
     }
@@ -364,6 +404,17 @@ object WeaponContentRegistry {
             require(definition.craft.fragmentsRequired >= 0) { "Weapon '${definition.id}' has negative fragmentsRequired" }
             require(definition.upgrades.baseFragmentCost >= 0) { "Weapon '${definition.id}' has negative baseFragmentCost" }
             require(definition.upgrades.skillArtifactCountPerLevel >= 0) { "Weapon '${definition.id}' has negative skillArtifactCountPerLevel" }
+            definition.spirit?.let { spirit ->
+                require(spirit.nameKey.isNotBlank()) { "Weapon '${definition.id}' spirit.nameKey must not be blank" }
+                require(spirit.bondStages.map(WeaponSpiritBondStageDefinition::stage).distinct().size == spirit.bondStages.size) {
+                    "Weapon '${definition.id}' spirit bond stages must be unique"
+                }
+                spirit.bondStages.forEach { stage ->
+                    require(stage.stage in 1..6) { "Weapon '${definition.id}' spirit bond stage ${stage.stage} must be in 1..6" }
+                    require(stage.titleKey.isNotBlank()) { "Weapon '${definition.id}' spirit bond stage ${stage.stage} titleKey must not be blank" }
+                    require(stage.storyKey.isNotBlank()) { "Weapon '${definition.id}' spirit bond stage ${stage.stage} storyKey must not be blank" }
+                }
+            }
             if (definition.attackCurve.isNotEmpty()) {
                 val sorted = definition.attackCurve.sortedBy(WeaponAttackCurvePoint::level)
                 require(sorted == definition.attackCurve) { "Weapon '${definition.id}' attackCurve must be sorted by level" }

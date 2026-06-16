@@ -34,6 +34,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var role = "guard"
         var stats: StatsNode? = null
         var skill: SkillNode? = null
+        var spirit: SpiritNode? = null
         var translations = mutableMapOf<String, Map<String, String>>()
         val subSkills = mutableListOf<SubSkillNode>()
         var customModelData: Int? = null
@@ -79,6 +80,11 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     skill = skill(skillName)
                     consume(TokenType.RIGHT_BRACE, "Expect '}' after skill")
                 }
+                "spirit" -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for spirit")
+                    spirit = spirit()
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after spirit")
+                }
                 "sub_skill" -> {
                     val subSkillName = consume(TokenType.STRING, "Expect sub_skill name").lexeme
                     consume(TokenType.LEFT_BRACE, "Expect '{' for sub_skill")
@@ -107,7 +113,92 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         if (id.isBlank()) throw RuntimeException("Weapon '$name' is missing required id")
         if (rarity.isBlank()) throw RuntimeException("Weapon '$name' is missing required rarity")
         if (baseItem.isBlank()) throw RuntimeException("Weapon '$name' is missing required base_item")
-        return WeaponDefNode(name, id, rarity, baseItem, damageType, role, resolvedStats, skill, translations, subSkills, customModelData, texture)
+        return WeaponDefNode(name, id, rarity, baseItem, damageType, role, resolvedStats, skill, spirit, translations, subSkills, customModelData, texture)
+    }
+
+    private fun spirit(): SpiritNode {
+        var nameKey = ""
+        var awakeningConditionKey: String? = null
+        val voiceLines = linkedMapOf<String, String>()
+        val bondStages = mutableListOf<SpiritBondStageNode>()
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            when (token.lexeme) {
+                "name" -> {
+                    consume(TokenType.COLON, "Expect ':' after spirit name")
+                    nameKey = consume(TokenType.STRING, "Expect spirit name translation key").lexeme
+                }
+                "awakening_condition" -> {
+                    consume(TokenType.COLON, "Expect ':' after awakening_condition")
+                    awakeningConditionKey = consume(TokenType.STRING, "Expect awakening condition translation key").lexeme
+                }
+                "voice_lines" -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for voice_lines")
+                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                        val next = advance()
+                        if (next.type == TokenType.SEMICOLON) continue
+                        val key = when (next.type) {
+                            TokenType.IDENTIFIER, TokenType.STRING -> next.lexeme
+                            else -> throw RuntimeException("Expect voice_lines key at line ${next.line}")
+                        }
+                        consume(TokenType.COLON, "Expect ':' after voice_lines key")
+                        voiceLines[key] = consume(TokenType.STRING, "Expect voice line translation key").lexeme
+                    }
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after voice_lines")
+                }
+                "bond_stage" -> {
+                    val stage = consume(TokenType.NUMBER, "Expect bond stage number").lexeme.toInt()
+                    if (stage !in 1..6) {
+                        throw RuntimeException("Spirit bond stage must be between 1 and 6, got $stage at line ${token.line}")
+                    }
+                    consume(TokenType.LEFT_BRACE, "Expect '{' for bond_stage")
+                    var titleKey = ""
+                    var storyKey = ""
+                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                        val field = advance()
+                        if (field.type == TokenType.SEMICOLON) continue
+                        when (field.lexeme) {
+                            "title" -> {
+                                consume(TokenType.COLON, "Expect ':' after bond stage title")
+                                titleKey = consume(TokenType.STRING, "Expect bond stage title translation key").lexeme
+                            }
+                            "story" -> {
+                                consume(TokenType.COLON, "Expect ':' after bond stage story")
+                                storyKey = consume(TokenType.STRING, "Expect bond stage story translation key").lexeme
+                            }
+                            else -> throw RuntimeException("Unknown bond_stage field '${field.lexeme}' at line ${field.line}")
+                        }
+                    }
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after bond_stage")
+                    if (titleKey.isBlank()) {
+                        throw RuntimeException("Spirit bond_stage $stage is missing required title")
+                    }
+                    if (storyKey.isBlank()) {
+                        throw RuntimeException("Spirit bond_stage $stage is missing required story")
+                    }
+                    if (bondStages.any { it.stage == stage }) {
+                        throw RuntimeException("Duplicate spirit bond_stage $stage")
+                    }
+                    bondStages.add(SpiritBondStageNode(stage, titleKey, storyKey))
+                }
+                else -> {
+                    if (token.type != TokenType.SEMICOLON) {
+                        throw RuntimeException("Unknown spirit field '${token.lexeme}' at line ${token.line}")
+                    }
+                }
+            }
+        }
+
+        if (nameKey.isBlank()) {
+            throw RuntimeException("Spirit block is missing required name")
+        }
+        return SpiritNode(
+            nameKey = nameKey,
+            voiceLines = voiceLines,
+            bondStages = bondStages.sortedBy(SpiritBondStageNode::stage),
+            awakeningConditionKey = awakeningConditionKey
+        )
     }
 
     private fun dictionary(): DictionaryDefNode {

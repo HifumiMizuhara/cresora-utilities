@@ -12,6 +12,37 @@ weapon "Stride by the Lakeside" {
         max_skill_level: 10
         crit_rate_bonus: 10.0
     }
+    spirit {
+        name: "item.cresora-utilities.lakeside_stride"
+        awakening_condition: "spirit.cresora.lakeside_stride.awakening"
+        voice_lines {
+            first_contact: "spirit.cresora.lakeside_stride.voice.first_contact"
+        }
+        bond_stage 1 {
+            title: "spirit.cresora.lakeside_stride.bond.1.title"
+            story: "spirit.cresora.lakeside_stride.bond.1.story"
+        }
+        bond_stage 2 {
+            title: "spirit.cresora.lakeside_stride.bond.2.title"
+            story: "spirit.cresora.lakeside_stride.bond.2.story"
+        }
+        bond_stage 3 {
+            title: "spirit.cresora.lakeside_stride.bond.3.title"
+            story: "spirit.cresora.lakeside_stride.bond.3.story"
+        }
+        bond_stage 4 {
+            title: "spirit.cresora.lakeside_stride.bond.4.title"
+            story: "spirit.cresora.lakeside_stride.bond.4.story"
+        }
+        bond_stage 5 {
+            title: "spirit.cresora.lakeside_stride.bond.5.title"
+            story: "spirit.cresora.lakeside_stride.bond.5.story"
+        }
+        bond_stage 6 {
+            title: "spirit.cresora.lakeside_stride.bond.6.title"
+            story: "spirit.cresora.lakeside_stride.bond.6.story"
+        }
+    }
     skill "Lakeside Stride" {
         effect_id: "current_hp_true_damage"
         cooldown: 50s
@@ -58,21 +89,77 @@ weapon "Stride by the Lakeside" {
         en_us {
             name: "Stride by the Lakeside"
             skill_name: "Lakeside Stride"
+            "spirit.cresora.lakeside_stride.awakening": "Awakens when you choose stillness after battle instead of chasing one more blow."
+            "spirit.cresora.lakeside_stride.voice.first_contact": "Walk slowly. Water tells the truth only to those who do not hurry."
+            "spirit.cresora.lakeside_stride.bond.1.title": "Waterside Footfall"
+            "spirit.cresora.lakeside_stride.bond.1.story": "Her steps are so quiet you only notice them when your own finally slow to match."
+            "spirit.cresora.lakeside_stride.bond.2.title": "Reed-Shadow Calm"
+            "spirit.cresora.lakeside_stride.bond.2.story": "The hush around her is not emptiness, but a patience that refuses to be disturbed."
+            "spirit.cresora.lakeside_stride.bond.3.title": "Ripple Answer"
+            "spirit.cresora.lakeside_stride.bond.3.story": "Every movement you make returns to you softened, as though the lake has learned your name."
+            "spirit.cresora.lakeside_stride.bond.4.title": "Blue Mirror"
+            "spirit.cresora.lakeside_stride.bond.4.story": "She reflects not the face you show others, but the self that appears when no one presses you."
+            "spirit.cresora.lakeside_stride.bond.5.title": "Step Without Turbulence"
+            "spirit.cresora.lakeside_stride.bond.5.story": "Even in conflict, her composure teaches you that force is sharpest when it does not thrash."
+            "spirit.cresora.lakeside_stride.bond.6.title": "Lake that Keeps the Sky"
+            "spirit.cresora.lakeside_stride.bond.6.story": "At last her stillness is no longer distance; it becomes a vastness that makes room for you."
             "item.cresora.weapon.skill.current_hp_true_damage_activated": "%1$s Activated! Dealt %3$s hearts total true damage to %2$s targets."
         }
         ja_jp {
             name: "湖畔を歩む"
             skill_name: "湖畔の歩み"
+            "spirit.cresora.lakeside_stride.awakening": "戦いのあと、もう一太刀を追う代わりに静けさを選んだ時に目覚める。"
+            "spirit.cresora.lakeside_stride.voice.first_contact": "急がず歩いて。水は、急がない者にしか真実を語らないの。"
+            "spirit.cresora.lakeside_stride.bond.1.title": "水辺の足音"
+            "spirit.cresora.lakeside_stride.bond.1.story": "彼女の歩みはあまりに静かで、あなた自身が速度を緩めた時に初めて気づく。"
+            "spirit.cresora.lakeside_stride.bond.2.title": "葦影の静けさ"
+            "spirit.cresora.lakeside_stride.bond.2.story": "彼女を包む沈黙は空虚ではなく、揺らぐことを拒む辛抱強さでできている。"
+            "spirit.cresora.lakeside_stride.bond.3.title": "波紋の返答"
+            "spirit.cresora.lakeside_stride.bond.3.story": "あなたの動きはすべて和らいだ形で返り、まるで湖があなたの名を覚えたかのように広がる。"
+            "spirit.cresora.lakeside_stride.bond.4.title": "青き鏡"
+            "spirit.cresora.lakeside_stride.bond.4.story": "彼女が映すのは他人に見せる顔ではなく、誰にも急かされない時に現れる本当のあなた。"
+            "spirit.cresora.lakeside_stride.bond.5.title": "濁らぬ一歩"
+            "spirit.cresora.lakeside_stride.bond.5.story": "争いの最中でさえ、激しく暴れない力こそ最も鋭いと彼女は教える。"
+            "spirit.cresora.lakeside_stride.bond.6.title": "空を抱く湖"
+            "spirit.cresora.lakeside_stride.bond.6.story": "彼女の静けさはもはや距離ではなく、あなたを受け入れるための広さへ変わる。"
             "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s を発動。%s体に合計 %s ハートぶんの確定ダメージ。"
         }
         zh_cn {
             name: "行于湖畔"
             skill_name: "湖畔徐行"
+            "spirit.cresora.lakeside_stride.awakening": "当你在战后选择安静，而不是再追那一击时，她便苏醒。"
+            "spirit.cresora.lakeside_stride.voice.first_contact": "慢慢走。只有不着急的人，水才肯告诉他真相。"
+            "spirit.cresora.lakeside_stride.bond.1.title": "水边足音"
+            "spirit.cresora.lakeside_stride.bond.1.story": "她的步子太轻，只有当你自己也放慢时，才会发现她一直在旁边。"
+            "spirit.cresora.lakeside_stride.bond.2.title": "苇影之静"
+            "spirit.cresora.lakeside_stride.bond.2.story": "她周围的寂静不是空白，而是一种拒绝被惊扰的耐心。"
+            "spirit.cresora.lakeside_stride.bond.3.title": "涟漪回应"
+            "spirit.cresora.lakeside_stride.bond.3.story": "你的每个动作都被柔和地送回，仿佛整片湖水已经记住了你的名字。"
+            "spirit.cresora.lakeside_stride.bond.4.title": "青色之镜"
+            "spirit.cresora.lakeside_stride.bond.4.story": "她映出的不是你给别人看的样子，而是无人催促时真正出现的自己。"
+            "spirit.cresora.lakeside_stride.bond.5.title": "不惊之步"
+            "spirit.cresora.lakeside_stride.bond.5.story": "即使置身冲突，她也让你明白，不翻腾的力量反而最锋利。"
+            "spirit.cresora.lakeside_stride.bond.6.title": "留住天空的湖"
+            "spirit.cresora.lakeside_stride.bond.6.story": "她的静不再像距离，而像一片足够辽阔、能够容纳你的水面。"
             "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s 已发动。共对 %s 个目标造成 %s 颗心的固定伤害。"
         }
         lzh {
             name: "行乎湖畔"
             skill_name: "湖畔徐行"
+            "spirit.cresora.lakeside_stride.awakening": "戰罷之後，不復逐其餘刃，而能擇靜者，其靈乃寤。"
+            "spirit.cresora.lakeside_stride.voice.first_contact": "徐行。水惟語真於不急之人。"
+            "spirit.cresora.lakeside_stride.bond.1.title": "水際履聲"
+            "spirit.cresora.lakeside_stride.bond.1.story": "彼步甚微，惟爾自緩之時，始知其常在側。"
+            "spirit.cresora.lakeside_stride.bond.2.title": "葦影之靜"
+            "spirit.cresora.lakeside_stride.bond.2.story": "彼側之寂，非虛也，乃不受驚擾之耐。"
+            "spirit.cresora.lakeside_stride.bond.3.title": "漣答"
+            "spirit.cresora.lakeside_stride.bond.3.story": "爾之一動，皆柔而返之，如湖已識爾名。"
+            "spirit.cresora.lakeside_stride.bond.4.title": "青鏡"
+            "spirit.cresora.lakeside_stride.bond.4.story": "彼所映者，非示人之容，乃無所催迫時真我之形。"
+            "spirit.cresora.lakeside_stride.bond.5.title": "不濁之步"
+            "spirit.cresora.lakeside_stride.bond.5.story": "雖在爭中，彼亦使爾知，不翻騰之力，其鋒尤甚。"
+            "spirit.cresora.lakeside_stride.bond.6.title": "受天之湖"
+            "spirit.cresora.lakeside_stride.bond.6.story": "彼之靜，不復為遠，乃成容爾之廣。"
             "item.cresora.weapon.skill.current_hp_true_damage_activated": "%s 已發。凡 %s 敵，共受定傷 %s 心。"
         }
     }

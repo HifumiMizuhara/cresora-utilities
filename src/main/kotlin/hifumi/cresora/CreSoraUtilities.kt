@@ -56,6 +56,7 @@ import hifumi.cresora.weapon.WeaponRarity
 import hifumi.cresora.weapon.WeaponRole
 import hifumi.cresora.weapon.WeaponSkillMaterialScreenHandler
 import hifumi.cresora.weapon.WeaponSkillService
+import hifumi.cresora.weapon.SpiritBondService
 import hifumi.cresora.weapon.WeaponStackSupport
 import hifumi.cresora.weapon.WeaponUpgradeScreenHandler
 import hifumi.cresora.leyline.LeyLineElement
@@ -65,7 +66,6 @@ import hifumi.cresora.leyline.LeyLineSelectionScreenHandler
 import hifumi.cresora.leyline.LeyLineHooks
 import hifumi.cresora.world.PortalBlock
 import hifumi.cresora.world.SpiritGuideService
-import hifumi.cresora.world.SpiritManifestationService
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
@@ -320,7 +320,7 @@ object CreSoraUtilities : ModInitializer {
 		HotbarOverrideService.init()
 		LeyLineHooks.init()
 		SpiritGuideService.init()
-		SpiritManifestationService.init()
+		SpiritBondService.init()
 		modifyLootTables()
 
 		logger.info("CreSora Utilities initialized!")

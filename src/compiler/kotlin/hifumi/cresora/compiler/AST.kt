@@ -11,10 +11,24 @@ data class WeaponDefNode(
     val role: String = "guard",
     val stats: StatsNode,
     val skill: SkillNode?,
+    val spirit: SpiritNode? = null,
     val translations: Map<String, Map<String, String>> = emptyMap(),
     val subSkills: List<SubSkillNode> = emptyList(),
     val customModelData: Int? = null,
     val texture: String? = null
+) : ASTNode()
+
+data class SpiritNode(
+    val nameKey: String,
+    val voiceLines: Map<String, String> = emptyMap(),
+    val bondStages: List<SpiritBondStageNode> = emptyList(),
+    val awakeningConditionKey: String? = null
+) : ASTNode()
+
+data class SpiritBondStageNode(
+    val stage: Int,
+    val titleKey: String,
+    val storyKey: String
 ) : ASTNode()
 
 data class ArtifactDefNode(

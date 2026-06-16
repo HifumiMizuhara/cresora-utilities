@@ -157,4 +157,39 @@ class TypedActionNodeTest {
         val addBuff = execute.statements.filterIsInstance<AddBuffActionNode>().single()
         assertEquals(2, addBuff.stacks)
     }
+
+    @Test
+    fun `spirit block parses into weapon metadata`() {
+        val weapon = parseWeapon(
+            """
+            weapon "Spirit Test" {
+                id: "spirit_test"
+                rarity: "5_star"
+                base_item: "minecraft:diamond_sword"
+                stats {
+                    base_damage: 5.0
+                    damage_per_level: 0.5
+                }
+                spirit {
+                    name: "spirit.test.name"
+                    awakening_condition: "spirit.test.awakening"
+                    voice_lines {
+                        greet: "spirit.test.voice.greet"
+                    }
+                    bond_stage 1 {
+                        title: "spirit.test.bond.1.title"
+                        story: "spirit.test.bond.1.story"
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+
+        val spirit = weapon.spirit
+        assertEquals("spirit.test.name", spirit?.nameKey)
+        assertEquals("spirit.test.awakening", spirit?.awakeningConditionKey)
+        assertEquals("spirit.test.voice.greet", spirit?.voiceLines?.get("greet"))
+        assertEquals(1, spirit?.bondStages?.single()?.stage)
+        assertEquals("spirit.test.bond.1.title", spirit?.bondStages?.single()?.titleKey)
+    }
 }
