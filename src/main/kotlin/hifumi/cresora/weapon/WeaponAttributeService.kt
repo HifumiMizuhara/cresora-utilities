@@ -1,6 +1,7 @@
 package hifumi.cresora.weapon
 
 import hifumi.cresora.CreSoraUtilities
+import hifumi.cresora.combat.CombatStatSupport
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
@@ -37,13 +38,13 @@ object WeaponAttributeService {
                 updateModifier(
                     player.attributes.getCustomInstance(EntityAttributes.ATTACK_DAMAGE),
                     DYNAMIC_ATTACK_SCALAR_ID,
-                    WeaponSkillService.attackDamageScalar(player),
+                    CombatStatSupport.cappedAttributeScalarRatio(WeaponSkillService.attackDamageScalar(player)),
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
                 updateModifier(
                     player.attributes.getCustomInstance(EntityAttributes.ARMOR),
                     DYNAMIC_ARMOR_SCALAR_ID,
-                    WeaponSkillService.armorScalar(player),
+                    CombatStatSupport.cappedAttributeScalarRatio(WeaponSkillService.armorScalar(player)),
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
             }

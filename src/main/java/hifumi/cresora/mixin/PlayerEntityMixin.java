@@ -90,13 +90,13 @@ public class PlayerEntityMixin {
             weaponAllDamageBonus = WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData) / 100.0;
         }
 
-        double allBonus = totals.getOrDefault(StatType.ALL_DMG_BONUS, 0.0) / 100.0 + weaponAllDamageBonus;
-        double critRate = Math.min(1.0, CombatStatSupport.effectiveCritRateRatio(totals) + weaponCritRateBonus / 100.0);
-        double critDamage = CombatStatSupport.effectiveCritDamageRatio(totals) + weaponCritDamageBonus;
-        double damageMultiplier = 1.0 + Math.max(0.0, allBonus);
+        double allBonus = CombatStatSupport.cappedDamageBonusRatio(totals.getOrDefault(StatType.ALL_DMG_BONUS, 0.0) / 100.0 + weaponAllDamageBonus);
+        double critRate = CombatStatSupport.cappedCritRateRatio(CombatStatSupport.effectiveCritRateRatio(totals) + weaponCritRateBonus / 100.0);
+        double critDamage = CombatStatSupport.cappedCritDamageRatio(CombatStatSupport.effectiveCritDamageRatio(totals) + weaponCritDamageBonus);
         double bloodMoonMultiplier = BloodMoonService.INSTANCE.playerDamageMultiplier(player);
+        double damageMultiplier = CombatStatSupport.additiveDamageMultiplier(allBonus, bloodMoonMultiplier);
 
-        double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier * bloodMoonMultiplier;
+        double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier;
         if (critRate > 0.0) {
             if (player.getRandom().nextDouble() < critRate) {
                 double critMultiplier = 1.0 + Math.max(0.0, critDamage);

@@ -87,6 +87,9 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     private String cresora$selectedFeaturedWeaponId = "";
 
     @Unique
+    private String cresora$spiritBondPointsRaw = "";
+
+    @Unique
     private String cresora$storyClearsRaw = "";
 
     @Unique
@@ -132,6 +135,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         view.putInt(ResonanceService.INSTANCE.arpeggioReadyKey(), this.cresora$arpeggioReady ? 1 : 0);
         view.putLong(ResonanceService.INSTANCE.dailyLoginEpochDayKey(), this.cresora$lastDailyLoginEpochDay);
         view.putString(ResonanceService.INSTANCE.selectedFeaturedWeaponIdKey(), this.cresora$selectedFeaturedWeaponId);
+        view.putString(ResonanceService.INSTANCE.spiritBondPointsKey(), this.cresora$spiritBondPointsRaw);
         view.putString(StoryProgressService.INSTANCE.playerStoryClearsKey(), this.cresora$storyClearsRaw);
         view.putString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), this.cresora$masqueradeCurrentSeasonId);
         view.putInt(MasqueradeProgressService.INSTANCE.playerBestWaveKey(), this.cresora$masqueradeBestWave);
@@ -161,6 +165,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$arpeggioReady = view.getInt(ResonanceService.INSTANCE.arpeggioReadyKey(), 0) != 0;
         this.cresora$lastDailyLoginEpochDay = view.getLong(ResonanceService.INSTANCE.dailyLoginEpochDayKey(), -1L);
         this.cresora$selectedFeaturedWeaponId = view.getString(ResonanceService.INSTANCE.selectedFeaturedWeaponIdKey(), "");
+        this.cresora$spiritBondPointsRaw = view.getString(ResonanceService.INSTANCE.spiritBondPointsKey(), "");
         this.cresora$storyClearsRaw = view.getString(StoryProgressService.INSTANCE.playerStoryClearsKey(), "");
         this.cresora$masqueradeCurrentSeasonId = view.getString(MasqueradeProgressService.INSTANCE.playerSeasonIdKey(), "");
         this.cresora$masqueradeBestWave = view.getInt(MasqueradeProgressService.INSTANCE.playerBestWaveKey(), 0);
@@ -381,6 +386,16 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetSelectedFeaturedWeaponId(String value) {
         this.cresora$selectedFeaturedWeaponId = value == null ? "" : value;
+    }
+
+    @Override
+    public String cresoraGetSpiritBondPointsRaw() {
+        return this.cresora$spiritBondPointsRaw;
+    }
+
+    @Override
+    public void cresoraSetSpiritBondPointsRaw(String value) {
+        this.cresora$spiritBondPointsRaw = value == null ? "" : value;
     }
 
     @Override

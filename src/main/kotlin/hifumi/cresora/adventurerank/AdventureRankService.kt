@@ -6,6 +6,7 @@ import hifumi.cresora.combat.CombatMobDisplayService
 import hifumi.cresora.combat.FieldMobPackService
 import hifumi.cresora.domain.DomainService
 import hifumi.cresora.masquerade.MasqueradeService
+import hifumi.cresora.world.CresoraWorldKeys
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributeModifier
@@ -163,6 +164,10 @@ object AdventureRankService {
         val toughnessInstance = entity.attributes.getCustomInstance(EntityAttributes.ARMOR_TOUGHNESS)
         val scaleInstance = entity.attributes.getCustomInstance(EntityAttributes.SCALE)
         val world = entity.world as? ServerWorld
+        if (world != null && CresoraWorldKeys.isOverworldAlt(world.registryKey)) {
+            applyOverworldAltMobScaling(entity, maxHealthInstance, armorInstance, toughnessInstance, scaleInstance)
+            return
+        }
         val moonScalar = world?.server?.let { MoonPhaseService.healthScalar(it) } ?: 1.0
         val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
         val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
@@ -242,6 +247,10 @@ object AdventureRankService {
         val bloodMoonMultiplier = BloodMoonService.damageMultiplier(attacker)
         val leyLineMultiplier = hifumi.cresora.leyline.LeyLineService.damageMultiplier(attacker)
         val world = hostile.world as? ServerWorld ?: return 1.0
+        if (CresoraWorldKeys.isOverworldAlt(world.registryKey)) {
+            val phaseMultiplier = if (hostile.health <= hostile.maxHealth * 0.5f) 1.12 else 1.0
+            return phaseMultiplier * FieldMobPackService.eliteDamageScalar(hostile)
+        }
         val moonMultiplier = MoonPhaseService.damageMultiplier(world.server ?: return 1.0)
         if (storedRank <= 0) {
             return domainMultiplier * masqueradeMultiplier * bloodMoonMultiplier * moonMultiplier * leyLineMultiplier
@@ -253,6 +262,69 @@ object AdventureRankService {
             bloodMoonMultiplier *
             moonMultiplier *
             leyLineMultiplier
+    }
+
+    private fun applyOverworldAltMobScaling(
+        entity: MobEntity,
+        maxHealthInstance: net.minecraft.entity.attribute.EntityAttributeInstance,
+        armorInstance: net.minecraft.entity.attribute.EntityAttributeInstance?,
+        toughnessInstance: net.minecraft.entity.attribute.EntityAttributeInstance?,
+        scaleInstance: net.minecraft.entity.attribute.EntityAttributeInstance?
+    ) {
+        val oldMaxHealth = entity.maxHealth.toDouble().coerceAtLeast(1.0)
+        val healthRatio = (entity.health.toDouble() / oldMaxHealth).coerceIn(0.0, 1.0)
+        val baseMaxHealth = maxHealthInstance.baseValue.coerceAtLeast(1.0)
+        val access = entity as? AdventureRankMobAccess
+        val targetHealth = when {
+            access?.cresoraIsBossMob() == true -> 96.0
+            access?.cresoraIsEliteMob() == true -> 64.0
+            else -> 40.0
+        }
+        val modifierValue = targetHealth / baseMaxHealth - 1.0
+
+        maxHealthInstance.removeModifier(MOB_HEALTH_SCALAR_ID)
+        if (abs(modifierValue) > 1.0e-6) {
+            maxHealthInstance.addTemporaryModifier(
+                EntityAttributeModifier(
+                    MOB_HEALTH_SCALAR_ID,
+                    modifierValue,
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+            )
+        }
+
+        armorInstance?.removeModifier(MOB_ARMOR_BONUS_ID)
+        toughnessInstance?.removeModifier(MOB_TOUGHNESS_BONUS_ID)
+        scaleInstance?.removeModifier(MOB_ELITE_SCALE_ID)
+
+        val phaseArmor = if (entity.health <= entity.maxHealth * 0.5f) 2.0 else 0.0
+        armorInstance?.addTemporaryModifier(
+            EntityAttributeModifier(
+                MOB_ARMOR_BONUS_ID,
+                3.0 + phaseArmor,
+                EntityAttributeModifier.Operation.ADD_VALUE
+            )
+        )
+        toughnessInstance?.addTemporaryModifier(
+            EntityAttributeModifier(
+                MOB_TOUGHNESS_BONUS_ID,
+                0.6 + phaseArmor * 0.25,
+                EntityAttributeModifier.Operation.ADD_VALUE
+            )
+        )
+
+        val scaleBonus = FieldMobPackService.scaleBonus(entity)
+        if (scaleBonus > 0.0) {
+            scaleInstance?.addTemporaryModifier(
+                EntityAttributeModifier(
+                    MOB_ELITE_SCALE_ID,
+                    scaleBonus,
+                    EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+                )
+            )
+        }
+        entity.health = max(1.0, targetHealth * healthRatio).toFloat()
+        CombatMobDisplayService.updateMobStatus(entity)
     }
 
     fun mobRank(entity: MobEntity): Int {

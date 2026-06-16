@@ -258,8 +258,12 @@ object WeaponSkillService {
             player.sendMessage(Text.translatable("item.cresora.weapon.skill.none").formatted(Formatting.GRAY), true)
             return ActionResult.SUCCESS
         }
-        return WeaponSkillRegistry.getHandler(definition.skill.effectId)?.activate(player, definition, data, access)
+        val result = WeaponSkillRegistry.getHandler(definition.skill.effectId)?.activate(player, definition, data, access)
             ?: ActionResult.PASS
+        if (result == ActionResult.SUCCESS) {
+            CresoraDebuffService.triggerElementalSkill(player, definition.id, definition.skill.effectId, definition.skill.radiusMeters)
+        }
+        return result
     }
 
     fun absorbDamage(player: ServerPlayerEntity, amount: Float): Float {
@@ -731,4 +735,3 @@ object WeaponSkillService {
         return hifumi.cresora.equipment.EquipmentEffectHookService.getDisplayStacks(player, buffId, rawStacks)
     }
 }
-

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "cresora-utilities:block/cresora_portal"
+    }
+  }
+}

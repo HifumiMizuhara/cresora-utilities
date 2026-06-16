@@ -2,6 +2,7 @@ package hifumi.cresora.resonance
 import hifumi.cresora.weapon.WeaponContentRegistry
 import hifumi.cresora.weapon.WeaponRarity
 import hifumi.cresora.weapon.WeaponStackSupport
+import hifumi.cresora.weapon.WeaponSkillService
 import net.minecraft.item.ItemStack
 import net.minecraft.server.network.ServerPlayerEntity
 import kotlin.math.max
@@ -18,6 +19,7 @@ object ResonanceService {
     private const val LIMITED_FIVE_STAR_GUARANTEED_KEY = "cresora_resonance_limited_five_star_guaranteed"
     private const val ARPEGGIO_READY_KEY = "cresora_resonance_arpeggio_ready"
     private const val SELECTED_FEATURED_WEAPON_ID_KEY = "cresora_resonance_selected_featured_weapon_id"
+    private const val SPIRIT_BOND_POINTS_KEY = "cresora_spirit_bond_points"
 
     private const val LIMITED_SOFT_PITY_START = 100
     private const val LIMITED_HARD_PITY = 150
@@ -40,6 +42,9 @@ object ResonanceService {
         val rarity: WeaponRarity,
         val wasLimitedFiveStar: Boolean,
         val obtainedFeaturedFiveStar: Boolean,
+        val duplicateConverted: Boolean,
+        val bondPointsAwarded: Int,
+        val bondPointsAfter: Int,
         val progressAfter: Progress
     )
 
@@ -71,6 +76,8 @@ object ResonanceService {
     fun dailyLoginEpochDayKey(): String = DAILY_LOGIN_EPOCH_DAY_KEY
 
     fun selectedFeaturedWeaponIdKey(): String = SELECTED_FEATURED_WEAPON_ID_KEY
+
+    fun spiritBondPointsKey(): String = SPIRIT_BOND_POINTS_KEY
 
     fun getLastDailyLoginEpochDay(player: ServerPlayerEntity): Long {
         return (player as? ResonanceAccess)?.cresoraGetLastDailyLoginEpochDay() ?: -1L
@@ -194,6 +201,23 @@ object ResonanceService {
         newAccess.cresoraSetArpeggioReady(oldAccess.cresoraGetArpeggioReady())
         newAccess.cresoraSetLastDailyLoginEpochDay(oldAccess.cresoraGetLastDailyLoginEpochDay())
         newAccess.cresoraSetSelectedFeaturedWeaponId(oldAccess.cresoraGetSelectedFeaturedWeaponId())
+        newAccess.cresoraSetSpiritBondPointsRaw(oldAccess.cresoraGetSpiritBondPointsRaw())
+    }
+
+    fun getSpiritBondPoints(player: ServerPlayerEntity, weaponId: String): Int {
+        return readSpiritBondPoints(player)[weaponId]?.coerceAtLeast(0) ?: 0
+    }
+
+    fun addSpiritBondPoints(player: ServerPlayerEntity, weaponId: String, amount: Int): Int {
+        if (amount <= 0 || weaponId.isBlank()) {
+            return getSpiritBondPoints(player, weaponId)
+        }
+        val access = player as? ResonanceAccess ?: return 0
+        val points = readSpiritBondPoints(player).toMutableMap()
+        val updated = ((points[weaponId] ?: 0).toLong() + amount.toLong()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        points[weaponId] = updated
+        access.cresoraSetSpiritBondPointsRaw(writeSpiritBondPoints(points))
+        return updated
     }
 
     fun currencyCount(player: ServerPlayerEntity, banner: ResonanceBannerDefinition): Int {
@@ -243,7 +267,14 @@ object ResonanceService {
 
         val definition = WeaponContentRegistry.requireWeapon(entry.weaponId)
         val pulledWeapon = WeaponStackSupport.createWeaponStack(definition, entry.rarity, 1, 1)
-        player.giveItemStack(pulledWeapon.copy())
+        val duplicateConverted = WeaponSkillService.hasWeaponInInventory(player, definition.id)
+        val bondPointsAwarded = if (duplicateConverted) bondPointsForRarity(entry.rarity) else 0
+        val bondPointsAfter = if (duplicateConverted) {
+            addSpiritBondPoints(player, definition.id, bondPointsAwarded)
+        } else {
+            player.giveItemStack(pulledWeapon.copy())
+            getSpiritBondPoints(player, definition.id)
+        }
 
         val updated = updateProgress(player, banner, rarity, obtainedFeatured)
         hifumi.cresora.guide.GuideService.onResonancePull(player, 1)
@@ -254,6 +285,9 @@ object ResonanceService {
                 rarity = rarity,
                 wasLimitedFiveStar = banner.type == ResonanceBannerType.LIMITED && rarity == WeaponRarity.FIVE_STAR,
                 obtainedFeaturedFiveStar = obtainedFeatured,
+                duplicateConverted = duplicateConverted,
+                bondPointsAwarded = bondPointsAwarded,
+                bondPointsAfter = bondPointsAfter,
                 progressAfter = updated
             )
         )
@@ -412,5 +446,39 @@ object ResonanceService {
                 )
             }
         }
+    }
+
+    private fun bondPointsForRarity(rarity: WeaponRarity): Int {
+        return when (rarity) {
+            WeaponRarity.TWO_STAR -> 1
+            WeaponRarity.THREE_STAR -> 3
+            WeaponRarity.FOUR_STAR -> 12
+            WeaponRarity.FIVE_STAR -> 40
+        }
+    }
+
+    private fun readSpiritBondPoints(player: ServerPlayerEntity): Map<String, Int> {
+        val raw = (player as? ResonanceAccess)?.cresoraGetSpiritBondPointsRaw().orEmpty()
+        if (raw.isBlank()) {
+            return emptyMap()
+        }
+        return raw.split(';')
+            .mapNotNull { entry ->
+                val parts = entry.split('=', limit = 2)
+                if (parts.size != 2) {
+                    return@mapNotNull null
+                }
+                val weaponId = parts[0].trim()
+                val points = parts[1].toIntOrNull()?.coerceAtLeast(0) ?: return@mapNotNull null
+                if (weaponId.isBlank()) null else weaponId to points
+            }
+            .toMap()
+    }
+
+    private fun writeSpiritBondPoints(points: Map<String, Int>): String {
+        return points.entries
+            .filter { it.key.isNotBlank() && it.value > 0 }
+            .sortedBy { it.key }
+            .joinToString(";") { "${it.key}=${it.value}" }
     }
 }

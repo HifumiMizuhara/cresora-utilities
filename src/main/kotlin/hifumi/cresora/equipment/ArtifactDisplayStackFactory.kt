@@ -275,13 +275,29 @@ object ArtifactDisplayStackFactory {
         val stack = result.pulledWeapon.copy()
         stack.set(
             DataComponentTypes.CUSTOM_NAME,
-            Text.translatable(
-                "screen.cresora.resonance.result_entry",
-                Text.translatable(result.banner.translationKey),
-                Text.translatable(result.pulledWeapon.item.translationKey),
-                Text.translatable(result.rarity.translationKey())
-            )
+            if (result.duplicateConverted) {
+                Text.translatable(
+                    "screen.cresora.resonance.result_duplicate",
+                    Text.translatable(result.banner.translationKey),
+                    Text.translatable(result.pulledWeapon.item.translationKey),
+                    Text.translatable(result.rarity.translationKey()),
+                    result.bondPointsAwarded
+                )
+            } else {
+                Text.translatable(
+                    "screen.cresora.resonance.result_entry",
+                    Text.translatable(result.banner.translationKey),
+                    Text.translatable(result.pulledWeapon.item.translationKey),
+                    Text.translatable(result.rarity.translationKey())
+                )
+            }
         )
+        if (result.duplicateConverted) {
+            stack.set(
+                DataComponentTypes.LORE,
+                LoreComponent(listOf(Text.translatable("screen.cresora.resonance.result_duplicate_lore", result.bondPointsAfter)))
+            )
+        }
         return stack
     }
 

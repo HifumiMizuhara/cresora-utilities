@@ -1,6 +1,7 @@
 package hifumi.cresora.story
 import hifumi.cresora.CreSoraUtilities
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.network.RegistryByteBuf
 import net.minecraft.network.codec.PacketCodec
@@ -10,6 +11,8 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.text.TextCodecs
 import net.minecraft.util.Identifier
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 enum class StoryDialogueViewMode(val id: String) {
     DIALOGUE("dialogue"),
@@ -91,13 +94,46 @@ data class StoryDialogueActionPayload(
 }
 
 object StoryDialogueNetworking {
+    private data class SimpleDialogueSession(
+        val title: Text,
+        val lines: List<ResolvedStoryLine>,
+        val objective: Text?,
+        val hints: List<Text>,
+        var index: Int = 0
+    )
+
+    private val simpleDialogueSessions: MutableMap<UUID, SimpleDialogueSession> = ConcurrentHashMap()
+
     fun init() {
         PayloadTypeRegistry.playS2C().register(StoryDialogueStatePayload.ID, StoryDialogueStatePayload.CODEC)
         PayloadTypeRegistry.playS2C().register(StoryDialogueClosePayload.ID, StoryDialogueClosePayload.CODEC)
         PayloadTypeRegistry.playC2S().register(StoryDialogueActionPayload.ID, StoryDialogueActionPayload.CODEC)
+        ServerPlayConnectionEvents.DISCONNECT.register(ServerPlayConnectionEvents.Disconnect { handler, _ ->
+            simpleDialogueSessions.remove(handler.player.uuid)
+        })
         ServerPlayNetworking.registerGlobalReceiver(StoryDialogueActionPayload.ID) { payload, context ->
+            if (handleSimpleDialogueAction(context.player(), payload.actionId)) {
+                return@registerGlobalReceiver
+            }
             StoryService.handleDialogueAction(context.player(), payload.actionId)
         }
+    }
+
+    fun showSimpleDialogue(
+        player: ServerPlayerEntity,
+        title: Text,
+        lines: List<ResolvedStoryLine>,
+        objective: Text? = null,
+        hints: List<Text> = emptyList()
+    ) {
+        val normalizedLines = lines.filter { !it.body.string.isBlank() }
+        if (normalizedLines.isEmpty()) {
+            close(player)
+            return
+        }
+        val session = SimpleDialogueSession(title, normalizedLines, objective, hints)
+        simpleDialogueSessions[player.uuid] = session
+        sendSimpleDialogueLine(player, session)
     }
 
     fun showDialogue(
@@ -151,6 +187,31 @@ object StoryDialogueNetworking {
     }
 
     fun close(player: ServerPlayerEntity) {
+        simpleDialogueSessions.remove(player.uuid)
         ServerPlayNetworking.send(player, StoryDialogueClosePayload)
+    }
+
+    private fun handleSimpleDialogueAction(player: ServerPlayerEntity, actionId: String): Boolean {
+        val session = simpleDialogueSessions[player.uuid] ?: return false
+        when (actionId) {
+            StoryDialogueActionPayload.ACTION_CONTINUE -> session.index += 1
+            StoryDialogueActionPayload.ACTION_SKIP -> session.index = session.lines.size
+            else -> return true
+        }
+        if (session.index >= session.lines.size) {
+            close(player)
+        } else {
+            sendSimpleDialogueLine(player, session)
+        }
+        return true
+    }
+
+    private fun sendSimpleDialogueLine(player: ServerPlayerEntity, session: SimpleDialogueSession) {
+        val line = session.lines.getOrNull(session.index)
+        if (line == null) {
+            close(player)
+            return
+        }
+        showDialogue(player, session.title, line, session.objective, session.hints)
     }
 }

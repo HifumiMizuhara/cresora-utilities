@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " E ",
+    "OMO",
+    " O "
+  ],
+  "key": {
+    "E": "minecraft:ender_pearl",
+    "M": "cresora-utilities:moon_brick",
+    "O": "minecraft:crying_obsidian"
+  },
+  "result": {
+    "id": "cresora-utilities:cresora_portal",
+    "count": 1
+  }
+}

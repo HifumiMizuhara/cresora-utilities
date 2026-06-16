@@ -103,12 +103,7 @@ class ResonanceScreenHandler(
             is ResonanceService.PullOutcome.Success -> {
                 val result = outcome.result
                 player.sendMessage(
-                    Text.translatable(
-                        "screen.cresora.resonance.pull_success",
-                        Text.translatable(result.banner.translationKey),
-                        Text.translatable(result.pulledWeapon.item.translationKey),
-                        Text.translatable(result.rarity.translationKey())
-                    ),
+                    resonanceResultMessage(result),
                     false
                 )
                 ArtifactUiFlow.openResonanceResult(player, result)
@@ -126,6 +121,25 @@ class ResonanceScreenHandler(
             ResonanceService.PullOutcome.NoFiveStarWeaponsAvailable -> {
                 player.sendMessage(Text.translatable("screen.cresora.resonance.no_five_star_available"), false)
             }
+        }
+    }
+
+    private fun resonanceResultMessage(result: ResonanceService.PullResult): Text {
+        return if (result.duplicateConverted) {
+            Text.translatable(
+                "screen.cresora.resonance.pull_duplicate",
+                Text.translatable(result.banner.translationKey),
+                Text.translatable(result.pulledWeapon.item.translationKey),
+                Text.translatable(result.rarity.translationKey()),
+                result.bondPointsAwarded
+            )
+        } else {
+            Text.translatable(
+                "screen.cresora.resonance.pull_success",
+                Text.translatable(result.banner.translationKey),
+                Text.translatable(result.pulledWeapon.item.translationKey),
+                Text.translatable(result.rarity.translationKey())
+            )
         }
     }
 

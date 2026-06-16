@@ -43,4 +43,8 @@ interface ResonanceAccess {
     fun cresoraGetSelectedFeaturedWeaponId(): String?
 
     fun cresoraSetSelectedFeaturedWeaponId(value: String?)
+
+    fun cresoraGetSpiritBondPointsRaw(): String
+
+    fun cresoraSetSpiritBondPointsRaw(value: String)
 }

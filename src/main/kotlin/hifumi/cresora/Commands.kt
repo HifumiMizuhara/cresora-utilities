@@ -17,6 +17,7 @@ import hifumi.cresora.story.StoryContentRegistry
 import hifumi.cresora.story.StoryProgressService
 import hifumi.cresora.story.StoryService
 import hifumi.cresora.story.StoryTextRegistry
+import hifumi.cresora.world.SpiritGuideService
 import com.mojang.brigadier.arguments.IntegerArgumentType.getInteger
 import com.mojang.brigadier.arguments.IntegerArgumentType.integer
 import com.mojang.brigadier.arguments.StringArgumentType.getString
@@ -25,6 +26,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.item.ItemStack
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
@@ -60,6 +62,23 @@ object Commands {
                         ArtifactUiFlow.openGuide(context.source.playerOrThrow)
                         1
                     }
+                    .then(
+                        literal("intro")
+                            .executes { context ->
+                                SpiritGuideService.openGuideDialogue(context.source.playerOrThrow)
+                                1
+                            }
+                    )
+                    .then(
+                        literal("portal")
+                            .requires { source -> source.hasPermissionLevel(2) }
+                            .executes { context ->
+                                val player = context.source.playerOrThrow
+                                player.inventory.offerOrDrop(ItemStack(CreSoraUtilities.CRESORA_PORTAL_BLOCK_ITEM))
+                                context.source.sendFeedback({ Text.translatable("commands.cresora.portal.given") }, true)
+                                1
+                            }
+                    )
                     .then(
                         literal("moon")
                             .requires { source -> source.hasPermissionLevel(2) }

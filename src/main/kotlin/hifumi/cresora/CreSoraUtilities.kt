@@ -63,6 +63,9 @@ import hifumi.cresora.leyline.LeyLineKeyItem
 import hifumi.cresora.leyline.LeyLineOverflowBlock
 import hifumi.cresora.leyline.LeyLineSelectionScreenHandler
 import hifumi.cresora.leyline.LeyLineHooks
+import hifumi.cresora.world.PortalBlock
+import hifumi.cresora.world.SpiritGuideService
+import hifumi.cresora.world.SpiritManifestationService
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
@@ -117,6 +120,7 @@ object CreSoraUtilities : ModInitializer {
 	private val MOON_ALTAR_ID: Identifier = Identifier.of(MOD_ID, "moon_altar")
 	private val RESONANT_LOCATOR_ID: Identifier = Identifier.of(MOD_ID, "resonant_locator")
 	private val RESONANT_CACHE_ID: Identifier = Identifier.of(MOD_ID, "resonant_cache")
+	private val CRESORA_PORTAL_ID: Identifier = Identifier.of(MOD_ID, "cresora_portal")
  
 	private val EQUIPMENT_ITEMS: MutableMap<String, ArtifactEquipmentItem> = linkedMapOf()
 	private val WEAPON_ITEMS: MutableMap<String, CresoraWeaponItem> = linkedMapOf()
@@ -133,6 +137,8 @@ object CreSoraUtilities : ModInitializer {
 	val RESONANT_LOCATOR_ITEM: Item = Item(itemSettings(RESONANT_LOCATOR_ID).maxCount(16))
 	val RESONANT_CACHE_BLOCK: Block = Block(blockSettings(RESONANT_CACHE_ID, Blocks.CHEST))
 	val RESONANT_CACHE_BLOCK_ITEM: Item = BlockItem(RESONANT_CACHE_BLOCK, itemSettings(RESONANT_CACHE_ID))
+	val CRESORA_PORTAL_BLOCK: Block = PortalBlock(blockSettings(CRESORA_PORTAL_ID, Blocks.CRYING_OBSIDIAN).luminance { 10 })
+	val CRESORA_PORTAL_BLOCK_ITEM: Item = BlockItem(CRESORA_PORTAL_BLOCK, itemSettings(CRESORA_PORTAL_ID))
 	private val LEY_LINE_OVERFLOW_ID = Identifier.of(MOD_ID, "ley_line_overflow")
 	val LEY_LINE_OVERFLOW_BLOCK: Block = LeyLineOverflowBlock(blockSettings(LEY_LINE_OVERFLOW_ID, Blocks.STONE))
 	val LEY_LINE_OVERFLOW_BLOCK_ITEM: Item = BlockItem(LEY_LINE_OVERFLOW_BLOCK, itemSettings(LEY_LINE_OVERFLOW_ID))
@@ -165,6 +171,7 @@ object CreSoraUtilities : ModInitializer {
 
 		Registry.register(Registries.BLOCK, MOON_ALTAR_ID, MOON_ALTAR_BLOCK)
 		Registry.register(Registries.BLOCK, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK)
+		Registry.register(Registries.BLOCK, CRESORA_PORTAL_ID, CRESORA_PORTAL_BLOCK)
 		Registry.register(Registries.BLOCK, LEY_LINE_OVERFLOW_ID, LEY_LINE_OVERFLOW_BLOCK)
 		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
 		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
@@ -172,6 +179,7 @@ object CreSoraUtilities : ModInitializer {
 		Registry.register(Registries.ITEM, MOON_ALTAR_ID, MOON_ALTAR_BLOCK_ITEM)
 		Registry.register(Registries.ITEM, RESONANT_LOCATOR_ID, RESONANT_LOCATOR_ITEM)
 		Registry.register(Registries.ITEM, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK_ITEM)
+		Registry.register(Registries.ITEM, CRESORA_PORTAL_ID, CRESORA_PORTAL_BLOCK_ITEM)
 		Registry.register(Registries.ITEM, LEY_LINE_OVERFLOW_ID, LEY_LINE_OVERFLOW_BLOCK_ITEM)
 		for ((element, keyItem) in LEY_LINE_KEYS) {
 			Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "${element.id}_key"), keyItem)
@@ -311,6 +319,8 @@ object CreSoraUtilities : ModInitializer {
 		NaturalRegenService.init()
 		HotbarOverrideService.init()
 		LeyLineHooks.init()
+		SpiritGuideService.init()
+		SpiritManifestationService.init()
 		modifyLootTables()
 
 		logger.info("CreSora Utilities initialized!")

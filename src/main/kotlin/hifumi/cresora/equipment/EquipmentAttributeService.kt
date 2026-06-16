@@ -1,6 +1,7 @@
 package hifumi.cresora.equipment
 import hifumi.cresora.CreSoraUtilities
 import hifumi.cresora.bloodmoon.BloodMoonService
+import hifumi.cresora.combat.CombatStatSupport
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
@@ -34,7 +35,9 @@ object EquipmentAttributeService {
                 updateModifier(
                     healthInstance,
                     HEALTH_SCALAR_ID,
-                    (1.0 + bonuses.healthScalar + weaponHealthScalar) * bloodMoonHealthScalar - 1.0,
+                    CombatStatSupport.cappedAttributeScalarRatio(
+                        bonuses.healthScalar + weaponHealthScalar + (bloodMoonHealthScalar - 1.0)
+                    ),
                     EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                 )
                 updateModifier(armorInstance, ARMOR_FLAT_ID, bonuses.armorFlat, EntityAttributeModifier.Operation.ADD_VALUE)

@@ -60,7 +60,7 @@ object CombatDamageTypeSupport {
             CombatDamageType.PHYSICAL -> totals[StatType.PHYSICAL_RESISTANCE] ?: 0.0
             CombatDamageType.ARCANE -> totals[StatType.ARCANE_RESISTANCE] ?: 0.0
         }
-        return (legacy + typed).coerceAtLeast(0.0)
+        return (legacy + typed).coerceIn(0.0, CombatStatSupport.MAX_PLAYER_RESISTANCE_PERCENT)
     }
 
     @JvmStatic

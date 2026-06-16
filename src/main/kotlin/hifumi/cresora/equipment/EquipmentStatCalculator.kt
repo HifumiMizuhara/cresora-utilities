@@ -1,6 +1,7 @@
 package hifumi.cresora.equipment
 import hifumi.cresora.StatEntry
 import hifumi.cresora.StatType
+import hifumi.cresora.combat.CombatStatSupport
 import net.minecraft.text.Text
 import java.util.EnumMap
 import kotlin.math.roundToInt
@@ -34,11 +35,11 @@ object EquipmentStatCalculator {
     fun calculateAttributeBonuses(totals: Map<StatType, Double>): AttributeBonuses {
         return AttributeBonuses(
             attackFlat = totals[StatType.ATK_FLAT] ?: 0.0,
-            attackScalar = (totals[StatType.ATK_PERCENT] ?: 0.0) / 100.0,
+            attackScalar = CombatStatSupport.cappedPercentScalar(totals[StatType.ATK_PERCENT] ?: 0.0),
             healthFlat = totals[StatType.HP_FLAT] ?: 0.0,
-            healthScalar = (totals[StatType.HP_PERCENT] ?: 0.0) / 100.0,
+            healthScalar = CombatStatSupport.cappedPercentScalar(totals[StatType.HP_PERCENT] ?: 0.0),
             armorFlat = totals[StatType.DEF_FLAT] ?: 0.0,
-            armorScalar = (totals[StatType.DEF_PERCENT] ?: 0.0) / 100.0
+            armorScalar = CombatStatSupport.cappedPercentScalar(totals[StatType.DEF_PERCENT] ?: 0.0)
         )
     }
 
