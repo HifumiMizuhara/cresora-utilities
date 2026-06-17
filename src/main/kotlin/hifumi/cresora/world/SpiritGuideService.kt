@@ -19,7 +19,10 @@ object SpiritGuideService {
     val LANDING_POS: BlockPos = BlockPos(0, 72, 0)
 
     private val guidePos: BlockPos = LANDING_POS.add(0, 0, 5)
-    private var nextEnsureTick: Long = 0L
+    private const val GUIDE_INTERVAL_TICKS = 100L
+    private const val LANDING_INTERVAL_TICKS = 1200L
+    private var nextGuideTick: Long = 0L
+    private var nextLandingTick: Long = 0L
 
     fun init() {
         UseEntityCallback.EVENT.register(UseEntityCallback { player, world, _, entity, _ ->
@@ -36,16 +39,23 @@ object SpiritGuideService {
 
         ServerTickEvents.END_SERVER_TICK.register { server ->
             val now = server.overworld.time
-            if (now < nextEnsureTick) {
+            val needsGuide = now >= nextGuideTick
+            val needsLanding = now >= nextLandingTick
+            if (!needsGuide && !needsLanding) {
                 return@register
             }
-            nextEnsureTick = now + 100L
             val world = server.getWorld(CresoraWorldKeys.CRESORA_WORLD) ?: return@register
             val chunkX = LANDING_POS.x shr 4
             val chunkZ = LANDING_POS.z shr 4
-            val isLoaded = world.chunkManager.isChunkLoaded(chunkX, chunkZ)
-            if (isLoaded) {
+            if (!world.chunkManager.isChunkLoaded(chunkX, chunkZ)) {
+                return@register
+            }
+            if (needsLanding) {
+                nextLandingTick = now + LANDING_INTERVAL_TICKS
                 ensureLanding(world)
+            }
+            if (needsGuide) {
+                nextGuideTick = now + GUIDE_INTERVAL_TICKS
                 ensureGuide(world)
             }
         }

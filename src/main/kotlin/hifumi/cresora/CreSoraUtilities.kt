@@ -330,6 +330,7 @@ object CreSoraUtilities : ModInitializer {
 		LeyLineHooks.init()
 		SpiritGuideService.init()
 		RegionHooks.init()
+		PortalBlock.init()
 		SpiritBondService.init()
 		modifyLootTables()
 

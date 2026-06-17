@@ -1,5 +1,6 @@
 package hifumi.cresora.world
 
+import hifumi.cresora.adventurerank.AdventureRankService
 import hifumi.cresora.story.StoryFlagService
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.network.ServerPlayerEntity
@@ -12,6 +13,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Polls player positions inside cresora_world once per second. When a player crosses into a new
  * region (or enters one for the first time), the region is recorded as a `region_visited_<id>`
  * story flag (persisted via [StoryFlagService]) and the region name is shown on the action bar.
+ * Regions with [RegionDefinition.unlockRank] above the player's adventure rank surface a soft
+ * "locked" notice instead and are not recorded as visited, so re-entry after ranking up still
+ * fires the discovery moment.
  *
  * Outside cresora_world the tracker is cleared so re-entry re-fires the announcement.
  */
@@ -39,6 +43,18 @@ object RegionHooks {
 
         currentRegion[player.uuid] = regionId
         if (region == null) return
+
+        val playerRank = AdventureRankService.getRank(player)
+        if (playerRank < region.unlockRank) {
+            player.sendMessage(
+                Text.literal("✦ ").formatted(Formatting.GRAY)
+                    .append(Text.translatable(region.nameKey).formatted(Formatting.DARK_GRAY))
+                    .append(Text.literal(" — ").formatted(Formatting.DARK_GRAY))
+                    .append(Text.translatable("message.cresora.region.locked", region.unlockRank).formatted(Formatting.GRAY)),
+                true
+            )
+            return
+        }
 
         val firstVisit = !StoryFlagService.hasFlag(player, VISITED_FLAG_PREFIX + region.id)
         if (firstVisit) {

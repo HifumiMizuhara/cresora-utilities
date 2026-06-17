@@ -9,8 +9,9 @@ import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 
 /**
- * Axis-aligned rectangle (block coords) covering a single region.
- * Regions are non-overlapping by convention; the first match in declaration order wins.
+ * Axis-aligned rectangle in block coords. Bounds are half-open: `min` is inclusive,
+ * `max` is exclusive. This lets adjacent regions chain (`max == next.min`) without
+ * overlapping on the boundary. Overlap is validated at load time in [RegionContentRegistry.applyBundle].
  */
 data class RegionBox(
     val minX: Int,
@@ -18,7 +19,10 @@ data class RegionBox(
     val maxX: Int,
     val maxZ: Int
 ) {
-    fun contains(x: Int, z: Int): Boolean = x in minX..maxX && z in minZ..maxZ
+    fun contains(x: Int, z: Int): Boolean = x >= minX && x < maxX && z >= minZ && z < maxZ
+
+    fun overlaps(other: RegionBox): Boolean =
+        minX < other.maxX && other.minX < maxX && minZ < other.maxZ && other.minZ < maxZ
 
     companion object {
         val CODEC: Codec<RegionBox> = RecordCodecBuilder.create { instance ->
@@ -114,10 +118,19 @@ object RegionContentRegistry {
             require(seen.add(region.id)) { "Duplicate region id: ${region.id}" }
             require(region.nameKey.isNotBlank()) { "Region '${region.id}' must have a nameKey" }
             require(region.descriptionKey.isNotBlank()) { "Region '${region.id}' must have a descriptionKey" }
-            require(region.box.maxX >= region.box.minX && region.box.maxZ >= region.box.minZ) {
-                "Region '${region.id}' has an inverted box ${region.box}"
+            require(region.box.maxX > region.box.minX && region.box.maxZ > region.box.minZ) {
+                "Region '${region.id}' has a degenerate or inverted box ${region.box}"
             }
             require(region.unlockRank >= 0) { "Region '${region.id}' unlockRank must be non-negative" }
+        }
+        for (i in bundle.regions.indices) {
+            for (j in i + 1 until bundle.regions.size) {
+                val a = bundle.regions[i]
+                val b = bundle.regions[j]
+                require(!a.box.overlaps(b.box)) {
+                    "Regions '${a.id}' ${a.box} and '${b.id}' ${b.box} overlap"
+                }
+            }
         }
         regions = bundle.regions
     }
@@ -126,6 +139,8 @@ object RegionContentRegistry {
      * Built-in 6-region skeleton. The hub is centered on the SpiritGuide landing site and is
      * unlocked from the start; the four cardinal regions gate on rising adventure ranks, and a
      * far corner rewards deep progression. World lore is injected later by editing region_content.json.
+     *
+     * Bounds use half-open semantics (max exclusive) so neighbors share the boundary coord cleanly.
      */
     private fun defaultBundle(): RegionContentBundle = RegionContentBundle(
         regions = listOf(

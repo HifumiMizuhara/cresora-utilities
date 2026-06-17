@@ -14,7 +14,6 @@ import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.world.ServerWorld
-import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 import net.minecraft.world.WorldView
@@ -63,11 +62,4 @@ class SpiritGuideEntity(
     override fun canSpawn(world: WorldView): Boolean = true
 
     override fun shouldSave(): Boolean = false
-
-    override fun tick() {
-        super.tick()
-        if (!world.isClient && age % 20 == 0) {
-            refreshPositionAndAngles(x, y, z, yaw, pitch)
-        }
-    }
 }
