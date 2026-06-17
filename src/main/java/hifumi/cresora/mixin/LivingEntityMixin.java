@@ -66,6 +66,8 @@ public abstract class LivingEntityMixin {
         if ((Object) this instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || (Object) this instanceof HostileEntity)) {
             amount = (float) (amount * MasqueradeService.INSTANCE.damageTakenMultiplier(hostile));
             amount = (float) (amount * StoryService.INSTANCE.damageTakenMultiplier(hostile));
+            LivingEntity crescendoAttacker = source.getAttacker() instanceof LivingEntity a ? a : null;
+            amount = (float) (amount * CresoraDebuffService.INSTANCE.getCrescendoMultiplier(hostile, crescendoAttacker));
             CombatDamageType damageType = CombatDamageTypeSupport.damageSourceType(source);
             double baseResistanceRatio = MobCombatProfileRegistry.INSTANCE.resistancePercent(hostile.getType(), damageType) / 100.0D;
             double resistanceOffset = (damageType == CombatDamageType.PHYSICAL)
