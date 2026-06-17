@@ -13,7 +13,9 @@ import net.minecraft.network.packet.CustomPayload
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.text.TextCodecs
+import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
+import org.slf4j.LoggerFactory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -137,6 +139,8 @@ data class NpcDialogueSession(
 )
 
 object StoryDialogueNetworking {
+    private val logger = LoggerFactory.getLogger(CreSoraUtilities.MOD_ID)
+
     private data class SimpleDialogueSession(
         val title: Text,
         val lines: List<ResolvedStoryLine>,
@@ -170,9 +174,15 @@ object StoryDialogueNetworking {
     fun startNpcDialogue(player: ServerPlayerEntity, treeId: String) {
         val node = hifumi.cresora.npc.NpcDialogueContentRegistry.getRootNode(treeId)
         if (node == null) {
+            logger.warn("Unknown NPC dialogue tree '{}' requested for {}", treeId, player.gameProfile.name)
+            return
+        }
+        if (!isNodeAccessible(player, node)) {
+            sendDialogueLockedFeedback(player)
             return
         }
         npcDialogueSessions[player.uuid] = NpcDialogueSession(treeId, player.uuid, node.id)
+        applyNodeFlags(player, node)
         sendNpcDialogueNode(player, node)
     }
 
@@ -297,7 +307,7 @@ object StoryDialogueNetworking {
 
     private fun resolveNpcChoice(player: ServerPlayerEntity, session: NpcDialogueSession, choice: NpcDialogueChoice) {
         val currentNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, session.currentNodeId)
-        val nextNodeId = choice.nextNodeId ?: currentNode?.nextNodeId ?: choice.actionId
+        val nextNodeId = choice.nextNodeId ?: currentNode?.nextNodeId
         advanceNpcNode(player, session, nextNodeId)
     }
 
@@ -306,17 +316,36 @@ object StoryDialogueNetworking {
             close(player)
             return
         }
-        val currentNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, session.currentNodeId)
-        currentNode?.flagsToSet?.forEach { flag ->
+        val nextNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, targetNodeId)
+        if (nextNode == null) {
+            logger.warn(
+                "NPC dialogue tree '{}' references missing node '{}' (player={})",
+                session.treeId, targetNodeId, player.gameProfile.name
+            )
+            close(player)
+            return
+        }
+        if (!isNodeAccessible(player, nextNode)) {
+            sendDialogueLockedFeedback(player)
+            close(player)
+            return
+        }
+        session.currentNodeId = nextNode.id
+        applyNodeFlags(player, nextNode)
+        sendNpcDialogueNode(player, nextNode)
+    }
+
+    private fun applyNodeFlags(player: ServerPlayerEntity, node: NpcDialogueNode) {
+        node.flagsToSet?.forEach { flag ->
             hifumi.cresora.story.StoryFlagService.setFlag(player, flag)
         }
-        val nextNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, targetNodeId)
-        if (nextNode != null && isNodeAccessible(player, nextNode)) {
-            session.currentNodeId = nextNode.id
-            sendNpcDialogueNode(player, nextNode)
-        } else {
-            close(player)
-        }
+    }
+
+    private fun sendDialogueLockedFeedback(player: ServerPlayerEntity) {
+        player.sendMessage(
+            Text.translatable("message.cresora.npc.dialogue.locked").formatted(Formatting.GRAY),
+            true
+        )
     }
 
     private fun isNodeAccessible(player: ServerPlayerEntity, node: NpcDialogueNode): Boolean {
