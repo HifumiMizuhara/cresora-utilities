@@ -5,7 +5,6 @@ import hifumi.cresora.combat.CombatDamageType;
 import hifumi.cresora.combat.CombatDamageTypeSupport;
 import hifumi.cresora.combat.CombatFeedbackService;
 import hifumi.cresora.combat.CombatStatSupport;
-import hifumi.cresora.debuff.CresoraDebuffService;
 import hifumi.cresora.equipment.EquipmentPlayerSupport;
 import hifumi.cresora.masquerade.MasqueradeService;
 import hifumi.cresora.weapon.WeaponCombatSupport;
@@ -43,9 +42,6 @@ public class PlayerEntityMixin {
         if (amount <= 0.0F) {
             return 0.0F;
         }
-        if (player instanceof ServerPlayerEntity serverPlayer) {
-            amount = (float) (amount * CresoraDebuffService.INSTANCE.getIncomingDamageMultiplier(serverPlayer));
-        }
         Map<StatType, Double> totals = EquipmentPlayerSupport.getAggregatedStats(player);
         CombatDamageType damageType = CombatDamageTypeSupport.damageSourceType(source);
         double reduction = CombatDamageTypeSupport.effectiveResistanceRatio(totals, damageType);
@@ -63,10 +59,6 @@ public class PlayerEntityMixin {
     @Inject(method = "getDamageAgainst", at = @At("RETURN"), cancellable = true)
     private void cresora$applyOffenseStats(CallbackInfoReturnable<Float> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
-        double debuffMultiplier = 1.0;
-        if (player instanceof ServerPlayerEntity serverPlayer) {
-            debuffMultiplier = CresoraDebuffService.INSTANCE.getAttackMultiplier(serverPlayer);
-        }
         Map<StatType, Double> totals = EquipmentPlayerSupport.getAggregatedStats(player);
         WeaponDefinition weaponDefinition = WeaponStackSupport.INSTANCE.getDefinition(player.getMainHandStack());
         WeaponData weaponData = WeaponStackSupport.INSTANCE.getWeaponData(player.getMainHandStack());
@@ -96,7 +88,7 @@ public class PlayerEntityMixin {
         double bloodMoonMultiplier = BloodMoonService.INSTANCE.playerDamageMultiplier(player);
         double damageMultiplier = CombatStatSupport.additiveDamageMultiplier(allBonus, bloodMoonMultiplier);
 
-        double result = cir.getReturnValueF() * damageMultiplier * debuffMultiplier;
+        double result = cir.getReturnValueF() * damageMultiplier;
         if (critRate > 0.0) {
             if (player.getRandom().nextDouble() < critRate) {
                 double critMultiplier = 1.0 + Math.max(0.0, critDamage);

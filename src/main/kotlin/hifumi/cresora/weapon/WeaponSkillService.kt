@@ -232,11 +232,10 @@ object WeaponSkillService {
     private fun tickCooldowns(player: ServerPlayerEntity) {
         val cooldowns = (player as? WeaponSkillAccess)?.cresoraGetCooldowns() ?: return
         if (cooldowns.isEmpty()) return
-        val multiplier = CresoraDebuffService.getCooldownMultiplier(player)
         val iterator = cooldowns.entries.iterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
-            val remaining = entry.value - multiplier
+            val remaining = entry.value - 1.0
             if (remaining <= 0.0) {
                 iterator.remove()
                 removeCooldownBar(player, entry.key)
@@ -261,7 +260,7 @@ object WeaponSkillService {
         val result = WeaponSkillRegistry.getHandler(definition.skill.effectId)?.activate(player, definition, data, access)
             ?: ActionResult.PASS
         if (result == ActionResult.SUCCESS) {
-            CresoraDebuffService.triggerElementalSkill(player, definition.id, definition.skill.effectId, definition.skill.radiusMeters)
+            CresoraDebuffService.triggerElementalSkill(player, definition.skill.note, definition.skill.radiusMeters)
         }
         return result
     }
@@ -540,10 +539,7 @@ object WeaponSkillService {
             return 0.0f to 0.0f
         }
         val before = player.health
-        val canHeal = CresoraDebuffService.canHeal(player)
-        if (canHeal) {
-            player.heal(amountHp)
-        }
+        player.heal(amountHp)
         val healedHp = (player.health - before).coerceAtLeast(0.0f)
         val overflowHp = (amountHp - healedHp).coerceAtLeast(0.0f)
         if (overflowHp > 0.0f) {
@@ -568,9 +564,7 @@ object WeaponSkillService {
             .filter { it.isAlive && !it.isSpectator && it.squaredDistanceTo(player) <= radius * radius }
             .forEach(recipients::add)
         for (recipient in recipients) {
-            if (CresoraDebuffService.canHeal(recipient)) {
-                recipient.heal(amountHp)
-            }
+            recipient.heal(amountHp)
         }
         return recipients.size
     }

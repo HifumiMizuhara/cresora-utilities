@@ -2,7 +2,6 @@ package hifumi.cresora
 
 import hifumi.cresora.bloodmoon.BloodMoonService
 import hifumi.cresora.combat.CombatFeedbackService
-import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.equipment.EquipmentAttributeService
 import hifumi.cresora.masquerade.MasqueradeService
 import hifumi.cresora.treasure.TreasureChestService
@@ -18,7 +17,6 @@ object PlayerLifecycleHooks {
             WeaponSkillService.clearTransientState(player)
             EquipmentAttributeService.clearTransientState(player)
             CombatFeedbackService.clearTransientState(player)
-            CresoraDebuffService.clearTransientState(player)
             TreasureChestService.clearTransientState(player)
             BloodMoonService.clearTransientState(player)
             MasqueradeService.onPlayerDisconnect(player)

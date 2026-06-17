@@ -1,6 +1,5 @@
 package hifumi.cresora.mixin;
 
-import hifumi.cresora.adventurerank.AdventureRankMobAccess;
 import hifumi.cresora.adventurerank.AdventureRankService;
 import hifumi.cresora.bloodmoon.MoonPhaseService;
 import hifumi.cresora.combat.BaaMimicService;
@@ -124,11 +123,6 @@ public abstract class LivingEntityMixin {
             EquipmentEffectHookService.INSTANCE.onDamageTaken(player, source, damageDone);
             if (player instanceof ServerPlayerEntity serverPlayer) {
                 AdventureRankService.INSTANCE.showPlayerDamageFeedback(serverPlayer, source, damageDone);
-                if (source.getAttacker() instanceof MobEntity hostile && (hostile instanceof net.minecraft.entity.mob.Monster || hostile instanceof HostileEntity) && hostile instanceof AdventureRankMobAccess access) {
-                    if (access.cresoraIsEliteMob()) {
-                        CresoraDebuffService.INSTANCE.onEliteHit(serverPlayer, hostile);
-                    }
-                }
             }
             if (source.getAttacker() instanceof ServerPlayerEntity attackerPlayer) {
                 CombatMobDisplayService.INSTANCE.showPlayerHitFeedback(attackerPlayer, damageDone, source);

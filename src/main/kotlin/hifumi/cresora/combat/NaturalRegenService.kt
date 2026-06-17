@@ -1,6 +1,5 @@
 package hifumi.cresora.combat
 import hifumi.cresora.adventurerank.AdventureRankService
-import hifumi.cresora.debuff.CresoraDebuffService
 import hifumi.cresora.weapon.WeaponSkillService
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.MinecraftServer
@@ -68,7 +67,7 @@ object NaturalRegenService {
         }
 
         val foodLevel = player.hungerManager.foodLevel.coerceIn(0, 20)
-        if (foodLevel <= 0 || !CresoraDebuffService.canHeal(player)) {
+        if (foodLevel <= 0) {
             pendingHealByPlayer.remove(player.uuid)
             return
         }
