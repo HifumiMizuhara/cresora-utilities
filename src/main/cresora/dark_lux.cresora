@@ -45,6 +45,7 @@ weapon "Dark Lux" {
     }
     skill "Event Horizon" {
         effect_id: "dark_lux"
+        note: "bass"
         cooldown: 30s
         duration: 30s
 

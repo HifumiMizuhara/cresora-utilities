@@ -10,6 +10,7 @@ weapon "Masquerade Invitation" {
     }
     skill "Heal" {
         effect_id: "heal"
+        note: "harmony"
         cooldown: 30s
         duration: 0s
         base_value: 2.0

@@ -14,6 +14,7 @@ weapon "High Mountains, Flowing Water" {
     }
     skill "Healing Aura" {
         effect_id: "healing_aura"
+        note: "melody"
         cooldown: 20s
         duration: 8s
         base_value: 2.0

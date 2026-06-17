@@ -11,6 +11,7 @@ weapon "Pastoral Flute Reverie" {
     }
     skill "Sunlit Haste" {
         effect_id: "sunlit_haste"
+        note: "treble"
         cooldown: 50s
         duration: 50s
         base_value: 40.0

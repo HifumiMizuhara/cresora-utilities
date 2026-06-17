@@ -12,6 +12,7 @@ weapon "Requiem Toward Dawn" {
     }
     skill "Flame Aura" {
         effect_id: "flame_aura"
+        note: "harmony"
         cooldown: 25s
         duration: 10s
         base_value: 3.0

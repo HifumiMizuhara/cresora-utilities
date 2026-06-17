@@ -47,6 +47,7 @@ weapon "Tanboku Chokuu" {
     // メインスキル：メニュー展開
     skill "Rougan Kenpo" {
         effect_id: "rougan_kenpo"
+        note: "melody"
         cooldown: 3s
 
         buff "zanso_active" {

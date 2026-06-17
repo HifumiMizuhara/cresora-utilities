@@ -34,7 +34,8 @@ data class WeaponSkillDefinition(
     val radiusMeters: Double = 0.0,
     val secondaryBaseValue: Double = 0.0,
     val secondaryValuePerLevel: Double = 0.0,
-    val tickIntervalSeconds: Double = 1.0
+    val tickIntervalSeconds: Double = 1.0,
+    val note: String? = null
 ) {
     companion object {
         val CODEC: Codec<WeaponSkillDefinition> = RecordCodecBuilder.create { instance ->
@@ -47,8 +48,24 @@ data class WeaponSkillDefinition(
                 Codec.DOUBLE.optionalFieldOf("radiusMeters", 0.0).forGetter(WeaponSkillDefinition::radiusMeters),
                 Codec.DOUBLE.optionalFieldOf("secondaryBaseValue", 0.0).forGetter(WeaponSkillDefinition::secondaryBaseValue),
                 Codec.DOUBLE.optionalFieldOf("secondaryValuePerLevel", 0.0).forGetter(WeaponSkillDefinition::secondaryValuePerLevel),
-                Codec.DOUBLE.optionalFieldOf("tickIntervalSeconds", 1.0).forGetter(WeaponSkillDefinition::tickIntervalSeconds)
-            ).apply(instance, ::WeaponSkillDefinition)
+                Codec.DOUBLE.optionalFieldOf("tickIntervalSeconds", 1.0).forGetter(WeaponSkillDefinition::tickIntervalSeconds),
+                Codec.STRING.optionalFieldOf("note").forGetter { java.util.Optional.ofNullable(it.note) }
+            ).apply(instance) { effectId, durationSeconds, cooldownSeconds, baseValue, valuePerLevel,
+                                radiusMeters, secondaryBaseValue, secondaryValuePerLevel,
+                                tickIntervalSeconds, note ->
+                WeaponSkillDefinition(
+                    effectId = effectId,
+                    durationSeconds = durationSeconds,
+                    cooldownSeconds = cooldownSeconds,
+                    baseValue = baseValue,
+                    valuePerLevel = valuePerLevel,
+                    radiusMeters = radiusMeters,
+                    secondaryBaseValue = secondaryBaseValue,
+                    secondaryValuePerLevel = secondaryValuePerLevel,
+                    tickIntervalSeconds = tickIntervalSeconds,
+                    note = note.orElse(null)
+                )
+            }
         }
     }
 }
@@ -455,7 +472,8 @@ object WeaponContentRegistry {
                         durationSeconds = 15,
                         cooldownSeconds = 20,
                         baseValue = 3.0,
-                        valuePerLevel = 0.5
+                        valuePerLevel = 0.5,
+                        note = "bass"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -485,7 +503,8 @@ object WeaponContentRegistry {
                         durationSeconds = 0,
                         cooldownSeconds = 30,
                         baseValue = 2.0,
-                        valuePerLevel = 0.5
+                        valuePerLevel = 0.5,
+                        note = "harmony"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -525,7 +544,8 @@ object WeaponContentRegistry {
                         cooldownSeconds = 50,
                         baseValue = 0.0,
                         valuePerLevel = 5.0,
-                        radiusMeters = 5.0
+                        radiusMeters = 5.0,
+                        note = "melody"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -567,7 +587,8 @@ object WeaponContentRegistry {
                         durationSeconds = 10,
                         cooldownSeconds = 25,
                         baseValue = 1.0,
-                        valuePerLevel = 0.3
+                        valuePerLevel = 0.3,
+                        note = "treble"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -610,7 +631,8 @@ object WeaponContentRegistry {
                         baseValue = 0.0,
                         valuePerLevel = 0.0,
                         radiusMeters = 5.0,
-                        tickIntervalSeconds = 2.0
+                        tickIntervalSeconds = 2.0,
+                        note = "melody"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -643,7 +665,8 @@ object WeaponContentRegistry {
                         cooldownSeconds = 25,
                         baseValue = 3.0,
                         valuePerLevel = 1.0,
-                        radiusMeters = 4.0
+                        radiusMeters = 4.0,
+                        note = "harmony"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -677,7 +700,8 @@ object WeaponContentRegistry {
                         radiusMeters = 5.0,
                         secondaryBaseValue = 0.75,
                         secondaryValuePerLevel = 0.25,
-                        tickIntervalSeconds = 2.0
+                        tickIntervalSeconds = 2.0,
+                        note = "melody"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -708,7 +732,8 @@ object WeaponContentRegistry {
                         durationSeconds = 30,
                         cooldownSeconds = 30,
                         baseValue = 0.0,
-                        valuePerLevel = 0.0
+                        valuePerLevel = 0.0,
+                        note = "bass"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -744,7 +769,8 @@ object WeaponContentRegistry {
                         baseValue = 40.0,
                         valuePerLevel = 0.0,
                         secondaryBaseValue = 60.0,
-                        secondaryValuePerLevel = 0.0
+                        secondaryValuePerLevel = 0.0,
+                        note = "treble"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,
@@ -775,7 +801,8 @@ object WeaponContentRegistry {
                         cooldownSeconds = 15,
                         baseValue = 1.0,
                         valuePerLevel = 0.0,
-                        radiusMeters = 10.0
+                        radiusMeters = 10.0,
+                        note = "harmony"
                     ),
                     upgrades = WeaponUpgradeDefinition(
                         baseCscQuadraticCoefficient = 100,

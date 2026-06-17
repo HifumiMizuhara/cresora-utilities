@@ -47,6 +47,7 @@ weapon "Qianqiu, Yeluo" {
 
     skill "Qianqiu Yeluo" {
         effect_id: "qianqiu_yeluo"
+        note: "harmony"
         cooldown: 0s
 
         buff "passive_state" {

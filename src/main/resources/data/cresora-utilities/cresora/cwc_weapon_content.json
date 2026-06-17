@@ -59,7 +59,8 @@
         "cooldownSeconds": 0,
         "baseValue": 0.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "harmony"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -147,7 +148,8 @@
         "cooldownSeconds": 30,
         "baseValue": 0.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "bass"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -195,7 +197,8 @@
         "cooldownSeconds": 20,
         "baseValue": 3.0,
         "valuePerLevel": 0.5,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "bass"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -282,7 +285,8 @@
         "cooldownSeconds": 25,
         "baseValue": 0.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 5.0
+        "radiusMeters": 5.0,
+        "note": "melody"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -330,7 +334,8 @@
         "cooldownSeconds": 50,
         "baseValue": 40.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "treble"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -762,7 +767,8 @@
         "cooldownSeconds": 15,
         "baseValue": 1.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 10.0
+        "radiusMeters": 10.0,
+        "note": "harmony"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -810,7 +816,8 @@
         "cooldownSeconds": 30,
         "baseValue": 2.0,
         "valuePerLevel": 0.5,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "harmony"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -858,7 +865,8 @@
         "cooldownSeconds": 20,
         "baseValue": 2.0,
         "valuePerLevel": 0.5,
-        "radiusMeters": 5.0
+        "radiusMeters": 5.0,
+        "note": "melody"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -946,7 +954,8 @@
         "cooldownSeconds": 3,
         "baseValue": 0.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "melody"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -994,7 +1003,8 @@
         "cooldownSeconds": 25,
         "baseValue": 3.0,
         "valuePerLevel": 1.0,
-        "radiusMeters": 4.0
+        "radiusMeters": 4.0,
+        "note": "harmony"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -1081,7 +1091,8 @@
         "cooldownSeconds": 60,
         "baseValue": 0.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "harmony"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -1168,7 +1179,8 @@
         "cooldownSeconds": 35,
         "baseValue": 10.0,
         "valuePerLevel": 0.0,
-        "radiusMeters": 8.0
+        "radiusMeters": 8.0,
+        "note": "harmony"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -1255,7 +1267,8 @@
         "cooldownSeconds": 25,
         "baseValue": 1.0,
         "valuePerLevel": 0.3,
-        "radiusMeters": 0.0
+        "radiusMeters": 0.0,
+        "note": "treble"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,
@@ -1342,7 +1355,8 @@
         "cooldownSeconds": 50,
         "baseValue": 0.0,
         "valuePerLevel": 5.0,
-        "radiusMeters": 5.0
+        "radiusMeters": 5.0,
+        "note": "melody"
       },
       "upgrades": {
         "baseCscQuadraticCoefficient": 85,

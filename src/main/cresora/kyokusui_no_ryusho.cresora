@@ -44,6 +44,7 @@ weapon "Kyokusui no Ryusho" {
     }
     skill "Orchid Pavilion Echo" {
         effect_id: "orchid_pavilion_echo"
+        note: "melody"
         cooldown: 25s
         duration: 16s
         radius: 5.0

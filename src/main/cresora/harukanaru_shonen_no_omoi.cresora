@@ -44,6 +44,7 @@ weapon "Thoughts of the Distant Boy" {
     }
     skill "Heavy Thoughts" {
         effect_id: "harukanaru_shonen_no_omoi"
+        note: "harmony"
         cooldown: 35s
         duration: 5s
         base_value: 10.0

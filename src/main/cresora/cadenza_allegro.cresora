@@ -13,6 +13,7 @@ weapon "Cadenza Allegro" {
     }
     skill "Baa Mimic" {
         effect_id: "baa_mimic"
+        note: "harmony"
         cooldown: 15s
         duration: 0s
         base_value: 1.0

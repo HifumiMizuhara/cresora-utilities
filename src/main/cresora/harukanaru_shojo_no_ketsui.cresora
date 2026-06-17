@@ -46,6 +46,7 @@ weapon "Resolve of the Distant Girl" {
     }
     skill "Girl's Gaze" {
         effect_id: "harukanaru_shojo_no_ketsui"
+        note: "harmony"
         cooldown: 60s
         duration: 5s
 

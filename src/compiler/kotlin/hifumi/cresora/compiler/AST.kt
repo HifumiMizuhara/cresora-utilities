@@ -84,7 +84,8 @@ data class SkillNode(
     val valuePerLevel: Double,
     val radiusMeters: Double,
     val handlers: List<SkillHandlerNode>,
-    val buffs: List<BuffNode> = emptyList()
+    val buffs: List<BuffNode> = emptyList(),
+    val note: String? = null
 ) : ASTNode()
 
 data class BuffNode(

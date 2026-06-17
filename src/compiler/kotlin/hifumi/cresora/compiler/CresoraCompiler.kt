@@ -573,6 +573,7 @@ class CresoraCompiler(
                 skillObj.addProperty("baseValue", s.baseValue)
                 skillObj.addProperty("valuePerLevel", s.valuePerLevel)
                 skillObj.addProperty("radiusMeters", s.radiusMeters)
+                s.note?.let { skillObj.addProperty("note", it) }
             } else {
                 skillObj.addProperty("effectId", "none")
                 skillObj.addProperty("durationSeconds", 0)

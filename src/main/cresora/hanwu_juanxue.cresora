@@ -44,6 +44,7 @@ weapon "Cold Mist, Coiling Snow" {
     }
     skill "Snow Frost" {
         effect_id: "snow_frost"
+        note: "treble"
         cooldown: 25s
         duration: 10s
         base_value: 1.0

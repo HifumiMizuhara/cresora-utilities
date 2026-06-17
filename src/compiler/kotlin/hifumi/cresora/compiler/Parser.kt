@@ -359,6 +359,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var baseValue = 0.0
         var valuePerLevel = 0.0
         var radius = 0.0
+        var note: String? = null
         val handlers = mutableListOf<SkillHandlerNode>()
         val buffs = mutableListOf<BuffNode>()
 
@@ -384,11 +385,18 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     "base_value" -> baseValue = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                     "value_per_level" -> valuePerLevel = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
                     "radius" -> radius = consume(TokenType.NUMBER, "Expect number").lexeme.toDouble()
+                    "note" -> {
+                        val noteValue = consume(TokenType.STRING, "Expect note string").lexeme
+                        if (noteValue.lowercase() !in setOf("treble", "bass", "melody", "harmony")) {
+                            throw RuntimeException("Unknown note '$noteValue' at line ${token.line}. Valid: treble, bass, melody, harmony")
+                        }
+                        note = noteValue.lowercase()
+                    }
                     else -> throw RuntimeException("Unknown skill field '${token.lexeme}' at line ${token.line}")
                 }
             }
         }
-        return SkillNode(name, effectId, cooldown, duration, baseValue, valuePerLevel, radius, handlers, buffs)
+        return SkillNode(name, effectId, cooldown, duration, baseValue, valuePerLevel, radius, handlers, buffs, note)
     }
 
     private fun subSkill(name: String): SubSkillNode {

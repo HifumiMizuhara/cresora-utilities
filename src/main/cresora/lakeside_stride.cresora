@@ -45,6 +45,7 @@ weapon "Stride by the Lakeside" {
     }
     skill "Lakeside Stride" {
         effect_id: "current_hp_true_damage"
+        note: "melody"
         cooldown: 50s
         duration: 0s
         base_value: 0.0

@@ -10,6 +10,7 @@ weapon "Rondo Melody" {
     }
     skill "Shield" {
         effect_id: "shield"
+        note: "bass"
         cooldown: 20s
         duration: 15s
         base_value: 3.0
