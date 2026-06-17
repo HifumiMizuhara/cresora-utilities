@@ -1340,7 +1340,6 @@ LIMITED ★5 抽選の概要:
 責務:
 
 - rank 帯と combat 状態に基づく自然回復
-- `CresoraDebuffService.canHeal` による回復阻害の適用
 
 主 API:
 
@@ -1351,27 +1350,25 @@ LIMITED ★5 抽選の概要:
 
 ファイル:
 
-- [CresoraDebuff.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuff.kt)
-- [CresoraDebuffRegistry.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuffRegistry.kt)
 - [CresoraDebuffService.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuffService.kt)
+- [CresoraDebuffHooks.kt](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/src/main/kotlin/hifumi/cresora/debuff/CresoraDebuffHooks.kt)
 
 責務:
 
-- プレイヤーに対するデバフ（負の状態異常）の管理
-- エリートモブ攻撃時のデバフ付与判定（現在35%）
-- 攻撃力・被ダメージ・CT速度・回復可否への倍率適用
-- `clearTransientState(player)` による切断時および武器切り替え時のデバフ破棄
+- 旋律共鳴 (Resonant Chords) の音符付与・反応処理
+- Crescendo マークによる対象指定ダメージ倍率管理
+- `cleanupAll(server)` によるサーバーtickごとの期限切れマーク掃除
 
-実装済みデバフ:
+主 API:
 
-- **神経損傷 (NERVE_DAMAGE)**: 与ダメージ減少(0.85x)、被ダメージ増加(1.12x)
-- **移動不能 (ROOT)**: 移動速度を100%減少（その場から動けなくなる）
-- **煙幕 (SMOKE)**: 盲目 (Blindness) を付与
-- **燃焼 (BURN)**: 継続的な火炎ダメージ
-- **CT延長 (COOLDOWN_PENALTY)**: 武器スキルのクールダウン解消速度が50%に低下
-- **回復阻害 (HEAL_BLOCK)**: 自然回復を完全に停止
-- **キュン死 (kyundeath)**: 会心（クリティカル）攻撃時に確率で付与され、対象の与ダメージを 20% 低下。モブのネームタグ末尾にハートマーク `[❤]` がレンダリングされる。
-- **嘆き (nageki)**: 装備者が「遥かなる少女の決意」をインベントリに所持していない時に付与される負のマーク。攻撃力-50%、防御力+100%、与える非確定ダメージの術ダメージ変換、10秒毎に50%の確率で3ハート（6.0 HP）の無期限シールド（重複不可）を獲得。
+- `triggerElementalSkill(player, noteId, radiusMeters)`: 武器スキル発動時にエリア内のホスティルへ音符を付与し、反応を発火
+- `getCrescendoMultiplier(target, attacker)`: Crescendo の対象指定 1.5x をダメージ系 mixin から問い合わせる
+- `cleanupAll(server)`: サーバーtickごとの期限切れ掃除（`CresoraDebuffHooks.init()` 経由）
+
+その他の負マーク:
+
+- **キュン死 (kyundeath)**: 会心（クリティカル）攻撃時に確率で付与され、対象の与ダメージを 20% 低下。モブのネームタグ末尾にハートマーク `[❤]` がレンダリングされる。(`WeaponSkillService` 管理)
+- **嘆き (nageki)**: 装備者が「遥かなる少女の決意」をインベントリに所持していない時に付与される負のマーク。攻撃力-50%、防御力+100%、与える非確定ダメージの術ダメージ変換、10秒毎に50%の確率で3ハート（6.0 HP）の無期限シールド（重複不可）を獲得。(`WeaponSkillService` 管理)
 
 ### 旋律共鳴 (Resonant Chords)
 
@@ -1381,6 +1378,8 @@ LIMITED ★5 抽選の概要:
 - **低音 (BASS)**: 重く暗い旋律。盾や防御、闇などの効果等。
 - **旋律 (MELODY)**: 流れる水や雨、蘭などの効果等。
 - **和声 (HARMONY)**: 共鳴や祝福、日の光などの効果等。
+
+音符はデータ駆動で、`WeaponSkillDefinition.note` (オプショナル、値: `"treble" | "bass" | "melody" | "harmony"`) に宣言する。CWC `.cresora` の skill ブロック内で `note: "treble"` のように指定する。`note` が未指定または `radiusMeters` が 0 のスキルは付与をスキップする。付与対象は `HostileEntity` / `Monster` のみ (パッシブ Mob は除外)。期限管理はディメンション非依存で `MinecraftServer.overworld.time` に統一されている。
 
 共鳴反応一覧:
 - **不協和音 (Discord - 高音 + 低音)**: 敵に10.0の魔法ダメージを与え、移動速度低下IVを4秒間付与。さらに周囲5ブロック以内の全モブをノックバックし、3.0のダメージを与える。
