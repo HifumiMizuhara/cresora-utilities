@@ -973,5 +973,18 @@
   "npc.cresora.demo.dialogue.line_decline": "我明白了。等你准备好了，再来找我。灵们是很有耐心的。",
   "npc.cresora.demo.dialogue.line_farewell": "愿共鸣之风指引你的道路。",
   "npc.cresora.demo.dialogue.choice_accept": "详细说说",
-  "npc.cresora.demo.dialogue.choice_decline": "下次再说"
+  "npc.cresora.demo.dialogue.choice_decline": "下次再说",
+  "region.cresora.region_hub.name": "导引圣所",
+  "region.cresora.region_hub.desc": "导引之灵在此守候新到旅人的中央避风港。",
+  "region.cresora.region_east.name": "东陲之地",
+  "region.cresora.region_east.desc": "朝向朝阳延伸的阳光平原。",
+  "region.cresora.region_north.name": "北方旷野",
+  "region.cresora.region_north.desc": "风不止息的寒冷高地。",
+  "region.cresora.region_west.name": "西方秘境",
+  "region.cresora.region_west.desc": "古木参天的未开之林。",
+  "region.cresora.region_south.name": "南方沼泽",
+  "region.cresora.region_south.desc": "生机喧嚣的温暖湿地。",
+  "region.cresora.region_far.name": "遥远边陲",
+  "region.cresora.region_far.desc": "为久经旅途之人保留的远隅。",
+  "commands.cresora.story.locked_region": "你尚未发现该地域：%s"
 }

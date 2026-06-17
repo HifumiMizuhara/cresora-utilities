@@ -984,5 +984,18 @@
   "npc.cresora.demo.dialogue.line_decline": "そうか。準備ができたら、また来るといい。霊たちは気長に待ってくれている。",
   "npc.cresora.demo.dialogue.line_farewell": "共鳴の風が、君の道を導かんことを。",
   "npc.cresora.demo.dialogue.choice_accept": "詳しく聞く",
-  "npc.cresora.demo.dialogue.choice_decline": "また今度にする"
+  "npc.cresora.demo.dialogue.choice_decline": "また今度にする",
+  "region.cresora.region_hub.name": "導きの聖所",
+  "region.cresora.region_hub.desc": "導きの霊が新たな旅人を待つ中央の安全地帯。",
+  "region.cresora.region_east.name": "東方の果て",
+  "region.cresora.region_east.desc": "昇る陽に向かって伸びる陽光の平原。",
+  "region.cresora.region_north.name": "北方の荒野",
+  "region.cresora.region_north.desc": "風が止まぬ冷涼な高地。",
+  "region.cresora.region_west.name": "西方の秘境",
+  "region.cresora.region_west.desc": "古き木々が生い茂る未開の森。",
+  "region.cresora.region_south.name": "南方の湿原",
+  "region.cresora.region_south.desc": "生命がざわめく温暖な湿地帯。",
+  "region.cresora.region_far.name": "遥かな辺境",
+  "region.cresora.region_far.desc": "歴戦の旅人のための遠き一角。",
+  "commands.cresora.story.locked_region": "まだこの地域を発見していません: %s"
 }

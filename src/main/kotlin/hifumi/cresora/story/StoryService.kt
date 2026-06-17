@@ -14,6 +14,7 @@ import hifumi.cresora.equipment.ArtifactSpecialItem
 import hifumi.cresora.equipment.ArtifactUiFlow
 import hifumi.cresora.masquerade.MasqueradeService
 import hifumi.cresora.resonance.ResonanceService
+import hifumi.cresora.world.RegionContentRegistry
 import hifumi.cresora.weapon.WeaponContentRegistry
 import hifumi.cresora.weapon.WeaponStackSupport
 import net.minecraft.block.Blocks
@@ -121,6 +122,13 @@ object StoryService {
         val prerequisite = StoryProgressService.missingPrerequisite(player, chapter)
         if (prerequisite != null) {
             return StoryStartResult(false, "commands.cresora.story.locked_prerequisite", listOf(prerequisite))
+        }
+        chapter.requiredRegionId?.takeUnless(String::isBlank)?.let { rid ->
+            if (!StoryFlagService.hasFlag(player, "region_visited_$rid")) {
+                val region = RegionContentRegistry.region(rid)
+                val regionName = region?.nameKey ?: "region.cresora.$rid.name"
+                return StoryStartResult(false, "commands.cresora.story.locked_region", listOf(Text.translatable(regionName).string))
+            }
         }
         if (!chapter.linkedDomainId.isNullOrBlank()) {
             return DomainService.startLinkedStoryStage(player, chapter)

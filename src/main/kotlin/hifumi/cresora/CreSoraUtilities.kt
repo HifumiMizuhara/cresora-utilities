@@ -67,6 +67,8 @@ import hifumi.cresora.leyline.LeyLineHooks
 import hifumi.cresora.npc.NpcDialogueContentRegistry
 import hifumi.cresora.npc.SpiritGuideEntity
 import hifumi.cresora.world.PortalBlock
+import hifumi.cresora.world.RegionContentRegistry
+import hifumi.cresora.world.RegionHooks
 import hifumi.cresora.world.SpiritGuideService
 import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
@@ -205,6 +207,7 @@ object CreSoraUtilities : ModInitializer {
 		DomainContentRegistry.init()
 		MasqueradeContentRegistry.init()
 		StoryTextRegistry.init()
+		RegionContentRegistry.init()
 		StoryContentRegistry.init()
 		ResonanceContentRegistry.init()
 		MusicEchoContentRegistry.init()
@@ -326,6 +329,7 @@ object CreSoraUtilities : ModInitializer {
 		HotbarOverrideService.init()
 		LeyLineHooks.init()
 		SpiritGuideService.init()
+		RegionHooks.init()
 		SpiritBondService.init()
 		modifyLootTables()
 

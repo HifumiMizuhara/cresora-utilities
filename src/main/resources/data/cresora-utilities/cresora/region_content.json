@@ -1,0 +1,46 @@
+{
+  "regions": [
+    {
+      "id": "region_hub",
+      "nameKey": "region.cresora.region_hub.name",
+      "descriptionKey": "region.cresora.region_hub.desc",
+      "box": { "minX": -512, "minZ": -512, "maxX": 512, "maxZ": 512 },
+      "unlockRank": 0
+    },
+    {
+      "id": "region_east",
+      "nameKey": "region.cresora.region_east.name",
+      "descriptionKey": "region.cresora.region_east.desc",
+      "box": { "minX": 512, "minZ": -512, "maxX": 2048, "maxZ": 512 },
+      "unlockRank": 2
+    },
+    {
+      "id": "region_north",
+      "nameKey": "region.cresora.region_north.name",
+      "descriptionKey": "region.cresora.region_north.desc",
+      "box": { "minX": -512, "minZ": -2048, "maxX": 512, "maxZ": -512 },
+      "unlockRank": 4
+    },
+    {
+      "id": "region_west",
+      "nameKey": "region.cresora.region_west.name",
+      "descriptionKey": "region.cresora.region_west.desc",
+      "box": { "minX": -2048, "minZ": -512, "maxX": -512, "maxZ": 512 },
+      "unlockRank": 6
+    },
+    {
+      "id": "region_south",
+      "nameKey": "region.cresora.region_south.name",
+      "descriptionKey": "region.cresora.region_south.desc",
+      "box": { "minX": -512, "minZ": 512, "maxX": 512, "maxZ": 2048 },
+      "unlockRank": 8
+    },
+    {
+      "id": "region_far",
+      "nameKey": "region.cresora.region_far.name",
+      "descriptionKey": "region.cresora.region_far.desc",
+      "box": { "minX": 512, "minZ": 512, "maxX": 2048, "maxZ": 2048 },
+      "unlockRank": 10
+    }
+  ]
+}

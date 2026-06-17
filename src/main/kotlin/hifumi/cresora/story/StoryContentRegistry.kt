@@ -3,11 +3,13 @@ import hifumi.cresora.CreSoraUtilities
 import hifumi.cresora.adventurerank.AdventureRankProgression
 import hifumi.cresora.domain.DomainContentRegistry
 import hifumi.cresora.resonance.ResonanceCurrencyType
+import hifumi.cresora.world.RegionContentRegistry
 import hifumi.cresora.weapon.WeaponContentRegistry
 import hifumi.cresora.weapon.WeaponRarity
 import com.google.gson.JsonParser
 import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
+import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
@@ -165,6 +167,7 @@ data class StoryChapterDefinition(
     val domainRewardIds: List<String> = emptyList(),
     val unlockRank: Int,
     val prerequisiteChapterId: String?,
+    val requiredRegionId: String? = null,
     val preBattleStory: List<StoryDialogueLine>,
     val combatHints: List<StoryDialogueLine>,
     val grantedWeapons: List<StoryGrantedWeaponDefinition>,
@@ -174,42 +177,85 @@ data class StoryChapterDefinition(
     val rewards: StoryRewardDefinition
 ) {
     companion object {
+        private data class ChapterBase(
+            val id: String,
+            val displayName: String,
+            val groupId: String?,
+            val sortOrder: Int,
+            val titleTextId: String?,
+            val linkedDomainId: String?,
+            val domainRewardIds: List<String>,
+            val unlockRank: Int,
+            val prerequisiteChapterId: String?,
+            val requiredRegionId: String?
+        )
+
+        private data class ChapterContent(
+            val preBattleStory: List<StoryDialogueLine>,
+            val combatHints: List<StoryDialogueLine>,
+            val grantedWeapons: List<StoryGrantedWeaponDefinition>,
+            val battleObjective: StoryBattleObjectiveDefinition,
+            val battle: List<StoryBattleWaveDefinition>,
+            val postBattleStory: List<StoryDialogueLine>,
+            val rewards: StoryRewardDefinition
+        )
+
+        private val BASE_CODEC: MapCodec<ChapterBase> = RecordCodecBuilder.mapCodec { instance ->
+            instance.group(
+                Codec.STRING.fieldOf("id").forGetter(ChapterBase::id),
+                Codec.STRING.fieldOf("displayName").forGetter(ChapterBase::displayName),
+                Codec.STRING.optionalFieldOf("groupId", "").forGetter { it.groupId ?: "" },
+                Codec.INT.optionalFieldOf("sortOrder", 0).forGetter(ChapterBase::sortOrder),
+                Codec.STRING.optionalFieldOf("titleTextId", "").forGetter { it.titleTextId ?: "" },
+                Codec.STRING.optionalFieldOf("linkedDomainId", "").forGetter { it.linkedDomainId ?: "" },
+                Codec.STRING.listOf().optionalFieldOf("domainRewardIds", emptyList()).forGetter(ChapterBase::domainRewardIds),
+                Codec.INT.optionalFieldOf("unlockRank", AdventureRankProgression.MIN_RANK).forGetter(ChapterBase::unlockRank),
+                Codec.STRING.optionalFieldOf("prerequisiteChapterId", "").forGetter { it.prerequisiteChapterId ?: "" },
+                Codec.STRING.optionalFieldOf("requiredRegionId", "").forGetter { it.requiredRegionId ?: "" }
+            ).apply(instance) { id, displayName, groupId, sortOrder, titleTextId, linkedDomainId, domainRewardIds, unlockRank, prerequisiteChapterId, requiredRegionId ->
+                ChapterBase(
+                    id, displayName, groupId.takeUnless(String::isBlank), sortOrder,
+                    titleTextId.takeUnless(String::isBlank), linkedDomainId.takeUnless(String::isBlank),
+                    domainRewardIds, unlockRank, prerequisiteChapterId.takeUnless(String::isBlank),
+                    requiredRegionId.takeUnless(String::isBlank)
+                )
+            }
+        }
+
+        private val CONTENT_CODEC: MapCodec<ChapterContent> = RecordCodecBuilder.mapCodec { instance ->
+            instance.group(
+                StoryDialogueLine.CODEC.listOf().optionalFieldOf("preBattleStory", emptyList()).forGetter(ChapterContent::preBattleStory),
+                StoryDialogueLine.CODEC.listOf().optionalFieldOf("combatHints", emptyList()).forGetter(ChapterContent::combatHints),
+                StoryGrantedWeaponDefinition.CODEC.listOf().optionalFieldOf("grantedWeapons", emptyList()).forGetter(ChapterContent::grantedWeapons),
+                StoryBattleObjectiveDefinition.CODEC.optionalFieldOf("battleObjective", StoryBattleObjectiveDefinition()).forGetter(ChapterContent::battleObjective),
+                StoryBattleWaveDefinition.CODEC.listOf().optionalFieldOf("battle", emptyList()).forGetter(ChapterContent::battle),
+                StoryDialogueLine.CODEC.listOf().optionalFieldOf("postBattleStory", emptyList()).forGetter(ChapterContent::postBattleStory),
+                StoryRewardDefinition.CODEC.optionalFieldOf("rewards", StoryRewardDefinition(0, emptyList())).forGetter(ChapterContent::rewards)
+            ).apply(instance, ::ChapterContent)
+        }
+
         val CODEC: Codec<StoryChapterDefinition> = RecordCodecBuilder.create { instance ->
             instance.group(
-                Codec.STRING.fieldOf("id").forGetter(StoryChapterDefinition::id),
-                Codec.STRING.fieldOf("displayName").forGetter(StoryChapterDefinition::displayName),
-                Codec.STRING.optionalFieldOf("groupId").forGetter { Optional.ofNullable(it.groupId) },
-                Codec.INT.optionalFieldOf("sortOrder", 0).forGetter(StoryChapterDefinition::sortOrder),
-                Codec.STRING.optionalFieldOf("titleTextId").forGetter { Optional.ofNullable(it.titleTextId) },
-                Codec.STRING.optionalFieldOf("linkedDomainId").forGetter { Optional.ofNullable(it.linkedDomainId) },
-                Codec.STRING.listOf().optionalFieldOf("domainRewardIds", emptyList()).forGetter(StoryChapterDefinition::domainRewardIds),
-                Codec.INT.optionalFieldOf("unlockRank", AdventureRankProgression.MIN_RANK).forGetter(StoryChapterDefinition::unlockRank),
-                Codec.STRING.optionalFieldOf("prerequisiteChapterId").forGetter { Optional.ofNullable(it.prerequisiteChapterId) },
-                StoryDialogueLine.CODEC.listOf().optionalFieldOf("preBattleStory", emptyList()).forGetter(StoryChapterDefinition::preBattleStory),
-                StoryDialogueLine.CODEC.listOf().optionalFieldOf("combatHints", emptyList()).forGetter(StoryChapterDefinition::combatHints),
-                StoryGrantedWeaponDefinition.CODEC.listOf().optionalFieldOf("grantedWeapons", emptyList()).forGetter(StoryChapterDefinition::grantedWeapons),
-                StoryBattleObjectiveDefinition.CODEC.optionalFieldOf("battleObjective", StoryBattleObjectiveDefinition()).forGetter(StoryChapterDefinition::battleObjective),
-                StoryBattleWaveDefinition.CODEC.listOf().optionalFieldOf("battle", emptyList()).forGetter(StoryChapterDefinition::battle),
-                StoryDialogueLine.CODEC.listOf().optionalFieldOf("postBattleStory", emptyList()).forGetter(StoryChapterDefinition::postBattleStory),
-                StoryRewardDefinition.CODEC.optionalFieldOf("rewards", StoryRewardDefinition(0, emptyList())).forGetter(StoryChapterDefinition::rewards)
-            ).apply(instance) { id, displayName, groupId, sortOrder, titleTextId, linkedDomainId, domainRewardIds, unlockRank, prerequisiteChapterId, preBattleStory, combatHints, grantedWeapons, battleObjective, battle, postBattleStory, rewards ->
+                BASE_CODEC.forGetter { ch ->
+                    ChapterBase(
+                        ch.id, ch.displayName, ch.groupId, ch.sortOrder,
+                        ch.titleTextId, ch.linkedDomainId, ch.domainRewardIds,
+                        ch.unlockRank, ch.prerequisiteChapterId, ch.requiredRegionId
+                    )
+                },
+                CONTENT_CODEC.forGetter { ch ->
+                    ChapterContent(
+                        ch.preBattleStory, ch.combatHints, ch.grantedWeapons,
+                        ch.battleObjective, ch.battle, ch.postBattleStory, ch.rewards
+                    )
+                }
+            ).apply(instance) { base, content ->
                 StoryChapterDefinition(
-                    id = id,
-                    displayName = displayName,
-                    groupId = groupId.orElse(null),
-                    sortOrder = sortOrder,
-                    titleTextId = titleTextId.orElse(null),
-                    linkedDomainId = linkedDomainId.orElse(null),
-                    domainRewardIds = domainRewardIds,
-                    unlockRank = unlockRank,
-                    prerequisiteChapterId = prerequisiteChapterId.orElse(null),
-                    preBattleStory = preBattleStory,
-                    combatHints = combatHints,
-                    grantedWeapons = grantedWeapons,
-                    battleObjective = battleObjective,
-                    battle = battle,
-                    postBattleStory = postBattleStory,
-                    rewards = rewards
+                    base.id, base.displayName, base.groupId, base.sortOrder,
+                    base.titleTextId, base.linkedDomainId, base.domainRewardIds,
+                    base.unlockRank, base.prerequisiteChapterId, base.requiredRegionId,
+                    content.preBattleStory, content.combatHints, content.grantedWeapons,
+                    content.battleObjective, content.battle, content.postBattleStory, content.rewards
                 )
             }
         }
@@ -308,6 +354,10 @@ object StoryContentRegistry {
                 require(chapterMap.containsKey(prerequisiteChapterId)) {
                     "Story chapter '${chapter.id}' requires unknown prerequisite chapter '$prerequisiteChapterId'"
                 }
+            }
+            val requiredRegionId = chapter.requiredRegionId?.takeUnless(String::isBlank)
+            if (requiredRegionId != null) {
+                RegionContentRegistry.requireRegion(requiredRegionId)
             }
             val linkedDomainId = chapter.linkedDomainId?.takeUnless(String::isBlank)
             if (linkedDomainId != null) {

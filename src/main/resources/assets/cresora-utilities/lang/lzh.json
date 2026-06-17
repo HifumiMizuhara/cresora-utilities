@@ -966,5 +966,18 @@
   "npc.cresora.demo.dialogue.line_decline": "吾知之矣。待汝備足，再來尋吾。靈者，有耐心也。",
   "npc.cresora.demo.dialogue.line_farewell": "願共鳴之風，導汝之道。",
   "npc.cresora.demo.dialogue.choice_accept": "願聞其詳",
-  "npc.cresora.demo.dialogue.choice_decline": "他日再來"
+  "npc.cresora.demo.dialogue.choice_decline": "他日再來",
+  "region.cresora.region_hub.name": "導引聖所",
+  "region.cresora.region_hub.desc": "導引之靈候新旅者之中央安所。",
+  "region.cresora.region_east.name": "東陲之地",
+  "region.cresora.region_east.desc": "向陽而展之平原。",
+  "region.cresora.region_north.name": "北方曠野",
+  "region.cresora.region_north.desc": "風不止之寒高地。",
+  "region.cresora.region_west.name": "西方秘境",
+  "region.cresora.region_west.desc": "古木參天之未開林。",
+  "region.cresora.region_south.name": "南方沼澤",
+  "region.cresora.region_south.desc": "生機喧囂之暖濕地。",
+  "region.cresora.region_far.name": "遙遠邊陲",
+  "region.cresora.region_far.desc": "為久旅之人所留之遠隅。",
+  "commands.cresora.story.locked_region": "汝尚未發現此地：%s"
 }

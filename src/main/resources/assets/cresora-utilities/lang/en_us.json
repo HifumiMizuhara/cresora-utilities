@@ -984,5 +984,18 @@
   "npc.cresora.demo.dialogue.line_decline": "I understand. When you are ready, return to me. The spirits are patient.",
   "npc.cresora.demo.dialogue.line_farewell": "May the winds of resonance guide your path.",
   "npc.cresora.demo.dialogue.choice_accept": "Tell me more.",
-  "npc.cresora.demo.dialogue.choice_decline": "Not right now."
+  "npc.cresora.demo.dialogue.choice_decline": "Not right now.",
+  "region.cresora.region_hub.name": "Sanctuary of Guidance",
+  "region.cresora.region_hub.desc": "The central haven where the guiding spirit awaits new travelers.",
+  "region.cresora.region_east.name": "Eastern Reach",
+  "region.cresora.region_east.desc": "Sunlit plains stretching toward the rising sun.",
+  "region.cresora.region_north.name": "Northern Expanse",
+  "region.cresora.region_north.desc": "Cold highlands where the wind never rests.",
+  "region.cresora.region_west.name": "Western Wilds",
+  "region.cresora.region_west.desc": "Untamed forests thick with ancient trees.",
+  "region.cresora.region_south.name": "Southern Marshlands",
+  "region.cresora.region_south.desc": "Warm wetlands humming with life.",
+  "region.cresora.region_far.name": "Far Frontier",
+  "region.cresora.region_far.desc": "A distant corner reserved for seasoned travelers.",
+  "commands.cresora.story.locked_region": "You have not yet discovered the region: %s"
 }
