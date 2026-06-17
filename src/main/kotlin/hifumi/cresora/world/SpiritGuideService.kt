@@ -1,25 +1,21 @@
 package hifumi.cresora.world
 
 import hifumi.cresora.CreSoraUtilities
-import hifumi.cresora.story.ResolvedStoryLine
+import hifumi.cresora.npc.SpiritGuideEntity
 import hifumi.cresora.story.StoryDialogueNetworking
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
 import net.minecraft.block.Blocks
-import net.minecraft.entity.EntityType
 import net.minecraft.entity.SpawnReason
-import net.minecraft.entity.passive.VillagerEntity
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
 object SpiritGuideService {
-    private const val GUIDE_COMMAND_TAG = "cresora_spirit_guide"
     val LANDING_POS: BlockPos = BlockPos(0, 72, 0)
 
     private val guidePos: BlockPos = LANDING_POS.add(0, 0, 5)
@@ -30,11 +26,11 @@ object SpiritGuideService {
             if (world.isClient || !CresoraWorldKeys.isCresoraWorld(world.registryKey)) {
                 return@UseEntityCallback ActionResult.PASS
             }
-            if (entity !is VillagerEntity || !isGuide(entity)) {
+            if (entity !is SpiritGuideEntity) {
                 return@UseEntityCallback ActionResult.PASS
             }
             val serverPlayer = player as? ServerPlayerEntity ?: return@UseEntityCallback ActionResult.PASS
-            openGuideDialogue(serverPlayer)
+            StoryDialogueNetworking.startNpcDialogue(serverPlayer, entity.getDialogueTreeId())
             ActionResult.SUCCESS
         })
 
@@ -45,8 +41,13 @@ object SpiritGuideService {
             }
             nextEnsureTick = now + 100L
             val world = server.getWorld(CresoraWorldKeys.CRESORA_WORLD) ?: return@register
-            ensureLanding(world)
-            ensureGuide(world)
+            val chunkX = LANDING_POS.x shr 4
+            val chunkZ = LANDING_POS.z shr 4
+            val isLoaded = world.chunkManager.isChunkLoaded(chunkX, chunkZ)
+            if (isLoaded) {
+                ensureLanding(world)
+                ensureGuide(world)
+            }
         }
     }
 
@@ -59,61 +60,63 @@ object SpiritGuideService {
         for (x in -4..4) {
             for (z in -4..4) {
                 val floorPos = BlockPos(LANDING_POS.x + x, floorY, LANDING_POS.z + z)
-                world.setBlockState(floorPos, Blocks.POLISHED_DEEPSLATE.defaultState)
+                val polishedState = Blocks.POLISHED_DEEPSLATE.defaultState
+                if (world.getBlockState(floorPos) != polishedState) {
+                    world.setBlockState(floorPos, polishedState)
+                }
                 for (y in 0..3) {
-                    world.setBlockState(floorPos.up(y + 1), Blocks.AIR.defaultState)
+                    val airPos = floorPos.up(y + 1)
+                    val airState = Blocks.AIR.defaultState
+                    if (world.getBlockState(airPos) != airState) {
+                        world.setBlockState(airPos, airState)
+                    }
                 }
             }
         }
-        world.setBlockState(LANDING_POS.add(2, 0, 0), CreSoraUtilities.CRESORA_PORTAL_BLOCK.defaultState)
-        world.setBlockState(LANDING_POS.add(-2, 0, 0), Blocks.SEA_LANTERN.defaultState)
-        world.setBlockState(guidePos.down(), Blocks.CHISELED_DEEPSLATE.defaultState)
+        val portalPos = LANDING_POS.add(2, 0, 0)
+        val portalState = CreSoraUtilities.CRESORA_PORTAL_BLOCK.defaultState
+        if (world.getBlockState(portalPos) != portalState) {
+            world.setBlockState(portalPos, portalState)
+        }
+        val lanternPos = LANDING_POS.add(-2, 0, 0)
+        val lanternState = Blocks.SEA_LANTERN.defaultState
+        if (world.getBlockState(lanternPos) != lanternState) {
+            world.setBlockState(lanternPos, lanternState)
+        }
+        val guideUnderPos = guidePos.down()
+        val guideUnderState = Blocks.CHISELED_DEEPSLATE.defaultState
+        if (world.getBlockState(guideUnderPos) != guideUnderState) {
+            world.setBlockState(guideUnderPos, guideUnderState)
+        }
     }
 
-    fun openGuideDialogue(player: ServerPlayerEntity) {
-        StoryDialogueNetworking.showSimpleDialogue(
-            player,
-            Text.translatable("story.cresora.phase0.title"),
-            listOf(
-                ResolvedStoryLine(
-                    Text.translatable("story.cresora.phase0.speaker.guide"),
-                    Text.translatable("story.cresora.phase0.line.0")
-                ),
-                ResolvedStoryLine(
-                    Text.translatable("story.cresora.phase0.speaker.guide"),
-                    Text.translatable("story.cresora.phase0.line.1")
-                ),
-                ResolvedStoryLine(
-                    Text.translatable("story.cresora.phase0.speaker.spirit"),
-                    Text.translatable("story.cresora.phase0.line.2").copy().formatted(Formatting.LIGHT_PURPLE)
-                )
-            ),
-            Text.translatable("story.cresora.phase0.objective"),
-            listOf(Text.translatable("story.cresora.phase0.hint"))
-        )
-    }
-
-    private fun ensureGuide(world: ServerWorld) {
+    fun ensureGuide(world: ServerWorld) {
         val box = Box(guidePos).expand(8.0)
-        val existing = world.getEntitiesByClass(VillagerEntity::class.java, box) { it.isAlive && isGuide(it) }
+
+        // Clean up legacy VillagerEntity guides from previous versions
+        val legacyGuides = world.getEntitiesByClass(net.minecraft.entity.passive.VillagerEntity::class.java, box) { true }
+        for (legacy in legacyGuides) {
+            legacy.discard()
+        }
+
+        val existing = world.getEntitiesByClass(SpiritGuideEntity::class.java, box) { it.isAlive }
         if (existing.isNotEmpty()) {
             val guide = existing.first()
             guide.refreshPositionAndAngles(guidePos.x + 0.5, guidePos.y.toDouble(), guidePos.z + 0.5, 180.0f, 0.0f)
+            // Discard any duplicate guide entities in the area to keep it clean
+            for (i in 1 until existing.size) {
+                existing[i].discard()
+            }
             return
         }
 
-        val guide = EntityType.VILLAGER.create(world, SpawnReason.EVENT) ?: return
+        val guide = SpiritGuideEntity.ENTITY_TYPE.create(world, SpawnReason.EVENT) ?: return
         guide.refreshPositionAndAngles(guidePos.x + 0.5, guidePos.y.toDouble(), guidePos.z + 0.5, 180.0f, 0.0f)
         guide.customName = Text.translatable("entity.cresora.spirit_guide")
         guide.isCustomNameVisible = true
-        guide.addCommandTag(GUIDE_COMMAND_TAG)
         guide.setAiDisabled(true)
         guide.setInvulnerable(true)
         world.spawnEntity(guide)
         world.spawnParticles(ParticleTypes.ENCHANT, guide.x, guide.y + 1.1, guide.z, 24, 0.5, 0.8, 0.5, 0.02)
-    }
-
-    private fun isGuide(entity: VillagerEntity): Boolean {
-        return entity.commandTags.contains(GUIDE_COMMAND_TAG)
     }
 }

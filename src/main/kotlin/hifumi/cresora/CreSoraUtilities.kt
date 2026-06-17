@@ -64,6 +64,8 @@ import hifumi.cresora.leyline.LeyLineKeyItem
 import hifumi.cresora.leyline.LeyLineOverflowBlock
 import hifumi.cresora.leyline.LeyLineSelectionScreenHandler
 import hifumi.cresora.leyline.LeyLineHooks
+import hifumi.cresora.npc.NpcDialogueContentRegistry
+import hifumi.cresora.npc.SpiritGuideEntity
 import hifumi.cresora.world.PortalBlock
 import hifumi.cresora.world.SpiritGuideService
 import com.mojang.serialization.Codec
@@ -75,6 +77,7 @@ import hifumi.cresora.guide.GuideScreenHandler
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.fabricmc.loader.api.FabricLoader
+import net.fabricmc.fabric.api.`object`.builder.v1.entity.FabricDefaultAttributeRegistry
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -173,6 +176,8 @@ object CreSoraUtilities : ModInitializer {
 		Registry.register(Registries.BLOCK, RESONANT_CACHE_ID, RESONANT_CACHE_BLOCK)
 		Registry.register(Registries.BLOCK, CRESORA_PORTAL_ID, CRESORA_PORTAL_BLOCK)
 		Registry.register(Registries.BLOCK, LEY_LINE_OVERFLOW_ID, LEY_LINE_OVERFLOW_BLOCK)
+		Registry.register(Registries.ENTITY_TYPE, Identifier.of(MOD_ID, "spirit_guide"), SpiritGuideEntity.ENTITY_TYPE)
+		FabricDefaultAttributeRegistry.register(SpiritGuideEntity.ENTITY_TYPE, SpiritGuideEntity.createAttributes())
 		Registry.register(Registries.ITEM, VERSION_VERIFIER_ID, VERIFY)
 		Registry.register(Registries.ITEM, SUB_SKILL_DUMMY_ID, SUB_SKILL_DUMMY)
 		Registry.register(Registries.ITEM, MOON_BRICK_ID, MOON_BRICK_ITEM)
@@ -204,6 +209,7 @@ object CreSoraUtilities : ModInitializer {
 		ResonanceContentRegistry.init()
 		MusicEchoContentRegistry.init()
 		StoryDialogueNetworking.init()
+		NpcDialogueContentRegistry.init()
 		UPGRADE_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "upgrade"),

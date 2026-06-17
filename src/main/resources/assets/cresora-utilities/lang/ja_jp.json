@@ -977,5 +977,12 @@
   "spirit.cresora.lakeside_stride.bond.5.title": "濁らぬ一歩",
   "spirit.cresora.lakeside_stride.bond.5.story": "争いの最中でさえ、激しく暴れない力こそ最も鋭いと彼女は教える。",
   "spirit.cresora.lakeside_stride.bond.6.title": "空を抱く湖",
-  "spirit.cresora.lakeside_stride.bond.6.story": "彼女の静けさはもはや距離ではなく、あなたを受け入れるための広さへ変わる。"
+  "spirit.cresora.lakeside_stride.bond.6.story": "彼女の静けさはもはや距離ではなく、あなたを受け入れるための広さへ変わる。",
+  "npc.cresora.spirit_guide.name": "導きの霊",
+  "npc.cresora.demo.dialogue.line_1": "よく来たね、旅人。君の中に、かすかな共鳴を感じる……この世界に宿る「霊」について、聞いてみるかい？",
+  "npc.cresora.demo.dialogue.line_accept": "いい返事だ。武器と持ち主の絆は神聖なものだ。君を呼ぶ霊を探しなさい。必ず応えてくれるはずだ。",
+  "npc.cresora.demo.dialogue.line_decline": "そうか。準備ができたら、また来るといい。霊たちは気長に待ってくれている。",
+  "npc.cresora.demo.dialogue.line_farewell": "共鳴の風が、君の道を導かんことを。",
+  "npc.cresora.demo.dialogue.choice_accept": "詳しく聞く",
+  "npc.cresora.demo.dialogue.choice_decline": "また今度にする"
 }

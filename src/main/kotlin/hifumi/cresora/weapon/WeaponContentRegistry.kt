@@ -354,14 +354,25 @@ object WeaponContentRegistry {
     fun init() {
         weapons = emptyMap() // Reset before loading
         applyBundle(defaultBundle())
-        runCatching { loadBundledContent(CONTENT_RESOURCE) }
-            .onSuccess { bundle ->
+        val legacyStream = WeaponContentRegistry::class.java.classLoader.getResourceAsStream(CONTENT_RESOURCE)
+        if (legacyStream != null) {
+            runCatching {
+                legacyStream.use { stream ->
+                    InputStreamReader(stream).use { reader ->
+                        val json = JsonParser.parseReader(reader)
+                        WeaponContentBundle.CODEC.parse(JsonOps.INSTANCE, json)
+                            .getOrThrow { message -> IllegalArgumentException("Invalid weapon content: $message") }
+                    }
+                }
+            }.onSuccess { bundle ->
                 applyBundle(bundle)
                 logger.info("Loaded weapon content from {}", CONTENT_RESOURCE)
-            }
-            .onFailure { throwable ->
+            }.onFailure { throwable ->
                 logger.error("Failed to load weapon content from {}. Using built-in defaults.", CONTENT_RESOURCE, throwable)
             }
+        } else {
+            logger.info("Optional legacy weapon content resource {} not found; using built-in defaults.", CONTENT_RESOURCE)
+        }
         
         runCatching { loadBundledContent(CWC_CONTENT_RESOURCE) }
             .onSuccess { bundle ->

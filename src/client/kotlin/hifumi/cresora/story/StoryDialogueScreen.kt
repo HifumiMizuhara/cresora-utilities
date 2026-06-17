@@ -1,4 +1,5 @@
 package hifumi.cresora.story
+
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.ButtonWidget
@@ -16,27 +17,35 @@ class StoryDialogueScreen(
     private lateinit var continueButton: ButtonWidget
     private lateinit var autoButton: ButtonWidget
     private lateinit var skipButton: ButtonWidget
+    private val choiceButtons = mutableListOf<ButtonWidget>()
 
     override fun init() {
         super.init()
         val panelLeft = width / 2 - 150
         val panelTop = height - 124
-        continueButton = ButtonWidget.builder(Text.translatable("screen.cresora.story.dialogue.continue")) {
-            requestContinue()
-        }.dimensions(panelLeft + 196, panelTop + 92, 96, 20).build()
-        autoButton = ButtonWidget.builder(autoButtonText()) {
-            autoAdvance = !autoAdvance
-            if (autoAdvance) {
-                scheduleAutoAdvance()
+
+        when (StoryDialogueViewMode.fromId(state.modeId)) {
+            StoryDialogueViewMode.DIALOGUE -> {
+                continueButton = ButtonWidget.builder(Text.translatable("screen.cresora.story.dialogue.continue")) {
+                    requestContinue()
+                }.dimensions(panelLeft + 196, panelTop + 92, 96, 20).build()
+                autoButton = ButtonWidget.builder(autoButtonText()) {
+                    autoAdvance = !autoAdvance
+                    if (autoAdvance) scheduleAutoAdvance()
+                    refreshButtons()
+                }.dimensions(panelLeft + 92, panelTop + 92, 96, 20).build()
+                skipButton = ButtonWidget.builder(Text.translatable("screen.cresora.story.dialogue.skip")) {
+                    requestSkip()
+                }.dimensions(panelLeft - 4, panelTop + 92, 88, 20).build()
+                addDrawableChild(continueButton)
+                addDrawableChild(autoButton)
+                addDrawableChild(skipButton)
             }
-            refreshButtons()
-        }.dimensions(panelLeft + 92, panelTop + 92, 96, 20).build()
-        skipButton = ButtonWidget.builder(Text.translatable("screen.cresora.story.dialogue.skip")) {
-            requestSkip()
-        }.dimensions(panelLeft - 4, panelTop + 92, 88, 20).build()
-        addDrawableChild(continueButton)
-        addDrawableChild(autoButton)
-        addDrawableChild(skipButton)
+            StoryDialogueViewMode.NPC_DIALOGUE -> {
+                rebuildChoiceButtons()
+            }
+            StoryDialogueViewMode.COUNTDOWN -> {}
+        }
         refreshButtons()
         scheduleAutoAdvance()
     }
@@ -44,8 +53,13 @@ class StoryDialogueScreen(
     fun applyState(newState: StoryDialogueStatePayload) {
         state = newState
         awaitingServerResponse = false
-        if (StoryDialogueViewMode.fromId(newState.modeId) != StoryDialogueViewMode.DIALOGUE) {
+        val mode = StoryDialogueViewMode.fromId(newState.modeId)
+        if (mode != StoryDialogueViewMode.DIALOGUE) {
             autoAdvance = false
+        }
+        if (mode == StoryDialogueViewMode.NPC_DIALOGUE) {
+            clearButtons()
+            rebuildChoiceButtons()
         }
         scheduleAutoAdvance()
         if (this::continueButton.isInitialized) {
@@ -55,12 +69,8 @@ class StoryDialogueScreen(
 
     override fun tick() {
         super.tick()
-        if (!autoAdvance || awaitingServerResponse) {
-            return
-        }
-        if (StoryDialogueViewMode.fromId(state.modeId) != StoryDialogueViewMode.DIALOGUE || !state.canContinue) {
-            return
-        }
+        if (!autoAdvance || awaitingServerResponse) return
+        if (StoryDialogueViewMode.fromId(state.modeId) != StoryDialogueViewMode.DIALOGUE || !state.canContinue) return
         if (System.currentTimeMillis() >= nextAutoAdvanceAtMs) {
             requestContinue()
         }
@@ -71,7 +81,8 @@ class StoryDialogueScreen(
     override fun shouldCloseOnEsc(): Boolean = false
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        if (StoryDialogueViewMode.fromId(state.modeId) == StoryDialogueViewMode.DIALOGUE && state.canContinue) {
+        val mode = StoryDialogueViewMode.fromId(state.modeId)
+        if ((mode == StoryDialogueViewMode.DIALOGUE || mode == StoryDialogueViewMode.NPC_DIALOGUE) && state.canContinue) {
             if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
                 requestContinue()
                 return true
@@ -81,24 +92,38 @@ class StoryDialogueScreen(
             requestSkip()
             return true
         }
+        if (mode == StoryDialogueViewMode.NPC_DIALOGUE && state.extras.choices.isNotEmpty()) {
+            val index = keyCode - GLFW.GLFW_KEY_1
+            if (index in 0 until state.extras.choices.size) {
+                val choice = state.extras.choices[index]
+                if (choice.enabled) {
+                    requestChoice(choice.actionId)
+                    return true
+                }
+            }
+        }
         return super.keyPressed(keyCode, scanCode, modifiers)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // Avoid Screen.renderBackground here: on 1.21.7 the blur path can be invoked twice
-        // in the same frame for this custom full-screen UI and crash the client.
         context.fillGradient(0, 0, width, height, 0xB014101A.toInt(), 0xCC09070A.toInt())
 
-        val chapterWidth = 220
-        val chapterX = width / 2 - chapterWidth / 2
-        context.fill(chapterX, 18, chapterX + chapterWidth, 42, 0xD037504C.toInt())
-        context.drawCenteredTextWithShadow(textRenderer, state.chapterTitle, width / 2, 26, 0xFFF8F2E7.toInt())
-
-        drawObjectivePanel(context)
-
-        when (StoryDialogueViewMode.fromId(state.modeId)) {
-            StoryDialogueViewMode.DIALOGUE -> drawDialoguePanel(context)
-            StoryDialogueViewMode.COUNTDOWN -> drawCountdownPanel(context)
+        val mode = StoryDialogueViewMode.fromId(state.modeId)
+        when (mode) {
+            StoryDialogueViewMode.DIALOGUE -> {
+                val chapterWidth = 220
+                val chapterX = width / 2 - chapterWidth / 2
+                context.fill(chapterX, 18, chapterX + chapterWidth, 42, 0xD037504C.toInt())
+                context.drawCenteredTextWithShadow(textRenderer, state.chapterTitle, width / 2, 26, 0xFFF8F2E7.toInt())
+                drawObjectivePanel(context)
+                drawDialoguePanel(context)
+            }
+            StoryDialogueViewMode.NPC_DIALOGUE -> {
+                drawNpcDialoguePanel(context)
+            }
+            StoryDialogueViewMode.COUNTDOWN -> {
+                drawCountdownPanel(context)
+            }
         }
 
         super.render(context, mouseX, mouseY, delta)
@@ -122,7 +147,7 @@ class StoryDialogueScreen(
             context.drawWrappedText(textRenderer, state.objective, panelX + 10, textY, panelWidth - 20, 0xFFF4EFE5.toInt(), false)
             textY += textRenderer.getWrappedLinesHeight(state.objective, panelWidth - 20) + 10
         }
-        if (state.hints.isNotEmpty()) {
+        if (state.extras.hints.isNotEmpty()) {
             context.drawTextWithShadow(
                 textRenderer,
                 Text.translatable("screen.cresora.story.hints_label"),
@@ -131,7 +156,7 @@ class StoryDialogueScreen(
                 0xFF8FBCBB.toInt()
             )
             textY += 14
-            for (hint in state.hints) {
+            for (hint in state.extras.hints) {
                 context.drawWrappedText(textRenderer, hint, panelX + 10, textY, panelWidth - 20, 0xFFD8DEE9.toInt(), false)
                 textY += textRenderer.getWrappedLinesHeight(hint, panelWidth - 20) + 6
             }
@@ -149,6 +174,30 @@ class StoryDialogueScreen(
             context.drawTextWithShadow(textRenderer, state.speaker, panelLeft + 20, panelTop - 12, 0xFFFDF6EA.toInt())
         }
         context.drawWrappedText(textRenderer, state.body, panelLeft + 16, panelTop + 18, panelWidth - 32, 0xFF231A14.toInt(), false)
+    }
+
+    private fun drawNpcDialoguePanel(context: DrawContext) {
+        val panelWidth = width - 80
+        val panelLeft = width / 2 - panelWidth / 2
+        val dialogueHeight = 80 + state.extras.choices.size * 26
+        val panelTop = height - dialogueHeight - 24
+
+        context.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + dialogueHeight, 0xD62A211B.toInt())
+        context.fill(panelLeft + 2, panelTop + 2, panelLeft + panelWidth - 2, panelTop + dialogueHeight - 2, 0xEAEADFC9.toInt())
+
+        if (state.showSpeaker) {
+            context.fill(panelLeft + 12, panelTop - 18, panelLeft + 118, panelTop + 2, 0xE6486C67.toInt())
+            context.drawTextWithShadow(textRenderer, state.speaker, panelLeft + 20, panelTop - 12, 0xFFFDF6EA.toInt())
+        }
+        context.drawWrappedText(textRenderer, state.body, panelLeft + 16, panelTop + 18, panelWidth - 32, 0xFF231A14.toInt(), false)
+
+        if (state.canContinue) {
+            val continueWidth = 80
+            val cx = panelLeft + panelWidth - continueWidth - 12
+            val cy = panelTop + dialogueHeight - 28
+            context.fill(cx, cy, cx + continueWidth, cy + 18, 0xD0486C67.toInt())
+            context.drawCenteredTextWithShadow(textRenderer, Text.literal("▼"), cx + continueWidth / 2, cy + 4, 0xFFFDF6EA.toInt())
+        }
     }
 
     private fun drawCountdownPanel(context: DrawContext) {
@@ -174,15 +223,58 @@ class StoryDialogueScreen(
         )
     }
 
+    private fun clearButtons() {
+        choiceButtons.forEach { remove(it) }
+        choiceButtons.clear()
+    }
+
+    private fun rebuildChoiceButtons() {
+        clearButtons()
+        val panelWidth = width - 80
+        val panelLeft = width / 2 - panelWidth / 2
+        val dialogueHeight = 80 + state.extras.choices.size * 26
+        val panelTop = height - dialogueHeight - 24
+        val buttonWidth = panelWidth - 32
+        val buttonX = panelLeft + 16
+
+        state.extras.choices.forEachIndexed { index, choice ->
+            val buttonY = panelTop + 54 + index * 26
+            val label = if (choice.enabled) {
+                Text.literal("${index + 1}. ").copy().append(choice.label)
+            } else {
+                Text.literal("${index + 1}. ").copy().append(choice.label).formatted(net.minecraft.util.Formatting.GRAY, net.minecraft.util.Formatting.STRIKETHROUGH)
+            }
+            val btn = ButtonWidget.builder(label) {
+                if (choice.enabled && !awaitingServerResponse) {
+                    requestChoice(choice.actionId)
+                }
+            }.dimensions(buttonX, buttonY, buttonWidth, 20).build()
+            btn.active = choice.enabled && !awaitingServerResponse
+            choiceButtons.add(btn)
+            addDrawableChild(btn)
+        }
+
+        if (state.canContinue) {
+            val continueWidth = 80
+            val cx = panelLeft + panelWidth - continueWidth - 12
+            val cy = panelTop + dialogueHeight - 28
+            choiceButtons.add(ButtonWidget.builder(Text.literal("▼")) {
+                if (!awaitingServerResponse) requestContinue()
+            }.dimensions(cx, cy, continueWidth, 18).build().also { addDrawableChild(it) })
+        }
+    }
+
     private fun refreshButtons() {
-        val isDialogue = StoryDialogueViewMode.fromId(state.modeId) == StoryDialogueViewMode.DIALOGUE
-        continueButton.visible = isDialogue
-        continueButton.active = isDialogue && state.canContinue && !awaitingServerResponse
-        skipButton.visible = isDialogue
-        skipButton.active = isDialogue && state.canSkip && !awaitingServerResponse
-        autoButton.visible = isDialogue
-        autoButton.active = isDialogue && state.canContinue && !awaitingServerResponse
-        autoButton.message = autoButtonText()
+        val mode = StoryDialogueViewMode.fromId(state.modeId)
+        if (mode == StoryDialogueViewMode.DIALOGUE) {
+            continueButton.visible = true
+            continueButton.active = state.canContinue && !awaitingServerResponse
+            skipButton.visible = true
+            skipButton.active = state.canSkip && !awaitingServerResponse
+            autoButton.visible = true
+            autoButton.active = state.canContinue && !awaitingServerResponse
+            autoButton.message = autoButtonText()
+        }
     }
 
     private fun autoButtonText(): Text {
@@ -194,22 +286,24 @@ class StoryDialogueScreen(
     }
 
     private fun requestContinue() {
-        if (awaitingServerResponse || !state.canContinue) {
-            return
-        }
+        if (awaitingServerResponse || !state.canContinue) return
         awaitingServerResponse = true
         StoryDialogueClient.sendContinue()
         refreshButtons()
     }
 
     private fun requestSkip() {
-        if (awaitingServerResponse || !state.canSkip) {
-            return
-        }
+        if (awaitingServerResponse || !state.canSkip) return
         autoAdvance = false
         awaitingServerResponse = true
         StoryDialogueClient.sendSkip()
         refreshButtons()
+    }
+
+    private fun requestChoice(actionId: String) {
+        if (awaitingServerResponse) return
+        awaitingServerResponse = true
+        StoryDialogueClient.sendChoice(actionId)
     }
 
     private fun scheduleAutoAdvance() {

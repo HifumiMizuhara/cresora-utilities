@@ -1240,6 +1240,27 @@ LIMITED ★5 抽選の概要:
 - `copyTo(old, new)`
 - `missingPrerequisite(player, chapter)`
 
+### 7.13.1 StoryFlagService (Phase 4)
+
+ファイル:
+
+- `story/StoryFlagService.kt`
+- `story/StoryFlagAccess.kt`（mixin interface）
+- `java/.../mixin/ServerPlayerEntityMixin.java`（`cresora$storyFlagsRaw` を NBT に永続化）
+
+責務:
+
+- NPC 対話・章進行用の汎用ストーリーフラグ(`String` 集合)の保持と判定
+- フラグは `ServerPlayerEntity` の NBT(`cresora_story_flags`)にカンマ区切り文字列として永続化され、`copyTo` で重生時に引き継がれる
+
+主 API:
+
+- `getFlags(player): Set<String>`
+- `hasFlag(player, flagKey): Boolean`
+- `setFlag(player, flagKey)` / `unsetFlag(player, flagKey)`
+- `checkFlags(player, required: Map<String,Boolean>): Boolean` — 値 `true` は所持、`false` は非所持を要求
+- `copyTo(oldPlayer, newPlayer)`
+
 ### 7.14 MasqueradeService
 
 ファイル:
@@ -1458,6 +1479,66 @@ UI 与界面设计 (2026-06-15 重构):
 
 - ガチャ重複で `ResonanceService.addSpiritBondPoints` が呼ばれ、しきい値 `[0, 40, 100, 200, 350, 550]` で stage 1..6 が決まる
 - 武器ツールチップ(`CresoraWeaponItem`)と強化画面 Stats タブ(`WeaponUpgradeScreen`)が `spiritBondStage` と現在の `bondStages[stage].titleKey` / `awakeningConditionKey` を表示する
+
+### 7.22 StoryDialogueNetworking (Phase 0 / Phase 4)
+
+ファイル:
+
+- `story/StoryDialogueNetworking.kt`（サーバー権威）
+- `client/.../story/StoryDialogueClient.kt` / `StoryDialogueScreen.kt`（クライアント UI）
+
+責務:
+
+- 章進行用ダイアログ（`DIALOGUE`）、開戦カウントダウン（`COUNTDOWN`）、NPC 分岐対話（`NPC_DIALOGUE`）の3モードを1つの `StoryDialogueStatePayload` で配信
+- Phase 4 で `NPC_DIALOGUE` モードと `DialogueChoicePayload` / `DialogueExtraLists` を追加し、分岐選択肢・フラグ条件表示に対応。`hints` は `extras` に統合
+- `NpcDialogueSession(treeId, playerUuid, currentNodeId)` をサーバー側で保持し、選択肢アクション(`actionId`)でノード遷移。`flagsToSet` でフラグ書き込み、`conditionFlags` / `requiredFlags` で `StoryFlagService` 経由のゲート判定を行う
+
+主 API:
+
+- `startNpcDialogue(player, treeId)` — ツリーのルートノードを配信してセッション開始
+- `showSimpleDialogue(...)` / `showCountdown(...)` — 既存の章ダイアログ・カウントダウン
+- `close(player)` — セッション破棄 + クライアントへ close パケット送信
+
+### 7.23 NpcDialogueContentRegistry (Phase 4)
+
+ファイル:
+
+- `npc/NpcDialogueContentRegistry.kt`
+- `data/cresora-utilities/cresora/npc_dialogue_content.json`
+
+責務:
+
+- NPC 対話ツリー(`NpcDialogueTree` → `NpcDialogueNode` → `NpcDialogueChoice`)の JSON ロード
+- ノードは `speaker` / `body`(Text)・`choices`(分岐)・`flagsToSet`(フラグ書込)・`conditionFlags`(表示ゲート)・`nextNodeId`(自動遷移)を持つ
+- 選択肢は `actionId`・`label`・`requiredFlags`(有効/無効判定)・`nextNodeId` を持つ
+- JSON リソース不在時は `spirit_guide_intro` デモツリーをフォールバック生成
+
+主 API:
+
+- `init()` — `CreSoraUtilities.onInitialize` から呼ばれる
+- `getTree(treeId)` / `getRootNode(treeId)` / `getNode(treeId, nodeId)`
+
+### 7.24 SpiritGuideService / SpiritGuideEntity (Phase 4)
+
+ファイル:
+
+- `npc/SpiritGuideEntity.kt`（`PassiveEntity` ベース、`shouldSave=false` で非保存・重複防止）
+- `client/.../npc/SpiritGuideRenderer.kt`（ビルボード板ポリ + `textures/entity/spirit_guide.png`）
+- `world/SpiritGuideService.kt` — 案内人の着地・スポーン管理
+- `world/CresoraWorldKeys.kt` / `world/PortalBlock.kt` — `cresora_world` 次元キーと双方向界門
+
+責務:
+
+- `SpiritGuideEntity` は `MOVEMENT_SPEED=0`・`KNOCKBACK_RESISTANCE=1` の立ち止まり AI、`DIALOGUE_TREE_ID` を `DataTracker` で同期
+- `SpiritGuideService` は `END_SERVER_TICK`(5秒ごと)で `cresora_world` の着地エリア床/ポータルを差分復元し、案内人を1体だけ維持（重複・レガシー村人を `discard`）。チャンク未ロード時はスキップ
+- `UseEntityCallback` で案内人右クリック → `StoryDialogueNetworking.startNpcDialogue`
+- `PortalBlock` でバニラ OW ⇄ `cresora_world` の双方向遷移（着地時にチャンク先読み + 案内人確保）
+- `MinecraftServerMixin` で界門ブロックのスポーン保護をバイパス
+
+主 API:
+
+- `SpiritGuideService.init()` — `CreSoraUtilities.onInitialize` から登録
+- `SpiritGuideService.ensureLanding(world)` / `ensureGuide(world)` — `PortalBlock` からも呼ばれる
 
 ## 8. UI / Command API
 

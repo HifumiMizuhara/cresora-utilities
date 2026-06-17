@@ -9,6 +9,8 @@ import hifumi.cresora.masquerade.MasqueradeProgressAccess;
 import hifumi.cresora.masquerade.MasqueradeProgressService;
 import hifumi.cresora.resonance.ResonanceAccess;
 import hifumi.cresora.resonance.ResonanceService;
+import hifumi.cresora.story.StoryFlagAccess;
+import hifumi.cresora.story.StoryFlagService;
 import hifumi.cresora.story.StoryProgressAccess;
 import hifumi.cresora.story.StoryProgressService;
 import hifumi.cresora.weapon.WeaponSkillAccess;
@@ -25,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
-public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAccess, WeaponSkillAccess, ResonanceAccess, StoryProgressAccess, MasqueradeProgressAccess, GuideProgressAccess {
+public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAccess, WeaponSkillAccess, ResonanceAccess, StoryProgressAccess, StoryFlagAccess, MasqueradeProgressAccess, GuideProgressAccess {
     @Unique
     private int cresora$adventureRank = AdventureRankProgression.MIN_RANK;
 
@@ -119,6 +121,9 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Unique
     private String cresora$guideProgressMap = "";
 
+    @Unique
+    private String cresora$storyFlagsRaw = "";
+
     @Inject(method = "writeCustomData", at = @At("TAIL"))
     private void cresora$writeAdventureRank(WriteView view, CallbackInfo ci) {
         view.putInt(AdventureRankService.INSTANCE.playerRankKey(), this.cresora$adventureRank);
@@ -147,6 +152,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         view.putString("cresora_guide_claimed_tasks", this.cresora$guideClaimedTasks);
         view.putString("cresora_guide_claimed_chapters", this.cresora$guideClaimedChapters);
         view.putString("cresora_guide_progress_map", this.cresora$guideProgressMap);
+        view.putString(StoryFlagService.INSTANCE.playerStoryFlagsKey(), this.cresora$storyFlagsRaw);
     }
 
     @Inject(method = "readCustomData", at = @At("TAIL"))
@@ -179,6 +185,7 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
         this.cresora$guideClaimedTasks = view.getString("cresora_guide_claimed_tasks", "");
         this.cresora$guideClaimedChapters = view.getString("cresora_guide_claimed_chapters", "");
         this.cresora$guideProgressMap = view.getString("cresora_guide_progress_map", "");
+        this.cresora$storyFlagsRaw = view.getString(StoryFlagService.INSTANCE.playerStoryFlagsKey(), "");
     }
 
     @Inject(method = "onDeath", at = @At("HEAD"))
@@ -496,5 +503,15 @@ public class ServerPlayerEntityMixin implements AdventureRankAccess, CreditsAcce
     @Override
     public void cresoraSetGuideProgressMap(String value) {
         this.cresora$guideProgressMap = value == null ? "" : value;
+    }
+
+    @Override
+    public String cresoraGetStoryFlagsRaw() {
+        return this.cresora$storyFlagsRaw;
+    }
+
+    @Override
+    public void cresoraSetStoryFlagsRaw(String value) {
+        this.cresora$storyFlagsRaw = value == null ? "" : value;
     }
 }

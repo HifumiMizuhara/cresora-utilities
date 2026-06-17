@@ -11,6 +11,7 @@ import hifumi.cresora.masquerade.MasqueradeSupportScreen
 import hifumi.cresora.resonance.ResonanceFeaturedSelectionScreen
 import hifumi.cresora.resonance.ResonanceResultScreen
 import hifumi.cresora.resonance.ResonanceScreen
+import hifumi.cresora.npc.SpiritGuideRenderer
 import hifumi.cresora.story.StoryChapterSelectionScreen
 import hifumi.cresora.story.StoryDialogueClient
 import hifumi.cresora.story.StoryStageSelectionScreen
@@ -19,12 +20,14 @@ import hifumi.cresora.weapon.WeaponSkillMaterialScreen
 import hifumi.cresora.weapon.WeaponUpgradeScreen
 import hifumi.cresora.guide.GuideScreen
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry
 import net.minecraft.client.gui.screen.ingame.HandledScreens
 
 object CreSoraUtilitiesClient : ClientModInitializer {
 	override fun onInitializeClient() {
 		StoryDialogueClient.init()
 		SpiritRenderer.init()
+		EntityRendererRegistry.register(hifumi.cresora.npc.SpiritGuideEntity.ENTITY_TYPE, ::SpiritGuideRenderer)
 		HandledScreens.register(CreSoraUtilities.UPGRADE_SCREEN_HANDLER, ::UpgradeScreen)
 		HandledScreens.register(CreSoraUtilities.WEAPON_UPGRADE_SCREEN_HANDLER, ::WeaponUpgradeScreen)
 		HandledScreens.register(CreSoraUtilities.WEAPON_SKILL_MATERIAL_SCREEN_HANDLER, ::WeaponSkillMaterialScreen)

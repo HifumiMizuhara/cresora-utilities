@@ -1,0 +1,60 @@
+{
+  "trees": [
+    {
+      "id": "spirit_guide_intro",
+      "rootNodeId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "speaker": {
+            "translate": "npc.cresora.spirit_guide.name"
+          },
+          "body": {
+            "translate": "npc.cresora.demo.dialogue.line_1"
+          },
+          "choices": [
+            {
+              "actionId": "choice_accept",
+              "label": {
+                "translate": "npc.cresora.demo.dialogue.choice_accept"
+              },
+              "nextNodeId": "after_accept"
+            },
+            {
+              "actionId": "choice_decline",
+              "label": {
+                "translate": "npc.cresora.demo.dialogue.choice_decline"
+              },
+              "nextNodeId": "after_decline"
+            }
+          ]
+        },
+        {
+          "id": "after_accept",
+          "speaker": {
+            "translate": "npc.cresora.spirit_guide.name"
+          },
+          "body": {
+            "translate": "npc.cresora.demo.dialogue.line_accept"
+          },
+          "flagsToSet": ["met_guide"]
+        },
+        {
+          "id": "after_decline",
+          "speaker": {
+            "translate": "npc.cresora.spirit_guide.name"
+          },
+          "body": {
+            "translate": "npc.cresora.demo.dialogue.line_decline"
+          }
+        },
+        {
+          "id": "farewell",
+          "body": {
+            "translate": "npc.cresora.demo.dialogue.line_farewell"
+          }
+        }
+      ]
+    }
+  ]
+}

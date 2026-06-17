@@ -20,6 +20,10 @@ object StoryDialogueClient {
         ClientPlayNetworking.send(StoryDialogueActionPayload(StoryDialogueActionPayload.ACTION_SKIP))
     }
 
+    fun sendChoice(actionId: String) {
+        ClientPlayNetworking.send(StoryDialogueActionPayload(actionId))
+    }
+
     private fun applyState(client: MinecraftClient, payload: StoryDialogueStatePayload) {
         val existing = client.currentScreen as? StoryDialogueScreen
         if (existing != null) {

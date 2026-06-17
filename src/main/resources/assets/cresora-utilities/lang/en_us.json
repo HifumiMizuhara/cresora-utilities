@@ -977,5 +977,12 @@
   "spirit.cresora.lakeside_stride.bond.5.title": "Step Without Turbulence",
   "spirit.cresora.lakeside_stride.bond.5.story": "Even in conflict, her composure teaches you that force is sharpest when it does not thrash.",
   "spirit.cresora.lakeside_stride.bond.6.title": "Lake that Keeps the Sky",
-  "spirit.cresora.lakeside_stride.bond.6.story": "At last her stillness is no longer distance; it becomes a vastness that makes room for you."
+  "spirit.cresora.lakeside_stride.bond.6.story": "At last her stillness is no longer distance; it becomes a vastness that makes room for you.",
+  "npc.cresora.spirit_guide.name": "Guiding Spirit",
+  "npc.cresora.demo.dialogue.line_1": "Welcome, traveler. I sense a faint resonance within you... Would you like to learn about the spirits that dwell in this world?",
+  "npc.cresora.demo.dialogue.line_accept": "Excellent. The bond between weapon and wielder is sacred. Seek the spirits that call to you, and they shall answer.",
+  "npc.cresora.demo.dialogue.line_decline": "I understand. When you are ready, return to me. The spirits are patient.",
+  "npc.cresora.demo.dialogue.line_farewell": "May the winds of resonance guide your path.",
+  "npc.cresora.demo.dialogue.choice_accept": "Tell me more.",
+  "npc.cresora.demo.dialogue.choice_decline": "Not right now."
 }

@@ -42,7 +42,11 @@ class PortalBlock(settings: Settings) : Block(settings) {
             SpiritGuideService.LANDING_POS
         }
         if (!leavingCresora) {
+            val chunkX = SpiritGuideService.LANDING_POS.x shr 4
+            val chunkZ = SpiritGuideService.LANDING_POS.z shr 4
+            targetWorld.getChunk(chunkX, chunkZ)
             SpiritGuideService.ensureLanding(targetWorld)
+            SpiritGuideService.ensureGuide(targetWorld)
         }
         val center = targetPos.toCenterPos()
         serverPlayer.teleport(targetWorld, center.x, center.y + 0.1, center.z, setOf(), serverPlayer.yaw, serverPlayer.pitch, false)

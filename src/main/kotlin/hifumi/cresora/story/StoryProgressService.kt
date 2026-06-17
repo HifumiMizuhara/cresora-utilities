@@ -37,6 +37,7 @@ object StoryProgressService {
         val oldAccess = oldPlayer as? StoryProgressAccess ?: return
         val newAccess = newPlayer as? StoryProgressAccess ?: return
         newAccess.cresoraSetStoryClearsRaw(oldAccess.cresoraGetStoryClearsRaw())
+        StoryFlagService.copyTo(oldPlayer, newPlayer)
     }
 
     fun missingPrerequisite(player: ServerPlayerEntity, chapter: StoryChapterDefinition): String? {

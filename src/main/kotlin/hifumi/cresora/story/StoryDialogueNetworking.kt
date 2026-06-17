@@ -1,5 +1,8 @@
 package hifumi.cresora.story
 import hifumi.cresora.CreSoraUtilities
+import hifumi.cresora.npc.NpcDialogueChoice
+import hifumi.cresora.npc.NpcDialogueNode
+import hifumi.cresora.story.StoryDialogueViewMode
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
@@ -16,10 +19,44 @@ import java.util.concurrent.ConcurrentHashMap
 
 enum class StoryDialogueViewMode(val id: String) {
     DIALOGUE("dialogue"),
-    COUNTDOWN("countdown");
+    COUNTDOWN("countdown"),
+    NPC_DIALOGUE("npc_dialogue");
 
     companion object {
         fun fromId(id: String): StoryDialogueViewMode = entries.firstOrNull { it.id == id } ?: DIALOGUE
+    }
+}
+
+data class DialogueChoicePayload(
+    val actionId: String,
+    val label: Text,
+    val enabled: Boolean
+) {
+    companion object {
+        val CODEC: PacketCodec<RegistryByteBuf, DialogueChoicePayload> = PacketCodec.tuple(
+            PacketCodecs.STRING,
+            DialogueChoicePayload::actionId,
+            TextCodecs.REGISTRY_PACKET_CODEC,
+            DialogueChoicePayload::label,
+            PacketCodecs.BOOLEAN,
+            DialogueChoicePayload::enabled,
+            ::DialogueChoicePayload
+        )
+    }
+}
+
+data class DialogueExtraLists(
+    val hints: List<Text>,
+    val choices: List<DialogueChoicePayload>
+) {
+    companion object {
+        val CODEC: PacketCodec<RegistryByteBuf, DialogueExtraLists> = PacketCodec.tuple(
+            TextCodecs.REGISTRY_PACKET_CODEC.collect(PacketCodecs.toList()),
+            DialogueExtraLists::hints,
+            DialogueChoicePayload.CODEC.collect(PacketCodecs.toList()),
+            DialogueExtraLists::choices,
+            ::DialogueExtraLists
+        )
     }
 }
 
@@ -31,10 +68,10 @@ data class StoryDialogueStatePayload(
     val body: Text,
     val objective: Text,
     val showObjective: Boolean,
-    val hints: List<Text>,
     val countdownValue: Int,
     val canContinue: Boolean,
-    val canSkip: Boolean
+    val canSkip: Boolean,
+    val extras: DialogueExtraLists
 ) : CustomPayload {
     override fun getId(): CustomPayload.Id<StoryDialogueStatePayload> = ID
 
@@ -55,14 +92,14 @@ data class StoryDialogueStatePayload(
             StoryDialogueStatePayload::objective,
             PacketCodecs.BOOLEAN,
             StoryDialogueStatePayload::showObjective,
-            TextCodecs.REGISTRY_PACKET_CODEC.collect(PacketCodecs.toList()),
-            StoryDialogueStatePayload::hints,
             PacketCodecs.VAR_INT,
             StoryDialogueStatePayload::countdownValue,
             PacketCodecs.BOOLEAN,
             StoryDialogueStatePayload::canContinue,
             PacketCodecs.BOOLEAN,
             StoryDialogueStatePayload::canSkip,
+            DialogueExtraLists.CODEC,
+            StoryDialogueStatePayload::extras,
             ::StoryDialogueStatePayload
         )
     }
@@ -93,6 +130,12 @@ data class StoryDialogueActionPayload(
     }
 }
 
+data class NpcDialogueSession(
+    val treeId: String,
+    val playerUuid: UUID,
+    var currentNodeId: String
+)
+
 object StoryDialogueNetworking {
     private data class SimpleDialogueSession(
         val title: Text,
@@ -103,6 +146,7 @@ object StoryDialogueNetworking {
     )
 
     private val simpleDialogueSessions: MutableMap<UUID, SimpleDialogueSession> = ConcurrentHashMap()
+    private val npcDialogueSessions: MutableMap<UUID, NpcDialogueSession> = ConcurrentHashMap()
 
     fun init() {
         PayloadTypeRegistry.playS2C().register(StoryDialogueStatePayload.ID, StoryDialogueStatePayload.CODEC)
@@ -110,13 +154,26 @@ object StoryDialogueNetworking {
         PayloadTypeRegistry.playC2S().register(StoryDialogueActionPayload.ID, StoryDialogueActionPayload.CODEC)
         ServerPlayConnectionEvents.DISCONNECT.register(ServerPlayConnectionEvents.Disconnect { handler, _ ->
             simpleDialogueSessions.remove(handler.player.uuid)
+            npcDialogueSessions.remove(handler.player.uuid)
         })
         ServerPlayNetworking.registerGlobalReceiver(StoryDialogueActionPayload.ID) { payload, context ->
             if (handleSimpleDialogueAction(context.player(), payload.actionId)) {
                 return@registerGlobalReceiver
             }
+            if (handleNpcDialogueAction(context.player(), payload.actionId)) {
+                return@registerGlobalReceiver
+            }
             StoryService.handleDialogueAction(context.player(), payload.actionId)
         }
+    }
+
+    fun startNpcDialogue(player: ServerPlayerEntity, treeId: String) {
+        val node = hifumi.cresora.npc.NpcDialogueContentRegistry.getRootNode(treeId)
+        if (node == null) {
+            return
+        }
+        npcDialogueSessions[player.uuid] = NpcDialogueSession(treeId, player.uuid, node.id)
+        sendNpcDialogueNode(player, node)
     }
 
     fun showSimpleDialogue(
@@ -153,10 +210,10 @@ object StoryDialogueNetworking {
                 body = line.body,
                 objective = objective ?: Text.empty(),
                 showObjective = objective != null,
-                hints = hints,
                 countdownValue = 0,
                 canContinue = true,
-                canSkip = true
+                canSkip = true,
+                extras = DialogueExtraLists(hints = hints, choices = emptyList())
             )
         )
     }
@@ -178,16 +235,17 @@ object StoryDialogueNetworking {
                 body = Text.translatable("screen.cresora.story.dialogue.countdown_label"),
                 objective = objective ?: Text.empty(),
                 showObjective = objective != null,
-                hints = hints,
                 countdownValue = countdownValue,
                 canContinue = false,
-                canSkip = false
+                canSkip = false,
+                extras = DialogueExtraLists(hints = hints, choices = emptyList())
             )
         )
     }
 
     fun close(player: ServerPlayerEntity) {
         simpleDialogueSessions.remove(player.uuid)
+        npcDialogueSessions.remove(player.uuid)
         ServerPlayNetworking.send(player, StoryDialogueClosePayload)
     }
 
@@ -213,5 +271,81 @@ object StoryDialogueNetworking {
             return
         }
         showDialogue(player, session.title, line, session.objective, session.hints)
+    }
+
+    private fun handleNpcDialogueAction(player: ServerPlayerEntity, actionId: String): Boolean {
+        val session = npcDialogueSessions[player.uuid] ?: return false
+        val currentNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, session.currentNodeId)
+            ?: return run { close(player); true }
+
+        val choice = currentNode.choices?.find { it.actionId == actionId }
+        if (choice != null) {
+            if (choice.requiredFlags != null && !hifumi.cresora.story.StoryFlagService.checkFlags(player, choice.requiredFlags)) {
+                return true
+            }
+            resolveNpcChoice(player, session, choice)
+            return true
+        }
+
+        if (actionId == StoryDialogueActionPayload.ACTION_CONTINUE && currentNode.choices.isNullOrEmpty()) {
+            advanceNpcNode(player, session, currentNode.nextNodeId)
+            return true
+        }
+
+        return false
+    }
+
+    private fun resolveNpcChoice(player: ServerPlayerEntity, session: NpcDialogueSession, choice: NpcDialogueChoice) {
+        val currentNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, session.currentNodeId)
+        val nextNodeId = choice.nextNodeId ?: currentNode?.nextNodeId ?: choice.actionId
+        advanceNpcNode(player, session, nextNodeId)
+    }
+
+    private fun advanceNpcNode(player: ServerPlayerEntity, session: NpcDialogueSession, targetNodeId: String?) {
+        if (targetNodeId == null) {
+            close(player)
+            return
+        }
+        val currentNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, session.currentNodeId)
+        currentNode?.flagsToSet?.forEach { flag ->
+            hifumi.cresora.story.StoryFlagService.setFlag(player, flag)
+        }
+        val nextNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, targetNodeId)
+        if (nextNode != null && isNodeAccessible(player, nextNode)) {
+            session.currentNodeId = nextNode.id
+            sendNpcDialogueNode(player, nextNode)
+        } else {
+            close(player)
+        }
+    }
+
+    private fun isNodeAccessible(player: ServerPlayerEntity, node: NpcDialogueNode): Boolean {
+        if (node.conditionFlags == null) return true
+        return hifumi.cresora.story.StoryFlagService.checkFlags(player, node.conditionFlags)
+    }
+
+    private fun sendNpcDialogueNode(player: ServerPlayerEntity, node: NpcDialogueNode) {
+        val choicePayloads = node.choices?.mapNotNull { choice ->
+            val enabled = choice.requiredFlags?.let { hifumi.cresora.story.StoryFlagService.checkFlags(player, it) } ?: true
+            DialogueChoicePayload(choice.actionId, choice.label, enabled)
+        } ?: emptyList()
+
+        val hasChoices = choicePayloads.isNotEmpty()
+        ServerPlayNetworking.send(
+            player,
+            StoryDialogueStatePayload(
+                modeId = StoryDialogueViewMode.NPC_DIALOGUE.id,
+                chapterTitle = Text.empty(),
+                speaker = node.speaker ?: Text.empty(),
+                showSpeaker = node.speaker != null,
+                body = node.body,
+                objective = Text.empty(),
+                showObjective = false,
+                countdownValue = 0,
+                canContinue = !hasChoices,
+                canSkip = false,
+                extras = DialogueExtraLists(hints = emptyList(), choices = choicePayloads)
+            )
+        )
     }
 }

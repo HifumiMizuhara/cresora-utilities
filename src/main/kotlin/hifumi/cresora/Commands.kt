@@ -65,7 +65,7 @@ object Commands {
                     .then(
                         literal("intro")
                             .executes { context ->
-                                SpiritGuideService.openGuideDialogue(context.source.playerOrThrow)
+                                hifumi.cresora.story.StoryDialogueNetworking.startNpcDialogue(context.source.playerOrThrow, "spirit_guide_intro")
                                 1
                             }
                     )

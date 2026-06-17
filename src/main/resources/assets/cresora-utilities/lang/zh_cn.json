@@ -966,5 +966,12 @@
   "spirit.cresora.lakeside_stride.bond.5.title": "不惊之步",
   "spirit.cresora.lakeside_stride.bond.5.story": "即使置身冲突，她也让你明白，不翻腾的力量反而最锋利。",
   "spirit.cresora.lakeside_stride.bond.6.title": "留住天空的湖",
-  "spirit.cresora.lakeside_stride.bond.6.story": "她的静不再像距离，而像一片足够辽阔、能够容纳你的水面。"
+  "spirit.cresora.lakeside_stride.bond.6.story": "她的静不再像距离，而像一片足够辽阔、能够容纳你的水面。",
+  "npc.cresora.spirit_guide.name": "引导之灵",
+  "npc.cresora.demo.dialogue.line_1": "欢迎，旅者。我能感受到你体内微弱的共鸣……想要了解寄宿于此世的「灵」吗？",
+  "npc.cresora.demo.dialogue.line_accept": "很好。武器与持主之间的羁绊是神圣的。去寻找呼唤你的灵吧，它们定会回应。",
+  "npc.cresora.demo.dialogue.line_decline": "我明白了。等你准备好了，再来找我。灵们是很有耐心的。",
+  "npc.cresora.demo.dialogue.line_farewell": "愿共鸣之风指引你的道路。",
+  "npc.cresora.demo.dialogue.choice_accept": "详细说说",
+  "npc.cresora.demo.dialogue.choice_decline": "下次再说"
 }
