@@ -168,6 +168,8 @@ data class StoryChapterDefinition(
     val unlockRank: Int,
     val prerequisiteChapterId: String?,
     val requiredRegionId: String? = null,
+    val requiredSpiritId: String? = null,
+    val requiredBondStage: Int = 0,
     val preBattleStory: List<StoryDialogueLine>,
     val combatHints: List<StoryDialogueLine>,
     val grantedWeapons: List<StoryGrantedWeaponDefinition>,
@@ -187,7 +189,9 @@ data class StoryChapterDefinition(
             val domainRewardIds: List<String>,
             val unlockRank: Int,
             val prerequisiteChapterId: String?,
-            val requiredRegionId: String?
+            val requiredRegionId: String?,
+            val requiredSpiritId: String?,
+            val requiredBondStage: Int
         )
 
         private data class ChapterContent(
@@ -211,13 +215,17 @@ data class StoryChapterDefinition(
                 Codec.STRING.listOf().optionalFieldOf("domainRewardIds", emptyList()).forGetter(ChapterBase::domainRewardIds),
                 Codec.INT.optionalFieldOf("unlockRank", AdventureRankProgression.MIN_RANK).forGetter(ChapterBase::unlockRank),
                 Codec.STRING.optionalFieldOf("prerequisiteChapterId", "").forGetter { it.prerequisiteChapterId ?: "" },
-                Codec.STRING.optionalFieldOf("requiredRegionId", "").forGetter { it.requiredRegionId ?: "" }
-            ).apply(instance) { id, displayName, groupId, sortOrder, titleTextId, linkedDomainId, domainRewardIds, unlockRank, prerequisiteChapterId, requiredRegionId ->
+                Codec.STRING.optionalFieldOf("requiredRegionId", "").forGetter { it.requiredRegionId ?: "" },
+                Codec.STRING.optionalFieldOf("requiredSpiritId", "").forGetter { it.requiredSpiritId ?: "" },
+                Codec.INT.optionalFieldOf("requiredBondStage", 0).forGetter(ChapterBase::requiredBondStage)
+            ).apply(instance) { id, displayName, groupId, sortOrder, titleTextId, linkedDomainId, domainRewardIds, unlockRank, prerequisiteChapterId, requiredRegionId, requiredSpiritId, requiredBondStage ->
                 ChapterBase(
                     id, displayName, groupId.takeUnless(String::isBlank), sortOrder,
                     titleTextId.takeUnless(String::isBlank), linkedDomainId.takeUnless(String::isBlank),
                     domainRewardIds, unlockRank, prerequisiteChapterId.takeUnless(String::isBlank),
-                    requiredRegionId.takeUnless(String::isBlank)
+                    requiredRegionId.takeUnless(String::isBlank),
+                    requiredSpiritId.takeUnless(String::isBlank),
+                    requiredBondStage
                 )
             }
         }
@@ -240,7 +248,8 @@ data class StoryChapterDefinition(
                     ChapterBase(
                         ch.id, ch.displayName, ch.groupId, ch.sortOrder,
                         ch.titleTextId, ch.linkedDomainId, ch.domainRewardIds,
-                        ch.unlockRank, ch.prerequisiteChapterId, ch.requiredRegionId
+                        ch.unlockRank, ch.prerequisiteChapterId, ch.requiredRegionId,
+                        ch.requiredSpiritId, ch.requiredBondStage
                     )
                 },
                 CONTENT_CODEC.forGetter { ch ->
@@ -254,6 +263,7 @@ data class StoryChapterDefinition(
                     base.id, base.displayName, base.groupId, base.sortOrder,
                     base.titleTextId, base.linkedDomainId, base.domainRewardIds,
                     base.unlockRank, base.prerequisiteChapterId, base.requiredRegionId,
+                    base.requiredSpiritId, base.requiredBondStage,
                     content.preBattleStory, content.combatHints, content.grantedWeapons,
                     content.battleObjective, content.battle, content.postBattleStory, content.rewards
                 )
@@ -358,6 +368,20 @@ object StoryContentRegistry {
             val requiredRegionId = chapter.requiredRegionId?.takeUnless(String::isBlank)
             if (requiredRegionId != null) {
                 RegionContentRegistry.requireRegion(requiredRegionId)
+            }
+            val requiredSpiritId = chapter.requiredSpiritId?.takeUnless(String::isBlank)
+            if (requiredSpiritId != null) {
+                val weaponDef = WeaponContentRegistry.requireWeapon(requiredSpiritId)
+                require(weaponDef.spirit != null) {
+                    "Story chapter '${chapter.id}' requiredSpiritId '$requiredSpiritId' refers to a weapon without a spirit"
+                }
+                require(chapter.requiredBondStage in 1..6) {
+                    "Story chapter '${chapter.id}' must specify requiredBondStage in 1..6 when requiredSpiritId is set (got ${chapter.requiredBondStage})"
+                }
+            } else {
+                require(chapter.requiredBondStage == 0) {
+                    "Story chapter '${chapter.id}' cannot set requiredBondStage without requiredSpiritId"
+                }
             }
             val linkedDomainId = chapter.linkedDomainId?.takeUnless(String::isBlank)
             if (linkedDomainId != null) {
