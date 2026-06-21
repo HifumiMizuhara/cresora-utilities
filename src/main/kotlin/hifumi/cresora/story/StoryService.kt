@@ -130,6 +130,17 @@ object StoryService {
                 return StoryStartResult(false, "commands.cresora.story.locked_region", listOf(Text.translatable(regionName).string))
             }
         }
+        chapter.requiredSpiritId?.takeUnless(String::isBlank)?.let { sid ->
+            val playerBondStage = ResonanceService.spiritBondStage(player, sid)
+            if (playerBondStage < chapter.requiredBondStage) {
+                val spiritNameKey = WeaponContentRegistry.requireWeapon(sid).spirit?.nameKey ?: "item.cresora.weapon.$sid"
+                return StoryStartResult(
+                    false,
+                    "commands.cresora.story.locked_spirit_bond",
+                    listOf(Text.translatable(spiritNameKey).string, chapter.requiredBondStage)
+                )
+            }
+        }
         if (!chapter.linkedDomainId.isNullOrBlank()) {
             return DomainService.startLinkedStoryStage(player, chapter)
         }
