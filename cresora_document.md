@@ -1221,6 +1221,21 @@ LIMITED ★5 抽選の概要:
 - `onPlayerDisconnect(player)`
 - `handleDialogueAction(player, actionId)`
 
+`startSession` で行うゲート判定（順序通り）:
+
+1. session 重複（story / domain / masquerade）
+2. `unlockRank` ≤ AdventureRank
+3. `prerequisiteChapterId` クリア済み（`StoryProgressService.missingPrerequisite`）
+4. `requiredRegionId` 未到達なら拒否（`StoryFlagService.hasFlag("region_visited_<id>")`、`RegionHooks` が設定）
+5. `requiredSpiritId` + `requiredBondStage` — 当該武器の `ResonanceService.spiritBondStage(player, sid)` が指定段階以上であるかを判定
+6. `linkedDomainId` があれば `DomainService.startLinkedStoryStage` に委譲
+7. 武器配布スロット空きチェック
+
+`StoryChapterDefinition` のオプショナルゲートフィールド:
+- `requiredRegionId: String?` — 地域到達フラグ要求
+- `requiredSpiritId: String?` — `spirit` ブロックを持つ武器の ID
+- `requiredBondStage: Int = 0` — 1..6（`requiredSpiritId` が設定された場合のみ必須、未設定時は 0）
+
 ### 7.13 StoryProgressService
 
 ファイル:
