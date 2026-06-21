@@ -992,5 +992,6 @@
   "region.cresora.region_south.desc": "生机喧嚣的温暖湿地。",
   "region.cresora.region_far.name": "遥远边陲",
   "region.cresora.region_far.desc": "为久经旅途之人保留的远隅。",
-  "commands.cresora.story.locked_region": "你尚未发现该地域：%s"
+  "commands.cresora.story.locked_region": "你尚未发现该地域：%s",
+  "commands.cresora.story.locked_spirit_bond": "需与 %1$s 的灵之绊达到第 %2$s 阶。"
 }

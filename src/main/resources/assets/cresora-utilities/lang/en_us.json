@@ -995,5 +995,6 @@
   "region.cresora.region_south.desc": "Warm wetlands humming with life.",
   "region.cresora.region_far.name": "Far Frontier",
   "region.cresora.region_far.desc": "A distant corner reserved for seasoned travelers.",
-  "commands.cresora.story.locked_region": "You have not yet discovered the region: %s"
+  "commands.cresora.story.locked_region": "You have not yet discovered the region: %s",
+  "commands.cresora.story.locked_spirit_bond": "Requires Spirit Bond %2$s with %1$s."
 }

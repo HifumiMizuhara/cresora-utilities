@@ -985,5 +985,6 @@
   "region.cresora.region_south.desc": "生機喧囂之暖濕地。",
   "region.cresora.region_far.name": "遙遠邊陲",
   "region.cresora.region_far.desc": "為久旅之人所留之遠隅。",
-  "commands.cresora.story.locked_region": "汝尚未發現此地：%s"
+  "commands.cresora.story.locked_region": "汝尚未發現此地：%s",
+  "commands.cresora.story.locked_spirit_bond": "須與 %1$s 之靈絆達第 %2$s 階。"
 }

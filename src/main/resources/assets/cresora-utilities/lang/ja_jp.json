@@ -995,5 +995,6 @@
   "region.cresora.region_south.desc": "生命がざわめく温暖な湿地帯。",
   "region.cresora.region_far.name": "遥かな辺境",
   "region.cresora.region_far.desc": "歴戦の旅人のための遠き一角。",
-  "commands.cresora.story.locked_region": "まだこの地域を発見していません: %s"
+  "commands.cresora.story.locked_region": "まだこの地域を発見していません: %s",
+  "commands.cresora.story.locked_spirit_bond": "%1$s との霊絆 %2$s 段階が必要です。"
 }
