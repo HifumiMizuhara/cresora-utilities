@@ -48,6 +48,10 @@ replay_*.log
 # antigravity
 .antigravitycli/
 
+# assistant / editor local config
+.claude/
+.cursor/
+
 # local analysis & reports
 optimization/
 review/
