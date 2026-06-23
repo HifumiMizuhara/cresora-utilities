@@ -3,7 +3,7 @@
 最終更新: 2026-06-12
 
 このドキュメントは、Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジストリスキーマ、およびコアサービスの仕様書です。
-各機能の開発履歴や完了したタスクのログについては、[WORK_DONE.md](file:///Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/WORK_DONE.md) を参照してください。
+各機能の開発履歴や完了したタスクのログについては、Git のコミット履歴 (`git log`) を参照してください。
 
 ## 1. 結論
 

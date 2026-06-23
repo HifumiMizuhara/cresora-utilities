@@ -5,7 +5,7 @@ This file provides guidance to the Gemini / Antigravity AI coding assistant when
 ## Terminology Rule
 
 - Effective immediately, any reference to `Phase〇`, `Phase N`, or `Phase` in this repository means the phases defined in [roadmap.md](/Users/hifumimizuhara/IdeaProjects/cresora-utilities-1.21.7/roadmap.md).
-- Do not interpret `Phase` references using ad hoc labels from `WORK_DONE.md`, commit messages, or other progress logs unless the prompt explicitly says so.
+- Do not interpret `Phase` references using ad hoc labels from commit messages or other progress logs unless the prompt explicitly says so.
 
 ## Project Overview
 
@@ -266,35 +266,27 @@ The main mod (gameplay) code still has no automated test suite.
 
 **Commit messages must be written in English.**
 
-Recent history favors short imperative subjects, usually with conventional prefixes such as `feat:` or `chore:`. Keep commits narrow. PRs should state gameplay impact, note any touched registries or generated files, and include screenshots for UI changes. If you modify content schemas, registries, or service APIs, update `cresora_document.md`; log finished work in `WORK_DONE.md` and future follow-up in `TODO.md`.
+Recent history favors short imperative subjects, usually with conventional prefixes such as `feat:` or `chore:`. Keep commits narrow. PRs should state gameplay impact, note any touched registries or generated files, and include screenshots for UI changes. If you modify content schemas, registries, or service APIs, update `cresora_document.md`. Completed work is recorded by the commit itself (`git log`); record only future follow-up in `TODO.md`.
 
 ---
 
 ## Collaboration & Documentation Maintenance Rules (CRITICAL)
 
-To maintain absolute integrity across agent sessions, you **MUST** keep these collaboration files updated at the project root:
+To maintain integrity across agent sessions, keep these two living docs accurate. There is **no `WORK_DONE.md`** — completed work is recorded by Git history (`git log`), not a hand-maintained log.
 
-- **`WORK_DONE.md`**
-  - Records work that is completed and already landed in the codebase.
-  - Update this after finishing code, resource, version, or runtime verification work.
-- **`TODO.md`**
-  - Records work that still needs follow-up, polish, or testing.
-  - New issues, polish items, and future roadmap plans must go here first.
-- **`cresora_document.md`**
+- **`cresora_document.md`** (committed; the canonical reference)
   - Records current internal API surface, registry schemas, and service responsibilities.
   - **ALWAYS** update this after adding new content types, changing JSON schemas, or modifying service-layer APIs.
-- **`GEMINI.md`**
-  - Serves as the master developer guide for the Gemini assistant.
-  - **ALWAYS** dynamically adjust, refine, or update this file when new development workflows, commands, architectural changes, or style guidelines are established.
+- **`TODO.md`** (local, gitignored scratch list)
+  - A lean list of pending follow-up, polish, and verification work **only**.
+  - Add new follow-up items here; delete each item once it ships. Do not keep a completed-items log — `git log` is the record of finished work.
 
 ### Maintenance Workflow:
-1. Completed work goes into `WORK_DONE.md`.
-2. Incomplete or follow-up work goes into `TODO.md`.
-3. API, registry, or architectural changes go into `cresora_document.md`.
-4. Dev guide changes, command updates, and style guidelines adjustments go into `GEMINI.md` dynamically.
-5. **ALWAYS** run a compilation build (e.g., `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`) and verify after completing implementation to ensure no compilation errors or regressions.
-6. After large feature changes or bug fixes, update these files before ending the task.
-7. Any future collaborator or agent should read `WORK_DONE.md`, `TODO.md`, `cresora_document.md`, and `GEMINI.md` first.
+1. API, registry, or architectural changes go into `cresora_document.md`.
+2. Remaining follow-up / verification work goes into `TODO.md`; delete entries when finished.
+3. **ALWAYS** run a compilation build (e.g., `GRADLE_USER_HOME=.gradle-user ./gradlew classes --console=plain`) and verify after completing implementation to ensure no compilation errors or regressions.
+4. After large feature changes or bug fixes, update these docs before ending the task.
+5. Any future collaborator or agent should read `cresora_document.md` and `TODO.md` first, and consult `git log` for what has already shipped.
 
 ## Notes for Future Work
 
