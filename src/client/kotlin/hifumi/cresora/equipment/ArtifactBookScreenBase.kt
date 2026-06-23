@@ -82,7 +82,7 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
         val activeTab = getActiveTab()
 
         // Draw Left Decorative Tabs (Genshin Style)
-        for (tab in 1..5) {
+        for (tab in 1..6) {
             val tabY = y + 20 + (tab - 1) * 30
             if (tab == activeTab) {
                 // Active Tab background
@@ -116,6 +116,7 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
         drawTabText(context, "讨伐", 3, activeTab)
         drawTabText(context, "祈愿", 4, activeTab)
         drawTabText(context, "珍品", 5, activeTab)
+        drawTabText(context, "记录", 6, activeTab)
     }
 
     private fun drawTabText(context: DrawContext, text: String, tabIdx: Int, activeTab: Int) {
@@ -135,7 +136,7 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
         val mc = client ?: return super.mouseClicked(mouseX, mouseY, button)
 
         if (relativeX in -14.0..0.0) {
-            for (tab in 1..5) {
+            for (tab in 1..6) {
                 val tabYStart = 20.0 + (tab - 1) * 30.0
                 val tabYEnd = tabYStart + 25.0
                 if (relativeY in tabYStart..tabYEnd) {
@@ -146,6 +147,7 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
                         3 -> mc.player?.networkHandler?.sendChatCommand("cresora_domain")
                         4 -> mc.player?.networkHandler?.sendChatCommand("cresora_resonance")
                         5 -> mc.player?.networkHandler?.sendChatCommand("cresora_shop")
+                        6 -> mc.player?.networkHandler?.sendChatCommand("cresora_records")
                     }
                     return true
                 }

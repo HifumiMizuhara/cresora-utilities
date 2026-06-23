@@ -14,6 +14,7 @@ import hifumi.cresora.story.StoryStageSelectionScreenHandler
 import hifumi.cresora.weapon.WeaponSkillMaterialScreenHandler
 import hifumi.cresora.weapon.WeaponUpgradeScreenHandler
 import hifumi.cresora.guide.GuideScreenHandler
+import hifumi.cresora.guide.RecordsScreenHandler
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory
 import net.minecraft.server.network.ServerPlayerEntity
@@ -173,6 +174,15 @@ object ArtifactUiFlow {
             SimpleNamedScreenHandlerFactory(
                 { syncId, playerInventory, _ -> GuideScreenHandler(syncId, playerInventory) },
                 Text.translatable("screen.cresora.guide")
+            )
+        )
+    }
+
+    fun openRecords(player: ServerPlayerEntity) {
+        player.openHandledScreen(
+            SimpleNamedScreenHandlerFactory(
+                { syncId, playerInventory, _ -> RecordsScreenHandler(syncId, playerInventory) },
+                Text.translatable("screen.cresora.records")
             )
         )
     }

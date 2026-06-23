@@ -19,6 +19,7 @@ import hifumi.cresora.weapon.SpiritRenderer
 import hifumi.cresora.weapon.WeaponSkillMaterialScreen
 import hifumi.cresora.weapon.WeaponUpgradeScreen
 import hifumi.cresora.guide.GuideScreen
+import hifumi.cresora.guide.RecordsScreen
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry
 import net.minecraft.client.gui.screen.ingame.HandledScreens
@@ -46,5 +47,6 @@ object CreSoraUtilitiesClient : ClientModInitializer {
 		HandledScreens.register(CreSoraUtilities.RESONANCE_RESULT_SCREEN_HANDLER, ::ResonanceResultScreen)
 		HandledScreens.register(CreSoraUtilities.RESONANCE_FEATURED_SELECTION_SCREEN_HANDLER, ::ResonanceFeaturedSelectionScreen)
 		HandledScreens.register(CreSoraUtilities.GUIDE_SCREEN_HANDLER, ::GuideScreen)
+		HandledScreens.register(CreSoraUtilities.RECORDS_SCREEN_HANDLER, ::RecordsScreen)
 	}
 }

@@ -20,8 +20,15 @@ import java.util.concurrent.ConcurrentHashMap
  * Outside cresora_world the tracker is cleared so re-entry re-fires the announcement.
  */
 object RegionHooks {
-    private const val VISITED_FLAG_PREFIX = "region_visited_"
+    const val VISITED_FLAG_PREFIX = "region_visited_"
     private val currentRegion: MutableMap<UUID, String?> = ConcurrentHashMap()
+
+    /** Story flag key recording a first visit to [regionId]. */
+    fun visitedFlag(regionId: String): String = VISITED_FLAG_PREFIX + regionId
+
+    /** Whether [player] has discovered [regionId] (rank-gated regions only record on a qualified visit). */
+    fun hasVisited(player: ServerPlayerEntity, regionId: String): Boolean =
+        StoryFlagService.hasFlag(player, visitedFlag(regionId))
 
     fun init() {
         ServerTickEvents.END_SERVER_TICK.register { server ->
@@ -56,9 +63,9 @@ object RegionHooks {
             return
         }
 
-        val firstVisit = !StoryFlagService.hasFlag(player, VISITED_FLAG_PREFIX + region.id)
+        val firstVisit = !hasVisited(player, region.id)
         if (firstVisit) {
-            StoryFlagService.setFlag(player, VISITED_FLAG_PREFIX + region.id)
+            StoryFlagService.setFlag(player, visitedFlag(region.id))
             player.sendMessage(
                 Text.literal("◆ ").formatted(Formatting.GOLD)
                     .append(Text.translatable(region.nameKey).formatted(Formatting.WHITE))

@@ -76,6 +76,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import dev.emi.trinkets.api.TrinketsApi
 import hifumi.cresora.equipment.ArtifactSkillRegistry
 import hifumi.cresora.guide.GuideScreenHandler
+import hifumi.cresora.guide.RecordsScreenHandler
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.fabricmc.loader.api.FabricLoader
@@ -169,6 +170,7 @@ object CreSoraUtilities : ModInitializer {
 	lateinit var RESONANCE_FEATURED_SELECTION_SCREEN_HANDLER: ScreenHandlerType<ResonanceFeaturedSelectionScreenHandler>
 	lateinit var LEY_LINE_SELECTION_SCREEN_HANDLER: ScreenHandlerType<LeyLineSelectionScreenHandler>
 	lateinit var GUIDE_SCREEN_HANDLER: ScreenHandlerType<GuideScreenHandler>
+	lateinit var RECORDS_SCREEN_HANDLER: ScreenHandlerType<RecordsScreenHandler>
 	lateinit var SET_LEVEL_LOOT_FUNCTION: LootFunctionType<SetLevelLootFunction>
 
 	override fun onInitialize() {
@@ -302,6 +304,11 @@ object CreSoraUtilities : ModInitializer {
 			Registries.SCREEN_HANDLER,
 			Identifier.of(MOD_ID, "guide"),
 			ScreenHandlerType(::GuideScreenHandler, FeatureFlags.VANILLA_FEATURES)
+		)
+		RECORDS_SCREEN_HANDLER = Registry.register(
+			Registries.SCREEN_HANDLER,
+			Identifier.of(MOD_ID, "records"),
+			ScreenHandlerType(::RecordsScreenHandler, FeatureFlags.VANILLA_FEATURES)
 		)
 		SET_LEVEL_LOOT_FUNCTION = Registry.register(
 			Registries.LOOT_FUNCTION_TYPE,

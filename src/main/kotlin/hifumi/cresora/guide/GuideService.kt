@@ -4,7 +4,11 @@ import hifumi.cresora.adventurerank.AdventureRankService
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.resonance.ResonanceCurrencyType
 import hifumi.cresora.resonance.ResonanceService
+import hifumi.cresora.story.StoryFlagService
 import hifumi.cresora.story.StoryProgressService
+import hifumi.cresora.weapon.WeaponContentRegistry
+import hifumi.cresora.world.RegionContentRegistry
+import hifumi.cresora.world.RegionHooks
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 
@@ -139,6 +143,89 @@ object GuideService {
     fun onStoryStageClear(player: ServerPlayerEntity, stageId: String) {
         // Since CLEAR_STORY_STAGE is state-based (we directly check StoryProgressService.isCleared),
         // we don't need to save anything to the progress map, but we could trigger updates if screens are open.
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Record hub (発見・絆・達成記録): read-only aggregations layered over already-persisted data.
+    // Discovery reuses RegionHooks visit flags, bonds reuse ResonanceService bond points, and the
+    // achievement summary rolls up guide/story progress. Only the spirit-met flag is written here.
+    // ---------------------------------------------------------------------------------------------
+
+    private const val SPIRIT_MET_FLAG_PREFIX = "spirit_met_"
+
+    fun spiritMetFlag(weaponId: String): String = SPIRIT_MET_FLAG_PREFIX + weaponId
+
+    fun hasMetSpirit(player: ServerPlayerEntity, weaponId: String): Boolean =
+        StoryFlagService.hasFlag(player, spiritMetFlag(weaponId))
+
+    /** Records the first acquisition of a spirit-bearing weapon so the bond hub can surface it. */
+    fun onSpiritObtained(player: ServerPlayerEntity, weaponId: String) {
+        val definition = WeaponContentRegistry.weapon(weaponId) ?: return
+        if (definition.spirit == null) return
+        if (hasMetSpirit(player, weaponId)) return
+        StoryFlagService.setFlag(player, spiritMetFlag(weaponId))
+    }
+
+    // ---- 発見 (Discovery) ----
+
+    fun getRegionRecords(player: ServerPlayerEntity): List<GuideRegionRecord> {
+        return RegionContentRegistry.all().map { region ->
+            GuideRegionRecord(
+                regionId = region.id,
+                nameKey = region.nameKey,
+                descriptionKey = region.descriptionKey,
+                unlockRank = region.unlockRank,
+                discovered = RegionHooks.hasVisited(player, region.id)
+            )
+        }
+    }
+
+    // ---- 絆 (Spirit bond) ----
+
+    fun getSpiritBondRecords(player: ServerPlayerEntity): List<GuideSpiritBondRecord> {
+        val maxStage = ResonanceService.maxSpiritBondStage()
+        return WeaponContentRegistry.weaponDefinitions().mapNotNull { definition ->
+            val spirit = definition.spirit ?: return@mapNotNull null
+            val points = ResonanceService.getSpiritBondPoints(player, definition.id)
+            // Derive the stage from the points we already parsed instead of calling
+            // spiritBondStage(...), which would re-parse the raw bond map a second time per weapon.
+            val stage = ResonanceService.spiritBondStageForPoints(points)
+            val pointsForNextStage = if (stage >= maxStage) {
+                null
+            } else {
+                (ResonanceService.spiritBondStageThreshold(stage + 1) - points).coerceAtLeast(0)
+            }
+            val stageDefinition = spirit.bondStages.firstOrNull { it.stage == stage }
+            GuideSpiritBondRecord(
+                weaponId = definition.id,
+                nameKey = spirit.nameKey,
+                encountered = hasMetSpirit(player, definition.id) || points > 0,
+                stage = stage,
+                maxStage = maxStage,
+                points = points,
+                pointsForNextStage = pointsForNextStage,
+                currentStageTitleKey = stageDefinition?.titleKey,
+                currentStageStoryKey = stageDefinition?.storyKey
+            )
+        }
+    }
+
+    // ---- 達成記録 (Achievement summary) ----
+
+    fun getAchievementSummary(player: ServerPlayerEntity): GuideAchievementSummary {
+        val regions = getRegionRecords(player)
+        val spirits = getSpiritBondRecords(player)
+        return GuideAchievementSummary(
+            currentChapter = getPlayerChapter(player),
+            guideChaptersCompleted = getClaimedChapters(player).size,
+            guideTasksClaimed = getClaimedTasks(player).size,
+            storyStagesCleared = StoryProgressService.clearedChapterIds(player).size,
+            regionsDiscovered = regions.count { it.discovered },
+            regionsTotal = regions.size,
+            spiritsEncountered = spirits.count { it.encountered },
+            spiritsTotal = spirits.size,
+            spiritsMaxBonded = spirits.count { it.encountered && it.atMaxStage }
+        )
     }
 
     fun claimTaskReward(player: ServerPlayerEntity, taskId: String): Boolean {

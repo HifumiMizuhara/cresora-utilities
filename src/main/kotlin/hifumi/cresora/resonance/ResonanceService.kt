@@ -235,6 +235,18 @@ object ResonanceService {
         return 1
     }
 
+    /** Highest reachable spirit bond stage (1-indexed). */
+    fun maxSpiritBondStage(): Int = SPIRIT_BOND_STAGE_THRESHOLDS.size
+
+    /**
+     * Bond points required to reach [stage] (1-indexed). Stages outside `1..maxSpiritBondStage()`
+     * clamp to the nearest valid threshold, so callers can ask for "next stage" without bounds checks.
+     */
+    fun spiritBondStageThreshold(stage: Int): Int {
+        val index = (stage - 1).coerceIn(0, SPIRIT_BOND_STAGE_THRESHOLDS.size - 1)
+        return SPIRIT_BOND_STAGE_THRESHOLDS[index]
+    }
+
     fun currencyCount(player: ServerPlayerEntity, banner: ResonanceBannerDefinition): Int {
         return getCurrency(player, banner.currencyType())
     }
@@ -293,6 +305,7 @@ object ResonanceService {
 
         val updated = updateProgress(player, banner, rarity, obtainedFeatured)
         hifumi.cresora.guide.GuideService.onResonancePull(player, 1)
+        hifumi.cresora.guide.GuideService.onSpiritObtained(player, definition.id)
         return PullOutcome.Success(
             PullResult(
                 banner = banner,

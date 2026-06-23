@@ -404,6 +404,8 @@ object WeaponContentRegistry {
 
     fun weaponDefinitions(): List<WeaponDefinition> = weapons.values.sortedBy(WeaponDefinition::id)
 
+    fun weapon(id: String): WeaponDefinition? = weapons[id]
+
     fun requireWeapon(id: String): WeaponDefinition {
         return weapons[id] ?: error("Unknown weapon definition: $id")
     }

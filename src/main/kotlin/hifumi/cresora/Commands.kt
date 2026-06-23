@@ -11,6 +11,7 @@ import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.equipment.ArtifactUiFlow
 import hifumi.cresora.equipment.EquipmentContentRegistry
 import hifumi.cresora.equipment.EquipmentPlayerSupport
+import hifumi.cresora.guide.GuideService
 import hifumi.cresora.resonance.ResonanceCurrencyType
 import hifumi.cresora.resonance.ResonanceService
 import hifumi.cresora.story.StoryContentRegistry
@@ -33,6 +34,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import java.util.Locale
 
 object Commands {
@@ -68,6 +70,35 @@ object Commands {
                                 hifumi.cresora.story.StoryDialogueNetworking.startNpcDialogue(context.source.playerOrThrow, "spirit_guide_intro")
                                 1
                             }
+                    )
+                    .then(
+                        literal("guide")
+                            .requires { source -> source.entity is ServerPlayerEntity }
+                            .executes { context ->
+                                showGuideOverview(context.source, context.source.playerOrThrow)
+                                1
+                            }
+                            .then(
+                                literal("discovery")
+                                    .executes { context ->
+                                        showGuideDiscovery(context.source, context.source.playerOrThrow)
+                                        1
+                                    }
+                            )
+                            .then(
+                                literal("bond")
+                                    .executes { context ->
+                                        showGuideBonds(context.source, context.source.playerOrThrow)
+                                        1
+                                    }
+                            )
+                            .then(
+                                literal("achievements")
+                                    .executes { context ->
+                                        showGuideAchievements(context.source, context.source.playerOrThrow)
+                                        1
+                                    }
+                            )
                     )
                     .then(
                         literal("portal")
@@ -361,6 +392,15 @@ object Commands {
             )
 
             dispatcher.register(
+                literal("cresora_records")
+                    .requires { source -> source.entity is ServerPlayerEntity }
+                    .executes { context ->
+                        ArtifactUiFlow.openRecords(context.source.playerOrThrow)
+                        1
+                    }
+            )
+
+            dispatcher.register(
                 literal("cresora_domain")
                     .requires { source -> source.entity is ServerPlayerEntity }
                     .executes { context ->
@@ -586,6 +626,115 @@ object Commands {
                 false
             )
         }
+    }
+
+    private fun showGuideOverview(source: ServerCommandSource, player: ServerPlayerEntity) {
+        val summary = GuideService.getAchievementSummary(player)
+        source.sendFeedback({ Text.translatable("commands.cresora.guide.header").formatted(Formatting.GOLD) }, false)
+        source.sendFeedback(
+            {
+                Text.translatable(
+                    "commands.cresora.guide.overview",
+                    summary.currentChapter,
+                    summary.regionsDiscovered,
+                    summary.regionsTotal,
+                    summary.spiritsEncountered,
+                    summary.spiritsTotal
+                ).formatted(Formatting.GRAY)
+            },
+            false
+        )
+        source.sendFeedback({ Text.translatable("commands.cresora.guide.hint").formatted(Formatting.DARK_GRAY) }, false)
+    }
+
+    private fun showGuideDiscovery(source: ServerCommandSource, player: ServerPlayerEntity) {
+        val records = GuideService.getRegionRecords(player)
+        val discovered = records.count { it.discovered }
+        source.sendFeedback(
+            { Text.translatable("commands.cresora.guide.discovery.header", discovered, records.size).formatted(Formatting.GOLD) },
+            false
+        )
+        if (records.isEmpty()) {
+            source.sendFeedback({ Text.translatable("commands.cresora.guide.discovery.empty").formatted(Formatting.DARK_GRAY) }, false)
+            return
+        }
+        for (record in records) {
+            source.sendFeedback(
+                {
+                    if (record.discovered) {
+                        Text.literal("◆ ").formatted(Formatting.GREEN)
+                            .append(Text.translatable(record.nameKey).formatted(Formatting.WHITE))
+                    } else {
+                        Text.literal("◇ ").formatted(Formatting.DARK_GRAY)
+                            .append(Text.translatable("commands.cresora.guide.discovery.undiscovered").formatted(Formatting.DARK_GRAY))
+                            .append(Text.literal(" — ").formatted(Formatting.DARK_GRAY))
+                            .append(Text.translatable("message.cresora.region.locked", record.unlockRank).formatted(Formatting.DARK_GRAY))
+                    }
+                },
+                false
+            )
+        }
+    }
+
+    private fun showGuideBonds(source: ServerCommandSource, player: ServerPlayerEntity) {
+        val records = GuideService.getSpiritBondRecords(player)
+        val encountered = records.count { it.encountered }
+        source.sendFeedback(
+            { Text.translatable("commands.cresora.guide.bond.header", encountered, records.size).formatted(Formatting.GOLD) },
+            false
+        )
+        if (records.isEmpty()) {
+            source.sendFeedback({ Text.translatable("commands.cresora.guide.bond.empty").formatted(Formatting.DARK_GRAY) }, false)
+            return
+        }
+        for (record in records) {
+            source.sendFeedback(
+                {
+                    if (!record.encountered) {
+                        Text.literal("◇ ").formatted(Formatting.DARK_GRAY)
+                            .append(Text.translatable("commands.cresora.guide.bond.unmet").formatted(Formatting.DARK_GRAY))
+                    } else {
+                        val line = Text.literal("◆ ").formatted(Formatting.LIGHT_PURPLE)
+                            .append(Text.translatable(record.nameKey).formatted(Formatting.WHITE))
+                            .append(
+                                Text.translatable("commands.cresora.guide.bond.stage", record.stage, record.maxStage)
+                                    .formatted(Formatting.AQUA)
+                            )
+                        val next = record.pointsForNextStage
+                        if (next != null) {
+                            line.append(
+                                Text.translatable("commands.cresora.guide.bond.next", next).formatted(Formatting.GRAY)
+                            )
+                        } else {
+                            line.append(Text.translatable("commands.cresora.guide.bond.max").formatted(Formatting.GOLD))
+                        }
+                        line
+                    }
+                },
+                false
+            )
+        }
+    }
+
+    private fun showGuideAchievements(source: ServerCommandSource, player: ServerPlayerEntity) {
+        val summary = GuideService.getAchievementSummary(player)
+        source.sendFeedback({ Text.translatable("commands.cresora.guide.achievements.header").formatted(Formatting.GOLD) }, false)
+        source.sendFeedback(
+            { Text.translatable("commands.cresora.guide.achievements.chapters", summary.guideChaptersCompleted, summary.guideTasksClaimed).formatted(Formatting.GRAY) },
+            false
+        )
+        source.sendFeedback(
+            { Text.translatable("commands.cresora.guide.achievements.story", summary.storyStagesCleared).formatted(Formatting.GRAY) },
+            false
+        )
+        source.sendFeedback(
+            { Text.translatable("commands.cresora.guide.achievements.regions", summary.regionsDiscovered, summary.regionsTotal).formatted(Formatting.GRAY) },
+            false
+        )
+        source.sendFeedback(
+            { Text.translatable("commands.cresora.guide.achievements.spirits", summary.spiritsEncountered, summary.spiritsTotal, summary.spiritsMaxBonded).formatted(Formatting.GRAY) },
+            false
+        )
     }
 
     private fun buildResonanceTargetLine(player: ServerPlayerEntity): Text {

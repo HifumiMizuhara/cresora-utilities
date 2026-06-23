@@ -1460,19 +1460,22 @@ LIMITED ★5 抽選の概要:
 ファイル:
 
 - `GuideContentRegistry.kt`
+- `GuideRecords.kt`
 - `GuideProgressAccess.kt`
 - `GuideService.kt`
 - `GuideScreenHandler.kt`
 - `GuideScreen.kt`
+- `RecordsScreenHandler.kt` / `RecordsDisplayStackFactory.kt` / `RecordsScreen.kt`（記録ハブ GUI）
 
 责务:
 
 - 新手引导（冒险之证）任务系统。按章节管理引导任务，完成任务获得 CSC 及和弦奖励。
+- **记录中枢（发现・羁绊・达成记录）**：在新手任务之外，`GuideService` 还作为只读聚合中枢，统计玩家的地区发现、灵之羁绊与达成进度。所有记录均由既有持久化数据（`StoryFlagService` 访问标记、`ResonanceService` 羁绊点数、`StoryProgressService` 通关记录）实时计算，**不引入新的持久化字段**；唯一新写入的是首次获得带灵武器时记录的 `spirit_met_<weaponId>` 故事旗标。
 - 玩家进度的保存与加载（`ServerPlayerEntityMixin` 扩展 `GuideProgressAccess` 支持 NBT 序列化与数据在重生时的复制）。
 - 事件触发与进度自动更新（击杀敌对怪物、共鸣抽卡、升级武器、通关剧情等）。
-- UI 显示与奖励手动领取，通过主菜单（Slot 0）或者 UI Flow 开启引导界面。
+- UI 显示与奖励手动领取，通过主菜单（Slot 0）或者 UI Flow 开启引导界面；记录中枢另通过 `/cresora guide` 系列子命令以文本形式呈现。
 
-主 API:
+任务 API:
 
 - `GuideService.getPlayerChapter(player)`
 - `GuideService.getTaskProgress(player, task)`
@@ -1481,6 +1484,31 @@ LIMITED ★5 抽選の概要:
 - `GuideService.onKillHostile(player)`
 - `GuideService.onResonancePull(player, count)`
 - `GuideService.copyTo(oldPlayer, newPlayer)`
+
+记录中枢 API（`GuideRecords.kt` 定义 `GuideRegionRecord` / `GuideSpiritBondRecord` / `GuideAchievementSummary` 数据类）:
+
+- 发现：`GuideService.getRegionRecords(player)`（发现数/总数由 `record.discovered` 计数与 `list.size` 派生）
+  - 复用 `RegionHooks.hasVisited(player, regionId)`（新公开的 `VISITED_FLAG_PREFIX` / `visitedFlag(id)` / `hasVisited(...)` 辅助）。
+- 羁绊：`GuideService.getSpiritBondRecords(player)`（邂逅数由 `record.encountered` 计数派生）/ `hasMetSpirit(player, weaponId)` / `onSpiritObtained(player, weaponId)` / `spiritMetFlag(weaponId)`
+  - 枚举 `WeaponContentRegistry.weaponDefinitions()` 中带 `spirit` 的武器；阶段与点数来自 `ResonanceService.spiritBondStage(...)` 与新公开的 `maxSpiritBondStage()` / `spiritBondStageThreshold(stage)`。`onSpiritObtained` 在 `ResonanceService.pull` 排出武器后调用，记录首次邂逅。
+- 达成记录：`GuideService.getAchievementSummary(player)` 汇总引导章节、已领取任务、剧情通关、地区发现、灵邂逅与满羁绊数量。
+
+命令（均要求玩家上下文）:
+
+- `/cresora guide` — 概览（当前章节、地区与灵的发现进度）。
+- `/cresora guide discovery` — 逐条列出各地区的发现/未发现状态（未发现地区以 `???` + 解锁冒险阶提示遮蔽）。
+- `/cresora guide bond` — 列出各灵的羁绊阶段与距下一阶所需点数（未邂逅以 `???` 遮蔽）。
+- `/cresora guide achievements` — 达成记录汇总。
+- `/cresora_records` — 打开记录中枢 GUI（亦由冒险之证书页第 6 个「记录」标签触发）。
+
+记录中枢 GUI（`RecordsScreen` / `RecordsScreenHandler`）:
+- `ArtifactBookScreenBase` 现支持 6 个书页标签（见闻/演奏/讨伐/祈愿/珍品/**记录**）；第 6 个标签路由到 `cresora_records` 命令，对所有书页风格界面统一生效。`RecordsScreen.getActiveTab()` 返回 6。
+- `RecordsScreenHandler` 为服务端权威：属性委托保存 `activeSubTab`(0=发现/1=羁绊/2=达成)、`page`、`totalPages`、左页比率（current/total）及 `selectedEntry`（当前选中的条目绝对索引，`NO_SELECTION=-1` 表示未选）；显示槽位（18 格中：0/1/2=子标签，6/7=上/下页，8=返回，9..14=最多 6 条目，15=详情面板）由 `GuideService` 聚合结果填充并通过同步槽位（CUSTOM_NAME+LORE）下发。子标签切换、翻页与条目选择全部经由 `onSlotClick` 在服务端处理（每页 `ENTRIES_PER_PAGE=6`）；切换子标签或翻页会清空选中状态。
+- 选中条目时，槽 15 由 `RecordsDisplayStackFactory.regionDetail` / `spiritDetail` 填充长文详情栈，槽 9..14 中对应条目由 `selectedMarker` 标记「▶」。`RecordsScreen` 在左页将详情栈的 CUSTOM_NAME 作为标题、LORE 前两行作为状态(stage/next-or-max)、第 3 行作为当前阶段标题、第 4 行（`currentStageStoryKey`）经 `textRenderer.wrapLines` 折行渲染为物语段落——这是 `storyKey` 在仓库内首次被消费。未选中时左页退回显示聚合比率。
+- `RecordsDisplayStackFactory` 将每条记录编码为带名称与 lore 的 `ItemStack`（地区：已发现 `filled_map` / 未发现 `map`+`???`；灵：已邂逅 `amethyst_shard`+阶段/点数 / 未邂逅 `gray_dye`+`???`；达成：固定 6 行汇总）。
+- `RecordsScreen` 客户端仅转发点击（`clickSlot`）并渲染同步槽位/属性：左页为子标签按钮与（选中时）详情面板或（未选中时）比率，右页为条目卡片列表，底部为翻页与页码、返回按钮。
+- `/cresora guide` 及其 `discovery` / `bond` / `achievements` 子命令以 `.requires { entity is ServerPlayerEntity }` 在注册树根部预检玩家上下文；`discovery` 与 `bond` 在记录为空时分别输出 `commands.cresora.guide.discovery.empty` / `commands.cresora.guide.bond.empty` 占位文本。
+- `GuideService.getSpiritBondRecords` 由 `ResonanceService.spiritBondStageForPoints(points)` 推导阶段，避免对每件武器二次解析原始羁绊映射（2N→N 次解析）。
 
 UI 与界面设计 (2026-06-15 重构):
 - 冒险之证 UI 移除了玩家物品栏的注册，不再渲染玩家背包格子。
