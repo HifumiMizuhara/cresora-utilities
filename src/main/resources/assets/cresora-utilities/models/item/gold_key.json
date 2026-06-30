@@ -1,3 +1,6 @@
 {
-  "parent": "minecraft:item/trial_key"
+  "parent": "minecraft:item/trial_key",
+  "textures": {
+    "layer0": "cresora-utilities:item/gold_key"
+  }
 }

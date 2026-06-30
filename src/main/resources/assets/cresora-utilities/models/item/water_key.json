@@ -1,3 +1,6 @@
 {
-  "parent": "minecraft:item/ominous_trial_key"
+  "parent": "minecraft:item/ominous_trial_key",
+  "textures": {
+    "layer0": "cresora-utilities:item/water_key"
+  }
 }
