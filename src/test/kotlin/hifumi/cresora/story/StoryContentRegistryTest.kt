@@ -14,7 +14,7 @@ class StoryContentRegistryTest {
 
     @Test
     fun testStoryContentJsonIncludesTutorialChapter() {
-        val resourcePath = Path.of("src/main/resources/data/cresora-utilities/cresora/story_content.json")
+        val resourcePath = Path.of("build/generated/cresora/resources/data/cresora-utilities/cresora/story_content.json")
         val root = Files.newInputStream(resourcePath).use { stream ->
             InputStreamReader(stream).use { reader ->
                 JsonParser.parseReader(reader).asJsonObject

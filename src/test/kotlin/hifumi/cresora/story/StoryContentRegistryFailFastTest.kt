@@ -49,7 +49,7 @@ class StoryContentRegistryFailFastTest {
     // --- Property 2: Preservation Tests ---
 
     private fun loadStoryJson(): com.google.gson.JsonObject {
-        val resourcePath = Path.of("src/main/resources/data/cresora-utilities/cresora/story_content.json")
+        val resourcePath = Path.of("build/generated/cresora/resources/data/cresora-utilities/cresora/story_content.json")
         assertTrue(Files.exists(resourcePath), "story_content.json must exist")
         return Files.newInputStream(resourcePath).use { stream ->
             InputStreamReader(stream).use { reader ->
