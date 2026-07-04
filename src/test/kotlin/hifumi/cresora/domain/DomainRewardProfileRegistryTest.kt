@@ -59,6 +59,17 @@ class DomainRewardProfileRegistryTest {
         assertEquals(1, cscTraining.proofReward?.minCount)
         assertEquals(2, cscTraining.proofReward?.maxCount)
 
+        val resonancePractice = bundle.rewardProfiles.find { it.id == "resonance_practice" }
+        assertNotNull(resonancePractice, "resonance_practice profile should exist")
+        assertNull(resonancePractice!!.artifactReward, "resonance_practice should not have artifactReward")
+        assertNull(resonancePractice.weaponFragmentReward, "resonance_practice should not have weaponFragmentReward")
+        assertNull(resonancePractice.proofReward, "resonance_practice should not have proofReward")
+        assertNull(resonancePractice.insightReward, "resonance_practice should not have insightReward")
+        assertEquals(300, resonancePractice.currencyReward.creditsBase)
+        assertEquals(10, resonancePractice.currencyReward.rankXpBase)
+        assertEquals(10, resonancePractice.chordProgressionReward)
+        assertEquals(5, resonancePractice.substituteChordReward)
+
         // Verify backward compatibility of profiles without proofReward, insightReward, or weaponFragmentReward
         val hinagataHunt = bundle.rewardProfiles.find { it.id == "hinagata_hunt" }
         assertNotNull(hinagataHunt, "hinagata_hunt profile should exist")
@@ -128,4 +139,3 @@ class DomainRewardProfileRegistryTest {
         assertEquals(1000, profile.currencyReward.creditsBase)
     }
 }
-

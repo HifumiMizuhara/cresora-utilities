@@ -10,6 +10,7 @@ enum class TokenType {
     KEYWORD_ARTIFACT, KEYWORD_SET,
     KEYWORD_MOVEMENT, KEYWORD_PHASE, KEYWORD_PRE_BATTLE, KEYWORD_BATTLE, KEYWORD_POST_BATTLE,
     KEYWORD_DIALOGUE, KEYWORD_COMBAT_HINTS, KEYWORD_GRANTED_WEAPONS, KEYWORD_BATTLE_OBJECTIVE,
+    KEYWORD_RESONANT_CHORD_TUTORIAL, KEYWORD_STEP,
     KEYWORD_WAVE, KEYWORD_SPAWNS, KEYWORD_SPAWN, KEYWORD_MODIFIERS, KEYWORD_REWARDS,
     KEYWORD_RESONANCE_CURRENCIES,
     EOF
@@ -44,6 +45,8 @@ class Lexer(private val source: String) {
         "combat_hints" to TokenType.KEYWORD_COMBAT_HINTS,
         "granted_weapons" to TokenType.KEYWORD_GRANTED_WEAPONS,
         "battle_objective" to TokenType.KEYWORD_BATTLE_OBJECTIVE,
+        "resonant_chord_tutorial" to TokenType.KEYWORD_RESONANT_CHORD_TUTORIAL,
+        "step" to TokenType.KEYWORD_STEP,
         "wave" to TokenType.KEYWORD_WAVE,
         "spawns" to TokenType.KEYWORD_SPAWNS,
         "spawn" to TokenType.KEYWORD_SPAWN,

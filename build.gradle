@@ -142,13 +142,38 @@ tasks.named('test') {
 
 task compileAssets(type: JavaExec) {
     group = "cresora"
+    description = "Compiles .cresora, .artifact, and .movement DSL files to Kotlin code and JSON"
     mainClass = "hifumi.cresora.compiler.MainKt"
     classpath = sourceSets.compiler.runtimeClasspath
+
+    // Inputs: DSL source files and the compiler itself
+    inputs.dir("src/main/cresora")
+    inputs.files(sourceSets.compiler.output)
+
+    // Generated outputs
+    def kotlinOutDir = layout.buildDirectory.dir("generated/cresora/kotlin")
+    def resourceOutDir = layout.buildDirectory.dir("generated/cresora/resources")
+    outputs.dir(kotlinOutDir)
+    outputs.dir(resourceOutDir)
+
+    jvmArgs = [
+        "-Dcresora.output.kotlin=${kotlinOutDir.get().asFile.absolutePath}",
+        "-Dcresora.output.resources=${resourceOutDir.get().asFile.absolutePath}",
+        "-Dcresora.source.resources=${file('src/main/resources').absolutePath}"
+    ]
+
     standardOutput = System.out
     errorOutput = System.err
 }
 
+// Wire generated sources into the main source set
+sourceSets.main {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/cresora/kotlin"))
+    resources.srcDir(layout.buildDirectory.dir("generated/cresora/resources"))
+}
+
 compileKotlin.dependsOn compileAssets
+processResources.dependsOn compileAssets
 
 task generateWeapons {
     dependsOn compileAssets

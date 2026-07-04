@@ -107,15 +107,23 @@ class MovementCompiler(
             if (movement.grantedWeapons.isNotEmpty()) {
                 val grantedWeaponsArray = JsonArray()
                 for (gw in movement.grantedWeapons) {
-                    val gwObj = JsonObject()
-                    gwObj.addProperty("weaponId", gw.weaponId)
-                    gwObj.addProperty("rarity", mapRarity(gw.rarity))
-                    gwObj.addProperty("baseLevel", gw.baseLevel)
-                    gwObj.addProperty("skillLevel", gw.skillLevel)
-                    gwObj.addProperty("removeOnExit", gw.removeOnExit)
-                    grantedWeaponsArray.add(gwObj)
+                    grantedWeaponsArray.add(grantedWeaponJson(gw))
                 }
                 chapterObj.add("grantedWeapons", grantedWeaponsArray)
+            }
+
+            if (movement.resonantChordTutorialSteps.isNotEmpty()) {
+                val tutorialStepsArray = JsonArray()
+                for (step in movement.resonantChordTutorialSteps) {
+                    val stepObj = JsonObject()
+                    stepObj.addProperty("reactionKey", step.reactionKey)
+                    stepObj.addProperty("effectKey", step.effectKey)
+                    val weaponsArray = JsonArray()
+                    step.weapons.forEach { weaponsArray.add(grantedWeaponJson(it)) }
+                    stepObj.add("weapons", weaponsArray)
+                    tutorialStepsArray.add(stepObj)
+                }
+                chapterObj.add("resonantChordTutorialSteps", tutorialStepsArray)
             }
 
             // battleObjective - omit if defeat_all/0 default
@@ -234,5 +242,13 @@ class MovementCompiler(
         "THREE_STAR", "3_STAR" -> "3_star"
         "TWO_STAR", "2_STAR" -> "2_star"
         else -> rarity.lowercase()
+    }
+
+    private fun grantedWeaponJson(weapon: GrantedWeaponNode): JsonObject = JsonObject().apply {
+        addProperty("weaponId", weapon.weaponId)
+        addProperty("rarity", mapRarity(weapon.rarity))
+        addProperty("baseLevel", weapon.baseLevel)
+        addProperty("skillLevel", weapon.skillLevel)
+        addProperty("removeOnExit", weapon.removeOnExit)
     }
 }

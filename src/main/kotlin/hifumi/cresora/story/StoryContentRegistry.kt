@@ -77,6 +77,22 @@ data class StoryGrantedWeaponDefinition(
     }
 }
 
+data class StoryResonantChordTutorialStepDefinition(
+    val reactionKey: String,
+    val effectKey: String,
+    val weapons: List<StoryGrantedWeaponDefinition>
+) {
+    companion object {
+        val CODEC: Codec<StoryResonantChordTutorialStepDefinition> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                Codec.STRING.fieldOf("reactionKey").forGetter(StoryResonantChordTutorialStepDefinition::reactionKey),
+                Codec.STRING.fieldOf("effectKey").forGetter(StoryResonantChordTutorialStepDefinition::effectKey),
+                StoryGrantedWeaponDefinition.CODEC.listOf().fieldOf("weapons").forGetter(StoryResonantChordTutorialStepDefinition::weapons)
+            ).apply(instance, ::StoryResonantChordTutorialStepDefinition)
+        }
+    }
+}
+
 data class StoryDialogueLine(
     val speaker: String? = null,
     val speakerId: String? = null,
@@ -173,6 +189,7 @@ data class StoryChapterDefinition(
     val preBattleStory: List<StoryDialogueLine>,
     val combatHints: List<StoryDialogueLine>,
     val grantedWeapons: List<StoryGrantedWeaponDefinition>,
+    val resonantChordTutorialSteps: List<StoryResonantChordTutorialStepDefinition> = emptyList(),
     val battleObjective: StoryBattleObjectiveDefinition = StoryBattleObjectiveDefinition(),
     val battle: List<StoryBattleWaveDefinition>,
     val postBattleStory: List<StoryDialogueLine>,
@@ -198,6 +215,7 @@ data class StoryChapterDefinition(
             val preBattleStory: List<StoryDialogueLine>,
             val combatHints: List<StoryDialogueLine>,
             val grantedWeapons: List<StoryGrantedWeaponDefinition>,
+            val resonantChordTutorialSteps: List<StoryResonantChordTutorialStepDefinition>,
             val battleObjective: StoryBattleObjectiveDefinition,
             val battle: List<StoryBattleWaveDefinition>,
             val postBattleStory: List<StoryDialogueLine>,
@@ -235,6 +253,7 @@ data class StoryChapterDefinition(
                 StoryDialogueLine.CODEC.listOf().optionalFieldOf("preBattleStory", emptyList()).forGetter(ChapterContent::preBattleStory),
                 StoryDialogueLine.CODEC.listOf().optionalFieldOf("combatHints", emptyList()).forGetter(ChapterContent::combatHints),
                 StoryGrantedWeaponDefinition.CODEC.listOf().optionalFieldOf("grantedWeapons", emptyList()).forGetter(ChapterContent::grantedWeapons),
+                StoryResonantChordTutorialStepDefinition.CODEC.listOf().optionalFieldOf("resonantChordTutorialSteps", emptyList()).forGetter(ChapterContent::resonantChordTutorialSteps),
                 StoryBattleObjectiveDefinition.CODEC.optionalFieldOf("battleObjective", StoryBattleObjectiveDefinition()).forGetter(ChapterContent::battleObjective),
                 StoryBattleWaveDefinition.CODEC.listOf().optionalFieldOf("battle", emptyList()).forGetter(ChapterContent::battle),
                 StoryDialogueLine.CODEC.listOf().optionalFieldOf("postBattleStory", emptyList()).forGetter(ChapterContent::postBattleStory),
@@ -255,7 +274,7 @@ data class StoryChapterDefinition(
                 CONTENT_CODEC.forGetter { ch ->
                     ChapterContent(
                         ch.preBattleStory, ch.combatHints, ch.grantedWeapons,
-                        ch.battleObjective, ch.battle, ch.postBattleStory, ch.rewards
+                        ch.resonantChordTutorialSteps, ch.battleObjective, ch.battle, ch.postBattleStory, ch.rewards
                     )
                 }
             ).apply(instance) { base, content ->
@@ -265,7 +284,7 @@ data class StoryChapterDefinition(
                     base.unlockRank, base.prerequisiteChapterId, base.requiredRegionId,
                     base.requiredSpiritId, base.requiredBondStage,
                     content.preBattleStory, content.combatHints, content.grantedWeapons,
-                    content.battleObjective, content.battle, content.postBattleStory, content.rewards
+                    content.resonantChordTutorialSteps, content.battleObjective, content.battle, content.postBattleStory, content.rewards
                 )
             }
         }
@@ -293,15 +312,9 @@ object StoryContentRegistry {
     private var chapters: Map<String, StoryChapterDefinition> = emptyMap()
 
     fun init() {
-        applyBundle(defaultBundle())
-        runCatching { loadBundledContent() }
-            .onSuccess { bundle ->
-                applyBundle(bundle)
-                logger.info("Loaded story content from {}", CONTENT_RESOURCE)
-            }
-            .onFailure { throwable ->
-                logger.error("Failed to load story content from {}. Using built-in defaults.", CONTENT_RESOURCE, throwable)
-            }
+        val bundle = loadBundledContent()
+        applyBundle(bundle)
+        logger.info("Loaded story content from {}", CONTENT_RESOURCE)
     }
 
     fun chapters(): List<StoryChapterDefinition> {
@@ -327,7 +340,8 @@ object StoryContentRegistry {
     fun groupIdOf(chapter: StoryChapterDefinition): String = chapter.groupId?.takeUnless(String::isBlank) ?: chapterGroupOf(chapter.id)
 
     fun requiredFreeMainSlots(chapter: StoryChapterDefinition): Int {
-        return chapter.grantedWeapons.size.coerceAtLeast(1)
+        val tutorialWeaponCount = chapter.resonantChordTutorialSteps.maxOfOrNull { it.weapons.size } ?: 0
+        return maxOf(chapter.grantedWeapons.size, tutorialWeaponCount, 1)
     }
 
     private fun loadBundledContent(): StoryContentBundle {
@@ -391,13 +405,35 @@ object StoryContentRegistry {
                 require(rewardDomainId.isNotBlank()) { "Story chapter '${chapter.id}' contains blank domainRewardIds entry" }
                 DomainContentRegistry.requireDomain(rewardDomainId)
             }
-            for (grantedWeapon in chapter.grantedWeapons) {
-                val definition = WeaponContentRegistry.requireWeapon(grantedWeapon.weaponId)
-                require(grantedWeapon.baseLevel in 1..definition.maxBaseLevel) {
-                    "Story chapter '${chapter.id}' has invalid baseLevel ${grantedWeapon.baseLevel} for '${grantedWeapon.weaponId}'"
+            chapter.grantedWeapons.forEach { validateGrantedWeapon(chapter.id, it) }
+            if (chapter.resonantChordTutorialSteps.isNotEmpty()) {
+                require(chapter.grantedWeapons.isEmpty()) {
+                    "Story chapter '${chapter.id}' cannot combine grantedWeapons with resonantChordTutorialSteps"
                 }
-                require(grantedWeapon.skillLevel in 1..definition.maxSkillLevel) {
-                    "Story chapter '${chapter.id}' has invalid skillLevel ${grantedWeapon.skillLevel} for '${grantedWeapon.weaponId}'"
+                require(chapter.battleObjective == StoryBattleObjectiveDefinition()) {
+                    "Story chapter '${chapter.id}' cannot combine battleObjective with resonantChordTutorialSteps"
+                }
+                val reactionKeys = chapter.resonantChordTutorialSteps.map(StoryResonantChordTutorialStepDefinition::reactionKey)
+                require(reactionKeys.distinct().size == reactionKeys.size) {
+                    "Story chapter '${chapter.id}' resonant chord tutorial reaction keys must be unique"
+                }
+                for (step in chapter.resonantChordTutorialSteps) {
+                    require(step.reactionKey.isNotBlank()) {
+                        "Story chapter '${chapter.id}' has a blank resonant chord tutorial reactionKey"
+                    }
+                    require(step.effectKey.isNotBlank()) {
+                        "Story chapter '${chapter.id}' tutorial step '${step.reactionKey}' has a blank effectKey"
+                    }
+                    require(step.weapons.size == 2) {
+                        "Story chapter '${chapter.id}' tutorial step '${step.reactionKey}' must grant exactly two weapons"
+                    }
+                    require(step.weapons.map(StoryGrantedWeaponDefinition::weaponId).distinct().size == step.weapons.size) {
+                        "Story chapter '${chapter.id}' tutorial step '${step.reactionKey}' must grant two distinct weapons"
+                    }
+                    require(step.weapons.all(StoryGrantedWeaponDefinition::removeOnExit)) {
+                        "Story chapter '${chapter.id}' tutorial step '${step.reactionKey}' weapons must set removeOnExit"
+                    }
+                    step.weapons.forEach { validateGrantedWeapon(chapter.id, it) }
                 }
             }
             if (linkedDomainId == null) {
@@ -423,163 +459,14 @@ object StoryContentRegistry {
         chapters = chapterMap
     }
 
-    private fun defaultBundle(): StoryContentBundle {
-        return StoryContentBundle(
-            chapters = listOf(
-                StoryChapterDefinition(
-                    id = "0-0",
-                    displayName = "0-0",
-                    sortOrder = 0,
-                    titleTextId = "story.cresora.chapter.0_0.title",
-                    domainRewardIds = listOf("rondo_forge", "masquerade_soiree"),
-                    unlockRank = AdventureRankProgression.MIN_RANK,
-                    prerequisiteChapterId = null,
-                    preBattleStory = listOf(
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_0.speaker", textId = "story.cresora.chapter.0_0.pre_0")
-                    ),
-                    combatHints = emptyList(),
-                    grantedWeapons = emptyList(),
-                    battle = listOf(
-                        StoryBattleWaveDefinition(
-                            enemyRank = 2,
-                            spawnDelayTicks = 40,
-                            spawns = listOf(
-                                StoryBattleSpawnDefinition("minecraft:zombie", 1)
-                            )
-                        )
-                    ),
-                    postBattleStory = listOf(
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_0.speaker", textId = "story.cresora.chapter.0_0.post_0")
-                    ),
-                    rewards = StoryRewardDefinition(
-                        credits = 3450,
-                        resonanceCurrencies = listOf(
-                            StoryCurrencyRewardDefinition(ResonanceCurrencyType.SUBSTITUTE_CHORD, 100),
-                            StoryCurrencyRewardDefinition(ResonanceCurrencyType.CHORD_PROGRESSION, 100)
-                        )
-                    )
-                ),
-                StoryChapterDefinition(
-                    id = "0-1",
-                    displayName = "0-1",
-                    sortOrder = 10,
-                    titleTextId = "story.cresora.chapter.0_1.title",
-                    domainRewardIds = listOf("credit_drill"),
-                    unlockRank = AdventureRankProgression.MIN_RANK,
-                    prerequisiteChapterId = "0-0",
-                    preBattleStory = listOf(
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.unknown", textId = "story.cresora.chapter.0_1.pre_0"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.unknown", textId = "story.cresora.chapter.0_1.pre_1"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.pre_2"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.player", textId = "story.cresora.chapter.0_1.pre_3"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.pre_4"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.unknown", textId = "story.cresora.chapter.0_1.pre_5"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.pre_6"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.pre_7"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.unknown", textId = "story.cresora.chapter.0_1.pre_8"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.pre_9"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.pre_10"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.pre_11"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.pre_12"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.pre_13")
-                    ),
-                    combatHints = listOf(
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.hint_0"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.hint_1"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.hint_2")
-                    ),
-                    grantedWeapons = listOf(
-                        StoryGrantedWeaponDefinition("lakeside_stride", WeaponRarity.FIVE_STAR, 60, 10, true),
-                        StoryGrantedWeaponDefinition("rondo_melody", WeaponRarity.TWO_STAR, 60, 10, true)
-                    ),
-                    battle = listOf(
-                        StoryBattleWaveDefinition(
-                            enemyRank = 30,
-                            spawnDelayTicks = 40,
-                            spawns = listOf(
-                                StoryBattleSpawnDefinition("minecraft:zombie", 1)
-                            )
-                        )
-                    ),
-                    postBattleStory = listOf(
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.player", textId = "story.cresora.chapter.0_1.post_0"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.player", textId = "story.cresora.chapter.0_1.post_1"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.post_2"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.post_3"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.post_4"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.player", textId = "story.cresora.chapter.0_1.post_5"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.post_6"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.post_7"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_1.post_8"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.player", textId = "story.cresora.chapter.0_1.post_9"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.lumine", textId = "story.cresora.chapter.0_1.post_10"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_1.speaker.player", textId = "story.cresora.chapter.0_1.post_11")
-                    ),
-                    rewards = StoryRewardDefinition(0, emptyList())
-                ),
-                StoryChapterDefinition(
-                    id = "0-2",
-                    displayName = "0-2",
-                    sortOrder = 20,
-                    titleTextId = "story.cresora.chapter.0_2.title",
-                    unlockRank = AdventureRankProgression.MIN_RANK,
-                    prerequisiteChapterId = "0-1",
-                    preBattleStory = listOf(
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_0"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_1"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_2"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_3"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.oldman", textId = "story.cresora.chapter.0_2.pre_4"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.player", textId = "story.cresora.chapter.0_2.pre_5"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.oldman", textId = "story.cresora.chapter.0_2.pre_6"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.oldman", textId = "story.cresora.chapter.0_2.pre_7"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_8"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.player", textId = "story.cresora.chapter.0_2.pre_9"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.oldman", textId = "story.cresora.chapter.0_2.pre_10"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_11"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.pre_12")
-                    ),
-                    combatHints = listOf(
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.hint_0"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.hint_1"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.hint_2")
-                    ),
-                    grantedWeapons = listOf(
-                        StoryGrantedWeaponDefinition("rondo_melody", WeaponRarity.TWO_STAR, 60, 10, true)
-                    ),
-                    battleObjective = StoryBattleObjectiveDefinition(
-                        type = StoryBattleObjectiveType.SURVIVE_TIME,
-                        durationSeconds = 45
-                    ),
-                    battle = listOf(
-                        StoryBattleWaveDefinition(
-                            enemyRank = 50,
-                            spawnDelayTicks = 40,
-                            spawns = listOf(
-                                StoryBattleSpawnDefinition("minecraft:skeleton", 1)
-                            ),
-                            modifiers = StoryBattleModifierDefinition(
-                                damageReductionPercent = 100.0,
-                                trueDamageImmune = true
-                            )
-                        )
-                    ),
-                    postBattleStory = listOf(
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.post_0"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.lumine", textId = "story.cresora.chapter.0_2.post_1"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.player", textId = "story.cresora.chapter.0_2.post_2"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.post_3"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.lumine", textId = "story.cresora.chapter.0_2.post_4"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.player", textId = "story.cresora.chapter.0_2.post_5"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.lumine", textId = "story.cresora.chapter.0_2.post_6"),
-                        StoryDialogueLine(textId = "story.cresora.chapter.0_2.post_7"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.player", textId = "story.cresora.chapter.0_2.post_8"),
-                        StoryDialogueLine(speakerId = "story.cresora.chapter.0_2.speaker.lumine", textId = "story.cresora.chapter.0_2.post_9")
-                    ),
-                    rewards = StoryRewardDefinition(0, emptyList())
-                )
-            )
-        )
+    private fun validateGrantedWeapon(chapterId: String, grantedWeapon: StoryGrantedWeaponDefinition) {
+        val definition = WeaponContentRegistry.requireWeapon(grantedWeapon.weaponId)
+        require(grantedWeapon.baseLevel in 1..definition.maxBaseLevel) {
+            "Story chapter '$chapterId' has invalid baseLevel ${grantedWeapon.baseLevel} for '${grantedWeapon.weaponId}'"
+        }
+        require(grantedWeapon.skillLevel in 1..definition.maxSkillLevel) {
+            "Story chapter '$chapterId' has invalid skillLevel ${grantedWeapon.skillLevel} for '${grantedWeapon.weaponId}'"
+        }
     }
 
     private fun chapterGroupNumericKey(groupId: String): Int = groupId.toIntOrNull() ?: Int.MAX_VALUE

@@ -28,6 +28,12 @@ object StoryDisplayText {
     }
 
     fun objectiveText(chapter: StoryChapterDefinition): Text {
+        if (chapter.resonantChordTutorialSteps.isNotEmpty()) {
+            return Text.translatable(
+                "screen.cresora.story.objective.resonant_chords_tutorial",
+                chapter.resonantChordTutorialSteps.size
+            )
+        }
         if (!chapter.linkedDomainId.isNullOrBlank()) {
             return Text.translatable("screen.cresora.story.objective.domain_clear")
         }

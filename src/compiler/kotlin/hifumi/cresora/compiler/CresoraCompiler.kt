@@ -11,7 +11,8 @@ import java.io.File
 class CresoraCompiler(
     private val inputDir: File,
     private val outputDir: File,
-    private val weaponJsonFile: File
+    private val weaponJsonFile: File,
+    private val sourceResourcesDir: File? = null
 ) {
     private val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
@@ -651,7 +652,11 @@ class CresoraCompiler(
     }
 
     private fun updateLangFiles(weapons: List<WeaponDefNode>, dictionaries: List<DictionaryDefNode>) {
-        val langDir = File(weaponJsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities/lang")
+        val langDir = if (sourceResourcesDir != null) {
+            File(sourceResourcesDir, "assets/cresora-utilities/lang")
+        } else {
+            File(weaponJsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities/lang")
+        }
         if (!langDir.exists()) return
 
         val locales = (weapons.flatMap { it.translations.keys } + dictionaries.flatMap { it.translations.keys }).distinct()
@@ -717,7 +722,11 @@ class CresoraCompiler(
     }
 
     private fun updateItemModels(weapons: List<WeaponDefNode>) {
-        val assetsDir = File(weaponJsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities")
+        val assetsDir = if (sourceResourcesDir != null) {
+            File(sourceResourcesDir, "assets/cresora-utilities")
+        } else {
+            File(weaponJsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities")
+        }
         val itemsDir = File(assetsDir, "items")
         val modelsDir = File(assetsDir, "models/item")
         if (!itemsDir.exists()) itemsDir.mkdirs()

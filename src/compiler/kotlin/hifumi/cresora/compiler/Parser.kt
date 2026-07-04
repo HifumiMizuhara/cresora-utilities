@@ -722,6 +722,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
     private class BattlePhaseResult(
         val hints: List<String>,
         val weapons: List<GrantedWeaponNode>,
+        val resonantChordTutorialSteps: List<ResonantChordTutorialStepNode>,
         val objective: BattleObjectiveNode,
         val waves: List<BattleWaveNode>
     )
@@ -743,6 +744,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         var preBattleStory = emptyList<DialogueLineNode>()
         var combatHints = emptyList<String>()
         var grantedWeapons = emptyList<GrantedWeaponNode>()
+        var resonantChordTutorialSteps = emptyList<ResonantChordTutorialStepNode>()
         var battleObjective = BattleObjectiveNode("defeat_all", 0)
         var battleWaves = emptyList<BattleWaveNode>()
         var postBattleStory = emptyList<DialogueLineNode>()
@@ -767,6 +769,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                             val battleResult = phaseBattle()
                             combatHints = battleResult.hints
                             grantedWeapons = battleResult.weapons
+                            resonantChordTutorialSteps = battleResult.resonantChordTutorialSteps
                             battleObjective = battleResult.objective
                             battleWaves = battleResult.waves
                         }
@@ -843,7 +846,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
         return MovementDefNode(
             name, id, displayName, groupId, sortOrder, titleTextId, linkedDomainId, domainRewardIds,
             unlockRank, prerequisiteChapterId, preBattleStory, combatHints, grantedWeapons,
-            battleObjective, battleWaves, postBattleStory, rewards, translations
+            resonantChordTutorialSteps, battleObjective, battleWaves, postBattleStory, rewards, translations
         )
     }
 
@@ -879,6 +882,7 @@ class Parser(private val source: String, private val tokens: List<Token>) {
     private fun phaseBattle(): BattlePhaseResult {
         val hints = mutableListOf<String>()
         val weapons = mutableListOf<GrantedWeaponNode>()
+        val resonantChordTutorialSteps = mutableListOf<ResonantChordTutorialStepNode>()
         var objective = BattleObjectiveNode("defeat_all", 0)
         val waves = mutableListOf<BattleWaveNode>()
 
@@ -902,6 +906,11 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                     }
                     consume(TokenType.RIGHT_BRACKET, "Expect ']'")
                 }
+                TokenType.KEYWORD_RESONANT_CHORD_TUTORIAL -> {
+                    consume(TokenType.LEFT_BRACE, "Expect '{' after resonant_chord_tutorial")
+                    resonantChordTutorialSteps.addAll(resonantChordTutorial())
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after resonant_chord_tutorial")
+                }
                 TokenType.KEYWORD_BATTLE_OBJECTIVE -> {
                     consume(TokenType.LEFT_BRACE, "Expect '{'")
                     objective = battleObjective()
@@ -916,7 +925,58 @@ class Parser(private val source: String, private val tokens: List<Token>) {
                 else -> throw RuntimeException("Unknown battle phase field '${token.lexeme}' at line ${token.line}")
             }
         }
-        return BattlePhaseResult(hints, weapons, objective, waves)
+        val reactionKeys = resonantChordTutorialSteps.map(ResonantChordTutorialStepNode::reactionKey)
+        if (reactionKeys.distinct().size != reactionKeys.size) {
+            throw RuntimeException("Resonant chord tutorial reaction keys must be unique")
+        }
+        return BattlePhaseResult(hints, weapons, resonantChordTutorialSteps, objective, waves)
+    }
+
+    private fun resonantChordTutorial(): List<ResonantChordTutorialStepNode> {
+        val steps = mutableListOf<ResonantChordTutorialStepNode>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            val token = advance()
+            if (token.type == TokenType.SEMICOLON) continue
+            if (token.type != TokenType.KEYWORD_STEP) {
+                throw RuntimeException("Expect tutorial step at line ${token.line}")
+            }
+            val reactionKey = consume(TokenType.STRING, "Expect reaction translation key after step").lexeme
+            consume(TokenType.LEFT_BRACE, "Expect '{' after tutorial step reaction key")
+            var effectKey = ""
+            val weapons = mutableListOf<GrantedWeaponNode>()
+            while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                val field = advance()
+                if (field.type == TokenType.SEMICOLON) continue
+                when {
+                    field.type == TokenType.IDENTIFIER && field.lexeme == "effect_key" -> {
+                        consume(TokenType.COLON, "Expect ':' after effect_key")
+                        effectKey = consume(TokenType.STRING, "Expect effect translation key").lexeme
+                    }
+                    field.type == TokenType.KEYWORD_GRANTED_WEAPONS -> {
+                        consume(TokenType.LEFT_BRACKET, "Expect '[' after granted_weapons")
+                        while (!check(TokenType.RIGHT_BRACKET) && !isAtEnd()) {
+                            weapons.add(grantedWeapon())
+                            if (check(TokenType.COMMA)) advance()
+                        }
+                        consume(TokenType.RIGHT_BRACKET, "Expect ']' after tutorial granted_weapons")
+                    }
+                    else -> throw RuntimeException("Unknown tutorial step field '${field.lexeme}' at line ${field.line}")
+                }
+            }
+            consume(TokenType.RIGHT_BRACE, "Expect '}' after tutorial step")
+            if (reactionKey.isBlank()) throw RuntimeException("Tutorial step reaction key must not be blank")
+            if (effectKey.isBlank()) throw RuntimeException("Tutorial step '$reactionKey' is missing effect_key")
+            if (weapons.size != 2) throw RuntimeException("Tutorial step '$reactionKey' must grant exactly two weapons")
+            if (weapons.map(GrantedWeaponNode::weaponId).distinct().size != weapons.size) {
+                throw RuntimeException("Tutorial step '$reactionKey' must grant two distinct weapons")
+            }
+            if (weapons.any { !it.removeOnExit }) {
+                throw RuntimeException("Tutorial step '$reactionKey' weapons must use remove_on_exit: true")
+            }
+            steps.add(ResonantChordTutorialStepNode(reactionKey, effectKey, weapons))
+        }
+        if (steps.isEmpty()) throw RuntimeException("resonant_chord_tutorial must define at least one step")
+        return steps
     }
 
     private fun grantedWeapon(): GrantedWeaponNode {

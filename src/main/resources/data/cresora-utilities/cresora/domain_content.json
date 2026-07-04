@@ -43,6 +43,15 @@
       ]
     },
     {
+      "id": "resonance_trial",
+      "entries": [
+        { "entityTypeId": "minecraft:zombie", "weight": 4 },
+        { "entityTypeId": "minecraft:skeleton", "weight": 3 },
+        { "entityTypeId": "minecraft:spider", "weight": 2 },
+        { "entityTypeId": "minecraft:drowned", "weight": 1 }
+      ]
+    },
+    {
       "id": "osananajimi_trial",
       "entries": [
         { "entityTypeId": "minecraft:pillager", "weight": 4 },
@@ -159,6 +168,23 @@
             { "count": 4, "levelOffset": 12, "elite": false, "spawnDelayTicks": 60 },
             { "count": 2, "levelOffset": 14, "elite": true, "spawnDelayTicks": 80 },
             { "count": 3, "levelOffset": 16, "elite": true, "spawnDelayTicks": 100 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resonance_practice",
+      "nameKey": "screen.cresora.domain.resonance_practice",
+      "themeId": "arcane",
+      "unlockRank": 1,
+      "entryCostCsc": 0,
+      "rewardProfileId": "resonance_practice",
+      "mobPoolId": "resonance_trial",
+      "stages": [
+        {
+          "waves": [
+            { "count": 3, "levelOffset": 0, "elite": false, "spawnDelayTicks": 40 },
+            { "count": 2, "levelOffset": 2, "elite": false, "spawnDelayTicks": 60 }
           ]
         }
       ]

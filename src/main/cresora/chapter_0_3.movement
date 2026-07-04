@@ -1,0 +1,154 @@
+movement "0-3" {
+    id: "0-3"
+    sort_order: 50
+    title_text_id: "story.cresora.chapter.0_3.title"
+    domain_reward_ids: ["resonance_practice"]
+    unlock_rank: 1
+    prerequisite_chapter_id: "0-2"
+
+    phase pre_battle {
+        dialogue("story.cresora.chapter.0_3.speaker.lumine", "story.cresora.chapter.0_3.pre_0")
+        dialogue("story.cresora.chapter.0_3.speaker.lumine", "story.cresora.chapter.0_3.pre_1")
+        dialogue("story.cresora.chapter.0_3.speaker.player", "story.cresora.chapter.0_3.pre_2")
+        dialogue("story.cresora.chapter.0_3.speaker.lumine", "story.cresora.chapter.0_3.pre_3")
+        dialogue("story.cresora.chapter.0_3.speaker.lumine", "story.cresora.chapter.0_3.pre_4")
+    }
+
+    phase battle {
+        combat_hints ["story.cresora.chapter.0_3.hint_0", "story.cresora.chapter.0_3.hint_1", "story.cresora.chapter.0_3.hint_2"]
+        granted_weapons []
+        resonant_chord_tutorial {
+            step "reaction.cresora.discord" {
+                effect_key: "message.cresora.story.chord_tutorial.effect.discord"
+                granted_weapons [
+                    weapon("hanwu_juanxue", FIVE_STAR, base_level: 60, skill_level: 10),
+                    weapon("rondo_melody", TWO_STAR, base_level: 60, skill_level: 10)
+                ]
+            }
+            step "reaction.cresora.crescendo" {
+                effect_key: "message.cresora.story.chord_tutorial.effect.crescendo"
+                granted_weapons [
+                    weapon("hanwu_juanxue", FIVE_STAR, base_level: 60, skill_level: 10),
+                    weapon("gaoshan_liushui", FOUR_STAR, base_level: 60, skill_level: 10)
+                ]
+            }
+            step "reaction.cresora.decrescendo" {
+                effect_key: "message.cresora.story.chord_tutorial.effect.decrescendo"
+                granted_weapons [
+                    weapon("rondo_melody", TWO_STAR, base_level: 60, skill_level: 10),
+                    weapon("gaoshan_liushui", FOUR_STAR, base_level: 60, skill_level: 10)
+                ]
+            }
+            step "reaction.cresora.cadenza" {
+                effect_key: "message.cresora.story.chord_tutorial.effect.cadenza"
+                granted_weapons [
+                    weapon("hanwu_juanxue", FIVE_STAR, base_level: 60, skill_level: 10),
+                    weapon("cadenza_allegro", FOUR_STAR, base_level: 60, skill_level: 1)
+                ]
+            }
+            step "reaction.cresora.requiem" {
+                effect_key: "message.cresora.story.chord_tutorial.effect.requiem"
+                granted_weapons [
+                    weapon("rondo_melody", TWO_STAR, base_level: 60, skill_level: 10),
+                    weapon("cadenza_allegro", FOUR_STAR, base_level: 60, skill_level: 1)
+                ]
+            }
+            step "reaction.cresora.serenade" {
+                effect_key: "message.cresora.story.chord_tutorial.effect.serenade"
+                granted_weapons [
+                    weapon("gaoshan_liushui", FOUR_STAR, base_level: 60, skill_level: 10),
+                    weapon("cadenza_allegro", FOUR_STAR, base_level: 60, skill_level: 1)
+                ]
+            }
+        }
+        wave 24 {
+            spawn_delay_ticks: 40
+            spawns [spawn("minecraft:zombie", count: 1)]
+            modifiers {
+                damage_reduction_percent: 20.0
+                true_damage_immune: false
+            }
+        }
+    }
+
+    phase post_battle {
+        dialogue("story.cresora.chapter.0_3.speaker.player", "story.cresora.chapter.0_3.post_0")
+        dialogue("story.cresora.chapter.0_3.speaker.lumine", "story.cresora.chapter.0_3.post_1")
+        dialogue("story.cresora.chapter.0_3.speaker.lumine", "story.cresora.chapter.0_3.post_2")
+    }
+
+    rewards {
+        credits: 1500
+        resonance_currencies {
+            chord_progression: 150
+            substitute_chord: 50
+        }
+    }
+
+    translations {
+        ja_jp {
+            "story.cresora.chapter.0_3.title": "共鳴の稽古"
+            "story.cresora.chapter.0_3.speaker.lumine": "Lumine"
+            "story.cresora.chapter.0_3.speaker.player": "＜Player＞"
+            "story.cresora.chapter.0_3.pre_0": "ここからは、共鳴の稽古だよ。"
+            "story.cresora.chapter.0_3.pre_1": "今日は旋律共鳴の種類を、ひとつずつ実戦で覚える。反応名だけでなく、何が起きるかまで確認していこう。"
+            "story.cresora.chapter.0_3.pre_2": "一度に全部ではなく、組み合わせごとに武器を替えながら確かめるわけか。"
+            "story.cresora.chapter.0_3.pre_3": "そう。同じ敵に異なる音を重ねて、反応が起きたと分かったら次へ進む。"
+            "story.cresora.chapter.0_3.pre_4": "六つの反応を通しで終えれば、共鳴稽古場でも迷わなくなるよ。"
+            "story.cresora.chapter.0_3.hint_0": "各段階で必要な二本だけを一時配布します。反応を確認すると次の組み合わせへ切り替わります。"
+            "story.cresora.chapter.0_3.hint_1": "同じ敵に異なる音符を続けて当てること。反応名と効果は段階の開始時に表示されます。"
+            "story.cresora.chapter.0_3.hint_2": "六種類の旋律共鳴をすべて確認すれば、この稽古は完了です。"
+            "story.cresora.chapter.0_3.post_0": "順番に見ていくと、反応ごとの役目がずいぶんはっきりするな。"
+            "story.cresora.chapter.0_3.post_1": "ええ。名前を覚えるだけでなく、どう戦いを変えるかまで掴めたはず。"
+            "story.cresora.chapter.0_3.post_2": "なら次は、稽古場で必要な反応を自分の判断で選び取る番だな。"
+        }
+        en_us {
+            "story.cresora.chapter.0_3.title": "Rehearsal of Resonance"
+            "story.cresora.chapter.0_3.speaker.lumine": "Lumine"
+            "story.cresora.chapter.0_3.speaker.player": "<Player>"
+            "story.cresora.chapter.0_3.pre_0": "From here on, this is resonance practice."
+            "story.cresora.chapter.0_3.pre_1": "Today you will learn each resonant chord in live combat. Not just the names. The actual effects."
+            "story.cresora.chapter.0_3.pre_2": "So we swap weapons per pairing and verify each reaction before moving on."
+            "story.cresora.chapter.0_3.pre_3": "Exactly. Stack different notes on the same enemy, confirm the reaction, then advance to the next lesson."
+            "story.cresora.chapter.0_3.pre_4": "Once you clear all six, the Resonance Rehearsal will stop feeling like guesswork."
+            "story.cresora.chapter.0_3.hint_0": "Each lesson issues only the two weapons needed for that pairing. Confirm the reaction to move on."
+            "story.cresora.chapter.0_3.hint_1": "Land two different notes on the same enemy. The reaction name and effect will be shown at the start of each lesson."
+            "story.cresora.chapter.0_3.hint_2": "This rehearsal ends after all six resonant chord types have been confirmed."
+            "story.cresora.chapter.0_3.post_0": "Going through them one by one makes their roles far clearer."
+            "story.cresora.chapter.0_3.post_1": "Exactly. Now you know not only the names, but how each reaction changes the fight."
+            "story.cresora.chapter.0_3.post_2": "Then the next step is simple. Choose the right reaction on your own in the practice ground."
+        }
+        zh_cn {
+            "story.cresora.chapter.0_3.title": "共鸣排练"
+            "story.cresora.chapter.0_3.speaker.lumine": "流明"
+            "story.cresora.chapter.0_3.speaker.player": "＜Player＞"
+            "story.cresora.chapter.0_3.pre_0": "从现在开始，就是共鸣的练习了。"
+            "story.cresora.chapter.0_3.pre_1": "今天要学的，是把六种旋律共鸣逐个在实战里认清。不只是名字，还包括它们真正造成的效果。"
+            "story.cresora.chapter.0_3.pre_2": "也就是说，每确认一种反应，就更换下一组武器继续。"
+            "story.cresora.chapter.0_3.pre_3": "没错。把不同的音叠在同一个敌人身上，确认反应成立，再进入下一课。"
+            "story.cresora.chapter.0_3.pre_4": "六种都走完之后，共鸣练习场对你来说就不会再像碰运气了。"
+            "story.cresora.chapter.0_3.hint_0": "每个阶段只会临时发放该组合需要的两把武器。确认反应后才会进入下一阶段。"
+            "story.cresora.chapter.0_3.hint_1": "务必把两种不同音符连续打在同一个敌人身上。阶段开始时会显示反应名与效果。"
+            "story.cresora.chapter.0_3.hint_2": "确认完六种旋律共鸣后，这场练习才算完成。"
+            "story.cresora.chapter.0_3.post_0": "逐个看下来，反应各自的职责确实清楚多了。"
+            "story.cresora.chapter.0_3.post_1": "正是如此。你现在记住的，不只是名字，而是它们如何改写战斗。"
+            "story.cresora.chapter.0_3.post_2": "那下一步，就该在练习场里自己判断该选哪一种反应了。"
+        }
+        lzh {
+            "story.cresora.chapter.0_3.title": "共鳴之習"
+            "story.cresora.chapter.0_3.speaker.lumine": "流明"
+            "story.cresora.chapter.0_3.speaker.player": "＜Player＞"
+            "story.cresora.chapter.0_3.pre_0": "自此而後，乃共鳴之習也。"
+            "story.cresora.chapter.0_3.pre_1": "今日所習，乃六種旋律共鳴，皆當逐一驗於戰中。非徒識其名，亦須知其效。"
+            "story.cresora.chapter.0_3.pre_2": "然則，每驗一反應，即易其兵而進於下一式乎？"
+            "story.cresora.chapter.0_3.pre_3": "然。以異音疊加同敵，既證其反應，乃可進次課。"
+            "story.cresora.chapter.0_3.pre_4": "六式盡通之後，共鳴稽場於汝，當不復若憑運而試。"
+            "story.cresora.chapter.0_3.hint_0": "每階惟暫授所需二兵。證得其反應，方進下一階。"
+            "story.cresora.chapter.0_3.hint_1": "務以二異音連擊同敵。每階始時，皆示反應之名與其效。"
+            "story.cresora.chapter.0_3.hint_2": "六種旋律共鳴皆驗，然後此習乃畢。"
+            "story.cresora.chapter.0_3.post_0": "循次而觀，諸反應之職，誠分明多矣。"
+            "story.cresora.chapter.0_3.post_1": "正是。今汝所識者，不獨其名，亦其如何改戰。"
+            "story.cresora.chapter.0_3.post_2": "然則下一步，當於稽場中自擇所需之反應矣。"
+        }
+    }
+}

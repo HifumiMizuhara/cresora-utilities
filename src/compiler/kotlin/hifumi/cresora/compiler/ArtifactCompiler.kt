@@ -11,7 +11,8 @@ import java.io.File
 class ArtifactCompiler(
     private val inputDir: File,
     private val outputDir: File,
-    private val jsonFile: File
+    private val jsonFile: File,
+    private val sourceResourcesDir: File? = null
 ) {
     private val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
     private val artifactRegistryDir = File(outputDir, "hifumi/cresora/equipment/generated")
@@ -625,7 +626,11 @@ class ArtifactCompiler(
     }
 
     private fun updateLangFiles(artifacts: List<ArtifactDefNode>) {
-        val langDir = File(jsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities/lang")
+        val langDir = if (sourceResourcesDir != null) {
+            File(sourceResourcesDir, "assets/cresora-utilities/lang")
+        } else {
+            File(jsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities/lang")
+        }
         if (!langDir.exists()) return
 
         val locales = artifacts.flatMap { it.translations.keys }.distinct()

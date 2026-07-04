@@ -45,6 +45,14 @@ replay_*.log
 
 .kotlin/errors/
 
+# generated source (now emitted to build/generated/cresora/)
+src/main/kotlin/hifumi/cresora/skill/generated/
+src/main/kotlin/hifumi/cresora/equipment/generated/
+src/main/resources/data/cresora-utilities/cresora/cwc_weapon_content.json
+src/main/resources/data/cresora-utilities/cresora/cac_artifact_content.json
+src/main/resources/data/cresora-utilities/cresora/story_content.json
+src/main/resources/data/cresora-utilities/cresora/story_texts.json
+
 # antigravity
 .antigravitycli/
 

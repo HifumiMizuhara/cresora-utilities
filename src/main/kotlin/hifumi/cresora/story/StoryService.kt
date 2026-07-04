@@ -16,6 +16,7 @@ import hifumi.cresora.masquerade.MasqueradeService
 import hifumi.cresora.resonance.ResonanceService
 import hifumi.cresora.world.RegionContentRegistry
 import hifumi.cresora.weapon.WeaponContentRegistry
+import hifumi.cresora.weapon.WeaponSkillAccess
 import hifumi.cresora.weapon.WeaponStackSupport
 import net.minecraft.block.Blocks
 import net.minecraft.entity.SpawnReason
@@ -27,6 +28,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -77,6 +79,8 @@ private class StorySession(
     var preparingNextWave: Boolean = true
     var combatStartTick: Long = -1L
     var lastSurviveSecondsShown: Int = -1
+    var tutorialStepIndex: Int = 0
+    var tutorialStepPrepared: Boolean = false
 
     fun chapter(): StoryChapterDefinition = StoryContentRegistry.requireChapter(chapterId)
 
@@ -87,6 +91,8 @@ object StoryService {
     private const val ARENA_FAIL_DISTANCE_SQUARED = 32.0 * 32.0
     private const val COUNTDOWN_INTERVAL_TICKS = 20L
     private const val START_DELAY_TICKS = 20L
+    private const val TUTORIAL_STEP_TRANSITION_TICKS = 30L
+    private const val TUTORIAL_RESPAWN_TICKS = 20L
 
     private val sessionsByPlayer: MutableMap<UUID, StorySession> = linkedMapOf()
     private val sessionsById: MutableMap<UUID, StorySession> = linkedMapOf()
@@ -189,6 +195,36 @@ object StoryService {
         val session = sessionsByPlayer[player.uuid] ?: return
         val server = player.server ?: return
         failSession(server, session, player, "commands.cresora.story.failed", restorePlayer = false)
+    }
+
+    fun onResonantChordTriggered(player: ServerPlayerEntity, reactionKey: String) {
+        val session = sessionsByPlayer[player.uuid] ?: return
+        if (session.phase != StoryPhase.COMBAT) return
+        val tutorialSteps = session.chapter().resonantChordTutorialSteps
+        val step = tutorialSteps.getOrNull(session.tutorialStepIndex) ?: return
+        if (reactionKey != step.reactionKey) {
+            return
+        }
+        val server = player.server ?: return
+        val world = ArenaManager.getDomainWorld(server) ?: return
+        player.sendMessage(
+            Text.translatable(
+                "message.cresora.story.chord_tutorial.confirmed",
+                Text.translatable(step.reactionKey),
+                session.tutorialStepIndex + 1,
+                tutorialSteps.size
+            ).formatted(Formatting.GREEN),
+            false
+        )
+        clearSessionMobs(world, session)
+        session.tutorialStepPrepared = false
+        session.tutorialStepIndex += 1
+        if (session.tutorialStepIndex >= tutorialSteps.size) {
+            session.phase = StoryPhase.POST_STORY
+            resetPhaseState(session, world.time + 20L)
+            return
+        }
+        session.nextEventTick = world.time + TUTORIAL_STEP_TRANSITION_TICKS
     }
 
     fun handleDialogueAction(player: ServerPlayerEntity, actionId: String) {
@@ -313,6 +349,10 @@ object StoryService {
 
     private fun tickCombatPhase(world: ServerWorld, session: StorySession, player: ServerPlayerEntity) {
         val chapter = session.chapter()
+        if (chapter.resonantChordTutorialSteps.isNotEmpty()) {
+            tickResonantChordTutorialCombat(world, session, player)
+            return
+        }
         if (chapter.battleObjective.type == StoryBattleObjectiveType.SURVIVE_TIME) {
             if (session.combatStartTick < 0L) {
                 session.combatStartTick = world.time
@@ -335,7 +375,7 @@ object StoryService {
                 return
             }
         }
-        val waves = session.chapter().battle
+        val waves = chapter.battle
         if (session.preparingNextWave) {
             if (world.time >= session.nextEventTick) {
                 val wave = waves.getOrNull(session.waveIndex)
@@ -354,6 +394,33 @@ object StoryService {
             session.preparingNextWave = true
             val nextWave = waves.getOrNull(session.waveIndex)
             session.nextEventTick = world.time + (nextWave?.spawnDelayTicks?.toLong() ?: 20L).coerceAtLeast(20L)
+        }
+    }
+
+    private fun tickResonantChordTutorialCombat(world: ServerWorld, session: StorySession, player: ServerPlayerEntity) {
+        if (!session.phaseInitialized) {
+            session.phaseInitialized = true
+            session.nextEventTick = world.time
+        }
+        if (world.time < session.nextEventTick) {
+            return
+        }
+        val step = session.chapter().resonantChordTutorialSteps.getOrNull(session.tutorialStepIndex) ?: run {
+            session.phase = StoryPhase.POST_STORY
+            resetPhaseState(session, world.time + 20L)
+            return
+        }
+        if (!session.tutorialStepPrepared) {
+            prepareResonantChordTutorialStep(world, session, player, step)
+            return
+        }
+        if (session.activeMobUuids.isEmpty()) {
+            player.sendMessage(
+                Text.translatable("message.cresora.story.chord_tutorial.retry", Text.translatable(step.reactionKey)).formatted(Formatting.GRAY),
+                false
+            )
+            spawnTutorialTargets(world, session, player)
+            session.nextEventTick = world.time + TUTORIAL_RESPAWN_TICKS
         }
     }
 
@@ -384,6 +451,112 @@ object StoryService {
         session.preparingNextWave = false
         val chapterLabel = StoryTextRegistry.chapterLabel(StoryTextRegistry.resolvePlayerLocale(player), session.chapter())
         player.sendMessage(Text.translatable("commands.cresora.story.wave", chapterLabel, waveNumber, session.chapter().battle.size, wave.enemyRank), false)
+    }
+
+    private fun prepareResonantChordTutorialStep(
+        world: ServerWorld,
+        session: StorySession,
+        player: ServerPlayerEntity,
+        step: StoryResonantChordTutorialStepDefinition
+    ) {
+        removeStoryLoanWeapons(player, session.loanMarker())
+        resetTutorialPlayerState(player)
+        grantSpecificStoryWeapons(player, session.loanMarker(), step.weapons)
+        session.tutorialStepPrepared = true
+        sendResonantChordTutorialIntro(player, session, step)
+        spawnTutorialTargets(world, session, player)
+        session.nextEventTick = world.time + TUTORIAL_RESPAWN_TICKS
+    }
+
+    private fun grantSpecificStoryWeapons(player: ServerPlayerEntity, marker: String, weapons: List<StoryGrantedWeaponDefinition>) {
+        for (granted in weapons) {
+            val definition = WeaponContentRegistry.requireWeapon(granted.weaponId)
+            val stack = WeaponStackSupport.createWeaponStack(definition, granted.rarity, granted.baseLevel, granted.skillLevel)
+            if (granted.removeOnExit) {
+                stack.set(ModDataComponents.STORY_LOAN_SESSION_ID, marker)
+            }
+            insertIntoMainInventory(player, stack)
+        }
+        player.inventory.markDirty()
+        player.playerScreenHandler.sendContentUpdates()
+    }
+
+    private fun sendResonantChordTutorialIntro(
+        player: ServerPlayerEntity,
+        session: StorySession,
+        step: StoryResonantChordTutorialStepDefinition
+    ) {
+        val firstWeapon = WeaponContentRegistry.requireWeapon(step.weapons[0].weaponId)
+        val secondWeapon = WeaponContentRegistry.requireWeapon(step.weapons[1].weaponId)
+        player.sendMessage(
+            Text.translatable(
+                "message.cresora.story.chord_tutorial.step",
+                session.tutorialStepIndex + 1,
+                session.chapter().resonantChordTutorialSteps.size,
+                Text.translatable(step.reactionKey)
+            ).formatted(Formatting.GOLD),
+            false
+        )
+        player.sendMessage(Text.translatable(step.effectKey).formatted(Formatting.AQUA), false)
+        player.sendMessage(
+            Text.translatable(
+                "message.cresora.story.chord_tutorial.combo",
+                Text.translatable(firstWeapon.translationKey()),
+                Text.translatable(secondWeapon.translationKey()),
+                Text.translatable(step.reactionKey)
+            ).formatted(Formatting.YELLOW),
+            false
+        )
+    }
+
+    private fun spawnTutorialTargets(world: ServerWorld, session: StorySession, player: ServerPlayerEntity) {
+        val templateWave = session.chapter().battle.firstOrNull()
+            ?: StoryBattleWaveDefinition(
+                enemyRank = 24,
+                spawnDelayTicks = 20,
+                spawns = listOf(StoryBattleSpawnDefinition("minecraft:zombie", 1))
+            )
+        for ((index, spawn) in templateWave.spawns.withIndex()) {
+            val entityType = Registries.ENTITY_TYPE.get(Identifier.of(spawn.entityTypeId))
+            val spawnPos = BlockPos.ofFloored(
+                session.arenaCenter.x + 0.5 + randomOffset(world.random, index * 17),
+                session.arenaCenter.y + 1.0,
+                session.arenaCenter.z + 0.5 + randomOffset(world.random, index * 31 + 7)
+            )
+            val hostile = entityType.spawn(world, null, spawnPos, SpawnReason.EVENT, true, false) as? MobEntity ?: continue
+            val access = hostile as? AdventureRankMobAccess ?: continue
+            access.cresoraSetMobAdventureRank(templateWave.enemyRank)
+            AdventureRankService.applyMobScaling(hostile, templateWave.enemyRank)
+            hostile.target = player
+            FieldMobPackService.markExplicit(hostile, false)
+            mobRuntime[hostile.uuid] = StoryRuntimeMob(
+                session.id,
+                (1.0 - templateWave.modifiers.damageReductionPercent / 100.0).coerceAtLeast(0.0),
+                templateWave.modifiers.trueDamageImmune
+            )
+            session.activeMobUuids += hostile.uuid
+        }
+    }
+
+    private fun clearSessionMobs(world: ServerWorld, session: StorySession) {
+        for (mobUuid in session.activeMobUuids.toList()) {
+            world.getEntity(mobUuid)?.discard()
+            mobRuntime.remove(mobUuid)
+        }
+        session.activeMobUuids.clear()
+    }
+
+    private fun resetTutorialPlayerState(player: ServerPlayerEntity) {
+        player.health = player.maxHealth
+        player.hungerManager.foodLevel = 20
+        player.clearStatusEffects()
+        val access = player as? WeaponSkillAccess ?: return
+        access.cresoraSetShieldHp(0.0f)
+        access.cresoraSetShieldExpireTick(0L)
+        access.cresoraSetShieldWeaponId(null)
+        access.cresoraSetSkillCooldownExpireTick(0L)
+        access.cresoraSetSkillCooldownWeaponId(null)
+        access.cresoraGetCooldowns().clear()
     }
 
     private fun completeSession(server: MinecraftServer, session: StorySession, player: ServerPlayerEntity) {
@@ -460,11 +633,7 @@ object StoryService {
 
     private fun cleanupSession(server: MinecraftServer, session: StorySession, player: ServerPlayerEntity?) {
         val world = ArenaManager.getDomainWorld(server) ?: return
-        for (mobUuid in session.activeMobUuids) {
-            world.getEntity(mobUuid)?.discard()
-            mobRuntime.remove(mobUuid)
-        }
-        session.activeMobUuids.clear()
+        clearSessionMobs(world, session)
         removeStoryLoanWeapons(player, session.loanMarker())
         sessionsByPlayer.remove(session.playerUuid)
         sessionsById.remove(session.id)

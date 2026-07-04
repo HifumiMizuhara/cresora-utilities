@@ -13,6 +13,7 @@ import net.minecraft.sound.SoundEvents
 import net.minecraft.sound.SoundCategory
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import hifumi.cresora.story.StoryService
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -188,6 +189,7 @@ object CresoraDebuffService {
             }
         }
         player.sendMessage(Text.translatable("message.cresora.resonant_chord", Text.translatable(reactionKey)).formatted(Formatting.AQUA), true)
+        StoryService.onResonantChordTriggered(player, reactionKey)
     }
 
     private fun parseNote(noteId: String?): Note? {

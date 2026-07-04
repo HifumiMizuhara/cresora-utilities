@@ -151,6 +151,18 @@
       "chordProgressionReward": 180,
       "substituteChordReward": 90,
       "resonantLocatorChance": 0.05
+    },
+    {
+      "id": "resonance_practice",
+      "currencyReward": {
+        "creditsBase": 300,
+        "creditsPerRank": 0,
+        "rankXpBase": 10,
+        "rankXpPerRank": 0
+      },
+      "chordProgressionReward": 10,
+      "substituteChordReward": 5,
+      "resonantLocatorChance": 0.0
     }
   ]
 }

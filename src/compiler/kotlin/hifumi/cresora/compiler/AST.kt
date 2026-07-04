@@ -206,6 +206,7 @@ data class MovementDefNode(
     val preBattleStory: List<DialogueLineNode>,
     val combatHints: List<String>,
     val grantedWeapons: List<GrantedWeaponNode>,
+    val resonantChordTutorialSteps: List<ResonantChordTutorialStepNode>,
     val battleObjective: BattleObjectiveNode,
     val battleWaves: List<BattleWaveNode>,
     val postBattleStory: List<DialogueLineNode>,
@@ -224,6 +225,12 @@ data class GrantedWeaponNode(
     val baseLevel: Int,
     val skillLevel: Int,
     val removeOnExit: Boolean
+) : ASTNode()
+
+data class ResonantChordTutorialStepNode(
+    val reactionKey: String,
+    val effectKey: String,
+    val weapons: List<GrantedWeaponNode>
 ) : ASTNode()
 
 data class BattleObjectiveNode(

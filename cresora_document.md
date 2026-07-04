@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-06-12
+最終更新: 2026-06-30
 
 このドキュメントは、Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジストリスキーマ、およびコアサービスの仕様書です。
 各機能の開発履歴や完了したタスクのログについては、Git のコミット履歴 (`git log`) を参照してください。
@@ -459,6 +459,14 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - 戦闘後ストーリー
 - 報酬
 
+現行の追加章:
+
+- `0-3` / `Rehearsal of Resonance` 相当のチュートリアル章
+- `0-2` クリア後に解放
+- `StoryService` の専用進行で 6 種の旋律共鳴を順番に教える
+- 各段階で必要な 2 本だけを一時配布し、対象の反応が発生したことを確認したら次の組み合わせへ進む
+- `domain_reward_ids` で `resonance_practice` に接続する
+
 主 API:
 
 - `chapters()`
@@ -506,6 +514,12 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - entry cost
 - reward profile link
 
+現行の追加ドメイン:
+
+- `resonance_practice`
+- `resonance_trial` mob pool を使う低コストの練習用ドメイン
+- `resonance_practice` 報酬プロファイルと連動し、CSC を消費せず共鳴素材の導線だけを見せる
+
 主 API:
 
 - `domains()`
@@ -529,6 +543,12 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
   - `maxCount`: Int (>= minCount)
 - 共鳴探索コンパスの副報酬枠 `resonantLocatorChance: Double = 0.0`（0.0〜1.0、`DomainService.generateRewardsForProfile` が確率判定で 1 個 `resonant_locator` を追加）
 - CSC / Rank XP 報酬
+
+現行の追加プロファイル:
+
+- `resonance_practice`
+- 低額 CSC / Rank XP と `chordProgression` / `substituteChord` を返す tutorial 向けプロファイル
+- `artifactReward` や `proofReward` は持たない
 
 主 API:
 
@@ -1209,6 +1229,7 @@ LIMITED ★5 抽選の概要:
 - 3,2,1 カウントダウン
 - survival objective
 - 一時貸与武器の配布 / 回収
+- `resonantChordTutorialSteps` が定義された章の旋律共鳴チュートリアル進行（段階別の貸与武器切替、反応確認、再スポーン）。章 ID の特例は持たない
 
 主 API:
 
@@ -1219,6 +1240,7 @@ LIMITED ★5 抽選の概要:
 - `tick(server)`
 - `onPlayerDeath(player)`
 - `onPlayerDisconnect(player)`
+- `onResonantChordTriggered(player, reactionKey)`
 - `handleDialogueAction(player, actionId)`
 
 `startSession` で行うゲート判定（順序通り）:
@@ -1235,6 +1257,11 @@ LIMITED ★5 抽選の概要:
 - `requiredRegionId: String?` — 地域到達フラグ要求
 - `requiredSpiritId: String?` — `spirit` ブロックを持つ武器の ID
 - `requiredBondStage: Int = 0` — 1..6（`requiredSpiritId` が設定された場合のみ必須、未設定時は 0）
+
+`StoryChapterDefinition` の旋律共鳴チュートリアルフィールド:
+- `resonantChordTutorialSteps: List<StoryResonantChordTutorialStepDefinition>` — 空なら通常戦闘、非空なら全ステップの反応確認で戦闘完了
+- 各ステップは `reactionKey`、`effectKey`、異なる2本の一時貸与 `weapons`（`removeOnExit = true`）を持つ
+- `grantedWeapons` および `battleObjective` との併用は禁止。必要な空きスロット数は全ステップ中の最大貸与本数から算出する
 
 ### 7.13 StoryProgressService
 
@@ -1721,9 +1748,10 @@ UI 与界面设计 (2026-06-15 重构):
 
 新しいストーリー:
 
-1. `story_content.json` に章定義追加
-2. `story_texts.json` に全 locale 文言追加
-3. 戦闘ギミックが既存 objective で足りなければ `StoryService` 拡張
+1. `src/main/cresora/` に `.movement` 章定義を追加
+2. 同ファイルの `translations` に全 locale 文言を追加
+3. `./gradlew compileAssets` で `story_content.json` / `story_texts.json` を生成
+4. 戦闘ギミックが既存の型付き定義で足りない場合は、CMC AST・JSON codec・runtime を同時に拡張する
 
 ## 10. 現状の注意点
 
@@ -1862,6 +1890,7 @@ weapon "Name" {
 - **フェーズ設計**:
   - `phase pre_battle`: 戦闘前の会話フェーズをダイアログ (`dialogue`) で定義。
   - `phase battle`: クリア条件 (`battle_objective`)、出現する敵ウェーブ (`wave`)、敵の耐性・被ダメージなどのモディファイア (`modifiers`) を構造化。
+    - `resonant_chord_tutorial`: `step "<reactionKey>"` ごとに `effect_key` とちょうど2本の `granted_weapons` を定義。生成された `resonantChordTutorialSteps` を `StoryService` が章 ID 非依存で実行する。
   - `phase post_battle`: 戦闘後の会話フェーズを定義。
   - `rewards`: CSC や共鳴通貨（代理弦など）のクリア報酬を定義。
   - `translations`: 各ロケール (`ja_jp`, `en_us`, `zh_cn`, `lzh`) ごとに、作中で参照される `speaker_id` や `text_id` の対訳テキストを直接記述。
