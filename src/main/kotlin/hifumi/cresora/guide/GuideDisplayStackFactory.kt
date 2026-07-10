@@ -8,6 +8,8 @@ import net.minecraft.item.Items
 import net.minecraft.text.Text
 
 object GuideDisplayStackFactory {
+    const val CLAIMABLE_STATUS_KEY = "guide.cresora.status.claimable"
+
     fun fillerDisplay(): ItemStack {
         return ItemStack.EMPTY
     }
@@ -75,7 +77,7 @@ object GuideDisplayStackFactory {
                         LoreComponent(
                             listOf(
                                 Text.translatable("guide.cresora.reward_line", chapter.cscReward, chapter.chordReward),
-                                Text.translatable("guide.cresora.status.claimable")
+                                Text.translatable(CLAIMABLE_STATUS_KEY)
                             )
                         )
                     )
@@ -134,7 +136,7 @@ object GuideDisplayStackFactory {
                         Text.translatable("guide.cresora.progress", progressText),
                         Text.translatable("guide.cresora.reward_line", task.cscReward, task.chordReward),
                         if (isComplete) {
-                            Text.translatable("guide.cresora.status.claimable")
+                            Text.translatable(CLAIMABLE_STATUS_KEY)
                         } else {
                             Text.translatable("guide.cresora.status.incomplete")
                         }

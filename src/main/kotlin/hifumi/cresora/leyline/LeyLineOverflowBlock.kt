@@ -34,8 +34,7 @@ class LeyLineOverflowBlock(settings: Settings) : Block(settings) {
         if (world.isClient) return ActionResult.SUCCESS
 
         val serverPlayer = player as? ServerPlayerEntity ?: return ActionResult.CONSUME
-        val element = state.get(ELEMENT)
-        LeyLineService.openSelectionGui(serverPlayer, pos, element)
+        LeyLineService.openSelectionGui(serverPlayer, pos)
 
         return ActionResult.SUCCESS
     }

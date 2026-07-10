@@ -24,6 +24,7 @@ import net.minecraft.entity.mob.MobEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -103,7 +104,6 @@ object MasqueradeService {
     private val sessionsByPlayer: MutableMap<UUID, MasqueradeSession> = linkedMapOf()
     private val sessionsById: MutableMap<UUID, MasqueradeSession> = linkedMapOf()
     private val mobRuntime: MutableMap<UUID, MasqueradeRuntimeMob> = linkedMapOf()
-    private val pendingRespawnSnapshots: MutableMap<UUID, MasqueradeInventorySnapshot> = linkedMapOf()
 
     fun hasActiveSession(player: ServerPlayerEntity): Boolean = sessionsByPlayer.containsKey(player.uuid)
 
@@ -179,6 +179,7 @@ object MasqueradeService {
             inventorySnapshot = snapshot
         )
         session.nextEventTick = world.time + START_DELAY_TICKS
+        MasqueradeRecoveryStateService.save(server, recoveryRecord(session))
         sessionsByPlayer[player.uuid] = session
         sessionsById[session.id] = session
 
@@ -223,28 +224,30 @@ object MasqueradeService {
         endSession(server, session, player, EndReason.DEATH)
     }
 
-    fun onPlayerDisconnect(player: ServerPlayerEntity) {
+    fun onPlayerLeave(player: ServerPlayerEntity) {
         val session = sessionsByPlayer[player.uuid] ?: return
         val server = player.server ?: return
         endSession(server, session, player, EndReason.DISCONNECT)
     }
 
-    fun clearTransientState(player: ServerPlayerEntity) {
-        clearTransientState(player.uuid)
-    }
-
-    // UUID-keyed cleanup. A pending respawn snapshot must be dropped when the player
-    // disconnects so a reconnecting player cannot replay it (reskill protection state
-    // must not leak across sessions).
-    fun clearTransientState(playerId: UUID) {
-        pendingRespawnSnapshots.remove(playerId)
-    }
-
-    fun hasPendingRespawnSnapshot(playerId: UUID): Boolean = pendingRespawnSnapshots.containsKey(playerId)
-
     fun restoreAfterRespawn(newPlayer: ServerPlayerEntity) {
-        val snapshot = pendingRespawnSnapshots.remove(newPlayer.uuid) ?: return
-        restoreSnapshot(newPlayer, snapshot)
+        val server = newPlayer.server ?: return
+        val recovery = MasqueradeRecoveryStateService.find(server, newPlayer.uuid) ?: return
+        if (!recovery.restoreOnRespawn) {
+            return
+        }
+        restoreSnapshot(newPlayer, recovery.inventorySnapshot())
+        MasqueradeRecoveryStateService.remove(server, newPlayer.uuid)
+    }
+
+    fun restoreAfterJoin(player: ServerPlayerEntity) {
+        val server = player.server ?: return
+        val recovery = MasqueradeRecoveryStateService.find(server, player.uuid) ?: return
+        restoreSnapshot(player, recovery.inventorySnapshot())
+        if (!recovery.restoreOnRespawn) {
+            restorePlayerPosition(server, player, recovery.returnPoint())
+        }
+        MasqueradeRecoveryStateService.remove(server, player.uuid)
     }
 
     fun damageMultiplier(attacker: Entity?): Double {
@@ -480,18 +483,16 @@ object MasqueradeService {
         cleanupSession(server, session)
         when (reason) {
             EndReason.DEATH -> {
-                cleanupRunItems(server.overworld, player?.pos ?: session.arenaCenter.toCenterPos(), session.loanMarker())
-                pendingRespawnSnapshots[session.playerUuid] = session.inventorySnapshot
+                MasqueradeRecoveryStateService.markForRespawn(server, session.playerUuid)
             }
-            EndReason.DISCONNECT -> {
-                pendingRespawnSnapshots.remove(session.playerUuid)
-            }
+            EndReason.DISCONNECT -> Unit
             else -> if (player != null && player.isAlive) {
                 restoreSnapshot(player, session.inventorySnapshot)
                 restorePlayerPosition(server, player, session.returnPoint)
+                MasqueradeRecoveryStateService.remove(server, session.playerUuid)
             }
         }
-        if (player != null && player.isAlive) {
+        if (player != null && player.isAlive && reason != EndReason.DISCONNECT) {
             when (reason) {
                 EndReason.CLEARED -> player.sendMessage(Text.translatable("screen.cresora.masquerade.completed", cleared), false)
                 EndReason.TIMEOUT -> player.sendMessage(Text.translatable("screen.cresora.masquerade.timeout", cleared), false)
@@ -507,13 +508,15 @@ object MasqueradeService {
     }
 
     private fun cleanupSession(server: MinecraftServer, session: MasqueradeSession) {
-        val world = ArenaManager.getDomainWorld(server) ?: return
+        val world = ArenaManager.getDomainWorld(server)
         for (mobUuid in session.activeMobUuids) {
-            world.getEntity(mobUuid)?.discard()
+            world?.getEntity(mobUuid)?.discard()
             mobRuntime.remove(mobUuid)
         }
         session.activeMobUuids.clear()
-        cleanupRunItems(world, session.arenaCenter.toCenterPos(), session.loanMarker())
+        if (world != null) {
+            cleanupRunItems(world, session.arenaCenter.toCenterPos(), session.loanMarker())
+        }
         sessionsByPlayer.remove(session.playerUuid)
         sessionsById.remove(session.id)
     }
@@ -536,6 +539,44 @@ object MasqueradeService {
             mainInventory = mainInventory,
             offHand = player.offHandStack.copy(),
             selectedSlot = player.inventory.selectedSlot
+        )
+    }
+
+    private fun recoveryRecord(session: MasqueradeSession): MasqueradeRecoveryRecord {
+        val snapshot = session.inventorySnapshot
+        val returnPoint = session.returnPoint
+        return MasqueradeRecoveryRecord(
+            playerUuid = session.playerUuid,
+            mainInventory = snapshot.mainInventory.map(ItemStack::copy),
+            offHand = snapshot.offHand.copy(),
+            selectedSlot = snapshot.selectedSlot,
+            returnWorldId = returnPoint.worldKey.value.toString(),
+            returnX = returnPoint.position.x,
+            returnY = returnPoint.position.y,
+            returnZ = returnPoint.position.z,
+            returnYaw = returnPoint.yaw,
+            returnPitch = returnPoint.pitch
+        )
+    }
+
+    private fun MasqueradeRecoveryRecord.inventorySnapshot(): MasqueradeInventorySnapshot {
+        return MasqueradeInventorySnapshot(
+            mainInventory = mainInventory.map(ItemStack::copy),
+            offHand = offHand.copy(),
+            selectedSlot = selectedSlot
+        )
+    }
+
+    private fun MasqueradeRecoveryRecord.returnPoint(): MasqueradeReturnPoint {
+        val fallback = RegistryKey.of<World>(RegistryKeys.WORLD, Identifier.of("minecraft", "overworld"))
+        val worldKey = runCatching {
+            RegistryKey.of<World>(RegistryKeys.WORLD, Identifier.of(returnWorldId))
+        }.getOrDefault(fallback)
+        return MasqueradeReturnPoint(
+            worldKey = worldKey,
+            position = Vec3d(returnX, returnY, returnZ),
+            yaw = returnYaw,
+            pitch = returnPitch
         )
     }
 

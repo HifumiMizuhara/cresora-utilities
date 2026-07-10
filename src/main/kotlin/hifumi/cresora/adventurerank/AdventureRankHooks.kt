@@ -1,5 +1,6 @@
 package hifumi.cresora.adventurerank
 import hifumi.cresora.CreSoraUtilities
+import hifumi.cresora.bloodmoon.BloodMoonService
 import hifumi.cresora.bloodmoon.MoonAltarService
 import hifumi.cresora.bloodmoon.MoonPhaseService
 import hifumi.cresora.combat.CombatMobDisplayService
@@ -77,6 +78,9 @@ object AdventureRankHooks {
 
         ServerEntityEvents.ENTITY_LOAD.register(ServerEntityEvents.Load { entity, world ->
             if (CombatMobDisplayService.discardOrphanedIndicator(entity)) {
+                return@Load
+            }
+            if (BloodMoonService.discardOrphanedBedDisplay(entity)) {
                 return@Load
             }
             val hostile = entity as? MobEntity ?: return@Load

@@ -911,13 +911,13 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 
 主 API / 仕様:
 
-- `placeLeyLine(world, pos, player, element)`: 地点に特定元素の地脉噴湧ブロックを配置し、50秒の有効期限タイマー（過ぎると自動でブロックが消滅し、配置者にキーが返却される）を開始します。
+- `placeLeyLine(world, pos, player, element)`: 地点に特定元素の地脉噴湧ブロックを配置し、50秒の有効期限タイマー（過ぎると自動でブロックが消滅し、配置者にキーが返却される）を開始します。同じ world/pos に pending 配置または active session がある場合は `false` を返して何も置換しないため、呼び出し元はキーを消費しません。
 - `onBlockRemoved(world, pos)`: イベント開始前にブロックが破壊された場合、配置者にキーを返却します。
-- `startEvent(player, pos, element, tier)`: プレイヤーの冒険ランク要件を確認し、イベントを開始します。ブロックを消去し、10x10の戦闘セッション（`LeyLineEventSession`）を登録します。
+- `startEvent(player, pos, tier)`: pending 配置の所有者 UUID、ブロック種別、サーバーに保存された元素を検証してから、プレイヤーの冒険ランク要件を確認しイベントを開始します。元素は GUI / client 側値を受け取らず pending 記録から導出されます。配置者以外は開始できません。ブロックを消去し、10x10の戦闘セッション（`LeyLineEventSession`）を登録します。
 - `tick(server)`: 有効期限タイマーおよび進行中の戦闘セッション（プレイヤーの境界内チェック、境界パーティクルの再生、各ウェーブのモンスター死亡監視、成功時の報酬配布等）を毎ティック処理します。
 - `damageMultiplier(attacker)`: スポーンしたイベントモンスター（`mobRuntime`に登録されたUUID）の攻撃ダメージ倍率を取得します。
 - **エリートモブの統合**: スポーンした精英怪（1ウェーブにつき1体）に対し、`FieldMobPackService.markExplicit(mob, true)` を呼び出してモデルサイズを 18% 拡大し、`AdventureRankService.applyMobScaling` でエリートステータス補正を適用します。また、全モブに `GLOWING`（発光）ステータス効果を付与します。
-- **報酬分配**: 討伐成功時に `generateRewards` で報酬を算出し、プレイヤーへアイテム/クレジット/XPを付与します。最終的な報酬プレビューとして `ArtifactUiFlow.openDomainReward` を呼び出し、チェストUIを表示します。
+- **報酬分配**: 討伐成功時に `generateRewards` で報酬を算出し、配置者が挑戦領域内にいる場合にその配置者へアイテム/クレジット/XPを付与します。協力者は討伐を手伝えますが、報酬の受取人にはなりません。最終 wave 完了時に配置者が領域外なら、報酬を横取りさせず session を失敗として即時破棄します。最終的な報酬プレビューとして `ArtifactUiFlow.openDomainReward` を呼び出し、チェストUIを表示します。
 
 ### 7.2 CreditsService
 
@@ -1121,6 +1121,8 @@ LIMITED ★5 抽選の概要:
 
 - 聖遺物の効果（セットボーナスのエフェクトフック）をトリガー条件（攻撃時、ダメージ受傷時、キック時等）に応じてディスパッチするサービスです。
 - `getDisplayStacks(player, buffId, rawStacks)`: 表示上のスタック数を取得します（将来の拡張用）。
+- `ArtifactSkillRegistry` は生成済み handler の `onTransientStateTick(player)` を毎 server tick に実行し、duration を持つ buff の期限処理を DSL の `on_tick` と独立して保証します。`on_tick` はゲーム効果用の通常 hook のままです。
+- 同 registry は切断時に全 handler の `clearTransientState(playerId)` を呼び、オンライン集合外の state は `pruneTransientState(...)` で回収します。
 
 ### 7.9 EquipmentAttributeService / WeaponAttributeService
 
@@ -1164,6 +1166,7 @@ LIMITED ★5 抽選の概要:
   - 武器の属性ボーナス（会心率、全ダメージボーナスなど）を取得する際、メインハンドに持っている武器（または `HotbarOverrideService` で一時的に指定された武器）と一致していることを厳密に検証するチェック (`lastHeldWeaponIdByPlayer` によるトラッキング）。
   - 武器切り替え（または武器を外した際）の検知時に、古い武器の一時的な戦闘バフを破棄するため、ハンドラーの `clearTransientState(player.uuid)` を自動的に起動します。
 - `clearTransientState(player)`: 切断時や武器切り替え時に武器由来の一時状態を即時掃除します。
+- 対象 entity を key にする mark / 破魂 / 一時無敵は online player の集合では prune しません。各 effect 自身の expiry tick で回収するため、敵に付与した持続効果の寿命はプレイヤー接続状態に左右されません。
 - `getDisplayStacks(player, buffId, rawStacks)`: 表示上のスタック数を取得します。幼馴染4セット効果かつ「遥かなる少女の決意」を装備中、決意バフ（`ketsui`）に対して表示上 `+5` の加算オフセットを自動で計算して返します。
 
 `WeaponSkillHandler` インターフェース:
@@ -1330,12 +1333,19 @@ LIMITED ★5 抽選の概要:
 - `selectSupportBuff(player, buffId)`
 - `tick(server)`
 - `onPlayerDeath(player)`
-- `onPlayerDisconnect(player)`
+- `onPlayerLeave(player)`
 - `restoreAfterRespawn(newPlayer)`
-- `clearTransientState(player)`: pending respawn snapshot を切断時に消します。
+- `restoreAfterJoin(player)`
 - `damageMultiplier(attacker)`
 - `damageTakenMultiplier(target)`
 - `adjustIncomingDamage(player, source, amount)`
+
+復旧仕様:
+
+- session 開始前に元インベントリ・offhand・選択スロット・帰還地点を `MasqueradeRecoveryPersistentState` に永続化してから、持込武器用インベントリへ切り替える。
+- 切断・サーバー再起動後は JOIN で一度だけ元インベントリを復元し、生存中の run は元の帰還地点へ戻す。切断 callback では packet を送らない。
+- 死亡時は復旧 record を respawn 用に印付け、`COPY_FROM` 後にインベントリだけを一度復元する。respawn 前に切断しても JOIN 復旧へ引き継がれる。
+- domain world を取得できない teardown でも session / runtime mob map は必ず切り離す。
 
 ### 7.15 TreasureChestService
 
@@ -1784,7 +1794,7 @@ UI 与界面设计 (2026-06-15 重构):
 - **JSON データ**: `cwc_weapon_content.json` (自動生成武器専用の定義ファイル)
 - **登録処理**: `CompiledWeaponSkillRegistry` (レジストリへの自動登録)
 
-CWC はコンパイルのたびに出力先（`generated` パッケージおよび `cwc_weapon_content.json`）を完全にクリアしてから再生成するため、常に最新のスクリプト内容が正確に反映されます。既存の `weapon_content.json` は手動定義用として保持され、ゲーム実行時に自動的にマージされます。
+CWC はコンパイルのたびに `build/generated/cresora/kotlin` と `build/generated/cresora/resources` を完全に再生成するため、常に最新のスクリプト内容が正確に反映されます。`src/main/resources` は読み取り専用の基底資産で、`lang` / `items` / `models/item` は生成オーバーレイへコピーしてから DSL 出力を重ねます。`processResources` は古い checked-in の生成 JSON・管理対象 assets を除外し、このオーバーレイだけをパッケージングします。既存の `weapon_content.json` は手動定義用として保持され、ゲーム実行時に自動的にマージされます。
 
 #### CWC 2.0 強化点
 - **自動インポート機能**: 生成される Kotlin スキルクラスに、Minecraft やクレソラ関連の常用クラス（`Text`, `LivingEntity`, `ServerWorld`, `ParticleTypes`, `WeaponSkillService`, `AdventureRankService` など）を自動的にインポート。これにより、`execute` ブロック内で完全修飾名を使わずに簡潔に記述できるようになりました。
@@ -1792,7 +1802,7 @@ CWC はコンパイルのたびに出力先（`generated` パッケージおよ�
 - **実行ラベル (`execute@run`)**: `execute` ブロックが `run execute@ { ... }` にラップされて生成されるため、スクリプト内で `return@execute` を使用した早期リターンが可能です。
 - **独立した減衰時間 (`decay: independent`)**: バフ定義ブロックに `decay: independent` を指定可能。指定時、バフスタックごとに個別の失効時刻を記録する `expireTicks: MutableList<Long>` を持つ内部状態クラス `*State` が自動生成されます。
 - **AOE 構文の修正**: `area_of_effect` 内での `ignite` 等のパラメータが 1.21.7 のレジストリ API に適合するように自動変換されます。
-- **翻訳ブロック (`translations`)**: スクリプト内に `en_us`, `ja_jp`, `zh_cn`, `lzh` の各キーと値を直接記述可能。ビルド時に `lang/*.json` へ自動的にマージされるため、外部ファイルの編集が不要になりました。
+- **翻訳ブロック (`translations`)**: スクリプト内に `en_us`, `ja_jp`, `zh_cn`, `lzh` の各キーと値を直接記述可能。ビルド時に生成オーバーレイ側の `lang/*.json` へ自動的にマージされ、ソース資産は書き換えません。
 - **動的メッセージ出力**: `execute` ブロック内で `Text.translatable` を用いて、スタック数や回復量などを動的に埋め込んだメッセージ演出を簡単に実装できるようになりました。
 - **サブスキル文脈登録**: 生成 registry はサブスキルを単体 handler として登録するだけでなく、親スキルとの対応も登録します。これにより、サブスキル発動後の継続効果 (`on_player_tick`) が親武器を装備している間に正しく更新されます。
 
@@ -1862,7 +1872,7 @@ weapon "Name" {
   - `getCritDamageBonus(player)`: 会心ダメージ補正 (％)
 - **独立した減衰時間 (`decay: independent`)**:
   - `buff` 定義ブロックに `decay: independent` を指定することで、バフスタックごとに個別の残り持続時間 (Ticks) をカウントし、失効させる仕組み。
-  - コンパイルされる `State` 状態クラスがスタックごとの失効時刻を記録する `expireTicks: MutableList<Long>` を持ち、毎ティック自動でクレンジングされます。
+  - コンパイルされる `State` 状態クラスがスタックごとの失効時刻を記録する `expireTicks: MutableList<Long>` を持ち、DSL の `on_tick` 有無にかかわらず `ArtifactSkillRegistry.onTransientStateTick` で毎ティック自動クレンジングされます。
 - **共通組み込み命令**: `log()`, `apply_mark()`, `spawn_particles()`, `add_buff()`, `send_message()`, `apply_status_effect()`, `grant_invulnerability()` をサポート（型付きノード対象のコマンドは CWC と同じパース時検証が適用される。`start_cooldown` / `skill_duration` / `skill_value` は artifact では使用不可）。
 - **生ソースコード抽出**: `execute` 内の複雑な Kotlin ロジックを、トークン再構成ではなく原始ソースコードから直接抽出することで構文エラーを防ぎます。
 
@@ -1895,6 +1905,6 @@ weapon "Name" {
   - `rewards`: CSC や共鳴通貨（代理弦など）のクリア報酬を定義。
   - `translations`: 各ロケール (`ja_jp`, `en_us`, `zh_cn`, `lzh`) ごとに、作中で参照される `speaker_id` や `text_id` の対訳テキストを直接記述。
 - **生成アセット**:
-  - **JSON (Content)**: `src/main/resources/data/cresora-utilities/cresora/story_content.json` にシリアライズ。
-  - **JSON (Translations)**: `src/main/resources/data/cresora-utilities/cresora/story_texts.json` へ自動マージ。
+  - **JSON (Content)**: `build/generated/cresora/resources/data/cresora-utilities/cresora/story_content.json` にシリアライズ。
+  - **JSON (Translations)**: `build/generated/cresora/resources/data/cresora-utilities/cresora/story_texts.json` に完全生成。DSL を削除した場合も旧 chapter/text が残りません。
 - **ビルドタスク**: `GRADLE_USER_HOME=.gradle-user ./gradlew compileAssets` で CWC/CAC とともに自動実行されます。
