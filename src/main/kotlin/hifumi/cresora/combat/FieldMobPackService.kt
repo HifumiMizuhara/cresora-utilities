@@ -34,18 +34,6 @@ object FieldMobPackService {
     private const val PACK_ELITE_MIN = 1
     private const val PACK_ELITE_MAX = 2
 
-    private const val ELITE_HEALTH_SCALAR = 1.32
-    private const val ELITE_DEFENSE_SCALAR = 1.18
-    private const val ELITE_TOUGHNESS_SCALAR = 1.12
-    private const val ELITE_DAMAGE_SCALAR = 1.16
-    private const val ELITE_SCALE_BONUS = 0.18
-
-    private const val BOSS_HEALTH_SCALAR = 2.20
-    private const val BOSS_DEFENSE_SCALAR = 1.45
-    private const val BOSS_TOUGHNESS_SCALAR = 1.35
-    private const val BOSS_DAMAGE_SCALAR = 1.35
-    private const val BOSS_SCALE_BONUS = 0.35
-
     private data class PendingPackMember(
         val packId: String,
         val rank: Int,
@@ -162,32 +150,32 @@ object FieldMobPackService {
     }
 
     fun eliteHealthScalar(hostile: MobEntity): Double = when {
-        isFieldBoss(hostile) -> BOSS_HEALTH_SCALAR
-        isFieldElite(hostile) -> ELITE_HEALTH_SCALAR
+        isFieldBoss(hostile) -> CombatBalanceProfileRegistry.current().field.bossHealthScalar
+        isFieldElite(hostile) -> CombatBalanceProfileRegistry.current().field.eliteHealthScalar
         else -> 1.0
     }
 
     fun eliteDefenseScalar(hostile: MobEntity): Double = when {
-        isFieldBoss(hostile) -> BOSS_DEFENSE_SCALAR
-        isFieldElite(hostile) -> ELITE_DEFENSE_SCALAR
+        isFieldBoss(hostile) -> CombatBalanceProfileRegistry.current().field.bossDefenseScalar
+        isFieldElite(hostile) -> CombatBalanceProfileRegistry.current().field.eliteDefenseScalar
         else -> 1.0
     }
 
     fun eliteToughnessScalar(hostile: MobEntity): Double = when {
-        isFieldBoss(hostile) -> BOSS_TOUGHNESS_SCALAR
-        isFieldElite(hostile) -> ELITE_TOUGHNESS_SCALAR
+        isFieldBoss(hostile) -> CombatBalanceProfileRegistry.current().field.bossToughnessScalar
+        isFieldElite(hostile) -> CombatBalanceProfileRegistry.current().field.eliteToughnessScalar
         else -> 1.0
     }
 
     fun eliteDamageScalar(hostile: MobEntity): Double = when {
-        isFieldBoss(hostile) -> BOSS_DAMAGE_SCALAR
-        isFieldElite(hostile) -> ELITE_DAMAGE_SCALAR
+        isFieldBoss(hostile) -> CombatBalanceProfileRegistry.current().field.bossDamageScalar
+        isFieldElite(hostile) -> CombatBalanceProfileRegistry.current().field.eliteDamageScalar
         else -> 1.0
     }
 
     fun scaleBonus(hostile: MobEntity): Double = when {
-        (hostile as? AdventureRankMobAccess)?.cresoraIsBossMob() == true -> BOSS_SCALE_BONUS
-        (hostile as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true -> ELITE_SCALE_BONUS
+        (hostile as? AdventureRankMobAccess)?.cresoraIsBossMob() == true -> CombatBalanceProfileRegistry.current().field.bossScaleBonus
+        (hostile as? AdventureRankMobAccess)?.cresoraIsEliteMob() == true -> CombatBalanceProfileRegistry.current().field.eliteScaleBonus
         else -> 0.0
     }
 

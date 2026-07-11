@@ -5,6 +5,7 @@ import hifumi.cresora.adventurerank.AdventureRankMobAccess
 import hifumi.cresora.adventurerank.AdventureRankService
 import hifumi.cresora.combat.ArenaManager
 import hifumi.cresora.combat.FieldMobPackService
+import hifumi.cresora.combat.CombatBalanceProfileRegistry
 import hifumi.cresora.credits.CreditsService
 import hifumi.cresora.domain.DomainService
 import hifumi.cresora.equipment.ArtifactDisplayStackFactory
@@ -393,7 +394,7 @@ object MasqueradeService {
                 AdventureRankService.applyMobScaling(
                     hostile,
                     spawn.rank,
-                    spawn.modifiers.healthScalar,
+                    spawn.modifiers.healthScalar * CombatBalanceProfileRegistry.current().masqueradeHealthScalar,
                     spawn.modifiers.defenseScalar,
                     spawn.modifiers.toughnessScalar
                 )
@@ -403,7 +404,7 @@ object MasqueradeService {
                 }
                 mobRuntime[hostile.uuid] = MasqueradeRuntimeMob(
                     session.id,
-                    spawn.modifiers.damageScalar,
+                    spawn.modifiers.damageScalar * CombatBalanceProfileRegistry.current().masqueradeDamageScalar,
                     (1.0 - spawn.modifiers.damageReductionPercent / 100.0).coerceIn(0.05, 1.0)
                 )
                 session.activeMobUuids += hostile.uuid

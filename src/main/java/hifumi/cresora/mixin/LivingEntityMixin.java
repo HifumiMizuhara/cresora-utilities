@@ -6,6 +6,8 @@ import hifumi.cresora.combat.BaaMimicService;
 import hifumi.cresora.combat.CombatDamageType;
 import hifumi.cresora.combat.CombatDamageTypeSupport;
 import hifumi.cresora.combat.CombatFeedbackService;
+import hifumi.cresora.combat.CombatDamageResolver;
+import hifumi.cresora.combat.ResolvedCombatDamage;
 import hifumi.cresora.combat.MobCombatProfileRegistry;
 import hifumi.cresora.combat.NaturalRegenService;
 import hifumi.cresora.debuff.CresoraDebuffService;
@@ -16,6 +18,7 @@ import hifumi.cresora.story.StoryService;
 import hifumi.cresora.weapon.WeaponSkillService;
 
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.MobEntity;
@@ -54,6 +57,14 @@ public abstract class LivingEntityMixin {
         if (WeaponSkillService.isDealingTrueDamage()) {
             return amount;
         }
+        if ((Object) this instanceof MobEntity && source.getAttacker() instanceof ServerPlayerEntity serverPlayer &&
+                (source.isOf(DamageTypes.MAGIC) || source.isOf(DamageTypes.INDIRECT_MAGIC))) {
+            ResolvedCombatDamage resolved = CombatDamageResolver.resolvePlayerOffense(serverPlayer, amount, true);
+            amount = (float) resolved.getDamage();
+            if (resolved.getCritical()) {
+                CombatFeedbackService.INSTANCE.recordCrit(serverPlayer, resolved.getCritMultiplier());
+            }
+        }
         if (source.getAttacker() instanceof LivingEntity attacker) {
             if (WeaponSkillService.hasMark(attacker, "kyundeath")) {
                 amount = amount * 0.8f;
@@ -72,10 +83,7 @@ public abstract class LivingEntityMixin {
             double resistanceOffset = (damageType == CombatDamageType.PHYSICAL)
                     ? WeaponSkillService.INSTANCE.getPhysicalResistanceOffset(hostile)
                     : WeaponSkillService.INSTANCE.getArcaneResistanceOffset(hostile);
-            double resistanceRatio = baseResistanceRatio - resistanceOffset;
-            if (resistanceRatio != 0.0D) {
-                amount = (float) (amount * (1.0D - (float) resistanceRatio));
-            }
+            amount = (float) CombatDamageResolver.applyMobResistance(amount, baseResistanceRatio, resistanceOffset);
         }
         double enemyMultiplier = AdventureRankService.INSTANCE.damageMultiplier(source);
         if (enemyMultiplier > 1.0D) {

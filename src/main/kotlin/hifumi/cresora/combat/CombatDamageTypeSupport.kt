@@ -34,10 +34,6 @@ object CombatDamageTypeSupport {
 
     @JvmStatic
     fun damageSourceType(source: DamageSource): CombatDamageType {
-        entityAttackDamageType(source.attacker ?: source.source)?.let { return it }
-        if (source.attacker is PlayerEntity) {
-            return playerAttackDamageType(source.attacker as PlayerEntity)
-        }
         if (
             source.isOf(DamageTypes.MAGIC) ||
             source.isOf(DamageTypes.INDIRECT_MAGIC) ||
@@ -50,6 +46,10 @@ object CombatDamageTypeSupport {
         ) {
             return CombatDamageType.ARCANE
         }
+        entityAttackDamageType(source.attacker ?: source.source)?.let { return it }
+        if (source.attacker is PlayerEntity) {
+            return playerAttackDamageType(source.attacker as PlayerEntity)
+        }
         return CombatDamageType.PHYSICAL
     }
 
@@ -60,7 +60,7 @@ object CombatDamageTypeSupport {
             CombatDamageType.PHYSICAL -> totals[StatType.PHYSICAL_RESISTANCE] ?: 0.0
             CombatDamageType.ARCANE -> totals[StatType.ARCANE_RESISTANCE] ?: 0.0
         }
-        return (legacy + typed).coerceIn(0.0, CombatStatSupport.MAX_PLAYER_RESISTANCE_PERCENT)
+        return (legacy + typed).coerceIn(0.0, CombatBalanceProfileRegistry.current().maxPlayerResistancePercent)
     }
 
     @JvmStatic

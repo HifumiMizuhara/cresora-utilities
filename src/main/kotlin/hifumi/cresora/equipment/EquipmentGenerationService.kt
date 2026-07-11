@@ -1,6 +1,7 @@
 package hifumi.cresora.equipment
 import hifumi.cresora.StatEntry
 import hifumi.cresora.StatType
+import hifumi.cresora.combat.CombatBalanceProfileRegistry
 import net.minecraft.util.math.random.Random
 
 object EquipmentGenerationService {
@@ -157,6 +158,11 @@ object EquipmentGenerationService {
             EquipmentRarity.FIVE_STAR -> 1.7
         }
         val subScale = if (subStat) 0.68 else 1.0
+        val balanceScale = if (subStat) {
+            CombatBalanceProfileRegistry.current().artifactSubRollScalar
+        } else {
+            CombatBalanceProfileRegistry.current().artifactMainRollScalar
+        }
         val base = when (type) {
             StatType.ATK_FLAT -> 2.2
             StatType.ATK_PERCENT -> 2.1
@@ -172,6 +178,6 @@ object EquipmentGenerationService {
             StatType.DAMAGE_REDUCTION -> 1.6
         }
         val variance = 0.92 + random.nextDouble() * 0.16
-        return ((base * rarityScale * subScale * variance) * 100.0).toInt() / 100.0
+        return ((base * rarityScale * subScale * balanceScale * variance) * 100.0).toInt() / 100.0
     }
 }

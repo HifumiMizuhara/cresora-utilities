@@ -10,7 +10,8 @@ data class EquipmentData(
     val subStats: List<StatEntry>,
     val upgradeCount: Int,
     val slotTypeId: String = "wand",
-    val setId: String = "hinagata"
+    val setId: String = "hinagata",
+    val balanceVersion: Int = 0
 ) {
     fun normalized(): EquipmentData {
         val normalizedMainStat = mainStat.normalized()
@@ -28,7 +29,8 @@ data class EquipmentData(
             subStats = normalizedSubStats,
             upgradeCount = normalizedUpgradeCount,
             slotTypeId = slotTypeId.ifBlank { "wand" },
-            setId = setId.ifBlank { "hinagata" }
+            setId = setId.ifBlank { "hinagata" },
+            balanceVersion = balanceVersion.coerceAtLeast(0)
         )
     }
 
@@ -41,7 +43,8 @@ data class EquipmentData(
                 StatEntry.CODEC.listOf().fieldOf("subStats").forGetter(EquipmentData::subStats),
                 Codec.INT.fieldOf("upgradeCount").forGetter(EquipmentData::upgradeCount),
                 Codec.STRING.optionalFieldOf("slotType", "wand").forGetter(EquipmentData::slotTypeId),
-                Codec.STRING.optionalFieldOf("setId", "hinagata").forGetter(EquipmentData::setId)
+                Codec.STRING.optionalFieldOf("setId", "hinagata").forGetter(EquipmentData::setId),
+                Codec.INT.optionalFieldOf("balanceVersion", 0).forGetter(EquipmentData::balanceVersion)
             ).apply(instance, ::EquipmentData)
         }
     }

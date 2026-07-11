@@ -134,6 +134,12 @@ tasks.register('compilerTest', Test) {
 	classpath = sourceSets.compilerTest.runtimeClasspath
 	useJUnitPlatform()
 }
+tasks.register('combatBalanceReport', JavaExec) {
+	group = "cresora"
+	description = "Reports deterministic combat balance checkpoints"
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = "hifumi.cresora.combat.CombatBalanceReportMain"
+}
 tasks.named('check') { dependsOn 'compilerTest' }
 
 tasks.named('test') {

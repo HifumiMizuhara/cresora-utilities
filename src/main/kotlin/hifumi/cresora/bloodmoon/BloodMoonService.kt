@@ -693,8 +693,9 @@ object BloodMoonService {
         val target = server.playerManager.playerList.firstOrNull { session.participants.contains(it.uuid) } ?: return
         val waveRank = (AdventureRankService.getRank(target) + waveNumber * 2 + participantCount).coerceAtLeast(1)
         val baseCount = 5 + waveNumber + participantCount
-        val healthScalar = 1.0 + (waveNumber - 1) * 0.05
-        val defenseScalar = 1.0 + (waveNumber - 1) * 0.025
+        val balance = hifumi.cresora.combat.CombatBalanceProfileRegistry.current()
+        val healthScalar = 1.0 + (waveNumber - 1) * balance.bloodMoonWaveHealthGrowth
+        val defenseScalar = 1.0 + (waveNumber - 1) * balance.bloodMoonWaveDefenseGrowth
         session.bedInvulnerableUntilNextWave = false
 
         var spawnedCount = 0

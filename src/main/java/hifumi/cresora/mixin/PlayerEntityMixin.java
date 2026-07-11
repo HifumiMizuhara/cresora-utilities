@@ -4,6 +4,8 @@ import hifumi.cresora.bloodmoon.BloodMoonService;
 import hifumi.cresora.combat.CombatDamageType;
 import hifumi.cresora.combat.CombatDamageTypeSupport;
 import hifumi.cresora.combat.CombatFeedbackService;
+import hifumi.cresora.combat.CombatDamageResolver;
+import hifumi.cresora.combat.ResolvedCombatDamage;
 import hifumi.cresora.combat.CombatStatSupport;
 import hifumi.cresora.equipment.EquipmentPlayerSupport;
 import hifumi.cresora.masquerade.MasqueradeService;
@@ -59,47 +61,14 @@ public class PlayerEntityMixin {
     @Inject(method = "getDamageAgainst", at = @At("RETURN"), cancellable = true)
     private void cresora$applyOffenseStats(CallbackInfoReturnable<Float> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
-        Map<StatType, Double> totals = EquipmentPlayerSupport.getAggregatedStats(player);
-        WeaponDefinition weaponDefinition = WeaponStackSupport.INSTANCE.getDefinition(player.getMainHandStack());
-        WeaponData weaponData = WeaponStackSupport.INSTANCE.getWeaponData(player.getMainHandStack());
-        
-        double weaponCritRateBonus = 0.0;
-        double weaponCritDamageBonus = 0.0;
-        
-        if (player instanceof ServerPlayerEntity serverPlayer && weaponDefinition != null) {
-            weaponCritRateBonus = WeaponCombatSupport.INSTANCE.totalCritRateBonusPercent(serverPlayer, weaponDefinition, weaponData);
-            weaponCritDamageBonus = WeaponCombatSupport.INSTANCE.totalCritDamageBonusPercent(serverPlayer, weaponDefinition) / 100.0;
-        } else if (weaponDefinition != null) {
-            weaponCritRateBonus = WeaponCombatSupport.INSTANCE.critRateBonusPercent(weaponDefinition, weaponData);
+        if (!(player instanceof ServerPlayerEntity serverPlayer)) {
+            return;
         }
-
-        double weaponAllDamageBonus = 0.0;
-        if (player instanceof ServerPlayerEntity && weaponDefinition != null && weaponData != null) {
-            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
-            weaponAllDamageBonus = (WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData)
-                + WeaponSkillService.allDamageBonusPercent(serverPlayer, weaponDefinition.getId())) / 100.0;
-        } else if (weaponDefinition != null && weaponData != null) {
-            weaponAllDamageBonus = WeaponCombatSupport.INSTANCE.allDamageBonusPercent(weaponDefinition, weaponData) / 100.0;
+        ResolvedCombatDamage resolved = CombatDamageResolver.resolvePlayerOffense(serverPlayer, cir.getReturnValueF(), true);
+        if (resolved.getCritical()) {
+            CombatFeedbackService.INSTANCE.recordCrit(serverPlayer, resolved.getCritMultiplier());
+            player.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 0.8F, 1.0F);
         }
-
-        double allBonus = CombatStatSupport.cappedDamageBonusRatio(totals.getOrDefault(StatType.ALL_DMG_BONUS, 0.0) / 100.0 + weaponAllDamageBonus);
-        double critRate = CombatStatSupport.cappedCritRateRatio(CombatStatSupport.effectiveCritRateRatio(totals) + weaponCritRateBonus / 100.0);
-        double critDamage = CombatStatSupport.cappedCritDamageRatio(CombatStatSupport.effectiveCritDamageRatio(totals) + weaponCritDamageBonus);
-        double bloodMoonMultiplier = BloodMoonService.INSTANCE.playerDamageMultiplier(player);
-        double damageMultiplier = CombatStatSupport.additiveDamageMultiplier(allBonus, bloodMoonMultiplier);
-
-        double result = cir.getReturnValueF() * damageMultiplier;
-        if (critRate > 0.0) {
-            if (player.getRandom().nextDouble() < critRate) {
-                double critMultiplier = 1.0 + Math.max(0.0, critDamage);
-                result *= critMultiplier;
-                if (player instanceof ServerPlayerEntity) {
-                    ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
-                    CombatFeedbackService.INSTANCE.recordCrit(serverPlayer, critMultiplier);
-                }
-                player.playSound(SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 0.8F, 1.0F);
-            }
-        }
-        cir.setReturnValue((float) result);
+        cir.setReturnValue((float) resolved.getDamage());
     }
 }

@@ -1,6 +1,6 @@
 # CreSora Utilities API Document
 
-最終更新: 2026-06-30
+最終更新: 2026-07-10
 
 このドキュメントは、Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジストリスキーマ、およびコアサービスの仕様書です。
 各機能の開発履歴や完了したタスクのログについては、Git のコミット履歴 (`git log`) を参照してください。
@@ -234,6 +234,8 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 - `upgradeCount: Int`
 - `slotTypeId: String`
 - `setId: String`
+- `balanceVersion: Int`
+  - `combat_balance.json` の `version`。旧値はアイテム読込時に一度だけ新しいロール尺度へ移行される。
 
 公開メソッド:
 
@@ -262,6 +264,22 @@ Mixin 実装前提の保存口です。各 `Service` はこれを読む構造で
 ## 5. Content Registry API
 
 ここが最重要です。今の CreSora は多くのゲーム内容を JSON で差し替えられます。
+
+### 5.0 CombatBalanceProfileRegistry
+
+ファイル:
+
+- `combat/CombatBalanceProfile.kt`
+- `data/cresora-utilities/cresora/combat_balance.json`
+
+`CombatBalanceProfileRegistry.init()` は起動時に共有バランスプロファイルを検証して読み込む。ここがランク別敵成長、フィールド精鋭／ボス、ドメイン、血月、マスカレード、自然回復、聖遺物ロール、武器突破の数値上の唯一の調整口である。
+
+- `caps`: プレイヤー耐性上限、モブ耐性下限／上限、全ダメージ／会心ダメージの上限。
+- `survivor` 〜 `relic`: 敵ファミリー別のHP、防御、タフネス、与ダメージ曲線。
+- `domain` / `field` / `regen`: コンテンツ固有の補正と最大HP比の自然回復率。
+- `tuning`: 血月・マスカレード・聖遺物ロール・武器成長／突破の共通倍率。
+
+`combatBalanceReport` Gradle task はランク `1 / 20 / 40 / 55 / 70` と未完成／標準／最大育成を評価し、DPS、TTK、イベント1ウェーブ時間、被弾率を出力する。標準育成は通常敵3〜5秒・精鋭12〜18秒、最大育成は通常敵2秒以内・精鋭6〜10秒・イベント波30〜45秒を回帰基準とする。
 
 ### 5.1 EquipmentContentRegistry
 
@@ -1371,7 +1389,7 @@ LIMITED ★5 抽選の概要:
     - 3星チャレンジ: 通常モブ 3体
     - 4星チャレンジ: 通常モブ 2体 ＋ エリートモブ 1体
     - 5星チャレンジ: 通常モブ 2体 ＋ エリートモブ 2体（内1体はウィザースケルトン）
-  - **ステータススケーリング**: `AdventureRankService.applyMobScaling` に基づき、出現させたプレイヤーの冒険ランクに応じて動的にスケール。エリートモブはさらに高い倍率（HP 2.5倍、防御 2.0倍）が適用されます。
+  - **ステータススケーリング**: `AdventureRankService.applyMobScaling` と `combat_balance.json` の field boss 補正に基づき、出現させたプレイヤーの冒険ランクに応じて動的にスケールします。
   - **フロー表示**: 宝箱の頭上 (`y + 1.25` の座標) に `DisplayEntity.TextDisplayEntity` を生成し、リアルタイムに進捗を表示します。
   - **失敗およびリセット**: プレイヤーが死亡するか、宝箱から 32ブロック 以上離脱した場合にチャレンジは即座に失敗となり、守護者およびテキストは自動で消滅しリセットされます。
   - **報酬設計**:
@@ -1391,7 +1409,7 @@ LIMITED ★5 抽選の概要:
 
 責務:
 
-- rank 帯と combat 状態に基づく自然回復
+- combat 状態と `combat_balance.json` の最大HP比回復率に基づく滑らかな自然回復。ランク帯ごとの固定HP段差は廃止。
 
 主 API:
 
@@ -1463,6 +1481,14 @@ LIMITED ★5 抽選の概要:
 - `effectiveDisplayValue(type, totals)`
 - `effectiveCritRateRatio(totals)`
 - `effectiveCritDamageRatio(totals)`
+
+### 7.18.1 CombatDamageResolver
+
+ファイル:
+
+- `combat/CombatDamageResolver.kt`
+
+`CombatDamageRequest` を `ResolvedCombatDamage` へ変換する統一計算口。通常攻撃とプレイヤー起点の魔法スキルは、基礎値 → 与ダメージ → 会心 → 対象耐性の順で処理される。耐性低下後のモブ耐性は `combat_balance.json` の範囲（現行 `-50%〜75%`）へクランプされる。真ダメージは明示的にこの補正列を通らない。
 
 ### 7.19 CombatMobDisplayService
 

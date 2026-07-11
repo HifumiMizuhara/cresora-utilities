@@ -33,7 +33,7 @@ object EquipmentStackSupport {
             ?.copy(slotTypeId = definition.slotTypeId, setId = definition.setId)
             ?.normalized()
         if (existing != null) {
-            return existing
+            return syncEquipmentData(stack, EquipmentBalanceMigration.migrate(existing))
         }
 
         val legacyLevel = stack.getOrDefault(ModDataComponents.LEVEL, 0).coerceAtLeast(0)
@@ -92,7 +92,9 @@ object EquipmentStackSupport {
 
     fun syncEquipmentData(stack: ItemStack, data: EquipmentData): EquipmentData {
         val definition = getDefinition(stack) ?: return data.normalized()
-        val normalized = data.copy(slotTypeId = definition.slotTypeId, setId = definition.setId).normalized()
+        val normalized = EquipmentBalanceMigration.markCurrent(
+            data.copy(slotTypeId = definition.slotTypeId, setId = definition.setId)
+        )
         stack.set(ModDataComponents.EQUIPMENT_DATA, normalized)
         stack.set(ModDataComponents.LEVEL, normalized.level)
         return normalized
