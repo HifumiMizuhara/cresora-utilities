@@ -49,6 +49,7 @@ weapon "Tanboku Chokuu" {
         effect_id: "rougan_kenpo"
         note: "melody"
         cooldown: 3s
+        radius: 5.0
 
         buff "zanso_active" {
             max_stacks: 1

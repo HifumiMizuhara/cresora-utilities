@@ -49,6 +49,7 @@ weapon "Cold Mist, Coiling Snow" {
         duration: 10s
         base_value: 1.0
         value_per_level: 0.3
+        radius: 5.0
 
         buff "snow_mist" {
             max_stacks: 5

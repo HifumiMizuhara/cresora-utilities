@@ -15,6 +15,7 @@ weapon "Pastoral Flute Reverie" {
         cooldown: 50s
         duration: 50s
         base_value: 40.0
+        radius: 5.0
 
         on_activate {
             start_cooldown()

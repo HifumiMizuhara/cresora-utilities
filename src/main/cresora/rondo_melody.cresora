@@ -15,7 +15,8 @@ weapon "Rondo Melody" {
         duration: 15s
         base_value: 3.0
         value_per_level: 0.5
-        
+        radius: 5.0
+
         on_activate {
             start_cooldown()
             execute {

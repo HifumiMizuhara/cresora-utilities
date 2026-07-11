@@ -49,6 +49,7 @@ weapon "Resolve of the Distant Girl" {
         note: "harmony"
         cooldown: 60s
         duration: 5s
+        radius: 8.0
 
         buff "ketsui" {
             max_stacks: 100

@@ -48,6 +48,7 @@ weapon "Dark Lux" {
         note: "bass"
         cooldown: 30s
         duration: 30s
+        radius: 5.0
 
         on_activate {
             start_cooldown()

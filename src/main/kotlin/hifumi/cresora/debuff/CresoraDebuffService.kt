@@ -142,7 +142,7 @@ object CresoraDebuffService {
 
             // Treble + Harmony = Cadenza
             pair == setOf(Note.TREBLE, Note.HARMONY) -> {
-                target.damage(world, player.damageSources.indirectMagic(player, player), 12.0f)
+                hifumi.cresora.weapon.WeaponSkillService.dealTrueDamage(player, target, 12.0f)
 
                 // Reduce active weapon skill cooldown by 20% of its total cooldown.
                 val stack = player.mainHandStack
