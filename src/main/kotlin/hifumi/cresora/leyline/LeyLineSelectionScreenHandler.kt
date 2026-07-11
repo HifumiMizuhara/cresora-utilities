@@ -109,9 +109,8 @@ class LeyLineSelectionScreenHandler(
     private fun attemptStart(tier: Int, player: PlayerEntity) {
         val serverPlayer = player as? ServerPlayerEntity ?: return
         val pos = getBlockPos()
-        val element = getElement()
-        
-        val result = LeyLineService.startEvent(serverPlayer, pos, element, tier)
+
+        val result = LeyLineService.startEvent(serverPlayer, pos, tier)
         if (result.success) {
             player.closeHandledScreen()
         } else {

@@ -3,7 +3,6 @@ package hifumi.cresora.compiler
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import java.io.File
 
 class MovementCompiler(
@@ -32,6 +31,8 @@ class MovementCompiler(
 
         if (allMovements.isEmpty()) {
             println("No movement definitions found.")
+            updateStoryJson(emptyList())
+            updateStoryTexts(emptyList())
             return
         }
 
@@ -200,18 +201,9 @@ class MovementCompiler(
     }
 
     private fun updateStoryTexts(movements: List<MovementDefNode>) {
-        val root = if (storyTextsFile.exists()) {
-            JsonParser.parseString(storyTextsFile.readText()).asJsonObject
-        } else {
-            val r = JsonObject()
-            r.addProperty("fallbackLocale", "ja_jp")
-            r.add("texts", JsonObject())
-            r
-        }
-
-        if (!root.has("texts")) {
-            root.add("texts", JsonObject())
-        }
+        val root = JsonObject()
+        root.addProperty("fallbackLocale", "ja_jp")
+        root.add("texts", JsonObject())
         val textsObj = root.getAsJsonObject("texts")
 
         for (movement in movements) {

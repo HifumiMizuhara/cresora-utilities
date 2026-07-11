@@ -12,7 +12,8 @@ class CresoraCompiler(
     private val inputDir: File,
     private val outputDir: File,
     private val weaponJsonFile: File,
-    private val sourceResourcesDir: File? = null
+    private val sourceResourcesDir: File? = null,
+    private val generatedResourcesDir: File? = null
 ) {
     private val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
 
@@ -26,7 +27,7 @@ class CresoraCompiler(
         generatedDir.mkdirs()
 
         if (!inputDir.exists()) inputDir.mkdirs()
-        val cresoraFiles = inputDir.listFiles { _, name -> name.endsWith(".cresora") } ?: return
+        val cresoraFiles = inputDir.listFiles { _, name -> name.endsWith(".cresora") } ?: emptyArray()
         val allWeapons = mutableListOf<WeaponDefNode>()
         val allDictionaries = mutableListOf<DictionaryDefNode>()
 
@@ -52,6 +53,7 @@ class CresoraCompiler(
             generateKotlinCode(emptyList())
             updateWeaponJson(emptyList())
             updateRegistry(emptyList())
+            updateItemModels(emptyList())
             return
         }
 
@@ -652,20 +654,17 @@ class CresoraCompiler(
     }
 
     private fun updateLangFiles(weapons: List<WeaponDefNode>, dictionaries: List<DictionaryDefNode>) {
-        val langDir = if (sourceResourcesDir != null) {
-            File(sourceResourcesDir, "assets/cresora-utilities/lang")
-        } else {
-            File(weaponJsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities/lang")
-        }
-        if (!langDir.exists()) return
+        val generatedLangDir = File(generatedResourceRoot(), "assets/cresora-utilities/lang")
+        val sourceLangDir = sourceResourcesDir?.let { File(it, "assets/cresora-utilities/lang") }
 
         val locales = (weapons.flatMap { it.translations.keys } + dictionaries.flatMap { it.translations.keys }).distinct()
         for (locale in locales) {
-            val langFile = File(langDir, "$locale.json")
-            val langJson = if (langFile.exists()) {
-                JsonParser.parseString(langFile.readText()).asJsonObject
-            } else {
-                JsonObject()
+            val generatedLangFile = File(generatedLangDir, "$locale.json")
+            val sourceLangFile = sourceLangDir?.let { File(it, "$locale.json") }
+            val langJson = when {
+                generatedLangFile.isFile -> JsonParser.parseString(generatedLangFile.readText()).asJsonObject
+                sourceLangFile?.isFile == true -> JsonParser.parseString(sourceLangFile.readText()).asJsonObject
+                else -> JsonObject()
             }
 
             // Apply dictionaries first (base translations)
@@ -717,20 +716,24 @@ class CresoraCompiler(
                     }
                 }
             }
-            langFile.writeText(gson.toJson(langJson))
+            check(generatedLangDir.mkdirs() || generatedLangDir.isDirectory) {
+                "Could not create generated language directory: ${generatedLangDir.absolutePath}"
+            }
+            generatedLangFile.writeText(gson.toJson(langJson))
         }
     }
 
     private fun updateItemModels(weapons: List<WeaponDefNode>) {
-        val assetsDir = if (sourceResourcesDir != null) {
-            File(sourceResourcesDir, "assets/cresora-utilities")
-        } else {
-            File(weaponJsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities")
+        val generatedAssetsDir = File(generatedResourceRoot(), "assets/cresora-utilities")
+        val sourceAssetsDir = sourceResourcesDir?.let { File(it, "assets/cresora-utilities") } ?: generatedAssetsDir
+        val itemsDir = File(generatedAssetsDir, "items")
+        val modelsDir = File(generatedAssetsDir, "models/item")
+        check(itemsDir.mkdirs() || itemsDir.isDirectory) {
+            "Could not create generated item definition directory: ${itemsDir.absolutePath}"
         }
-        val itemsDir = File(assetsDir, "items")
-        val modelsDir = File(assetsDir, "models/item")
-        if (!itemsDir.exists()) itemsDir.mkdirs()
-        if (!modelsDir.exists()) modelsDir.mkdirs()
+        check(modelsDir.mkdirs() || modelsDir.isDirectory) {
+            "Could not create generated item model directory: ${modelsDir.absolutePath}"
+        }
 
         for (weapon in weapons) {
             // 1. Item Definition (Modern Minecraft)
@@ -759,7 +762,7 @@ class CresoraCompiler(
             val modelJson = JsonObject()
             modelJson.addProperty("parent", "minecraft:item/handheld")
             val textures = JsonObject()
-            val customTextureFile = File(assetsDir, "textures/item/${weapon.id}.png")
+            val customTextureFile = File(sourceAssetsDir, "textures/item/${weapon.id}.png")
             val texturePath = weapon.texture ?: if (customTextureFile.exists()) {
                 "cresora-utilities:item/${weapon.id}"
             } else {
@@ -781,7 +784,7 @@ class CresoraCompiler(
             val fragmentModelJson = JsonObject()
             fragmentModelJson.addProperty("parent", "minecraft:item/generated")
             val fragmentTextures = JsonObject()
-            val customFragmentTextureFile = File(assetsDir, "textures/item/${weapon.id}_fragment.png")
+            val customFragmentTextureFile = File(sourceAssetsDir, "textures/item/${weapon.id}_fragment.png")
             val fragmentTexturePath = if (customFragmentTextureFile.exists()) {
                 "cresora-utilities:item/${weapon.id}_fragment"
             } else {
@@ -836,6 +839,9 @@ class CresoraCompiler(
         subSkillRoot.add("model", subSkillModel)
         subSkillDummyFile.writeText(gson.toJson(subSkillRoot))
     }
+
+    private fun generatedResourceRoot(): File =
+        generatedResourcesDir ?: weaponJsonFile.parentFile.parentFile.parentFile.parentFile
 
     private fun FileSpec.Builder.addDefaultImports(): FileSpec.Builder {
         return this

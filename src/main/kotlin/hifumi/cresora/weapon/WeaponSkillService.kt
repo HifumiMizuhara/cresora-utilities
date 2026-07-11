@@ -99,7 +99,7 @@ object WeaponSkillService {
             val now = server.overworld.time
             val onlinePlayers = server.playerManager.playerList
             val onlinePlayerIds = onlinePlayers.mapTo(linkedSetOf(), ServerPlayerEntity::getUuid)
-            pruneOfflineState(onlinePlayerIds)
+            pruneOfflinePlayerState(onlinePlayerIds)
 
             WeaponSkillRegistry.allHandlers().forEach { (id, handler) ->
                 handler.pruneTransientState(onlinePlayerIds)
@@ -676,7 +676,7 @@ object WeaponSkillService {
         }
     }
 
-    private fun pruneOfflineState(onlinePlayerIds: Set<UUID>) {
+    private fun pruneOfflinePlayerState(onlinePlayerIds: Set<UUID>) {
         val offlinePlayers = cooldownBars.keys.filterNot(onlinePlayerIds::contains)
         for (playerId in offlinePlayers) {
             cooldownBars.remove(playerId)?.values?.forEach { bossBar ->
@@ -687,10 +687,6 @@ object WeaponSkillService {
         temporaryGuardExpireTickByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         lastHeldWeaponIdByPlayer.keys.removeIf { !onlinePlayerIds.contains(it) }
         taoStacks.keys.removeIf { !onlinePlayerIds.contains(it) }
-        soulBreakStacks.keys.removeIf { !onlinePlayerIds.contains(it) }
-        soulBreakExpireTick.keys.removeIf { !onlinePlayerIds.contains(it) }
-        targetMarks.keys.removeIf { !onlinePlayerIds.contains(it) }
-        invulnerabilityTicks.keys.removeIf { !onlinePlayerIds.contains(it) }
     }
 
     private inline fun runWeaponHandlers(

@@ -1,5 +1,4 @@
 package hifumi.cresora.combat
-import hifumi.cresora.adventurerank.AdventureRankService
 import hifumi.cresora.weapon.WeaponSkillService
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.server.MinecraftServer
@@ -9,29 +8,6 @@ import kotlin.math.floor
 
 object NaturalRegenService {
     private const val COMBAT_GRACE_TICKS: Long = 120L
-
-    private data class RegenBand(
-        val minRank: Int,
-        val maxRank: Int,
-        val combatSeconds: Double,
-        val combatHp: Double,
-        val nonCombatSeconds: Double,
-        val nonCombatHp: Double
-    ) {
-        fun matches(rank: Int): Boolean = rank in minRank..maxRank
-        fun combatHpPerTick(): Double = combatHp / (combatSeconds * 20.0)
-        fun nonCombatHpPerTick(): Double = nonCombatHp / (nonCombatSeconds * 20.0)
-    }
-
-    private val regenBands: List<RegenBand> = listOf(
-        RegenBand(1, 10, combatSeconds = 3.0, combatHp = 1.0, nonCombatSeconds = 5.0, nonCombatHp = 1.0),
-        RegenBand(11, 20, combatSeconds = 2.0, combatHp = 1.0, nonCombatSeconds = 4.0, nonCombatHp = 1.0),
-        RegenBand(21, 30, combatSeconds = 3.0, combatHp = 2.0, nonCombatSeconds = 5.0, nonCombatHp = 2.0),
-        RegenBand(31, 40, combatSeconds = 1.0, combatHp = 1.0, nonCombatSeconds = 2.0, nonCombatHp = 1.0),
-        RegenBand(41, 50, combatSeconds = 3.0, combatHp = 4.0, nonCombatSeconds = 1.0, nonCombatHp = 1.0),
-        RegenBand(51, 60, combatSeconds = 2.0, combatHp = 3.0, nonCombatSeconds = 3.0, nonCombatHp = 4.0),
-        RegenBand(61, 70, combatSeconds = 1.0, combatHp = 2.0, nonCombatSeconds = 2.0, nonCombatHp = 3.0)
-    )
 
     private val lastCombatTickByPlayer: MutableMap<UUID, Long> = mutableMapOf()
     private val pendingHealByPlayer: MutableMap<UUID, Double> = mutableMapOf()
@@ -72,12 +48,15 @@ object NaturalRegenService {
             return
         }
 
-        val rank = AdventureRankService.getRank(player)
-        val baseBandIndex = regenBands.indexOfFirst { it.matches(rank) }.let { if (it >= 0) it else regenBands.lastIndex }
-        val boostedBandIndex = (baseBandIndex + WeaponSkillService.regenStageBonus(player)).coerceIn(0, regenBands.lastIndex)
-        val band = regenBands[boostedBandIndex]
         val hungerScalar = foodLevel / 20.0
-        val ratePerTick = if (isInCombat(player, tick)) band.combatHpPerTick() else band.nonCombatHpPerTick()
+        val balance = CombatBalanceProfileRegistry.current().regen
+        val basePercentPerSecond = if (isInCombat(player, tick)) {
+            balance.combatPercentMaxHealthPerSecond
+        } else {
+            balance.nonCombatPercentMaxHealthPerSecond
+        }
+        val weaponScalar = 1.0 + WeaponSkillService.regenStageBonus(player).coerceAtLeast(0) * 0.15
+        val ratePerTick = player.maxHealth.toDouble() * (basePercentPerSecond / 100.0) * weaponScalar / 20.0
         val accumulated = (pendingHealByPlayer[player.uuid] ?: 0.0) + ratePerTick * hungerScalar
         val missingHealth = (player.maxHealth - player.health).toDouble().coerceAtLeast(0.0)
         val wholePoints = floor(accumulated).coerceAtMost(floor(missingHealth))

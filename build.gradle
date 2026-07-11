@@ -134,6 +134,12 @@ tasks.register('compilerTest', Test) {
 	classpath = sourceSets.compilerTest.runtimeClasspath
 	useJUnitPlatform()
 }
+tasks.register('combatBalanceReport', JavaExec) {
+	group = "cresora"
+	description = "Reports deterministic combat balance checkpoints"
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = "hifumi.cresora.combat.CombatBalanceReportMain"
+}
 tasks.named('check') { dependsOn 'compilerTest' }
 
 tasks.named('test') {
@@ -146,8 +152,9 @@ task compileAssets(type: JavaExec) {
     mainClass = "hifumi.cresora.compiler.MainKt"
     classpath = sourceSets.compiler.runtimeClasspath
 
-    // Inputs: DSL source files and the compiler itself
+    // Inputs: DSL source files, immutable resource bases, and the compiler itself
     inputs.dir("src/main/cresora")
+    inputs.dir("src/main/resources")
     inputs.files(sourceSets.compiler.output)
 
     // Generated outputs
@@ -166,10 +173,29 @@ task compileAssets(type: JavaExec) {
     errorOutput = System.err
 }
 
+def cresoraGeneratedResourceDir = layout.buildDirectory.dir("generated/cresora/resources")
+
 // Wire generated sources into the main source set
 sourceSets.main {
     kotlin.srcDir(layout.buildDirectory.dir("generated/cresora/kotlin"))
-    resources.srcDir(layout.buildDirectory.dir("generated/cresora/resources"))
+    // processResources below explicitly assembles the immutable base and generated overlay.
+    // Leaving the default source roots here would copy stale checked-in generated assets too.
+    resources.setSrcDirs([])
+}
+
+// The DSL compilers copy and augment these asset trees under build/generated. Excluding
+// their source counterparts prevents Gradle from selecting stale checked-in files.
+processResources {
+    from("src/main/resources") {
+        exclude "assets/cresora-utilities/lang/**"
+        exclude "assets/cresora-utilities/items/**"
+        exclude "assets/cresora-utilities/models/item/**"
+        exclude "data/cresora-utilities/cresora/cwc_weapon_content.json"
+        exclude "data/cresora-utilities/cresora/cac_artifact_content.json"
+        exclude "data/cresora-utilities/cresora/story_content.json"
+        exclude "data/cresora-utilities/cresora/story_texts.json"
+    }
+    from(cresoraGeneratedResourceDir)
 }
 
 compileKotlin.dependsOn compileAssets

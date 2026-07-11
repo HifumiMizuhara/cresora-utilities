@@ -42,13 +42,13 @@ object CombatStatSupport {
 
     @JvmStatic
     fun cappedDamageBonusRatio(value: Double): Double {
-        return value.coerceIn(0.0, MAX_DAMAGE_BONUS_RATIO)
+        return value.coerceIn(0.0, CombatBalanceProfileRegistry.current().maxDamageBonusRatio)
     }
 
     @JvmStatic
     fun additiveDamageMultiplier(allDamageBonusRatio: Double, externalMultiplier: Double): Double {
         val externalBonus = externalMultiplier - 1.0
-        return 1.0 + (allDamageBonusRatio + externalBonus).coerceIn(0.0, MAX_DAMAGE_BONUS_RATIO)
+        return 1.0 + (allDamageBonusRatio + externalBonus).coerceIn(0.0, CombatBalanceProfileRegistry.current().maxDamageBonusRatio)
     }
 
     @JvmStatic
@@ -58,6 +58,6 @@ object CombatStatSupport {
 
     @JvmStatic
     fun cappedCritDamageRatio(value: Double): Double {
-        return value.coerceIn(0.0, MAX_CRIT_DAMAGE_RATIO)
+        return value.coerceIn(0.0, CombatBalanceProfileRegistry.current().maxCritDamageRatio)
     }
 }

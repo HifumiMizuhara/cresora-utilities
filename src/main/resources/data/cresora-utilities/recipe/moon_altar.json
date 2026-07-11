@@ -6,12 +6,10 @@
     "MMM"
   ],
   "key": {
-    "M": {
-      "item": "cresora-utilities:moon_brick"
-    }
+    "M": "cresora-utilities:moon_brick"
   },
   "result": {
-    "item": "cresora-utilities:moon_altar",
+    "id": "cresora-utilities:moon_altar",
     "count": 1
   }
 }

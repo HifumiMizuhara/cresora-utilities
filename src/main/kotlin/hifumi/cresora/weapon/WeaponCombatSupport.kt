@@ -5,8 +5,10 @@ object WeaponCombatSupport {
 
     fun attackDamage(definition: WeaponDefinition, data: WeaponData): Double {
         val curve = definition.attackCurve
+        val tuning = hifumi.cresora.combat.CombatBalanceProfileRegistry.current()
         val raw = if (curve.isEmpty()) {
-            definition.baseAttackDamage + (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel
+            definition.baseAttackDamage * tuning.weaponBaseDamageScalar +
+                (data.baseLevel - 1).coerceAtLeast(0) * definition.attackDamagePerLevel * tuning.weaponLevelGrowthScalar
         } else {
             val level = data.baseLevel.coerceIn(1, definition.maxBaseLevel)
             if (level <= curve.first().level) {
@@ -27,7 +29,7 @@ object WeaponCombatSupport {
                 calculated
             }
         }
-        return raw * (1.0 + WeaponUpgradeService.BREAKTHROUGH_ATTACK_FACTOR * data.breakthrough)
+        return raw * (1.0 + WeaponUpgradeService.breakthroughAttackFactor() * data.breakthrough)
     }
 
     fun attackDamageModifier(definition: WeaponDefinition, data: WeaponData): Double {
@@ -40,11 +42,7 @@ object WeaponCombatSupport {
 
     fun critRateBonusPercent(definition: WeaponDefinition, data: WeaponData? = null): Double {
         val baseCrit = definition.critRateBonusPercent
-        val btBonus = when (data?.breakthrough) {
-            1 -> WeaponUpgradeService.BREAKTHROUGH_1_CRIT_RATE_BONUS
-            2 -> WeaponUpgradeService.BREAKTHROUGH_2_CRIT_RATE_BONUS
-            else -> 0.0
-        }
+        val btBonus = WeaponUpgradeService.breakthroughCritRateBonus(data?.breakthrough ?: 0)
         return baseCrit + btBonus
     }
 
@@ -64,7 +62,7 @@ object WeaponCombatSupport {
             val progress = (data.baseLevel.coerceIn(1, definition.maxBaseLevel) - 1).toDouble() / (definition.maxBaseLevel - 1).toDouble()
             maxBonus * progress.coerceIn(0.0, 1.0)
         }
-        val btBonus = if (data.breakthrough == 2) WeaponUpgradeService.BREAKTHROUGH_2_ALL_DAMAGE_BONUS else 0.0
+        val btBonus = WeaponUpgradeService.breakthroughAllDamageBonus(data.breakthrough)
         return normalBonus + btBonus
     }
 

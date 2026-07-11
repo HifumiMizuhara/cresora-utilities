@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 
 import hifumi.cresora.equipment.ArtifactBookScreenBase
 
@@ -95,17 +96,9 @@ class GuideScreen(
     private fun isTaskClaimable(stack: ItemStack): Boolean {
         if (stack.isEmpty || stack.item == Items.GREEN_STAINED_GLASS_PANE) return false
         val lore = stack.get(DataComponentTypes.LORE) ?: return false
-        for (line in lore.lines) {
-            val content = line.content
-            if (content is net.minecraft.text.TranslatableTextContent && content.key == "guide.cresora.status.claimable") {
-                return true
-            }
-            val str = line.string.lowercase()
-            if (str.contains("claim") || str.contains("领取") || str.contains("可") || str.contains("click")) {
-                return true
-            }
+        return lore.lines.any { line ->
+            (line.content as? TranslatableTextContent)?.key == GuideDisplayStackFactory.CLAIMABLE_STATUS_KEY
         }
-        return false
     }
 
     private fun updateButtonStates() {

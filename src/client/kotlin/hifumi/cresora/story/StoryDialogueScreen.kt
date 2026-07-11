@@ -21,6 +21,33 @@ class StoryDialogueScreen(
 
     override fun init() {
         super.init()
+        rebuildControls()
+        scheduleAutoAdvance()
+    }
+
+    fun applyState(newState: StoryDialogueStatePayload) {
+        val previousMode = StoryDialogueViewMode.fromId(state.modeId)
+        state = newState
+        awaitingServerResponse = false
+        val mode = StoryDialogueViewMode.fromId(newState.modeId)
+        if (mode != StoryDialogueViewMode.DIALOGUE) {
+            autoAdvance = false
+        }
+
+        if (previousMode != mode) {
+            rebuildControls()
+        } else if (mode == StoryDialogueViewMode.NPC_DIALOGUE) {
+            rebuildChoiceButtons()
+        }
+
+        scheduleAutoAdvance()
+        refreshButtons()
+    }
+
+    private fun rebuildControls() {
+        clearChildren()
+        choiceButtons.clear()
+
         val panelLeft = width / 2 - 150
         val panelTop = height - 124
 
@@ -47,24 +74,6 @@ class StoryDialogueScreen(
             StoryDialogueViewMode.COUNTDOWN -> {}
         }
         refreshButtons()
-        scheduleAutoAdvance()
-    }
-
-    fun applyState(newState: StoryDialogueStatePayload) {
-        state = newState
-        awaitingServerResponse = false
-        val mode = StoryDialogueViewMode.fromId(newState.modeId)
-        if (mode != StoryDialogueViewMode.DIALOGUE) {
-            autoAdvance = false
-        }
-        if (mode == StoryDialogueViewMode.NPC_DIALOGUE) {
-            clearButtons()
-            rebuildChoiceButtons()
-        }
-        scheduleAutoAdvance()
-        if (this::continueButton.isInitialized) {
-            refreshButtons()
-        }
     }
 
     override fun tick() {
@@ -223,13 +232,13 @@ class StoryDialogueScreen(
         )
     }
 
-    private fun clearButtons() {
+    private fun clearChoiceButtons() {
         choiceButtons.forEach { remove(it) }
         choiceButtons.clear()
     }
 
     private fun rebuildChoiceButtons() {
-        clearButtons()
+        clearChoiceButtons()
         val panelWidth = width - 80
         val panelLeft = width / 2 - panelWidth / 2
         val dialogueHeight = 80 + state.extras.choices.size * 26

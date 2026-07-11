@@ -12,7 +12,8 @@ class ArtifactCompiler(
     private val inputDir: File,
     private val outputDir: File,
     private val jsonFile: File,
-    private val sourceResourcesDir: File? = null
+    private val sourceResourcesDir: File? = null,
+    private val generatedResourcesDir: File? = null
 ) {
     private val gson = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
     private val artifactRegistryDir = File(outputDir, "hifumi/cresora/equipment/generated")
@@ -38,6 +39,8 @@ class ArtifactCompiler(
 
         if (allArtifacts.isEmpty()) {
             println("No artifact definitions found.")
+            generateRegistry(emptyList())
+            updateArtifactJson(emptyList())
             return
         }
 
@@ -249,43 +252,43 @@ class ArtifactCompiler(
                 .build())
         }
 
-        // 2. onTick for expiry (Artifacts use onTick(player))
+        // 2. State tick for expiry. This is dispatched independently from DSL on_tick hooks.
         if (bonus.buffs.isNotEmpty()) {
-            val onTickFun = funSpecs.getOrPut("onTick") {
-                FunSpec.builder("onTick")
+            val onStateTickFun = funSpecs.getOrPut("onTransientStateTick") {
+                FunSpec.builder("onTransientStateTick")
                     .addModifiers(KModifier.OVERRIDE)
                     .addParameter("player", ClassName("net.minecraft.server.network", "ServerPlayerEntity"))
             }
 
-            onTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
+            onStateTickFun.addStatement("val now = %T.currentWorldTime(player)", ClassName("hifumi.cresora.weapon", "WeaponSkillService"))
             for (buff in bonus.buffs) {
                 val mapName = camelCase(buff.id) + "States"
                 val buffNameKey = buff.translationKey ?: "item.cresora.artifact.skill.buff.${buff.id}.name"
                 if (buff.decay == "independent") {
-                    onTickFun.beginControlFlow("run")
-                    onTickFun.addStatement("val state = $mapName[player.uuid]")
-                    onTickFun.beginControlFlow("if (state != null)")
-                    onTickFun.addStatement("val removed = state.expireTicks.removeIf { now >= it }")
-                    onTickFun.beginControlFlow("if (removed && state.expireTicks.isEmpty())")
-                    onTickFun.addStatement("$mapName.remove(player.uuid)")
-                    onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
+                    onStateTickFun.beginControlFlow("run")
+                    onStateTickFun.addStatement("val state = $mapName[player.uuid]")
+                    onStateTickFun.beginControlFlow("if (state != null)")
+                    onStateTickFun.addStatement("val removed = state.expireTicks.removeIf { now >= it }")
+                    onStateTickFun.beginControlFlow("if (removed && state.expireTicks.isEmpty())")
+                    onStateTickFun.addStatement("$mapName.remove(player.uuid)")
+                    onStateTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
                         ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
-                    onTickFun.nextControlFlow("else if (removed)")
-                    onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S), %T.getDisplayStacks(player, %S, state.stacks)), true)",
+                    onStateTickFun.nextControlFlow("else if (removed)")
+                    onStateTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S), %T.getDisplayStacks(player, %S, state.stacks)), true)",
                         ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.decreased",
                         ClassName("net.minecraft.text", "Text"), buffNameKey,
                         ClassName("hifumi.cresora.equipment", "EquipmentEffectHookService"), buff.id)
-                    onTickFun.endControlFlow()
-                    onTickFun.endControlFlow()
-                    onTickFun.endControlFlow()
+                    onStateTickFun.endControlFlow()
+                    onStateTickFun.endControlFlow()
+                    onStateTickFun.endControlFlow()
                 } else {
-                    onTickFun.beginControlFlow("if ($mapName.containsKey(player.uuid) && now >= $mapName[player.uuid]!!.expireTick)")
-                    onTickFun.addStatement("$mapName.remove(player.uuid)")
-                    onTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
+                    onStateTickFun.beginControlFlow("if ($mapName.containsKey(player.uuid) && now >= $mapName[player.uuid]!!.expireTick)")
+                    onStateTickFun.addStatement("$mapName.remove(player.uuid)")
+                    onStateTickFun.addStatement("player.sendMessage(%T.translatable(%S, %T.translatable(%S)), true)",
                         ClassName("net.minecraft.text", "Text"), "item.cresora.artifact.skill.buff.${buff.id}.expired",
                         ClassName("net.minecraft.text", "Text"), buffNameKey)
-                    onTickFun.endControlFlow()
+                    onStateTickFun.endControlFlow()
                 }
             }
 
@@ -626,20 +629,17 @@ class ArtifactCompiler(
     }
 
     private fun updateLangFiles(artifacts: List<ArtifactDefNode>) {
-        val langDir = if (sourceResourcesDir != null) {
-            File(sourceResourcesDir, "assets/cresora-utilities/lang")
-        } else {
-            File(jsonFile.parentFile.parentFile.parentFile.parentFile, "assets/cresora-utilities/lang")
-        }
-        if (!langDir.exists()) return
+        val generatedLangDir = File(generatedResourceRoot(), "assets/cresora-utilities/lang")
+        val sourceLangDir = sourceResourcesDir?.let { File(it, "assets/cresora-utilities/lang") }
 
         val locales = artifacts.flatMap { it.translations.keys }.distinct()
         for (locale in locales) {
-            val langFile = File(langDir, "$locale.json")
-            val langJson = if (langFile.exists()) {
-                JsonParser.parseString(langFile.readText()).asJsonObject
-            } else {
-                JsonObject()
+            val generatedLangFile = File(generatedLangDir, "$locale.json")
+            val sourceLangFile = sourceLangDir?.let { File(it, "$locale.json") }
+            val langJson = when {
+                generatedLangFile.isFile -> JsonParser.parseString(generatedLangFile.readText()).asJsonObject
+                sourceLangFile?.isFile == true -> JsonParser.parseString(sourceLangFile.readText()).asJsonObject
+                else -> JsonObject()
             }
 
             for (artifact in artifacts) {
@@ -690,7 +690,13 @@ class ArtifactCompiler(
                 }
             }
 
-            langFile.writeText(gson.toJson(langJson) + "\n")
+            check(generatedLangDir.mkdirs() || generatedLangDir.isDirectory) {
+                "Could not create generated language directory: ${generatedLangDir.absolutePath}"
+            }
+            generatedLangFile.writeText(gson.toJson(langJson) + "\n")
         }
     }
+
+    private fun generatedResourceRoot(): File =
+        generatedResourcesDir ?: jsonFile.parentFile.parentFile.parentFile.parentFile
 }

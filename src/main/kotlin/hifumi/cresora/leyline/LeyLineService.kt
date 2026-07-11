@@ -46,6 +46,25 @@ data class LeyLineStartResult(
     val args: List<Any> = emptyList()
 )
 
+internal enum class LeyLineStartAuthorization {
+    AUTHORIZED,
+    MISSING_PENDING_LEY_LINE,
+    NOT_OWNER
+}
+
+internal object LeyLineAccessPolicy {
+    fun canPlace(hasPendingLeyLine: Boolean, hasActiveSession: Boolean): Boolean =
+        !hasPendingLeyLine && !hasActiveSession
+
+    fun authorizeStart(pendingOwnerId: UUID?, requesterId: UUID): LeyLineStartAuthorization = when {
+        pendingOwnerId == null -> LeyLineStartAuthorization.MISSING_PENDING_LEY_LINE
+        pendingOwnerId != requesterId -> LeyLineStartAuthorization.NOT_OWNER
+        else -> LeyLineStartAuthorization.AUTHORIZED
+    }
+
+    fun canReceiveCompletion(ownerId: UUID, participantId: UUID): Boolean = ownerId == participantId
+}
+
 private class PendingLeyLine(
     val pos: BlockPos,
     val placerUuid: UUID,
@@ -86,9 +105,9 @@ object LeyLineService {
         element: LeyLineElement
     ): Boolean {
         val key = leyLineKey(world, pos)
-        // Clear any existing at the position
-        pendingLeyLines.remove(key)
-        activeSessions.remove(key)
+        if (!LeyLineAccessPolicy.canPlace(pendingLeyLines.containsKey(key), activeSessions.containsKey(key))) {
+            return false
+        }
 
         val state = CreSoraUtilities.LEY_LINE_OVERFLOW_BLOCK.defaultState.with(LeyLineOverflowBlock.ELEMENT, element)
         world.setBlockState(pos, state)
@@ -110,7 +129,29 @@ object LeyLineService {
         refundKey(world, pos, pending.placerUuid, pending.element)
     }
 
-    fun openSelectionGui(player: ServerPlayerEntity, pos: BlockPos, element: LeyLineElement) {
+    fun openSelectionGui(player: ServerPlayerEntity, pos: BlockPos) {
+        val world = player.world as? ServerWorld ?: return
+        val key = leyLineKey(world, pos)
+        val pending = pendingLeyLines[key]
+        when (LeyLineAccessPolicy.authorizeStart(pending?.placerUuid, player.uuid)) {
+            LeyLineStartAuthorization.NOT_OWNER -> {
+                player.sendMessage(Text.translatable("screen.cresora.leyline.not_owner"), true)
+                return
+            }
+
+            LeyLineStartAuthorization.MISSING_PENDING_LEY_LINE -> {
+                player.sendMessage(Text.translatable("screen.cresora.leyline.invalid_block"), true)
+                return
+            }
+
+            LeyLineStartAuthorization.AUTHORIZED -> Unit
+        }
+        val authorizedPending = pending ?: return
+        if (!world.getBlockState(pos).isOf(CreSoraUtilities.LEY_LINE_OVERFLOW_BLOCK)) {
+            player.sendMessage(Text.translatable("screen.cresora.leyline.invalid_block"), true)
+            return
+        }
+
         player.openHandledScreen(object : net.minecraft.screen.NamedScreenHandlerFactory {
             override fun getDisplayName(): Text = Text.translatable("screen.cresora.leyline.selection_title")
 
@@ -121,7 +162,7 @@ object LeyLineService {
             ): net.minecraft.screen.ScreenHandler {
                 val handler = LeyLineSelectionScreenHandler(syncId, playerInventory)
                 val properties = handler.properties
-                properties.set(LeyLineSelectionScreenHandler.PROPERTY_ELEMENT, element.ordinal)
+                properties.set(LeyLineSelectionScreenHandler.PROPERTY_ELEMENT, authorizedPending.element.ordinal)
                 properties.set(LeyLineSelectionScreenHandler.PROPERTY_POS_X, pos.x)
                 properties.set(LeyLineSelectionScreenHandler.PROPERTY_POS_Y, pos.y)
                 properties.set(LeyLineSelectionScreenHandler.PROPERTY_POS_Z, pos.z)
@@ -130,13 +171,43 @@ object LeyLineService {
         })
     }
 
-    fun startEvent(player: ServerPlayerEntity, pos: BlockPos, element: LeyLineElement, tier: Int): LeyLineStartResult {
+    fun startEvent(player: ServerPlayerEntity, pos: BlockPos, tier: Int): LeyLineStartResult {
+        if (tier !in 1..4) {
+            return LeyLineStartResult(false, "screen.cresora.leyline.invalid_tier")
+        }
+
+        val world = player.world as? ServerWorld
+            ?: return LeyLineStartResult(false, "screen.cresora.leyline.invalid_block")
+        val key = leyLineKey(world, pos)
+        val pending = pendingLeyLines[key]
+        when (LeyLineAccessPolicy.authorizeStart(pending?.placerUuid, player.uuid)) {
+            LeyLineStartAuthorization.NOT_OWNER -> {
+                return LeyLineStartResult(false, "screen.cresora.leyline.not_owner")
+            }
+
+            LeyLineStartAuthorization.MISSING_PENDING_LEY_LINE -> {
+                return LeyLineStartResult(false, "screen.cresora.leyline.invalid_block")
+            }
+
+            LeyLineStartAuthorization.AUTHORIZED -> Unit
+        }
+        val authorizedPending = pending
+            ?: return LeyLineStartResult(false, "screen.cresora.leyline.invalid_block")
+
+        val state = world.getBlockState(pos)
+        if (!state.isOf(CreSoraUtilities.LEY_LINE_OVERFLOW_BLOCK) || state.get(LeyLineOverflowBlock.ELEMENT) != authorizedPending.element) {
+            return LeyLineStartResult(false, "screen.cresora.leyline.invalid_block")
+        }
+        if (activeSessions.containsKey(key)) {
+            return LeyLineStartResult(false, "screen.cresora.leyline.already_started")
+        }
+
         val unlockRank = when (tier) {
             1 -> 1
             2 -> 10
             3 -> 20
             4 -> 35
-            else -> 1
+            else -> error("Validated tier was outside 1..4")
         }
         val rank = AdventureRankService.getRank(player)
         if (rank < unlockRank) {
@@ -147,24 +218,13 @@ object LeyLineService {
             return LeyLineStartResult(false, "screen.cresora.domain.inventory_full", listOf(1))
         }
 
-        val world = player.world as ServerWorld
-        val key = leyLineKey(world, pos)
-        val state = world.getBlockState(pos)
-        if (!state.isOf(CreSoraUtilities.LEY_LINE_OVERFLOW_BLOCK)) {
-            return LeyLineStartResult(false, "screen.cresora.leyline.invalid_block")
-        }
-
-        if (activeSessions.containsKey(key)) {
-            return LeyLineStartResult(false, "screen.cresora.leyline.already_started")
-        }
-
         // Remove from pending so we don't refund key when replacing the block with air
         pendingLeyLines.remove(key)
         world.setBlockState(pos, Blocks.AIR.defaultState)
 
         val session = LeyLineEventSession(
             pos = pos,
-            element = element,
+            element = authorizedPending.element,
             tier = tier,
             placerUuid = player.uuid,
             worldKey = world.registryKey
@@ -288,11 +348,26 @@ object LeyLineService {
                         session.wavePreparing = true
                         session.nextSpawnTick = world.time + 40
                     } else {
-                        // Success!
-                        sessionIterator.remove()
-                        val completer = nearbyPlayers.firstOrNull() ?: server.playerManager.getPlayer(session.placerUuid)
-                        if (completer != null) {
-                            completeEvent(world, session, completer)
+                        val owner = nearbyPlayers.firstOrNull {
+                            LeyLineAccessPolicy.canReceiveCompletion(session.placerUuid, it.uuid)
+                        }
+                        if (owner != null) {
+                            sessionIterator.remove()
+                            completeEvent(world, session, owner)
+                        } else {
+                            // Helpers may clear the encounter, but the owner must be present to
+                            // receive the owner-bound reward. Do not leave an inert session behind.
+                            sessionIterator.remove()
+                            server.playerManager.getPlayer(session.placerUuid)?.sendMessage(
+                                Text.translatable("message.cresora.leyline.failed_owner_absent"),
+                                false
+                            )
+                            nearbyPlayers.forEach { participant ->
+                                participant.sendMessage(
+                                    Text.translatable("message.cresora.leyline.failed_owner_absent"),
+                                    false
+                                )
+                            }
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package hifumi.cresora.domain
 import hifumi.cresora.adventurerank.AdventureRankProgression
+import hifumi.cresora.combat.CombatBalanceProfileRegistry
 object DomainCombatProfile {
     data class Scaling(
         val healthScalar: Double,
@@ -10,13 +11,14 @@ object DomainCombatProfile {
 
     fun scaling(rank: Int, elite: Boolean, boss: Boolean = false): Scaling {
         val progress = AdventureRankProgression.normalizedProgress(rank)
+        val profile = CombatBalanceProfileRegistry.current().domain
         val eliteBonus = if (elite || boss) 1.0 else 0.0
         val bossBonus = if (boss) 1.0 else 0.0
         return Scaling(
-            healthScalar = 0.92 + progress * 0.42 + eliteBonus * 0.32 + bossBonus * 0.56,
-            defenseScalar = 1.0 + progress * 0.18 + eliteBonus * 0.18 + bossBonus * 0.27,
-            toughnessScalar = 1.0 + progress * 0.12 + eliteBonus * 0.14 + bossBonus * 0.21,
-            damageScalar = 1.0 + progress * 0.18 + eliteBonus * 0.16 + bossBonus * 0.19
+            healthScalar = profile.normalHealthBase + progress * profile.normalHealthGrowth + eliteBonus * profile.eliteHealthBonus + bossBonus * profile.bossHealthBonus,
+            defenseScalar = 1.0 + progress * profile.defenseGrowth + eliteBonus * profile.eliteDefenseBonus + bossBonus * profile.bossDefenseBonus,
+            toughnessScalar = 1.0 + progress * profile.toughnessGrowth + eliteBonus * profile.eliteToughnessBonus + bossBonus * profile.bossToughnessBonus,
+            damageScalar = 1.0 + progress * profile.damageGrowth + eliteBonus * profile.eliteDamageBonus + bossBonus * profile.bossDamageBonus
         )
     }
 

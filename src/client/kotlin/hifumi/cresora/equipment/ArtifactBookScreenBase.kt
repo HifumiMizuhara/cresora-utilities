@@ -27,6 +27,17 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
     abstract fun getActiveTab(): Int
 
     companion object {
+        private const val TAB_WIDTH = 52
+
+        private val TAB_LABEL_KEYS = listOf(
+            "screen.cresora.book.tab.guide",
+            "screen.cresora.book.tab.story",
+            "screen.cresora.book.tab.domain",
+            "screen.cresora.book.tab.resonance",
+            "screen.cresora.book.tab.shop",
+            "screen.cresora.book.tab.records"
+        )
+
         private var savedMouseX: Double? = null
         private var savedMouseY: Double? = null
         private var savedTime: Long = 0L
@@ -86,11 +97,11 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
             val tabY = y + 20 + (tab - 1) * 30
             if (tab == activeTab) {
                 // Active Tab background
-                context.fill(x - 14, tabY, x, tabY + 25, 0xFFF5EFEB.toInt())
-                context.fill(x - 14, tabY, x - 12, tabY + 25, 0xFF5C9E32.toInt()) // Green Indicator
+                context.fill(x - TAB_WIDTH, tabY, x, tabY + 25, 0xFFF5EFEB.toInt())
+                context.fill(x - TAB_WIDTH, tabY, x - TAB_WIDTH + 2, tabY + 25, 0xFF5C9E32.toInt()) // Green Indicator
             } else {
                 // Inactive Tab background
-                context.fill(x - 12, tabY, x, tabY + 25, 0xFF5E4F3E.toInt())
+                context.fill(x - TAB_WIDTH + 2, tabY, x, tabY + 25, 0xFF5E4F3E.toInt())
             }
         }
 
@@ -110,24 +121,16 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
     override fun drawForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
         val activeTab = getActiveTab()
 
-        // Render tab text labels vertically (vertical characters)
-        drawTabText(context, "见闻", 1, activeTab)
-        drawTabText(context, "演奏", 2, activeTab)
-        drawTabText(context, "讨伐", 3, activeTab)
-        drawTabText(context, "祈愿", 4, activeTab)
-        drawTabText(context, "珍品", 5, activeTab)
-        drawTabText(context, "记录", 6, activeTab)
+        TAB_LABEL_KEYS.forEachIndexed { index, key ->
+            drawTabText(context, Text.translatable(key), index + 1, activeTab)
+        }
     }
 
-    private fun drawTabText(context: DrawContext, text: String, tabIdx: Int, activeTab: Int) {
+    private fun drawTabText(context: DrawContext, text: Text, tabIdx: Int, activeTab: Int) {
         val tabY = 23 + (tabIdx - 1) * 30
         val color = if (tabIdx == activeTab) 0xFF3C3024.toInt() else 0xFFC0B2A3.toInt()
-        val xOffset = if (tabIdx == activeTab) -9 else -7
-        
-        if (text.length >= 2) {
-            context.drawText(textRenderer, text[0].toString(), xOffset, tabY, color, false)
-            context.drawText(textRenderer, text[1].toString(), xOffset, tabY + 10, color, false)
-        }
+        val xOffset = -TAB_WIDTH + (TAB_WIDTH - textRenderer.getWidth(text)) / 2
+        context.drawText(textRenderer, text, xOffset, tabY + 8, color, false)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -135,7 +138,7 @@ abstract class ArtifactBookScreenBase<T : ScreenHandler>(
         val relativeY = mouseY - y
         val mc = client ?: return super.mouseClicked(mouseX, mouseY, button)
 
-        if (relativeX in -14.0..0.0) {
+        if (relativeX in -TAB_WIDTH.toDouble()..0.0) {
             for (tab in 1..6) {
                 val tabYStart = 20.0 + (tab - 1) * 30.0
                 val tabYEnd = tabYStart + 25.0

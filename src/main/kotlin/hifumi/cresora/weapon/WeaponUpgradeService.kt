@@ -1,9 +1,17 @@
 package hifumi.cresora.weapon
+
+import hifumi.cresora.combat.CombatBalanceProfileRegistry
+
 object WeaponUpgradeService {
-    const val BREAKTHROUGH_ATTACK_FACTOR = 0.15
-    const val BREAKTHROUGH_1_CRIT_RATE_BONUS = 5.0
-    const val BREAKTHROUGH_2_CRIT_RATE_BONUS = 10.0
-    const val BREAKTHROUGH_2_ALL_DAMAGE_BONUS = 10.0
+    fun breakthroughAttackFactor(): Double = CombatBalanceProfileRegistry.current().weaponBreakthroughAttackFactor
+
+    fun breakthroughCritRateBonus(breakthrough: Int): Double {
+        return breakthrough.coerceIn(0, 2) * CombatBalanceProfileRegistry.current().weaponBreakthroughCritRateBonus
+    }
+
+    fun breakthroughAllDamageBonus(breakthrough: Int): Double {
+        return if (breakthrough.coerceIn(0, 2) >= 2) CombatBalanceProfileRegistry.current().weaponBreakthroughAllDamageBonus else 0.0
+    }
 
     fun baseUpgradeCost(definition: WeaponDefinition, currentLevel: Int): Int {
         val level = currentLevel.coerceAtLeast(1)

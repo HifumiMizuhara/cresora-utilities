@@ -62,8 +62,6 @@ object TreasureChestService {
 
     private const val TRIGGER_DISTANCE_SQ = 36.0 // 6 blocks
     private const val RESET_DISTANCE_SQ = 1024.0 // 32 blocks
-    private const val ELITE_HEALTH_SCALAR = 2.5
-    private const val ELITE_DEFENSE_SCALAR = 2.0
 
     private data class ChestReward(
         val stars: Int,
@@ -309,8 +307,9 @@ object TreasureChestService {
             FieldMobPackService.markExplicit(entity, elite)
         }
 
-        val healthScalar = if (elite) ELITE_HEALTH_SCALAR else 1.0
-        val defenseScalar = if (elite) ELITE_DEFENSE_SCALAR else 1.0
+        val fieldBalance = hifumi.cresora.combat.CombatBalanceProfileRegistry.current().field
+        val healthScalar = if (elite) fieldBalance.bossHealthScalar else 1.0
+        val defenseScalar = if (elite) fieldBalance.bossDefenseScalar else 1.0
         AdventureRankService.applyMobScaling(entity, rank, healthScalar, defenseScalar, defenseScalar)
 
         entity.isGlowing = true

@@ -1,7 +1,10 @@
 package hifumi.cresora.equipment
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.server.network.ServerPlayerEntity
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 interface ArtifactSkillHandler {
     fun onEquipChanged(player: ServerPlayerEntity) {}
@@ -9,10 +12,10 @@ interface ArtifactSkillHandler {
     fun onDamageTaken(player: ServerPlayerEntity, source: net.minecraft.entity.damage.DamageSource, damage: Double) {}
     fun onKill(player: ServerPlayerEntity, target: net.minecraft.entity.LivingEntity) {}
     fun onTick(player: ServerPlayerEntity) {}
-    
-    // For transient state management if needed in the future
-    fun clearTransientState(playerId: java.util.UUID) {}
-    fun pruneTransientState(activePlayerIds: Set<java.util.UUID>) {}
+    fun onTransientStateTick(player: ServerPlayerEntity) {}
+
+    fun clearTransientState(playerId: UUID) {}
+    fun pruneTransientState(activePlayerIds: Set<UUID>) {}
 
     fun getAttackDamageScalar(player: ServerPlayerEntity): Double = 0.0
     fun getArmorScalar(player: ServerPlayerEntity): Double = 0.0
@@ -25,6 +28,7 @@ interface ArtifactSkillHandler {
 object ArtifactSkillRegistry {
     private val logger = LoggerFactory.getLogger("cresora-utilities/artifact-skill-registry")
     private val handlers = mutableMapOf<String, ArtifactSkillHandler>()
+    private var lifecycleHooksRegistered = false
 
     init {
         // All artifacts are now registered through the compiler-generated registry
@@ -38,7 +42,20 @@ object ArtifactSkillRegistry {
     }
 
     fun init() {
-        // Just to trigger the init block
+        if (lifecycleHooksRegistered) return
+        lifecycleHooksRegistered = true
+
+        ServerPlayConnectionEvents.DISCONNECT.register(ServerPlayConnectionEvents.Disconnect { handler, _ ->
+            clearTransientState(handler.player.uuid)
+        })
+        ServerTickEvents.END_SERVER_TICK.register { server ->
+            val onlinePlayers = server.playerManager.playerList
+            val activePlayerIds = onlinePlayers.mapTo(linkedSetOf(), ServerPlayerEntity::getUuid)
+            handlers.values.toSet().forEach { artifactHandler ->
+                artifactHandler.pruneTransientState(activePlayerIds)
+                onlinePlayers.forEach(artifactHandler::onTransientStateTick)
+            }
+        }
     }
 
     fun register(effectId: String, handler: ArtifactSkillHandler) {
@@ -48,5 +65,8 @@ object ArtifactSkillRegistry {
     fun getHandler(effectId: String): ArtifactSkillHandler? {
         return handlers[effectId]
     }
-}
 
+    fun clearTransientState(playerId: UUID) {
+        handlers.values.toSet().forEach { it.clearTransientState(playerId) }
+    }
+}

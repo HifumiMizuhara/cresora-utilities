@@ -1,6 +1,8 @@
 package hifumi.cresora.adventurerank
 import hifumi.cresora.combat.HostileRewardFamilies
 import hifumi.cresora.combat.HostileRewardFamily
+import hifumi.cresora.combat.CombatBalanceProfileRegistry
+import hifumi.cresora.combat.CombatFamilyBalance
 import hifumi.cresora.equipment.EquipmentRarity
 import net.minecraft.entity.EntityType
 import net.minecraft.util.math.random.Random
@@ -22,70 +24,31 @@ object AdventureRankProfile {
 
     fun healthMultiplier(entityType: EntityType<*>, rank: Int): Double {
         val progress = AdventureRankProgression.normalizedProgress(rank)
-        val phaseBonus = phaseIndex(rank) * 0.10
-        return when (HostileRewardFamilies.classify(entityType)) {
-            HostileRewardFamily.SURVIVOR -> 1.0 + 2.0 * progress + phaseBonus
-            HostileRewardFamily.ASSAULT -> 1.0 + 2.2 * progress + phaseBonus
-            HostileRewardFamily.ARCANE -> 1.0 + 1.9 * progress + phaseBonus
-            HostileRewardFamily.ELITE -> 1.0 + 2.6 * progress + phaseBonus * 1.5
-            HostileRewardFamily.RELIC -> 1.0 + 0.08 * progress
-        }
+        val balance = balanceFor(entityType)
+        return 1.0 + balance.healthGrowth * progress + phaseIndex(rank) * balance.healthPhaseBonus
     }
 
     fun defenseBonus(entityType: EntityType<*>, rank: Int, overflowHealth: Double): DefenseBonus {
         val progress = AdventureRankProgression.normalizedProgress(rank)
+        val balance = balanceFor(entityType)
         val phase = phaseIndex(rank)
-        val family = HostileRewardFamilies.classify(entityType)
-        val baseArmor = when (family) {
-            HostileRewardFamily.SURVIVOR -> 1.0 + 3.0 * progress + phase * 0.8
-            HostileRewardFamily.ASSAULT -> 1.0 + 3.2 * progress + phase * 0.8
-            HostileRewardFamily.ARCANE -> 0.8 + 2.8 * progress + phase * 0.7
-            HostileRewardFamily.ELITE -> 1.6 + 4.4 * progress + phase * 1.1
-            HostileRewardFamily.RELIC -> 5.0 + 4.0 * progress
-        }
-        val baseToughness = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.2 + 0.9 * progress + phase * 0.2
-            HostileRewardFamily.ASSAULT -> 0.2 + 0.9 * progress + phase * 0.2
-            HostileRewardFamily.ARCANE -> 0.3 + 1.0 * progress + phase * 0.2
-            HostileRewardFamily.ELITE -> 0.6 + 1.4 * progress + phase * 0.3
-            HostileRewardFamily.RELIC -> 2.5 + 1.6 * progress
-        }
+        val baseArmor = balance.armorBase + balance.armorGrowth * progress + phase * balance.armorPhaseBonus
+        val baseToughness = balance.toughnessBase + balance.toughnessGrowth * progress + phase * balance.toughnessPhaseBonus
 
         if (overflowHealth <= 0.0) {
             return DefenseBonus(baseArmor, baseToughness)
         }
 
-        val overflowArmorCoefficient = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.12
-            HostileRewardFamily.ASSAULT -> 0.11
-            HostileRewardFamily.ARCANE -> 0.10
-            HostileRewardFamily.ELITE -> 0.15
-            HostileRewardFamily.RELIC -> 0.22
-        }
-        val overflowToughnessCoefficient = when (family) {
-            HostileRewardFamily.SURVIVOR -> 0.03
-            HostileRewardFamily.ASSAULT -> 0.03
-            HostileRewardFamily.ARCANE -> 0.03
-            HostileRewardFamily.ELITE -> 0.04
-            HostileRewardFamily.RELIC -> 0.07
-        }
-
         return DefenseBonus(
-            armorFlat = baseArmor + (overflowHealth / 10.0) * overflowArmorCoefficient,
-            toughnessFlat = baseToughness + (overflowHealth / 25.0) * overflowToughnessCoefficient
+            armorFlat = baseArmor + (overflowHealth / 10.0) * balance.overflowArmorPerTenHealth,
+            toughnessFlat = baseToughness + (overflowHealth / 25.0) * balance.overflowToughnessPerTwentyFiveHealth
         )
     }
 
     fun damageMultiplier(entityType: EntityType<*>, rank: Int): Double {
         val progress = AdventureRankProgression.normalizedProgress(rank)
-        val cap = when (HostileRewardFamilies.classify(entityType)) {
-            HostileRewardFamily.SURVIVOR -> 0.55
-            HostileRewardFamily.ASSAULT -> 0.65
-            HostileRewardFamily.ARCANE -> 0.70
-            HostileRewardFamily.ELITE -> 0.82
-            HostileRewardFamily.RELIC -> 1.00
-        }
-        return 1.0 + cap * progress + phaseIndex(rank) * 0.04
+        val balance = balanceFor(entityType)
+        return 1.0 + balance.damageGrowth * progress + phaseIndex(rank) * balance.damagePhaseBonus
     }
 
     fun lootBonus(rank: Int): LootBonus {
@@ -142,6 +105,17 @@ object AdventureRankProfile {
             normalized >= 56 -> 2
             normalized >= 31 -> 1
             else -> 0
+        }
+    }
+
+    private fun balanceFor(entityType: EntityType<*>): CombatFamilyBalance {
+        val profile = CombatBalanceProfileRegistry.current()
+        return when (HostileRewardFamilies.classify(entityType)) {
+            HostileRewardFamily.SURVIVOR -> profile.survivor
+            HostileRewardFamily.ASSAULT -> profile.assault
+            HostileRewardFamily.ARCANE -> profile.arcane
+            HostileRewardFamily.ELITE -> profile.elite
+            HostileRewardFamily.RELIC -> profile.relic
         }
     }
 }

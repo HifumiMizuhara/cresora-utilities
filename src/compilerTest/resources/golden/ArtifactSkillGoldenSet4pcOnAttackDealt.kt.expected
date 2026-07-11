@@ -34,7 +34,7 @@ public class ArtifactSkillGoldenSet4pcOnAttackDealt : ArtifactSkillHandler {
     goldenEchoStates.keys.removeIf { !activePlayerIds.contains(it) }
   }
 
-  override fun onTick(player: ServerPlayerEntity) {
+  override fun onTransientStateTick(player: ServerPlayerEntity) {
     val now = WeaponSkillService.currentWorldTime(player)
     if (goldenEchoStates.containsKey(player.uuid) && now >=
         goldenEchoStates[player.uuid]!!.expireTick) {

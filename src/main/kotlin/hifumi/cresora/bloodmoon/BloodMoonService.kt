@@ -49,6 +49,7 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
 import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
@@ -241,6 +242,7 @@ object BloodMoonService {
     private const val PLAYER_HP_PER_STACK = 0.20
     private const val GLOW_DURATION_TICKS = 20 * 60 * 10
     private const val ZERO_SPAWN_RETRY_TICKS = 40L
+    private const val BED_STATUS_DISPLAY_COMMAND_TAG = "cresora_blood_moon_bed_display"
     private const val MAX_SPAWN_TRIES_PER_MOB = 6
     private const val MOB_BLOCK_BREAK_INTERVAL_TICKS = 100L
     private const val ELITE_BLOCK_BREAK_INTERVAL_TICKS = 60L
@@ -691,8 +693,9 @@ object BloodMoonService {
         val target = server.playerManager.playerList.firstOrNull { session.participants.contains(it.uuid) } ?: return
         val waveRank = (AdventureRankService.getRank(target) + waveNumber * 2 + participantCount).coerceAtLeast(1)
         val baseCount = 5 + waveNumber + participantCount
-        val healthScalar = 1.0 + (waveNumber - 1) * 0.05
-        val defenseScalar = 1.0 + (waveNumber - 1) * 0.025
+        val balance = hifumi.cresora.combat.CombatBalanceProfileRegistry.current()
+        val healthScalar = 1.0 + (waveNumber - 1) * balance.bloodMoonWaveHealthGrowth
+        val defenseScalar = 1.0 + (waveNumber - 1) * balance.bloodMoonWaveDefenseGrowth
         session.bedInvulnerableUntilNextWave = false
 
         var spawnedCount = 0
@@ -751,6 +754,7 @@ object BloodMoonService {
             return
         }
         restoreMobGriefing(server)
+        server.getWorld(session.bedKey.worldKey)?.let { world -> removeBattleBedDisplay(world, session) }
         restoreBattleBed(server, session)
         spawnRewardChests(server, session)
         restoreParticipantRespawns(server, session.participants)
@@ -1318,14 +1322,49 @@ object BloodMoonService {
         display.isInvulnerable = true
         display.isSilent = true
         display.setText(battleBedStatusText(session))
-        world.spawnEntity(display)
+        display.addCommandTag(BED_STATUS_DISPLAY_COMMAND_TAG)
+        // Register before spawning: ENTITY_LOAD fires inside spawnEntity and treats
+        // tagged-but-untracked displays as orphans restored from chunk data.
         session.bedStatusDisplayUuid = display.uuid
+        world.spawnEntity(display)
         return display
     }
 
     private fun removeBattleBedDisplay(world: ServerWorld, session: BloodMoonBattleSession) {
         resolveBattleBedDisplay(world, session)?.discard()
         session.bedStatusDisplayUuid = null
+    }
+
+    /**
+     * bedStatusDisplayUuid is transient (not persisted across restarts), so a display
+     * left over from a session that ended before shutdown has no tracked owner once the
+     * server restarts. Called from ServerEntityEvents.ENTITY_LOAD; discards the entity if
+     * it's tagged as one of ours but isn't the active session's current display. Also
+     * catches displays spawned before this tag existed, by matching their translation key,
+     * so already-orphaned labels self-heal on next chunk load without a manual /kill.
+     */
+    fun discardOrphanedBedDisplay(entity: Entity): Boolean {
+        val display = entity as? DisplayEntity.TextDisplayEntity ?: return false
+        val tagged = display.commandTags.contains(BED_STATUS_DISPLAY_COMMAND_TAG)
+        val orphaned = if (tagged) {
+            activeSession?.bedStatusDisplayUuid != display.uuid
+        } else {
+            isBedStatusText(display.text)
+        }
+        if (orphaned) {
+            display.discard()
+        }
+        return orphaned
+    }
+
+    private fun isBedStatusText(text: Text?): Boolean {
+        if (text == null) {
+            return false
+        }
+        return (sequenceOf(text) + text.siblings.asSequence()).any {
+            val key = (it.content as? TranslatableTextContent)?.key ?: return@any false
+            key == "message.cresora.blood_moon.bed_status" || key == "message.cresora.blood_moon.bed_status_guarded"
+        }
     }
 
     private fun updateBattleMobPressure(world: ServerWorld, session: BloodMoonBattleSession) {
@@ -1554,6 +1593,7 @@ object BloodMoonService {
 
     private fun failBattle(server: MinecraftServer, world: ServerWorld, session: BloodMoonBattleSession) {
         destroyBattleBed(world, session)
+        removeBattleBedDisplay(world, session)
         for (mobUuid in session.activeMobUuids) {
             world.getEntity(mobUuid)?.discard()
         }

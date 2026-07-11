@@ -8,6 +8,7 @@ import hifumi.cresora.bloodmoon.BloodMoonHooks
 import hifumi.cresora.bloodmoon.MoonAltarService
 import hifumi.cresora.bloodmoon.MoonPhaseHooks
 import hifumi.cresora.combat.MobCombatProfileRegistry
+import hifumi.cresora.combat.CombatBalanceProfileRegistry
 import hifumi.cresora.combat.NaturalRegenService
 import hifumi.cresora.debuff.CresoraDebuffHooks
 import hifumi.cresora.domain.DomainContentRegistry
@@ -204,6 +205,7 @@ object CreSoraUtilities : ModInitializer {
 		registerArtifactSpecialItems()
 		registerRoleMaterials()
 		ShopContentRegistry.init()
+		CombatBalanceProfileRegistry.init()
 		MobCombatProfileRegistry.init()
 		DomainRewardProfileRegistry.init()
 		DomainContentRegistry.init()
