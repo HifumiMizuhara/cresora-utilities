@@ -10,20 +10,25 @@
             "translate": "npc.cresora.spirit_guide.name"
           },
           "body": {
-            "translate": "npc.cresora.demo.dialogue.line_1"
+            "translate": "npc.cresora.field_story.0_0.intro"
           },
           "choices": [
             {
-              "actionId": "choice_accept",
+              "actionId": "story:start:0-0",
               "label": {
-                "translate": "npc.cresora.demo.dialogue.choice_accept"
+                "translate": "npc.cresora.field_story.0_0.choice_begin"
               },
-              "nextNodeId": "after_accept"
+              "requiredFlags": {
+                "chapter_0_0_completed": false
+              }
             },
             {
-              "actionId": "choice_decline",
+              "actionId": "choice_remember",
               "label": {
-                "translate": "npc.cresora.demo.dialogue.choice_decline"
+                "translate": "npc.cresora.field_story.0_0.choice_remember"
+              },
+              "requiredFlags": {
+                "chapter_0_0_completed": true
               },
               "nextNodeId": "after_decline"
             }
@@ -35,7 +40,7 @@
             "translate": "npc.cresora.spirit_guide.name"
           },
           "body": {
-            "translate": "npc.cresora.demo.dialogue.line_accept"
+            "translate": "npc.cresora.field_story.0_0.remember"
           },
           "flagsToSet": ["met_guide"]
         },

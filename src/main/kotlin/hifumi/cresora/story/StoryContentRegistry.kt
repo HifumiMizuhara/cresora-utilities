@@ -328,7 +328,7 @@ object StoryContentRegistry {
     }
 
     fun chaptersForGroup(groupId: String): List<StoryChapterDefinition> {
-        return chapters().filter { groupIdOf(it) == groupId }
+        return chapters().filter { groupIdOf(it) == groupId && !FieldStoryService.isFieldChapter(it.id) }
     }
 
     fun requireChapter(id: String): StoryChapterDefinition {

@@ -748,6 +748,13 @@ Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジス�
 
 旋律共鳴チュートリアル: `resonantChordTutorialSteps` 非空なら全ステップ反応確認で戦闘完了。各ステップは `reactionKey` / `effectKey` / 一時貸与 2 本（`removeOnExit`）。`grantedWeapons`・`battleObjective` との併用禁止。空きスロットは全ステップ最大貸与本数から算出
 
+#### FieldStoryService
+
+- ファイル: `story/FieldStoryService.kt`
+- 責務: 箱庭ワールドで開始する章の対話起動・現地到達判定・フィールド戦闘・既存章進捗／報酬への反映
+- API: `hasActiveSession`, `startFromDialogue`
+- 初回移行済みコンテンツ: `0-0`「微かな囁き」。`cresora_world` の Spirit Guide との選択肢 `story:start:0-0` で受注し、着地点北の `SpiritGuideService.OPENING_ENCOUNTER_POS` に到達すると戦闘を起動する。戦闘後は `StoryProgressService` と章／秘境報酬を通常どおり処理し、ポスト対話を表示する。移行済み章は従来の章選択UIから除外され、`/cresora_story start` でも開始できない
+
 #### StoryProgressService
 
 - ファイル: `StoryProgressService.kt`
@@ -763,7 +770,7 @@ Fabric 1.21.7 用 Minecraft Mod **CreSora Utilities** の内部 API、レジス�
 #### StoryDialogueNetworking（Phase 0 / 4）
 
 - ファイル: `story/StoryDialogueNetworking.kt`, `client/.../story/StoryDialogueClient.kt` / `StoryDialogueScreen.kt`
-- 責務: `DIALOGUE` / `COUNTDOWN` / `NPC_DIALOGUE` を `StoryDialogueStatePayload` で配信。Phase 4 で分岐選択肢・フラグ条件。サーバー側 `NpcDialogueSession`
+- 責務: `DIALOGUE` / `COUNTDOWN` / `NPC_DIALOGUE` を `StoryDialogueStatePayload` で配信。Phase 4 で分岐選択肢・フラグ条件。`story:start:<chapterId>` 選択肢は `FieldStoryService` へ箱庭章開始を委譲。サーバー側 `NpcDialogueSession`
 - API: `startNpcDialogue`, `showSimpleDialogue`, `showCountdown`, `close`
 
 #### MasqueradeService

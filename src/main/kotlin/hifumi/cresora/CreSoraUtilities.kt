@@ -41,6 +41,7 @@ import hifumi.cresora.resonance.ResonanceScreenHandler
 import hifumi.cresora.story.StoryChapterSelectionScreenHandler
 import hifumi.cresora.story.StoryContentRegistry
 import hifumi.cresora.story.StoryDialogueNetworking
+import hifumi.cresora.story.FieldStoryService
 import hifumi.cresora.story.StoryHooks
 import hifumi.cresora.story.StoryStageSelectionScreenHandler
 import hifumi.cresora.story.StoryTextRegistry
@@ -216,6 +217,7 @@ object CreSoraUtilities : ModInitializer {
 		ResonanceContentRegistry.init()
 		MusicEchoContentRegistry.init()
 		StoryDialogueNetworking.init()
+		FieldStoryService.init()
 		NpcDialogueContentRegistry.init()
 		UPGRADE_SCREEN_HANDLER = Registry.register(
 			Registries.SCREEN_HANDLER,

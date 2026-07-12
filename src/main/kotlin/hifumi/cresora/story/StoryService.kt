@@ -112,6 +112,9 @@ object StoryService {
         val chapter = runCatching { StoryContentRegistry.requireChapter(chapterId) }.getOrElse {
             return StoryStartResult(false, "commands.cresora.story.invalid", listOf(chapterId))
         }
+        if (FieldStoryService.isFieldChapter(chapter.id)) {
+            return StoryStartResult(false, "commands.cresora.story.field_only")
+        }
         if (sessionsByPlayer.containsKey(player.uuid)) {
             return StoryStartResult(false, "commands.cresora.story.already_active")
         }

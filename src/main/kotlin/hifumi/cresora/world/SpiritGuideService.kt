@@ -17,6 +17,7 @@ import net.minecraft.util.math.Box
 
 object SpiritGuideService {
     val LANDING_POS: BlockPos = BlockPos(0, 72, 0)
+    val OPENING_ENCOUNTER_POS: BlockPos = LANDING_POS.add(0, 0, 20)
 
     private val guidePos: BlockPos = LANDING_POS.add(0, 0, 5)
     private const val GUIDE_INTERVAL_TICKS = 100L
@@ -98,6 +99,16 @@ object SpiritGuideService {
         if (world.getBlockState(guideUnderPos) != guideUnderState) {
             world.setBlockState(guideUnderPos, guideUnderState)
         }
+        for (x in -2..2) {
+            for (z in -2..2) {
+                val floorPos = OPENING_ENCOUNTER_POS.add(x, -1, z)
+                world.setBlockState(floorPos, Blocks.CALCITE.defaultState)
+                for (y in 0..2) {
+                    world.setBlockState(floorPos.up(y + 1), Blocks.AIR.defaultState)
+                }
+            }
+        }
+        world.setBlockState(OPENING_ENCOUNTER_POS.down(), Blocks.CHISELED_QUARTZ_BLOCK.defaultState)
     }
 
     fun ensureGuide(world: ServerWorld) {

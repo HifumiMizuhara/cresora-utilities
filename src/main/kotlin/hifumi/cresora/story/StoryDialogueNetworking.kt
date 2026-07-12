@@ -306,6 +306,15 @@ object StoryDialogueNetworking {
     }
 
     private fun resolveNpcChoice(player: ServerPlayerEntity, session: NpcDialogueSession, choice: NpcDialogueChoice) {
+        if (choice.actionId.startsWith("story:start:")) {
+            val chapterId = choice.actionId.removePrefix("story:start:")
+            if (FieldStoryService.startFromDialogue(player, chapterId)) {
+                close(player)
+            } else {
+                sendDialogueLockedFeedback(player)
+            }
+            return
+        }
         val currentNode = hifumi.cresora.npc.NpcDialogueContentRegistry.getNode(session.treeId, session.currentNodeId)
         val nextNodeId = choice.nextNodeId ?: currentNode?.nextNodeId
         advanceNpcNode(player, session, nextNodeId)
